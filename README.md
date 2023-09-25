@@ -3,7 +3,8 @@
 
 ## 一、MWA流水线介绍
 
-MWA流水线的模块的结构示意图如下：
+MWA流水线的模块结构示意图如下：
+
 ```mermaid
 flowchart TD
   subgraph cluster
@@ -12,7 +13,6 @@ flowchart TD
     beam-maker --> fits-merger
     fits-merger --> heimdall
     fits-merger --> presto
-
   end
 ```
 
@@ -84,11 +84,9 @@ flowchart TD
 ## 四、MWA流水线设计
 
 ### 4.1 设计思考
-
-以下是标注输入/输出数据的mwa流水线示意图：
+- MWA流水线
 
 ```mermaid
-
 flowchart TD
   subgraph cluster
     mwa-down --> untar
@@ -96,15 +94,16 @@ flowchart TD
     beam-maker --> fits-merger
     fits-merger --> heimdall
     fits-merger --> presto
-    comment-1>Input:34.3TiB; Output:34.3TiB]
-    comment-2>Input:400PiB; Output:1.57PiB]
-    comment-3>Input:1.57PiB; Output:1.57PiB]
-    mwa-down ~~~ comment-1
-    untar ~~~ comment-2
-    beam-maker ~~~ comment-3
   end
-
 ```
+
+其主要模块的输入、输出数据量如下表：
+
+|  模块名 | 输入数据量  | 输出数据量 |
+|  ----  | ----  | ---- |
+| untar     | 34.3TiB | 34.3TiB |
+| beam-maker | 400 PiB | 1.57 PiB | 
+| fits-merger | 1.57 PiB | 1.57 PiB | 
 
 可以看出，beam-maker模块的读写数据规模极大，如何优化beam-maker模块是首要问题。
 
@@ -127,6 +126,7 @@ flowchart TD
   - 改进tar文件布局
   
 ![imporved layout](layout-1.svg)
+
 改进后的tar布局，将打包维度调整为按时间维度，长度为30秒，并将内部的原始数据用高效的zstd算法做压缩处理（压缩率可达原始数据的近70%）。如果单次处理的时间长度超过30秒，则可以按30秒的倍数。
 
 ### 4.3 beam-maker 与 fits-merger
