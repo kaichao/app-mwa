@@ -1,0 +1,29 @@
+name: beam-maker.test
+label: 单元测试
+cluster: local
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  beam-maker:
+    label: 通道转换
+    base_image: app-mwa/beam-maker
+    command: docker run -d --rm
+        --group-add video 
+        --device /dev/kfd 
+        --device /dev/dri/card0 
+        --device /dev/dri/renderD128 
+        --security-opt seccomp=unconfined 
+        --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    variables:
+      slot_options: reserved_on_exit
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    paths:
+      - ${BASEDIR}:${BASEDIR}
+    environments:
+      - BASEDIR=${BASEDIR}/
+      - DATDIR=${BASEDIR}/combined
+      - CALDIR=${BASEDIR}/cal
+      - OUTDIR=${BASEDIR}/pip_out4

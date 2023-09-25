@@ -1,0 +1,20 @@
+name: fits-merger.test
+label: 单元测试
+cluster: local
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  fits-merger:
+    label: 24通道fits合并
+    base_image: app-mwa/fits-merger
+    # variables:
+    #   slot_options: reserved_on_exit
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    paths:
+      - ${BASEDIR}:${BASEDIR}
+    environments:
+      - BASEDIR=${BASEDIR}
+      - OUTDIR=${BASEDIR}/pip_out3
