@@ -16,6 +16,7 @@ jobs:
         --security-opt seccomp=unconfined 
         --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
+      max_sleep_count: 720
       slot_options: reserved_on_exit
     parameters:
       key_group_regex: ^(.+)$
@@ -23,7 +24,12 @@ jobs:
     paths:
       - ${BASEDIR}:${BASEDIR}
     environments:
-      - BASEDIR=${BASEDIR}/
-      - DATDIR=${BASEDIR}/combined
-      - CALDIR=${BASEDIR}/cal
-      - OUTDIR=${BASEDIR}/pip_out4
+      # - BASEDIR=${BASEDIR}/
+      - DIR_DAT=${BASEDIR}/combined
+      - DIR_CAL=${BASEDIR}/cal
+      - DIR_1CH=${BASEDIR}/pip_out5
+    sink_jobs:
+      - next
+
+  next:
+    base_image: hub.cstcloud.cn/scalebox/agent

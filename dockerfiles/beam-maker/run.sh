@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# OBSID_BEG_END_ch_PTHEAD_PTTAIL
+# OBSID/BEG_END/ch/PTHEAD_PTTAIL
 m=$1
-# m="1257010784/1257010986_1257011185/132/001_003"
+# m="1257010784/1257010986_1257011185/132/00001_00003"
 my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
 OBSID=${my_arr[0]}
 BEG=${my_arr[1]}
@@ -21,7 +21,6 @@ echo PTHEAD=$PTHEAD
 echo PTTAIL=$PTTAIL
 echo i=$i
 
-
 # OBSID=1257010784
 # BEG=1257010986
 # END=1257011185
@@ -29,24 +28,44 @@ echo i=$i
 # PTHEAD=001
 # PTTAIL=003
 
+# 加载UTT等元数据信息
+source ${DIR_CAL}/${OBSID}/mb_meta.env
 
-UTT=2019-11-05T17:43:25.00
-PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
+echo UTT=${UTT}
+# UTT=2019-11-05T17:43:25.00
+# PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
+PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
-mkdir -p ${OUTDIR} && cd ${OUTDIR}
 
+# echo POINTS:$POINTS,
+
+# mkdir -p ${DIR_1CH} && cd ${DIR_1CH}
+cd /work
 make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
         -z ${UTT} \
-        -d ${DATDIR} -f ${ch} \
-        -m ${DATDIR}/*metafits_ppds.fits \
-        -F ${CALDIR}/flagged_tiles.txt \
-        -J ${CALDIR}/DI_JonesMatrices_node0${i}.dat \
-        -B ${CALDIR}/BandpassCalibration_node0${i}.dat \
+        -d ${DIR_DAT}/${OBSID} -f ${ch} \
+        -m ${DIR_CAL}/${OBSID}/metafits_ppds.fits \
+        -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
+        -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
+        -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
         -t 6000 -W 10000 -s 
 
 code=$?
 
-echo $1 > /work/messages.txt
+# 将生成的fits文件转移到规范目录下
+declare -i i=0
+point_arr=($(echo $POINTS | tr "," "\n" ))
+for ii in $(seq $PTHEAD $PTTAIL);
+do
+    pi=$(printf "%05d" $ii)
+    dest_file=${DIR_1CH}/${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
+    orig_file=/work/${point_arr[${i}]}/*.fits
+
+    mkdir -p $(dirname ${dest_file})
+    mv $orig_file $dest_file
+    i=$((i + 1))
+    echo ${OBSID}/${BEG}_${END}/${pi} >> /work/messages.txt
+done
 
 exit $code
