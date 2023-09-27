@@ -13,21 +13,6 @@ PTTAIL=${my_arr[5]}
 let ii=$((10#${ch}))-108
 printf -v i "%02d" $ii
 
-echo OBSID=$OBSID
-echo BEG=$BEG
-echo END=$END
-echo ch=$ch
-echo PTHEAD=$PTHEAD
-echo PTTAIL=$PTTAIL
-echo i=$i
-
-# OBSID=1257010784
-# BEG=1257010986
-# END=1257011185
-# ch=108
-# PTHEAD=001
-# PTTAIL=003
-
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
 
@@ -37,9 +22,6 @@ echo UTT=${UTT}
 PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 
-# echo POINTS:$POINTS,
-
-# mkdir -p ${DIR_1CH} && cd ${DIR_1CH}
 cd /work
 make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
@@ -50,8 +32,8 @@ make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
         -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
         -t 6000 -W 10000 -s 
-
 code=$?
+[[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code && exit $code
 
 # 将生成的fits文件转移到规范目录下
 declare -i i=0
@@ -59,13 +41,28 @@ point_arr=($(echo $POINTS | tr "," "\n" ))
 for ii in $(seq $PTHEAD $PTTAIL);
 do
     pi=$(printf "%05d" $ii)
-    dest_file=${DIR_1CH}/${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
+    dest_file_r=${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
+    dest_file=${DIR_1CH}/${dest_file_r}
     orig_file=/work/${point_arr[${i}]}/*.fits
 
-    mkdir -p $(dirname ${dest_file})
-    mv $orig_file $dest_file
+    mkdir -p $(dirname ${dest_file}) && mv $orig_file $dest_file
+    code=$?
+    [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" && exit $code
+    # 输出消息 
+    echo $dest_file_r >> /work/messages.txt
+    # 统计输出文件的字节数
+    echo $dest_file >> /work/output-files.txt
+
     i=$((i + 1))
-    echo ${OBSID}/${BEG}_${END}/${pi} >> /work/messages.txt
 done
+
+# 统计输入文件的总字节数
+num_points=${#point_arr[@]}
+num_files=$(expr "$END" - "$BEG")
+file_length=327680000
+input_bytes=$(( (num_files+1) * file_length * num_points ))
+echo '{
+    "inputBytes":'${input_bytes}'
+}' > /work/task-exec.json
 
 exit $code

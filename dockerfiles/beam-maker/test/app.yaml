@@ -11,8 +11,8 @@ jobs:
     command: docker run -d --rm
         --group-add video 
         --device /dev/kfd 
-        --device /dev/dri/card0 
-        --device /dev/dri/renderD128 
+        --device /dev/dri/card1
+        --device /dev/dri/renderD129 
         --security-opt seccomp=unconfined 
         --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
