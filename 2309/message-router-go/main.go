@@ -6,6 +6,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
 var (
@@ -51,10 +53,10 @@ func fromBeamMaker(message string, params map[string]string) int {
 
 	if strings.HasSuffix(message, ".fits") {
 		// 非压缩fits文件
-		appendToFile("/work/messages.txt", "fits2fil,"+dataRootMain+"/fits%"+message)
+		scalebox.AppendToFile("/work/messages.txt", "fits2fil,"+dataRootMain+"/fits%"+message)
 	} else if regex.MatchString(message) {
 		// 压缩fits文件
-		appendToFile("/work/messages.txt", "decompress,"+message)
+		scalebox.AppendToFile("/work/messages.txt", "decompress,"+message)
 	} else {
 		logger.Errorf("File extension error in fromFitsPull(), text:'%s'\n", message)
 		return 101
@@ -68,14 +70,14 @@ func fromFitsMerger(message string, params map[string]string) int {
 }
 
 func fromFits2Fil(message string, params map[string]string) int {
-	appendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/fil%"+message)
+	scalebox.AppendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/fil%"+message)
 	// m2 := "ftp-fil-push," + message
 	// return m1 + "\n" + m2
 	return 0
 }
 
 func fromRsyncFilPull(message string, params map[string]string) int {
-	appendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/decompressed%"+message)
+	scalebox.AppendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/decompressed%"+message)
 	return 0
 }
 
@@ -90,7 +92,7 @@ func fromMessageRouterQiu(message string, params map[string]string) int {
 		dataset := matches[2]
 		ts := matches[3]
 		tsFile := fmt.Sprintf("/local%s/fil/%s/timestamp.txt", dataRootMain, dataset)
-		appendToFile(tsFile, filFile+" "+ts)
+		scalebox.AppendToFile(tsFile, filFile+" "+ts)
 	}
 
 	return 0

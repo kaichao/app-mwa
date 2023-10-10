@@ -11,7 +11,6 @@ flowchart TD
     mwa-down --> untar
     untar --> beam-maker
     beam-maker --> fits-merger
-    fits-merger --> heimdall
     fits-merger --> presto
   end
 ```
@@ -20,8 +19,7 @@ flowchart TD
 - untar：将原始产品数据的tar文件解包为单秒dat文件；
 - beam-make：按beam、指向，生成fits文件；
 - fits-merger：按指向，将同指向的24个beam的fits文件合并；
-- heimdall：用单脉冲方法搜索前述的合并fits文件
-- presto：用周期脉冲方法搜索前述的合并fits文件
+- presto：用presto软件对前述24beam的fits文件做脉冲搜索
 - 
 ## 二、MWA流水线的相关数据量分析
 
@@ -56,17 +54,7 @@ flowchart TD
   - 总数据量：5.73 GiB * 24 ≈ 137.55 GiB
 - 按12000指向计，则总数据量为：12000 * 137.55 GiB ≈ 1.57PB
   
-### 2.5 单脉冲搜索文件
-
-#### filterbank文件
-
-#### cand文件
-
-#### gold文件
-
-#### png文件
-
-### 2.6 周期脉冲搜索文件
+### 2.5 presto搜索文件
 
 #### ？
 
@@ -98,7 +86,6 @@ flowchart TD
     mwa-down --> untar
     untar --> beam-maker
     beam-maker --> fits-merger
-    fits-merger --> heimdall
     fits-merger --> presto
   end
 ```
@@ -119,7 +106,7 @@ flowchart TD
 
 主要优化手段包括：
 - 原始产品数据预处理（repack）
-- 流水线模块优化设计，尽可能访问高性能存储（内存盘、内存缓存、本地SSD磁盘、本地磁盘、网络存储）
+- 流水线模块优化设计，分级访问高性能存储（内存盘、内存缓存、本地SSD磁盘、本地磁盘、网络存储）
 
 ### 4.2 repack设计
 
@@ -127,7 +114,9 @@ flowchart TD
   
 ![original layout](layout-0.svg)
 
-每个tar文件中包含24通道的1秒数据。因后续的波束生成算法需按通道组织数据，直接用原始产品数据做数据处理，需要拷贝大量冗余的数据，因而，需要在数据处理前对产品数据的打包tar文件做预处理，对tar文件做布局调整，并做压缩处理。
+出于数据管理、高性能网络传输的实际需求，将较小的数据文件打包为大文件，有效减少I/O数量，因而提升效率。
+原始产品数据以tar格式打包同1秒的24通道数据，便于管理。
+但在计算过程中，后续波束生成算法需按通道计算，直接用原始产品数据做数据处理，需拷贝大量冗余数据，并且这个操作需大量重复。因而，在数据处理前对产品数据的打包tar文件做预处理，对tar文件做布局调整，并做压缩处理。
 
   - 改进tar文件布局
   
@@ -137,7 +126,7 @@ flowchart TD
 
 ### 4.3 beam-maker 与 fits-merger
 
-按前面分析，输入数据量最大的模块为beam-maker，按12000指向的数据处理，单观测数据集的输入数据超过400PB。如果完全基于网络存储，将会带来极大的存储性能瓶颈。为此设计利用本地磁盘、本地SSD、本地内存缓存等方式，提高计算效率。
+按前面分析，输入数据量最大的模块为beam-maker，按12000指向的数据处理，单观测数据集的输入数据超过400PB。如果完全基于网络存储做数据读取，将会有极大的I/O存储性能瓶颈。为此设计利用本地磁盘、本地SSD、本地内存缓存的多层级的读取方式，提高加载效率。
 
 考虑到本地存储、本地内存的容量不同可能支持24通道的数据存储，目前的设计方案，将单个测试时间长度的24通道数据分别放在24个计算节点上，比如：
 
@@ -167,7 +156,6 @@ flowchart TB
   copy-untar --> beam-maker
   beam-maker --> fits-rsync
   fits-rsync --> fits-merger
-  fits-merger --> heimdall
   fits-merger --> presto
   subgraph cluster2
     ftp-pull
@@ -176,7 +164,6 @@ flowchart TB
     beam-maker
     fits-rsync
     fits-merger
-    heimdall
     presto
   end
   subgraph cluster1
@@ -190,8 +177,8 @@ flowchart TB
 
 主要特点包括：
 - 分布式集群计算
-  - 预处理集群：原始产品数据中打包文件的布局调整；
-  - DCU计算集群：beam-maker、fits-merger，以及单脉冲、周期脉冲的搜索
+  - 预处理集群：原始产品数据中打包文件的存储布局调整；
+  - DCU计算集群：主要计算过程，包括beam-maker、fits-merger，以及单脉冲、周期脉冲的搜索等。
 
 - I/O优化
   - 打包文件布局调整，减少冗余的文件加载
