@@ -1,0 +1,56 @@
+name: prep.app-mwa
+label: 预处理
+cluster: main
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  list-dir:
+    label: 打包文件列表
+    base_image: hub.cstcloud.cn/scalebox/list-dir
+    schedule_mode: HEAD
+    command: docker run -d --rm --privileged --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${DIR_NAME}
+    environments:
+      - SOURCE_URL=
+      - REGEX_FILTER=${REGEX_FILTER}
+      - REGEX_2D_DATASET=${REGEX_2D_DATASET}
+      - INDEX_2D_DATASET=${INDEX_2D_DATASET}
+      # 输出消息
+      # {"datasetID":"1266932744","horizontalWidth":1,"verticalStart":1266932746,"verticalHeight":4798}	
+      # /raidz/mwa%1266932744/1266932744_1266932746x.tar
+    sink_jobs:
+      - next-job
+
+  next-job:
+    base_image: hub.cstcloud.cn/scalebox/agent
+
+  unpack:
+    base_image: app-mwa/unpack
+
+  data-grouping-dat:
+    schedule_mode: HEAD
+    parameters:
+      key_group_regex: ${DAT_REGEX}
+      key_group_index: ${DAT_INDEX}
+    environments:
+      - COORD_TYPE=string
+      - DATASET_PREFIX=mwa
+    sink_jobs:
+      - repack
+
+  repack:
+    base_image: app-mwa/repack
+    sink_jobs:
+      - rsync-push
+
+  rsync-push-tar:
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+
+  ftp-push-tar:
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+
+  message-router-prep:
+    base_image: app-mwa/message-router-py

@@ -146,31 +146,35 @@ flowchart TD
 ```mermaid
 
 flowchart TB
-  mwa-down --> untar
-  untar --> repack
-  repack --> ftp-push
-  ftp-push --> ftp-pull
-  ftp-pull --> copy-untar
-  repack --> rsync-pull
-  rsync-pull --> copy-untar
+  mwa-down --> list-dir
+  list-dir --> unpack
+  list-dir --> ftp-pull-tar
+  unpack --> data-grouping-dat
+  data-grouping-dat --> repack
+  repack --> ftp-push-tar
+  repack --> rsync-push-tar
+  ftp-pull-tar --> rsync-push-tar
+  rsync-push-tar --> copy-untar
   copy-untar --> beam-maker
-  beam-maker --> fits-rsync
-  fits-rsync --> fits-merger
+  beam-maker --> fits-dist
+  fits-dist --> fits-merger
   fits-merger --> presto
   subgraph cluster2
-    ftp-pull
-    rsync-pull
     copy-untar
     beam-maker
-    fits-rsync
+    fits-dist
     fits-merger
     presto
   end
   subgraph cluster1
     mwa-down
-    untar
+    list-dir
+    unpack
+    data-grouping-dat
     repack
-    ftp-push
+    ftp-push-tar
+    rsync-push-tar
+    ftp-pull-tar
   end
   
   ```

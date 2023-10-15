@@ -37,7 +37,7 @@ func main() {
 	doMessageRoute := funcs[params["from_job"]]
 	if doMessageRoute == nil {
 		logger.Warnf("message-router not set,from_job=%s ,message=%s\n", params["from_job"], os.Args[1])
-		os.Exit(0)
+		os.Exit(3)
 	}
 
 	exitCode := doMessageRoute(os.Args[1], params)
@@ -69,20 +69,8 @@ func fromFitsMerger(message string, params map[string]string) int {
 	return 0
 }
 
-func fromFits2Fil(message string, params map[string]string) int {
-	scalebox.AppendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/fil%"+message)
-	// m2 := "ftp-fil-push," + message
-	// return m1 + "\n" + m2
-	return 0
-}
-
-func fromRsyncFilPull(message string, params map[string]string) int {
-	scalebox.AppendToFile("/work/messages.txt", "rsync-fil-pull,"+rsyncPrefixMain+"/decompressed%"+message)
-	return 0
-}
-
-// messager-router-qiu --> messager-router-main
-func fromMessageRouterQiu(message string, params map[string]string) int {
+// messager-router-prep --> messager-router-main
+func fromMessageRouterPrep(message string, params map[string]string) int {
 	// 时间戳写到cluster-main，用于画图
 	// Dec+4352_12_05/20221202/Dec+4352_12_05_arcdrift-M01_0001.fil,2022-12-02-00:10:26
 	re := regexp.MustCompile(`^(([^/]+)/.+),([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2})$`)
