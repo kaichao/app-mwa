@@ -60,6 +60,9 @@ flowchart TD
 
 #### ？
 
+### 2.6 总结
+MWA数据处理过程中，读取的数据量达原始数据的千倍以上，达到百PiB规模，其I/O优化是数据处理流水线设计的关键。
+
 ## 三、原型测试
 
 ### 3.1 测试环境
@@ -72,7 +75,7 @@ flowchart TD
 
 ### make-beam的初步测试结果
 - 单次处理指向数：建议在[20..80]区间，从计算过程与计算节点数量一致的角度看，可以取24的倍数（24、48、72、...）；如果节点数为24的约数（12、8、6、4、3、2、1），可以取与节点数相同。
-- 数据处理长度：2分钟到5分钟（上限还需要确认）
+- 数据处理长度：2分钟到5分钟（上限还需考虑计算过程的GPU资源消耗、本地SSD容量、内存容量后，再确认）
 - 12000指向的单个观测数据集，处理时间预计为1600 DCU时
 
 ## 四、MWA流水线设计
@@ -141,7 +144,7 @@ flowchart TD
 
 ### 4.4 流水线示意图
 
-按以上思考，设计了以下的流水线结构：
+基于以上思考，设计了以下的流水线结构：
 
 ```mermaid
 
@@ -157,12 +160,14 @@ flowchart TB
   rsync-push-tar --> copy-untar
   copy-untar --> beam-maker
   beam-maker --> fits-dist
-  fits-dist --> fits-merger
+  fits-dist --> data-grouping-fits
+  data-grouping-fits --> fits-merger
   fits-merger --> presto
   subgraph cluster2
     copy-untar
     beam-maker
     fits-dist
+    data-grouping-fits
     fits-merger
     presto
   end
@@ -182,8 +187,8 @@ flowchart TB
 主要特点包括：
 - 分布式集群计算
   - 预处理集群：原始产品数据中打包文件的存储布局调整；
-  - DCU计算集群：主要计算过程，包括beam-maker、fits-merger，以及单脉冲、周期脉冲的搜索等。
+  - DCU计算集群：主要计算过程，包括beam-maker、fits-merger，以及利用presto做单脉冲、周期脉冲的搜索等。
 
 - I/O优化
-  - 打包文件布局调整，减少冗余的文件加载
+  - 打包文件布局调整，减少冗余的文件加载；通过打包，减少文件数量及I/O开销
   - 以scalebox支持内存缓存、本地SSD的文件加载，实现模块间存储共享，极大提升I/O能力
