@@ -1,13 +1,13 @@
 name: prep.app-mwa
-label: 预处理
-cluster: main
+cluster: ${CLUSTER}
+label: mwa数据分组
 parameters:
   initial_status: RUNNING
-
+  default_message_router: message-router-mwa
 jobs:
   list-dir:
     label: 打包文件列表
-    base_image: hub.cstcloud.cn/scalebox/list-dir
+    base_image: hub.cstcloud.cn/scalebox/list-dir:latest
     schedule_mode: HEAD
     command: docker run -d --rm --privileged --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     parameters:
@@ -18,39 +18,59 @@ jobs:
       - REGEX_FILTER=${REGEX_FILTER}
       - REGEX_2D_DATASET=${REGEX_2D_DATASET}
       - INDEX_2D_DATASET=${INDEX_2D_DATASET}
-      # 输出消息
-      # {"datasetID":"1266932744","horizontalWidth":1,"verticalStart":1266932746,"verticalHeight":4798}	
-      # /raidz/mwa%1266932744/1266932744_1266932746x.tar
+  message-router-mwa:
+    label: 主消息路由
+    base_image:  app-mwa/message-router:2309
+    schedule_mode: HEAD
+    variables:
+      max_sleep_count: 240
+    environments:
+      - NUM_PER_GROUP=${NUM_PER_GROUP}
     sink_jobs:
-      - next-job
-
-  next-job:
-    base_image: hub.cstcloud.cn/scalebox/agent
-
+      - unpack
+      - data-grouping-fits
   unpack:
     base_image: app-mwa/unpack
-
-  data-grouping-dat:
     schedule_mode: HEAD
     parameters:
-      key_group_regex: ${DAT_REGEX}
-      key_group_index: ${DAT_INDEX}
+      tasks_per_queue: 500
+      key_group_regex: ${FITS_REGEX}
+      key_group_index: ${FITS_INDEX}
+    environments:
+      - SOURCE_URL=${SOURCE_URL}
+      - OUTPUT_URL=${OUTPUT_URL}
+    sink_jobs:
+      - data-grouping-fits
+
+  data-grouping-fits:
+    base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
+    schedule_mode: HEAD
     environments:
       - COORD_TYPE=string
       - DATASET_PREFIX=mwa
+    parameters:
+      key_group_regex: ${GROUP_REGEX}
+      key_group_index: ${GROUP_INDEX}
     sink_jobs:
       - repack
-
   repack:
-    base_image: app-mwa/repack
-    sink_jobs:
-      - rsync-push
-
-  rsync-push-tar:
-    base_image: hub.cstcloud.cn/scalebox/rsync-copy
-
-  ftp-push-tar:
-    base_image: hub.cstcloud.cn/scalebox/rsync-copy
-
-  message-router-prep:
-    base_image: app-mwa/message-router-py
+      base_image: app-mwa/repack
+      schedule_mode: HEAD
+      parameters:
+        tasks_per_queue: 500
+      environments:
+        - OUT_URL=${OUT_URL}
+      sink_jobs:
+        - storge-copy
+  storge-copy:
+      base_image: hub.cstcloud.cn/scalebox/ftp-copy
+      schedule_mode: HEAD
+      parameters:
+        retry_rules: "['14:${N_RETRIES}','15:${N_RETRIES}']"
+        key_group_regex: ${KEY_GROUP_REGEX}
+        key_group_submatch: ${KEY_GROUP_SUBMATCH}
+      environments:
+        - SOURCE_URL=${OUT_URL}
+        - TARGET_URL=${REMOTE_URL}
+        - ACTION=${REMOTE_ACTION}
+        - ENABLE_LOCAL_RELAY=${ENABLE_LOCAL_RELAY}
