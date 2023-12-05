@@ -3,6 +3,7 @@
 # OBSID/BEG_END/ch/PTHEAD_PTTAIL
 m=$1
 # m="1257010784/1257010986_1257011185/132/00001_00003"
+
 my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
 OBSID=${my_arr[0]}
 BEG=${my_arr[1]}
@@ -12,6 +13,10 @@ PTHEAD=${my_arr[4]}
 PTTAIL=${my_arr[5]}
 let ii=$((10#${ch}))-108
 printf -v i "%02d" $ii
+
+DIR_DAT=/data/mwa/decompress
+DIR_CAL=/data/mwa/cal
+DIR_1CH=/data/mwa/1ch
 
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
