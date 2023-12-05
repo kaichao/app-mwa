@@ -1,6 +1,6 @@
 name: fits-merger.test
 label: 单元测试
-cluster: local
+cluster: dcu
 parameters:
   initial_status: RUNNING
 
@@ -15,9 +15,5 @@ jobs:
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
-    paths:
-      - ${BASEDIR}:${BASEDIR}
-    environments:
-      - DIR_1CH=${BASEDIR}/1ch
-      - DIR_24CH=${BASEDIR}/24ch
-      
+    hosts:
+      - n0:1
