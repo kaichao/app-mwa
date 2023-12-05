@@ -1,6 +1,6 @@
 name: beam-maker.test
 label: 单元测试
-cluster: local
+cluster: dcu
 parameters:
   initial_status: RUNNING
 
@@ -21,13 +21,14 @@ jobs:
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
-    paths:
-      - ${BASEDIR}:${BASEDIR}
-    environments:
-      # - BASEDIR=${BASEDIR}/
-      - DIR_DAT=${BASEDIR}/combined
-      - DIR_CAL=${BASEDIR}/cal
-      - DIR_1CH=${BASEDIR}/pip_out5
+    # paths:
+    #   - ${BASEDIR}:${BASEDIR}
+    # environments:
+    #   - DIR_DAT=${BASEDIR}/combined
+    #   - DIR_CAL=${BASEDIR}/cal
+    #   - DIR_1CH=${BASEDIR}/pip_out5
+    hosts:
+      - n0:1
     sink_jobs:
       - next
 
