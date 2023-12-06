@@ -20,7 +20,7 @@ jobs:
       - REGEX_2D_DATASET=${REGEX_DAT}
       - INDEX_2D_DATASET=${INDEX_DAT}
 
-  data-grouping-dat:
+  data-grouping-main:
     label: dat分组
     base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
     schedule_mode: HEAD
@@ -29,12 +29,14 @@ jobs:
       key_group_regex: ${DAT_REGEX}
       key_group_index: ${DAT_INDEX}
       visiable: no
+      # exit_code=1, entity message precedes metadata message, retry
+      retry_rules: "['1']"
     environments:
       - COORD_TYPE=integer
       - DATASET_PREFIX=mwa
 
   beam-maker:
-    label: beam生成
+    label: beam-maker
     base_image: app-mwa/beam-maker
     command: docker run -d --rm
         --group-add video 
@@ -44,17 +46,14 @@ jobs:
         --security-opt seccomp=unconfined 
         --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
-      max_sleep_count: 720
-      slot_options: reserved_on_exit
+      max_sleep_count: 100
+      task_timeout_seconds: 300
     parameters:
-      key_group_regex: ^(.+)$
-    paths:
-      - ${BASEDIR}:${BASEDIR}
-    environments:
-      # - BASEDIR=${BASEDIR}/
-      - DIR_DAT=${BASEDIR}/combined
-      - DIR_CAL=${BASEDIR}/cal
-      - DIR_1CH=${BASEDIR}/pip_out5
+      # 1257010784/1257010806_1257010815/131/00001_00003
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]+)/[0-9]{5}_[0-9]{5}$
+      key_group_index: 1,3,2
+    hosts:
+      - n[01]:2
 
   down-sampler:
     base_image: app-mwa/down-sampler
@@ -63,7 +62,18 @@ jobs:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy
 
   fits-merger:
+    label: 24通道fits合并
     base_image: app-mwa/fits-merger
+    variables:
+    # 10-min
+      max_sleep_count: 100
+      task_timeout_seconds: 60
+    parameters:
+      # 1257010784/1257010786_1257010795/00001
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
+      key_group_index: 1,3,2
+    hosts:
+      - n0:1
 
   message-router-main:
     label: 主消息路由
@@ -81,10 +91,8 @@ jobs:
       - LOG_LEVEL=warn
     sink_jobs:
       - dir-list
-      - data-grouping-dat
+      - data-grouping-main
       - beam-maker
       - down-sampler
       - fits-dist
       - fits-merger
-
-
