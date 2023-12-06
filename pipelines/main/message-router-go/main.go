@@ -12,13 +12,13 @@ import (
 
 var (
 	funcs = map[string]func(string, map[string]string) int{
-		"dir-list":          fromDirList,
-		"data-grouping-dat": fromDataGroupingDat,
-		"beam-maker":        fromBeamMaker,
-		"fits-merger":       fromFitsMerger,
+		"dir-list":           fromDirList,
+		"data-grouping-main": fromDataGroupingMain,
+		"beam-maker":         fromBeamMaker,
+		"fits-merger":        fromFitsMerger,
 	}
 
-	currentDirections = "00001_00003"
+	currentPointings = "00001_00003"
 )
 
 func main() {
@@ -64,7 +64,7 @@ func fromDirList(message string, params map[string]string) int {
 		initDataGrouping(dataset)
 	} else {
 		// 文件项
-		m = "data-grouping-dat,dat," + message
+		m = "data-grouping-main,dat," + message
 	}
 	if m != "" {
 		scalebox.AppendToFile("/work/messages.txt", m)
@@ -73,48 +73,59 @@ func fromDirList(message string, params map[string]string) int {
 	return 0
 }
 
-func fromDataGroupingDat(message string, params map[string]string) int {
+func fromDataGroupingMain(message string, params map[string]string) int {
+	// for dat file
 	//  input: 1257010784/1257010784_1257010790_ch132.dat,...,1257010784/1257010784_1257010799_ch132.dat
 	//	output: 1257010784/1257010986_1257011185/132/00001_00003
-	ms := strings.Split(message, ",")
-	first := ms[0]
-	last := ms[len(ms)-1]
-	re := regexp.MustCompile("^([0-9]+)/[0-9]+_([0-9]+)_ch([0-9]{3}).dat$")
-	ss := re.FindStringSubmatch(first)
-	if ss == nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] Not valid message format, message:%s\n", message)
-		return 99
-	}
-	ds := ss[1]
-	start := ss[2]
-	ch := ss[3]
 
-	ss = re.FindStringSubmatch(last)
-	if ss == nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] Not valid message format, message:%s\n", message)
+	// for fits file
+	//  input: 1257010784/1257010786_1257010795/00001/ch109.fits,...,1257010784/1257010786_1257010795/00001/ch132.fits
+	//	output: 1257010784/1257010786_1257010815/00001
+
+	if strings.HasSuffix(message, "dat") {
+		ms := strings.Split(message, ",")
+		// first plus last
+		str := ms[0] + "," + ms[len(ms)-1]
+		fmt.Println(str)
+
+		datPattern := "([0-9]+)/[0-9]+_([0-9]+)_ch([0-9]{3}).dat"
+		format := "^%s,%s$"
+		reDat := regexp.MustCompile(fmt.Sprintf(format, datPattern, datPattern))
+		ss := reDat.FindStringSubmatch(str)
+		if ss == nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
+			return 99
+		}
+		ds := ss[1]
+		start := ss[2]
+		ch := ss[3]
+		end := ss[5]
+		m := fmt.Sprintf("%s/%s_%s/%s/%s", ds, start, end, ch, currentPointings)
+		scalebox.AppendToFile("/work/messages.txt", "beam-maker,"+m)
+	} else if strings.HasSuffix(message, "fits") {
+		str := strings.Split(message, ",")[0]
+		fits1chPattern := "^([0-9]+/[0-9]+_[0-9]+/[0-9]{5})/ch.+fits$"
+		reFits1ch := regexp.MustCompile(fits1chPattern)
+		ss := reFits1ch.FindStringSubmatch(str)
+		if ss == nil {
+			fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
+			return 99
+		}
+		m := ss[1]
+		scalebox.AppendToFile("/work/messages.txt", "fits-merger,"+m)
+	} else {
+		fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
 		return 99
 	}
-	end := ss[2]
-	m := fmt.Sprintf("%s/%s_%s/%s/%s", ds, start, end, ch, currentDirections)
-	scalebox.AppendToFile("/work/messages.txt", "beam-maker,"+m)
 
 	return 0
 }
 
 func fromBeamMaker(message string, params map[string]string) int {
-	// 1257010784_1257010986_1257011185_132_001
-	regex := regexp.MustCompile(`^([0-9]+)_([0-9]+_[0-9]+)_([0-9]+)_([0-9]+)$`)
+	// 1257010784/1257010786_1257010795/00001/ch123.fits
 
-	if strings.HasSuffix(message, ".fits") {
-		// 非压缩fits文件
-		scalebox.AppendToFile("/work/messages.txt", "fits2fil,"+dataRootMain+"/fits%"+message)
-	} else if regex.MatchString(message) {
-		// 压缩fits文件
-		scalebox.AppendToFile("/work/messages.txt", "decompress,"+message)
-	} else {
-		logger.Errorf("File extension error in fromFitsPull(), text:'%s'\n", message)
-		return 101
-	}
+	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,fits,"+message)
+
 	return 0
 }
 

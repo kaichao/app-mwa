@@ -152,22 +152,26 @@ flowchart TB
   mwa-down --> list-dir
   list-dir --> unpack
   list-dir --> ftp-pull-tar
-  unpack --> data-grouping-dat
-  data-grouping-dat --> repack
+  unpack --> data-grouping-prep
+  data-grouping-prep --> repack
   repack --> ftp-push-tar
-  repack --> rsync-push-tar
-  ftp-pull-tar --> rsync-push-tar
-  rsync-push-tar --> copy-untar
-  copy-untar --> beam-maker
-  beam-maker --> fits-dist
-  fits-dist --> data-grouping-fits
-  data-grouping-fits --> fits-merger
+  repack --> cluster-copy-tar
+  ftp-pull-tar --> cluster-copy-tar
+  cluster-copy-tar --> copy-untar
+  copy-untar --> data-grouping-main_1
+  data-grouping-main_1 --> beam-maker
+  beam-maker --> down-sampler
+  down-sampler --> fits-dist
+  fits-dist --> data-grouping-main_2
+  data-grouping-main_2 --> fits-merger
   fits-merger --> presto
   subgraph cluster2
     copy-untar
     beam-maker
+    down-sampler
     fits-dist
-    data-grouping-fits
+    data-grouping-main_1
+    data-grouping-main_2
     fits-merger
     presto
   end
@@ -175,14 +179,14 @@ flowchart TB
     mwa-down
     list-dir
     unpack
-    data-grouping-dat
+    data-grouping-prep
     repack
     ftp-push-tar
-    rsync-push-tar
+    cluster-copy-tar
     ftp-pull-tar
   end
   
-  ```
+```
 
 主要特点包括：
 - 分布式集群计算

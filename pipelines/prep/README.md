@@ -15,7 +15,7 @@
 ### 解包压缩模块(unpack)
 - 针对24beam的单时间戳文件，解包为24个dat文件，并用zstd对这24个文件分别压缩，将24个压缩文件名发送给后续模块
 
-### data-grouping-2d模块(标准模块，data-grouping-dat)
+### data-grouping-2d模块(标准模块，data-grouping)
 - 按垂直分组规则，以30秒/60秒为时间间隔，流式生成打包文件名列表，并发送后续模块
 
 ### 打包模块(repack)

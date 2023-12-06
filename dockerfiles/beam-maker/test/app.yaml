@@ -6,7 +6,7 @@ parameters:
 
 jobs:
   beam-maker:
-    label: 通道转换
+    label: beam-maker
     base_image: app-mwa/beam-maker
     command: docker run -d --rm
         --group-add video 
@@ -21,12 +21,6 @@ jobs:
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
-    # paths:
-    #   - ${BASEDIR}:${BASEDIR}
-    # environments:
-    #   - DIR_DAT=${BASEDIR}/combined
-    #   - DIR_CAL=${BASEDIR}/cal
-    #   - DIR_1CH=${BASEDIR}/pip_out5
     hosts:
       - n0:1
     sink_jobs:
