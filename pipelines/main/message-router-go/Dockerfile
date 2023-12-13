@@ -26,4 +26,9 @@ ENV \
     WITH_HEADERS=yes \
     ACTION_RUN=/app/bin/message-router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
-    LOG_LEVEL= 
+    LOG_LEVEL= \
+    # 2/3/4/6/8/12/24
+    NUM_NODES_PER_GROUP=24 \
+    # 节点的倍数
+    NUM_POINTINGS_PER_CALC=24 \
+    LOCAL_MODE=

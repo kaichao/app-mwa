@@ -5,20 +5,24 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
 var (
-	funcs = map[string]func(string, map[string]string) int{
+	fromFuncs = map[string]func(string, map[string]string) int{
 		"dir-list":           fromDirList,
-		"data-grouping-main": fromDataGroupingMain,
+		"copy-untar":         fromCopyUntar,
+		"cluster-copy-tar":   fromClusterCopyTar,
 		"beam-maker":         fromBeamMaker,
+		"fits-dist":          fromFitsDist,
 		"fits-merger":        fromFitsMerger,
+		"data-grouping-main": fromDataGroupingMain,
 	}
 
-	currentPointings = "00001_00003"
+	currentPointings = "00001_00002"
 )
 
 func main() {
@@ -27,6 +31,10 @@ func main() {
 		logger.Fatalf("cmdline params: expected=2,actual=%d\n", len(os.Args))
 		os.Exit(1)
 	}
+
+	fmt.Println("arg0:", os.Args[0])
+	fmt.Println("arg1:", os.Args[1])
+	fmt.Println("arg2:", os.Args[2])
 
 	logger.Infof("01, after number of arguments verification, message-body:%s,message-header:%s.\n",
 		os.Args[1], os.Args[2])
@@ -38,16 +46,32 @@ func main() {
 
 	logger.Infoln("02, after JSON format verification of headers")
 	if headers["from_job"] == "" {
+		fmt.Println("start-message:", os.Args[1])
 		// 初始的启动消息（数据集ID）
-		scalebox.AppendToFile("/work/messages.txt", "dir-list,"+os.Args[1])
+		ss := strings.Split(os.Args[1], "~")
+		if len(ss) != 3 {
+			fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", os.Args[1])
+			os.Exit(3)
+		}
+		if dataset := parseDataSet(ss[2]); dataset == nil {
+			fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
+			os.Exit(4)
+		} else {
+			// metadata message
+			initDataGrouping(dataset)
+		}
+
+		m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
+		scalebox.AppendToFile("/work/messages.txt", m)
 		os.Exit(0)
 	}
 
 	logger.Infoln("04, from-job not null")
-	doMessageRoute := funcs[headers["from_job"]]
+	doMessageRoute := fromFuncs[headers["from_job"]]
 	if doMessageRoute == nil {
-		logger.Warnf("from_job not set in message-router, from_job=%s ,message=%s\n", headers["from_job"], os.Args[1])
-		os.Exit(3)
+		logger.Warnf("from_job not set in message-router, from_job=%s ,message=%s\n",
+			headers["from_job"], os.Args[1])
+		os.Exit(4)
 	}
 
 	logger.Infoln("05, message-router not null")
@@ -58,95 +82,78 @@ func main() {
 	os.Exit(exitCode)
 }
 
-func fromDirList(message string, params map[string]string) int {
-	var m string
-	if dataset := parseDataSet(message); dataset != nil {
-		initDataGrouping(dataset)
-	} else {
-		// 文件项
-		m = "data-grouping-main,dat," + message
+func fromDirList(message string, headers map[string]string) int {
+	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.zst.tar
+	sinkJob := "copy-untar"
+	if !strings.HasPrefix(message, "/") {
+		// remote file
+		sinkJob = "cluster-copy-tar"
 	}
-	if m != "" {
-		scalebox.AppendToFile("/work/messages.txt", m)
-		logger.Infof("11, message emitted by dir-list :%s.\n", m)
+	ss := regexp.MustCompile("ch([0-9]{3})").FindStringSubmatch(message)
+	if len(ss) != 2 {
+		fmt.Fprintf(os.Stderr, "channel num not include in message:%s \n", message)
+		os.Exit(1)
 	}
-	return 0
-}
-
-func fromDataGroupingMain(message string, params map[string]string) int {
-	// for dat file
-	//  input: 1257010784/1257010784_1257010790_ch132.dat,...,1257010784/1257010784_1257010799_ch132.dat
-	//	output: 1257010784/1257010986_1257011185/132/00001_00003
-
-	// for fits file
-	//  input: 1257010784/1257010786_1257010795/00001/ch109.fits,...,1257010784/1257010786_1257010795/00001/ch132.fits
-	//	output: 1257010784/1257010786_1257010815/00001
-
-	if strings.HasSuffix(message, "dat") {
-		ms := strings.Split(message, ",")
-		// first plus last
-		str := ms[0] + "," + ms[len(ms)-1]
-		fmt.Println(str)
-
-		datPattern := "([0-9]+)/[0-9]+_([0-9]+)_ch([0-9]{3}).dat"
-		format := "^%s,%s$"
-		reDat := regexp.MustCompile(fmt.Sprintf(format, datPattern, datPattern))
-		ss := reDat.FindStringSubmatch(str)
-		if ss == nil {
-			fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
-			return 99
-		}
-		ds := ss[1]
-		start := ss[2]
-		ch := ss[3]
-		end := ss[5]
-		m := fmt.Sprintf("%s/%s_%s/%s/%s", ds, start, end, ch, currentPointings)
-		scalebox.AppendToFile("/work/messages.txt", "beam-maker,"+m)
-	} else if strings.HasSuffix(message, "fits") {
-		str := strings.Split(message, ",")[0]
-		fits1chPattern := "^([0-9]+/[0-9]+_[0-9]+/[0-9]{5})/ch.+fits$"
-		reFits1ch := regexp.MustCompile(fits1chPattern)
-		ss := reFits1ch.FindStringSubmatch(str)
-		if ss == nil {
-			fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
-			return 99
-		}
-		m := ss[1]
-		scalebox.AppendToFile("/work/messages.txt", "fits-merger,"+m)
-	} else {
-		fmt.Fprintf(os.Stderr, "[ERROR] Not valid format, message:%s\n", message)
-		return 99
-	}
+	n, _ := strconv.Atoi(ss[1])
+	toHost := hosts[(n-109)%numNodesPerGroup]
+	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
+	scalebox.ExecShellCommand(cmdTxt)
 
 	return 0
 }
 
-func fromBeamMaker(message string, params map[string]string) int {
+func fromCopyUntar(message string, headers map[string]string) int {
+	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
+
+	return 0
+}
+
+func fromClusterCopyTar(message string, headers map[string]string) int {
+	return 0
+}
+
+func fromBeamMaker(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010795/00001/ch123.fits
 
-	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,fits,"+message)
+	if localMode {
+		ss := strings.Split(message, "/")
+		if len(ss) != 4 {
+			fmt.Fprintf(os.Stderr, "invalid message format, message=%s \n", message)
+		}
+		nPointing, _ := strconv.Atoi(ss[2])
+		fromIP := headers["from_ip"]
+		fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, numNodesPerGroup)
+		fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%numNodesPerGroup)
+		toIP := hosts[(nPointing-1)%numNodesPerGroup]
 
-	return 0
-}
-
-func fromFitsMerger(message string, params map[string]string) int {
-	// appendToFile("/work/messages.txt", "fits2fil,"+dataRootMain+"/decompressed%"+message)
-	return 0
-}
-
-// messager-router-prep --> messager-router-main
-func fromMessageRouterPrep(message string, params map[string]string) int {
-	// 时间戳写到cluster-main，用于画图
-	// Dec+4352_12_05/20221202/Dec+4352_12_05_arcdrift-M01_0001.fil,2022-12-02-00:10:26
-	re := regexp.MustCompile(`^(([^/]+)/.+),([0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{2}:[0-9]{2}:[0-9]{2})$`)
-	matches := re.FindStringSubmatch(message)
-	if matches != nil {
-		filFile := matches[1]
-		dataset := matches[2]
-		ts := matches[3]
-		tsFile := fmt.Sprintf("/local%s/fil/%s/timestamp.txt", dataRootMain, dataset)
-		scalebox.AppendToFile(tsFile, filFile+" "+ts)
+		if fromIP != toIP {
+			sinkJob := "fits-dist"
+			format := "/dev/shm/scalebox/mydata/mwa/1ch~%s~root@%s/dev/shm/scalebox/mydata/mwa/1ch"
+			m := fmt.Sprintf(format, message, toIP)
+			cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
+			fmt.Printf("cmdTxt:%s\n", cmdTxt)
+			code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
+			fmt.Printf("stdout for task-add:\n%s\n", stdout)
+			fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+			return code
+		}
 	}
+	sinkJob := "data-grouping-main"
+	m := sinkJob + ",fits," + message
+	scalebox.AppendToFile("/work/messages.txt", m)
 
+	return 0
+}
+
+func fromFitsDist(message string, headers map[string]string) int {
+	// 1257010784/1257010786_1257010815/00001/ch129.fits
+	sinkJob := "data-grouping-main"
+	m := sinkJob + ",fits," + message
+	scalebox.AppendToFile("/work/messages.txt", m)
+
+	return 0
+}
+
+func fromFitsMerger(message string, headers map[string]string) int {
 	return 0
 }

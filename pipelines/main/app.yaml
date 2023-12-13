@@ -1,27 +1,132 @@
 name: main.app-mwa
-label: comput
-cluster: dcu
+label: mwa-comput
+cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   default_message_router: message-router-main
 
 jobs:
-  copy-untar:
-    base_image: hub.cstcloud.cn/scalebox/agent
-
   dir-list:
-    base_image: hub.cstcloud.cn/scalebox/cluster-dir-list
+    base_image: hub.cstcloud.cn/scalebox/dir-list
     schedule_mode: HEAD
     variables:
       # 10 minutes
       max_sleep_count: 100
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
-      - REGEX_2D_DATASET=${REGEX_DAT}
-      - INDEX_2D_DATASET=${INDEX_DAT}
+      # - REGEX_2D_DATASET=${REGEX_DAT}
+      # - INDEX_2D_DATASET=${INDEX_DAT}
+
+  cluster-copy-tar:
+    base_image: hub.cstcloud.cn/scalebox/cluster-file-copy
+    queue_mode: ${QUEUE_MODE}
+
+  copy-untar:
+    base_image: app-mwa/copy-untar
+    queue_mode: ${QUEUE_MODE}
+    variables:
+      max_sleep_count: 100
+      task_timeout_seconds: 1800
+    environments:
+      - KEEP_SOURCE_FILE=yes
+      - DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa~20
+    hosts:
+      - n[01]:1
+
+  beam-maker:
+    label: beam-maker
+    base_image: app-mwa/beam-maker
+    queue_mode: ${QUEUE_MODE}
+    command: ${GPU_COMMAND}
+    # command: docker run -d --rm
+    #     --group-add video 
+    #     --device /dev/kfd 
+    #     --device /dev/dri/card1
+    #     --device /dev/dri/renderD129 
+    #     --security-opt seccomp=unconfined 
+    #     --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    variables:
+      max_sleep_count: 100
+      task_timeout_seconds: 300
+    parameters:
+      # 1257010784/1257010806_1257010815/131/00001_00003
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]+)/[0-9]{5}_[0-9]{5}$
+      key_group_index: 1,3,2
+    environments:
+      - LOCAL_INPUT_ROOT=/tmp/scalebox/mydata
+      - LOCAL_OUTPUT_ROOT=/dev/shm/scalebox/mydata
+      - KEEP_SOURCE_FILE=no
+    hosts:
+      - n[01]:1
+
+  down-sampler:
+    base_image: app-mwa/down-sampler
+    queue_mode: ${QUEUE_MODE}
+    environments:
+      - KEEP_SOURCE_FILE=no
+
+  # push 
+  fits-dist:
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+    queue_mode: ${QUEUE_MODE}
+    variables:
+    # 10-min
+      max_sleep_count: 100
+      task_timeout_seconds: 60
+    environments:
+      - KEEP_SOURCE_FILE=no
+    hosts:
+      - n[01]:1
+
+  fits-merger:
+    label: 24通道fits合并
+    base_image: app-mwa/fits-merger
+    queue_mode: ${QUEUE_MODE}
+    variables:
+    # 10-min
+      max_sleep_count: 100
+      task_timeout_seconds: 60
+    parameters:
+      # 1257010784/1257010786_1257010795/00001
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
+      key_group_index: 1,3,2
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=/dev/shm/scalebox/mydata
+      - LOCAL_OUTPUT_ROOT=/dev/shm/scalebox/mydata
+    hosts:
+      - n[01]:1
+
+  message-router-main:
+    label: 主消息路由
+    base_image: app-mwa/message-router-go
+    schedule_mode: HEAD
+    variables:
+      max_sleep_count: 50
+    parameters:
+      key_group_regex: ${MR_REGEX}
+      key_group_index: ${MR_INDEX}
+      start_message: ${START_MESSAGE}
+      visiable: no
+    environments:
+      - NUM_PER_GROUP=${NUM_PER_GROUP}
+      - LOG_LEVEL=warn
+      - LOCAL_MODE=${LOCAL_MODE}
+      - NUM_NODES_PER_GROUP=2
+      - NUM_POINTINGS_PER_CALC=2
+      # - TRACE=yes
+    sink_jobs:
+      - dir-list
+      - cluster-copy-tar
+      - copy-untar
+      - beam-maker
+      - down-sampler
+      - fits-dist
+      - fits-merger
+      - data-grouping-main
 
   data-grouping-main:
-    label: dat分组
+    label: dat/fits分组
     base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
     schedule_mode: HEAD
     command: docker run -d -P {{ENVS}} {{VOLUMES}} {{IMAGE}}
@@ -34,65 +139,7 @@ jobs:
     environments:
       - COORD_TYPE=integer
       - DATASET_PREFIX=mwa
-
-  beam-maker:
-    label: beam-maker
-    base_image: app-mwa/beam-maker
-    command: docker run -d --rm
-        --group-add video 
-        --device /dev/kfd 
-        --device /dev/dri/card1
-        --device /dev/dri/renderD129 
-        --security-opt seccomp=unconfined 
-        --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
-    variables:
-      max_sleep_count: 100
-      task_timeout_seconds: 300
-    parameters:
-      # 1257010784/1257010806_1257010815/131/00001_00003
-      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]+)/[0-9]{5}_[0-9]{5}$
-      key_group_index: 1,3,2
-    hosts:
-      - n[01]:2
-
-  down-sampler:
-    base_image: app-mwa/down-sampler
-
-  fits-dist:
-    base_image: hub.cstcloud.cn/scalebox/rsync-copy
-
-  fits-merger:
-    label: 24通道fits合并
-    base_image: app-mwa/fits-merger
-    variables:
-    # 10-min
-      max_sleep_count: 100
-      task_timeout_seconds: 60
-    parameters:
-      # 1257010784/1257010786_1257010795/00001
-      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
-      key_group_index: 1,3,2
-    hosts:
-      - n0:1
-
-  message-router-main:
-    label: 主消息路由
-    base_image: app-mwa/message-router-go
-    schedule_mode: HEAD
-    variables:
-      max_sleep_count: 50
-    parameters:
-      key_group_regex: ${MR_REGEX}
-      key_group_index: ${MR_INDEX}
-      start_message: ${DIR_NAME}
-      visiable: no
-    environments:
-      - NUM_PER_GROUP=${NUM_PER_GROUP}
-      - LOG_LEVEL=warn
     sink_jobs:
-      - dir-list
-      - data-grouping-main
       - beam-maker
-      - down-sampler
-      - fits-dist
       - fits-merger
+

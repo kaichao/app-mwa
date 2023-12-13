@@ -146,17 +146,29 @@ flowchart TD
 
 基于以上思考，设计了以下的流水线结构：
 
+#### 预处理流水线
+
 ```mermaid
 
 flowchart TB
   mwa-down --> list-dir
   list-dir --> unpack
-  list-dir --> ftp-pull-tar
   unpack --> data-grouping-prep
   data-grouping-prep --> repack
   repack --> ftp-push-tar
-  repack --> cluster-copy-tar
+
+```
+
+#### 主处理流水线
+
+```mermaid
+
+flowchart TD
+  remote-dir-list --> ftp-pull-tar
+  remote-dir-list --> cluster-copy-tar
   ftp-pull-tar --> cluster-copy-tar
+  dir-list --> cluster-copy-tar
+  dir-list --> copy-untar
   cluster-copy-tar --> copy-untar
   copy-untar --> data-grouping-main_1
   data-grouping-main_1 --> beam-maker
@@ -166,6 +178,8 @@ flowchart TB
   data-grouping-main_2 --> fits-merger
   fits-merger --> presto
   subgraph cluster2
+    dir-list
+    cluster-copy-tar
     copy-untar
     beam-maker
     down-sampler
@@ -176,17 +190,17 @@ flowchart TB
     presto
   end
   subgraph cluster1
-    mwa-down
-    list-dir
-    unpack
-    data-grouping-prep
-    repack
-    ftp-push-tar
-    cluster-copy-tar
+    remote-dir-list
     ftp-pull-tar
   end
   
 ```
+
+如果不涉及到ftp的数据，可以用单集群，list-dir模块可以放在计算集群。
+- cluster-copy-tar: 从外部集群拷贝数据到计算集群共享存储；
+- copy-untar：从计算集群共享存储，拷贝数据到节点存储；
+- copy-untar、beam-maker、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
+
 
 主要特点包括：
 - 分布式集群计算

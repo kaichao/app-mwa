@@ -4,7 +4,9 @@ build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
 dist:
-	docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
+	docker save $(IMAGE_NAME) | pv | ssh node1 'docker load'
+	docker save $(IMAGE_NAME) | pv | ssh node2 'docker load'
+
 
 push:
 	docker push $(IMAGE_NAME)
