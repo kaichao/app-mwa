@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/sirupsen/logrus"
@@ -19,6 +20,12 @@ var (
 	numPerGroup int
 	// 每次观测最大序列号
 	maxSequence int
+
+	hosts               = []string{"10.11.16.79", "10.11.16.80"}
+	numNodesPerGroup    int
+	numPointingsPerCalc int
+
+	localMode bool
 )
 
 func init() {
@@ -32,4 +39,13 @@ func init() {
 	}
 	logger.SetLevel(level)
 	logger.SetReportCaller(true)
+
+	if numNodesPerGroup, err = strconv.Atoi(os.Getenv("NUM_NODES_PER_GROUP")); err != nil {
+		numNodesPerGroup = 24
+	}
+	if numPointingsPerCalc, err = strconv.Atoi(os.Getenv("NUM_POINTINGS_PER_CALC")); err != nil {
+		numPointingsPerCalc = 24
+	}
+
+	localMode = os.Getenv("LOCAL_MODE") == "yes"
 }

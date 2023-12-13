@@ -14,9 +14,18 @@ PTTAIL=${my_arr[5]}
 let ii=$((10#${ch}))-108
 printf -v i "%02d" $ii
 
-DIR_DAT=/data/mwa/decompress
 DIR_CAL=/data/mwa/cal
-DIR_1CH=/data/mwa/1ch
+
+if [ $LOCAL_INPUT_ROOT ]; then
+    DIR_DAT="/local${LOCAL_INPUT_ROOT}/mwa/dat"
+else
+    DIR_DAT=/data/mwa/dat
+fi
+if [ $LOCAL_OUTPUT_ROOT ]; then
+    DIR_1CH="/local${LOCAL_OUTPUT_ROOT}/mwa/1ch"
+else
+    DIR_1CH=/data/mwa/1ch
+fi
 
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
@@ -69,5 +78,14 @@ input_bytes=$(( (num_files+1) * file_length * num_points ))
 echo '{
     "inputBytes":'${input_bytes}'
 }' > /work/task-exec.json
+
+if [ -n "$KEEP_SOURCE_FILE" ] && [ "$KEEP_SOURCE_FILE" = "no" ]; then
+    echo "remove dat files"
+    for ((n=BEG; n<=END; n++)); do
+        file_name="${OBSID}/${OBSID}_${n}_ch${ch}.dat"
+        echo file_name:"${DIR_DAT}/${file_name}"
+        rm -f "${DIR_DAT}/${file_name}"
+    done
+fi
 
 exit $code
