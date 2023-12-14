@@ -8,6 +8,7 @@ parameters:
 jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-list
+    cluster: ${CLUSTER_LOCAL}
     schedule_mode: HEAD
     variables:
       # 10 minutes
@@ -19,15 +20,27 @@ jobs:
 
   cluster-copy-tar:
     base_image: hub.cstcloud.cn/scalebox/cluster-file-copy
+    cluster: ${CLUSTER_LOCAL}
+    variables:
+      max_sleep_count: 100
+      task_timeout_seconds: 1800
+
+  local-copy-tar:
+    base_image: hub.cstcloud.cn/scalebox/cluster-file-copy
+    variables:
+      max_sleep_count: 100
+      task_timeout_seconds: 180
     queue_mode: ${QUEUE_MODE}
 
-  copy-untar:
-    base_image: app-mwa/copy-untar
+  copy-unpack:
+    base_image: ${COPY_UNPACK}
     queue_mode: ${QUEUE_MODE}
     variables:
       max_sleep_count: 100
       task_timeout_seconds: 1800
     environments:
+      # - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - KEEP_SOURCE_FILE=yes
       - DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa~20
     hosts:
@@ -35,9 +48,9 @@ jobs:
 
   beam-maker:
     label: beam-maker
-    base_image: app-mwa/beam-maker
+    base_image: ${BEAM_MAKER}
     queue_mode: ${QUEUE_MODE}
-    command: ${GPU_COMMAND}
+    command: ${ROCM_COMMAND}
     # command: docker run -d --rm
     #     --group-add video 
     #     --device /dev/kfd 
@@ -47,59 +60,62 @@ jobs:
     #     --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
       max_sleep_count: 100
-      task_timeout_seconds: 300
+      task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
     parameters:
       # 1257010784/1257010806_1257010815/131/00001_00003
-      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]+)/[0-9]{5}_[0-9]{5}$
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]{3})/[0-9]{5}_[0-9]{5}$
       key_group_index: 1,3,2
     environments:
-      - LOCAL_INPUT_ROOT=/tmp/scalebox/mydata
-      - LOCAL_OUTPUT_ROOT=/dev/shm/scalebox/mydata
-      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
     hosts:
       - n[01]:1
 
   down-sampler:
-    base_image: app-mwa/down-sampler
+    base_image: ${DOWN_SAMPLER}
     queue_mode: ${QUEUE_MODE}
     environments:
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
 
   # push 
   fits-dist:
-    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+    base_image: ${FITS_DIST}
     queue_mode: ${QUEUE_MODE}
     variables:
     # 10-min
       max_sleep_count: 100
       task_timeout_seconds: 60
     environments:
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
     hosts:
       - n[01]:1
 
   fits-merger:
     label: 24通道fits合并
-    base_image: app-mwa/fits-merger
+    base_image: ${FITS_MERGER}
     queue_mode: ${QUEUE_MODE}
     variables:
     # 10-min
       max_sleep_count: 100
-      task_timeout_seconds: 60
+      task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
     parameters:
       # 1257010784/1257010786_1257010795/00001
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
-      key_group_index: 1,3,2
+      key_group_index: 1,2,3
     environments:
-      - KEEP_SOURCE_FILE=no
-      - LOCAL_INPUT_ROOT=/dev/shm/scalebox/mydata
-      - LOCAL_OUTPUT_ROOT=/dev/shm/scalebox/mydata
+      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
       - n[01]:1
 
   message-router-main:
     label: 主消息路由
     base_image: app-mwa/message-router-go
+    cluster: ${CLUSTER_LOCAL}
     schedule_mode: HEAD
     variables:
       max_sleep_count: 50
@@ -118,7 +134,7 @@ jobs:
     sink_jobs:
       - dir-list
       - cluster-copy-tar
-      - copy-untar
+      - copy-unpack
       - beam-maker
       - down-sampler
       - fits-dist
@@ -128,6 +144,7 @@ jobs:
   data-grouping-main:
     label: dat/fits分组
     base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
+    cluster: ${CLUSTER_LOCAL}
     schedule_mode: HEAD
     command: docker run -d -P {{ENVS}} {{VOLUMES}} {{IMAGE}}
     parameters:
@@ -142,4 +159,3 @@ jobs:
     sink_jobs:
       - beam-maker
       - fits-merger
-

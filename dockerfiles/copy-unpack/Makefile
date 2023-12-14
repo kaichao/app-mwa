@@ -1,4 +1,4 @@
-IMAGE_NAME:=app-mwa/copy-untar
+IMAGE_NAME:=app-mwa/copy-unpack
 
 build:
 	docker build --network=host -t $(IMAGE_NAME) .

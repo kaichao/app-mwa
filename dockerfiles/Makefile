@@ -1,4 +1,4 @@
-dirs:=beam-maker copy-untar down-sampler fits-merger repack unpack
+dirs:=beam-maker copy-unpack down-sampler fits-merger repack unpack
 
 build:
 	@for dir in $(dirs); do \
