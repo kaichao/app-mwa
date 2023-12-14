@@ -8,15 +8,15 @@ MWA流水线的模块结构示意图如下：
 ```mermaid
 flowchart TD
   subgraph cluster
-    mwa-down --> untar
-    untar --> beam-maker
+    mwa-down --> unpack
+    unpack --> beam-maker
     beam-maker --> fits-merger
     fits-merger --> presto
   end
 ```
 
 - mwa-down：实现mwa数据的广域网下载；
-- untar：将原始产品数据的tar文件解包为单秒dat文件；
+- unpack：将原始产品数据的tar文件解包为单秒dat文件；
 - beam-make：按beam、指向，生成fits文件；
 - fits-merger：按指向，将同指向的24个beam的fits文件合并；
 - presto：用presto软件对前述24beam的fits文件做脉冲搜索
@@ -86,8 +86,8 @@ MWA数据处理过程中，读取的数据量达原始数据的千倍以上，�
 ```mermaid
 flowchart TD
   subgraph cluster
-    mwa-down --> untar
-    untar --> beam-maker
+    mwa-down --> unpack
+    unpack --> beam-maker
     beam-maker --> fits-merger
     fits-merger --> presto
   end
@@ -97,7 +97,7 @@ flowchart TD
 
 |  模块名 | 输入数据量  | 输出数据量 |
 |  ----  | ----  | ---- |
-| untar     | 34.3TiB | 34.3TiB |
+| unpack     | 34.3TiB | 34.3TiB |
 | beam-maker | 400 PiB | 1.57 PiB | 
 | fits-merger | 1.57 PiB | 1.57 PiB | 
 
@@ -168,19 +168,20 @@ flowchart TD
   remote-dir-list --> cluster-copy-tar
   ftp-pull-tar --> cluster-copy-tar
   dir-list --> cluster-copy-tar
-  dir-list --> copy-untar
-  cluster-copy-tar --> copy-untar
-  copy-untar --> data-grouping-main_1
+  dir-list --> copy-unpack
+  cluster-copy-tar --> copy-unpack
+  copy-unpack --> data-grouping-main_1
   data-grouping-main_1 --> beam-maker
   beam-maker --> down-sampler
   down-sampler --> fits-dist
+  down-sampler --> data-grouping-main_2
   fits-dist --> data-grouping-main_2
   data-grouping-main_2 --> fits-merger
   fits-merger --> presto
   subgraph cluster2
     dir-list
     cluster-copy-tar
-    copy-untar
+    copy-unpack
     beam-maker
     down-sampler
     fits-dist
@@ -198,8 +199,8 @@ flowchart TD
 
 如果不涉及到ftp的数据，可以用单集群，list-dir模块可以放在计算集群。
 - cluster-copy-tar: 从外部集群拷贝数据到计算集群共享存储；
-- copy-untar：从计算集群共享存储，拷贝数据到节点存储；
-- copy-untar、beam-maker、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
+- copy-unpack：从计算集群共享存储，拷贝数据到节点存储；
+- copy-unpack、beam-maker、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
 
 
 主要特点包括：

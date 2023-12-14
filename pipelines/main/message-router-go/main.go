@@ -14,7 +14,7 @@ import (
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
 		"dir-list":           fromDirList,
-		"copy-untar":         fromCopyUntar,
+		"copy-unpack":        fromCopyUnpack,
 		"cluster-copy-tar":   fromClusterCopyTar,
 		"beam-maker":         fromBeamMaker,
 		"fits-dist":          fromFitsDist,
@@ -84,10 +84,14 @@ func main() {
 
 func fromDirList(message string, headers map[string]string) int {
 	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.zst.tar
-	sinkJob := "copy-untar"
+	sinkJob := "copy-unpack"
 	if !strings.HasPrefix(message, "/") {
 		// remote file
 		sinkJob = "cluster-copy-tar"
+	}
+	if !localMode {
+		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
+		return 0
 	}
 	ss := regexp.MustCompile("ch([0-9]{3})").FindStringSubmatch(message)
 	if len(ss) != 2 {
@@ -97,14 +101,14 @@ func fromDirList(message string, headers map[string]string) int {
 	n, _ := strconv.Atoi(ss[1])
 	toHost := hosts[(n-109)%numNodesPerGroup]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
-	scalebox.ExecShellCommand(cmdTxt)
-
-	return 0
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
+	fmt.Printf("stdout for task-add:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	return code
 }
 
-func fromCopyUntar(message string, headers map[string]string) int {
+func fromCopyUnpack(message string, headers map[string]string) int {
 	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
-
 	return 0
 }
 
