@@ -1,5 +1,6 @@
 app-create:
 	make -C ~/scalebox/server clean-agents
+	rm -rf ~/.scalebox/var/*
 	make -C message-router-go
 	scalebox app create -e dcu.env
 

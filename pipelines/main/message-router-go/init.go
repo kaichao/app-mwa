@@ -26,6 +26,8 @@ var (
 	numPointingsPerCalc int
 
 	localMode bool
+
+	datasetFile = "/work/.scalebox/dataset-v.txt"
 )
 
 func init() {

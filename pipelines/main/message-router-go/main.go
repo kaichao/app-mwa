@@ -84,15 +84,28 @@ func main() {
 
 func fromDirList(message string, headers map[string]string) int {
 	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.zst.tar
-	sinkJob := "copy-unpack"
-	if !strings.HasPrefix(message, "/") {
-		// remote file
-		sinkJob = "cluster-copy-tar"
-	}
-	if !localMode {
-		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
+	if !filterDataset(message) {
+		// filtered
 		return 0
 	}
+	sinkJob := "copy-unpack"
+	m := message
+	if !strings.HasPrefix(message, "/") {
+		// remote file, copy to global storage
+		sinkJob = "cluster-copy-tar"
+		m = message + "~/data/mwa/tar"
+		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
+		return 0
+	} else if !localMode {
+		// local file && not local-mode
+		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
+		return 0
+	}
+
+	// if !localMode {
+	// 	scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
+	// 	return 0
+	// }
 	ss := regexp.MustCompile("ch([0-9]{3})").FindStringSubmatch(message)
 	if len(ss) != 2 {
 		fmt.Fprintf(os.Stderr, "channel num not include in message:%s \n", message)
