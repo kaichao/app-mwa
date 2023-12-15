@@ -57,6 +57,10 @@ func initDataGrouping(dataset *DataSet) {
 	s := fmt.Sprintf(format, dataset.DatasetID, dataset.VerticalStart, dataset.VerticalHeight, numPerGroup)
 	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,"+s)
 
+	// save dataset filter info
+	s = fmt.Sprintf("%s,%d,%d", dataset.DatasetID, dataset.VerticalStart, dataset.VerticalStart+dataset.VerticalHeight-1)
+	scalebox.AppendToFile(datasetFile, s)
+
 	fmtFitsDataSet := ` {
 		"datasetID":"fits:%s",
 		"keyGroupRegex":"^([0-9]+)/([0-9]+_[0-9]+/[0-9]+)/ch([0-9]{3}).fits$",

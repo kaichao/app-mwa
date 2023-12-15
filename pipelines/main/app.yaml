@@ -19,18 +19,23 @@ jobs:
       # - INDEX_2D_DATASET=${INDEX_DAT}
 
   cluster-copy-tar:
-    base_image: hub.cstcloud.cn/scalebox/cluster-file-copy
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
     cluster: ${CLUSTER_LOCAL}
     variables:
       max_sleep_count: 100
       task_timeout_seconds: 1800
+    hosts:
+      - h0
 
   local-copy-tar:
-    base_image: hub.cstcloud.cn/scalebox/cluster-file-copy
+    # keep source file controlled by message-router
+    base_image: ${LOCAL_COPY_TAR}
+    queue_mode: ${QUEUE_MODE}
     variables:
       max_sleep_count: 100
-      task_timeout_seconds: 180
-    queue_mode: ${QUEUE_MODE}
+      task_timeout_seconds: 1800
+    hosts:
+      -  n[01]:1
 
   copy-unpack:
     base_image: ${COPY_UNPACK}
@@ -131,6 +136,8 @@ jobs:
       - NUM_NODES_PER_GROUP=2
       - NUM_POINTINGS_PER_CALC=2
       # - TRACE=yes
+    paths:
+      - ${HOME}/.scalebox/var/message-router-main:/work/.scalebox
     sink_jobs:
       - dir-list
       - cluster-copy-tar
@@ -156,6 +163,9 @@ jobs:
     environments:
       - COORD_TYPE=integer
       - DATASET_PREFIX=mwa
+      # - ALWAYS_RUNNING=
+    paths:
+      - ${HOME}/.scalebox/var/data-grouping-main:/work/.scalebox
     sink_jobs:
       - beam-maker
       - fits-merger
