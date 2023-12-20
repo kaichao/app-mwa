@@ -47,7 +47,7 @@ make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
         -t 6000 -W 10000 -s 
 code=$?
-[[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code && exit $code
+[[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 
 # 将生成的fits文件转移到规范目录下
 declare -i i=0
@@ -83,7 +83,7 @@ if [ -n "$KEEP_SOURCE_FILE" ] && [ "$KEEP_SOURCE_FILE" = "no" ]; then
     echo "remove dat files"
     for ((n=BEG; n<=END; n++)); do
         file_name="${OBSID}/${OBSID}_${n}_ch${ch}.dat"
-        echo file_name:"${DIR_DAT}/${file_name}"
+        echo "file_name to remove:${DIR_DAT}/${file_name}"
         rm -f "${DIR_DAT}/${file_name}"
     done
 fi

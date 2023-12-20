@@ -11,7 +11,7 @@ if [[ ${arr[1]} =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat.zst.tar$ ]]; the
     end=${BASH_REMATCH[3]}
     ch=${BASH_REMATCH[4]}
 else
-    echo "invalid input message:$1" >&2 && exit 5
+    echo "[ERROR]invalid input message:$1" >&2 && exit 5
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
@@ -20,22 +20,54 @@ else
     DIR_DAT=/data/mwa/dat
 fi
 
-file_name="/local${arr[0]}/${arr[1]}"
-tmp_dir="/local/dev/shm/copy-unpack"
+if [[ ${arr[0]} == /data* ]]; then
+    tar_file="${arr[0]}/${arr[1]}"
+else
+    tar_file="/local${arr[0]}/${arr[1]}"
+fi
+
+tmp_dir="/local/dev/shm/scalebox/copy-unpack"
 target_dir="${DIR_DAT}/${dataset}"
 
-echo source_file:$file_name
+echo source_file:$tar_file
 echo target_dir:$target_dir
 
 mkdir -p $tmp_dir $target_dir && \
 cd $tmp_dir && \
-tar xf $file_name && \
-if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f file_name;fi && \
-zstd -d -f --output-dir-flat=$target_dir --rm *.zst
+tar xf $tar_file && \
+if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f tar_file;fi
 code=$?
+[[ $code -ne 0 ]] && echo "error untar file:$tar_file" >&2 && exit $code
+
+echo "0000" >&2
+echo "0000"
+echo tmp_dir:$tmp_dir 
+ls -l $tmp_dir
+
+echo "0010"
+echo "0010" >&2
+
+for f in $(ls *.zst); do
+echo "1000,f=$f" >&2
+    zstd -d -f --output-dir-flat=$target_dir --rm $f
+    code=$?
+echo "1001,code=$code" >&2
+    if [[ $code -ne 0 ]]; then 
+        zstd -d -f --output-dir-flat=$target_dir --rm $f
+        code=?
+echo "1002,code=$code" >&2
+    fi
+    [[ $code -ne 0 ]] && echo "error unzstd file:$f" >&2 && exit $code
+echo "1003" >&2
+done
+echo "2222" >&2
+
+
+# Read error (39) : premature end 
 
 # 删除临时文件
-rm -f /local/dev/shm/copy-unpack/*
+rm -f $tmp_dir/*
+cd $target_dir && chmod 644 *.dat
 
 [[ $code -ne 0 ]] && echo "error copy-unpack file:$f" >&2 && exit $code
 
