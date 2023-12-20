@@ -51,10 +51,10 @@ func initDataGrouping(dataset *DataSet) {
 		"groupSize": %d
 	}
 	`
-	numPerGroup := 30
+
 	// Remove space characters
 	format := regexp.MustCompile("\\s+").ReplaceAllString(fmtDatDataSet, "")
-	s := fmt.Sprintf(format, dataset.DatasetID, dataset.VerticalStart, dataset.VerticalHeight, numPerGroup)
+	s := fmt.Sprintf(format, dataset.DatasetID, dataset.VerticalStart, dataset.VerticalHeight, numSecondsPerCalc)
 	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,"+s)
 
 	// save dataset filter info
@@ -113,20 +113,16 @@ func doDat(message string, headers map[string]string) int {
 	start := ss[2]
 	ch := ss[3]
 	end := ss[5]
-	m := fmt.Sprintf("%s/%s_%s/%s/%s", ds, start, end, ch, currentPointings)
-
-	sinkJob := "beam-maker"
-	if !localMode {
-		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
-		return 0
+	channel, _ := strconv.Atoi(ch)
+	for b, e := range getPointingRange() {
+		m := fmt.Sprintf("%s/%s_%s/%s/%05d_%05d", ds, start, end, ch, b, e)
+		ret := sendChannelAwareMessage(m, "beam-maker", channel)
+		if ret != 0 {
+			return ret
+		}
 	}
-	n, _ := strconv.Atoi(ch)
-	toHost := hosts[(n-109)%numNodesPerGroup]
-	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, m)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-	return code
+
+	return 0
 }
 
 func doFits(message string, headers map[string]string) int {
@@ -144,8 +140,8 @@ func doFits(message string, headers map[string]string) int {
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
 		return 0
 	}
-	pointing := ss[2]
-	n, _ := strconv.Atoi(pointing)
+	// pointing
+	n, _ := strconv.Atoi(ss[2])
 	toHost := hosts[(n-1)%numNodesPerGroup]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, m)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
