@@ -1,8 +1,8 @@
 app-create:
 	make -C ~/scalebox/server clean-agents
 	rm -rf ~/.scalebox/var/*
-	ssh node1 rm -rf /tmp/scalebox/ /dev/shm/scalebox/
-	ssh node2 rm -rf /tmp/scalebox/ /dev/shm/scalebox/
+	ssh node1 rm -rf /tmp/scalebox/mydata/mwa/dat/ /dev/shm/scalebox/mydata/mwa/1ch/
+	ssh node2 rm -rf /tmp/scalebox/mydata/mwa/dat/ /dev/shm/scalebox/mydata/mwa/1ch/
 	
 	make -C message-router-go
 	scalebox app create -e dcu-local-mode.env

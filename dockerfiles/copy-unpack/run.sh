@@ -39,29 +39,18 @@ if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f tar_file;fi
 code=$?
 [[ $code -ne 0 ]] && echo "error untar file:$tar_file" >&2 && exit $code
 
-echo "0000" >&2
-echo "0000"
-echo tmp_dir:$tmp_dir 
-ls -l $tmp_dir
-
-echo "0010"
-echo "0010" >&2
+echo "[INFO]tmp_dir=$tmp_dir"
+ls -l $tmp_dir/*.zst
 
 for f in $(ls *.zst); do
-echo "1000,f=$f" >&2
     zstd -d -f --output-dir-flat=$target_dir --rm $f
     code=$?
-echo "1001,code=$code" >&2
     if [[ $code -ne 0 ]]; then 
         zstd -d -f --output-dir-flat=$target_dir --rm $f
         code=?
-echo "1002,code=$code" >&2
     fi
     [[ $code -ne 0 ]] && echo "error unzstd file:$f" >&2 && exit $code
-echo "1003" >&2
 done
-echo "2222" >&2
-
 
 # Read error (39) : premature end 
 
