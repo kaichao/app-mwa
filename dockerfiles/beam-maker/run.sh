@@ -14,8 +14,11 @@ PTTAIL=${my_arr[5]}
 let ii=$((10#${ch}))-108
 printf -v i "%02d" $ii
 
-DIR_CAL=/data/mwa/cal
-
+if [ $LOCAL_CAL_ROOT ]; then
+    DIR_CAL="/local${LOCAL_CAL_ROOT}/mwa/cal"
+else
+    DIR_CAL=/data/mwa/cal
+fi
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_DAT="/local${LOCAL_INPUT_ROOT}/mwa/dat"
 else

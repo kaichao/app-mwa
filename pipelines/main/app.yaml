@@ -1,5 +1,5 @@
 name: main.app-mwa
-label: mwa-comput
+label: mwa-comput-${NUM_POINTINGS_PER_CALC}
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
@@ -57,7 +57,7 @@ jobs:
       # - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - KEEP_SOURCE_FILE=yes
-      - DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa~20
+      - DIR_LIMIT_GB=${UNPACK_DIR_LIMIT_GB}
     hosts:
       - n[01]:1
 
@@ -83,6 +83,7 @@ jobs:
       key_group_index: 1,2,3
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
+      - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_SOURCE_FILE=yes
       # - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
@@ -146,13 +147,13 @@ jobs:
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
       - NUM_NODES_PER_GROUP=2
-      - NUM_POINTINGS_PER_CALC=2
       # 指向起始号
       - POINTING_BEGIN=${POINTING_BEGIN}
       # 指向结束号
       - POINTING_END=${POINTING_END}
-      # 单次处理指向数
-      - POINTING_STEP=${POINTING_STEP}
+      # 单次计算的指向数
+      - NUM_POINTINGS_PER_CALC=${NUM_POINTINGS_PER_CALC}
+      # 单次计算的数据时长（秒数）
       - NUM_SECONDS_PER_CALC=${NUM_SECONDS_PER_CALC}
       # - TRACE=yes
     paths:

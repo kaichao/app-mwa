@@ -5,6 +5,7 @@ COPY run.sh /app/bin/
 ENV \
     LOCAL_INPUT_ROOT= \
     LOCAL_OUTPUT_ROOT= \
+    LOCAL_CAL_ROOT= \
     KEEP_SOURCE_FILE=yes \
     COMPRESS_RESULT=yes \
     DIR_CAL=
