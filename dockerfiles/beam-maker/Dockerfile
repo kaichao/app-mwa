@@ -7,8 +7,8 @@ ENV \
     LOCAL_OUTPUT_ROOT= \
     LOCAL_CAL_ROOT= \
     KEEP_SOURCE_FILE=yes \
-    COMPRESS_RESULT=yes \
-    DIR_CAL=
+    KEEP_TARGET_FILE=yes \
+    COMPRESS_RESULT=yes
 
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
 RUN mkdir -p /work/.scalebox /app/bin && echo "PATH=/app/bin:\${PATH}" >> /root/.bashrc

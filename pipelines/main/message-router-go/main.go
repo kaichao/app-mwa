@@ -13,7 +13,8 @@ import (
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"dir-list":           fromDirList,
+		// "dir-list": fromDirList,
+		"dir-list":           fromDirListTest,
 		"copy-unpack":        fromCopyUnpack,
 		"cluster-copy-tar":   fromClusterCopyTar,
 		"beam-maker":         fromBeamMaker,
@@ -98,8 +99,6 @@ func fromClusterCopyTar(message string, headers map[string]string) int {
 
 	m := "/data/mwa/tar~" + message
 	return sendChannelAwareMessage(m, "copy-unpack", channel)
-	// scalebox.AppendToFile("/work/messages.txt", "copy-unpack,"+m)
-	// return 0
 }
 
 func fromBeamMaker(message string, headers map[string]string) int {
