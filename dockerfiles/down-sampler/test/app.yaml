@@ -1,0 +1,20 @@
+name: down-sampler.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  down-sample:
+    label: down-sampler-test
+    base_image: app-mwa/down-sampler
+    command: docker run -d --rm
+        --security-opt seccomp=unconfined 
+        --network=host
+        -v /raid0/zhzhang/data:/data/
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - n0:1
