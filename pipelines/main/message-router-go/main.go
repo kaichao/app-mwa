@@ -60,7 +60,8 @@ func main() {
 			// metadata message
 			initDataGrouping(dataset)
 
-			initCounters(dataset)
+			// initCounters(dataset)
+			createRemoveDatSemaphores(dataset)
 		}
 
 		m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
