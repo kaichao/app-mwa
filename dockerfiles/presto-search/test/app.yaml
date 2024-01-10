@@ -1,0 +1,24 @@
+name: presto-search.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  presto-search:
+    label: presto-search-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --group-add video 
+        --device /dev/kfd 
+        --device /dev/dri/card1
+        --device /dev/dri/renderD129 
+        --security-opt seccomp=unconfined 
+        --network=host
+        -v /raid0/zhzhang/data:/data/
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - n0:1
