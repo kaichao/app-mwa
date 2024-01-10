@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	counters = make(map[string]int)
-	workDir  string
+	// counters = make(map[string]int)
+	workDir string
 
 	db *sql.DB
 )
@@ -23,26 +23,9 @@ func init() {
 	if workDir == "" {
 		workDir = "/work"
 	}
-	// // set database connection
-	// if db, err = sql.Open("sqlite3", workDir+"/.scalebox/sqlite.db"); err != nil {
-	// 	logrus.Fatalln("Unable to open sqlite3 database:", err)
-	// }
-	// sqlText := `
-	// 	CREATE TABLE IF NOT EXISTS t_counter (
-	// 		id INTEGER PRIMARY KEY autoincrement,
-	// 		uri_name TEXT,
-	// 		value INT
-	// 	);
-	// 	CREATE UNIQUE INDEX IF NOT EXISTS i_count_0 ON t_counter(name,uri_name);
-	// `
-
-	// if _, err = db.Exec(sqlText); err != nil {
-	// 	logrus.Errorln(err)
-	// 	os.Exit(1)
-	// }
 }
 
-func initCounters(dataset *DataSet) {
+func createRemoveDatSemaphores(dataset *DataSet) {
 	begin, err := strconv.Atoi(os.Getenv("POINTING_BEGIN"))
 	if err != nil || begin == 0 {
 		begin = 1
@@ -58,8 +41,9 @@ func initCounters(dataset *DataSet) {
 		for i := 0; i < len(arr); i += 2 {
 			uri := fmt.Sprintf("remove-dat-file:%s/%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
 			fmt.Printf("uri:%s,init-value:%d\n", uri, initValue)
-			cmdText := fmt.Sprintf("scalebox latch create %s %d", uri, initValue)
-			scalebox.ExecShellCommand(cmdText)
+			// cmdText := fmt.Sprintf("scalebox semaphore create %s %d", uri, initValue)
+			// scalebox.ExecShellCommand(cmdText)
+			addSemaphore(uri, initValue)
 		}
 	}
 }
@@ -81,24 +65,19 @@ func getRange(dataset *DataSet) []int {
 	}
 	return ret
 }
-func addCounter(counterName string, defaultValue int) {
-	counters[counterName] = defaultValue
-}
-
-func countDown(counterName string) int {
-	cmdText := fmt.Sprintf("scalebox latch countdown %s", counterName)
+func addSemaphore(semaName string, defaultValue int) int {
+	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
+	// scalebox.ExecShellCommand(cmdText)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
 }
 
-func countDownN(counterName string, n int) int {
-	m, ok := counters[counterName]
-	if !ok {
-		return -1
-	}
-	m -= n
-	counters[counterName] = m
-	return m
+func countDown(semaName string) int {
+	cmdText := fmt.Sprintf("scalebox semaphore countdown %s", semaName)
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
+	fmt.Printf("stdout for task-add:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	return code
 }
