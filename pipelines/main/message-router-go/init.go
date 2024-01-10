@@ -65,6 +65,7 @@ func sendChannelAwareMessage(message string, sinkJob string, channel int) int {
 	}
 	toHost := hosts[(channel-109)%numNodesPerGroup]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
+	fmt.Printf("cmd-text:%s\n", cmdTxt)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)

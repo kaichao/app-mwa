@@ -7,8 +7,8 @@ github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a h1:bbPeKD0xmW/
 github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
 github.com/jackc/pgx/v5 v5.4.3 h1:cxFyXhxlvAifxnkKKdlxv8XqUf59tDlYjnV5YYfsJJY=
 github.com/jackc/pgx/v5 v5.4.3/go.mod h1:Ig06C2Vu0t5qXC60W8sqIthScaEnFvojjj9dSljmHRA=
-github.com/kaichao/scalebox v0.0.0-20231211133729-851b312aa807 h1:Q4oIO1rTu32VGkSCObpkGM+km9/SY1amftI4Bwh/UQs=
-github.com/kaichao/scalebox v0.0.0-20231211133729-851b312aa807/go.mod h1:nWlxsAJXt+lSiWOQn1bbTUc9e79bEnWXo2taH79V8Tk=
+github.com/kaichao/scalebox v0.0.0-20231231062350-7783a4c02769 h1:EzdAuJwgO8VIRi2FBPy8HBa8M8/quAKMPUiL0t2WI+8=
+github.com/kaichao/scalebox v0.0.0-20231231062350-7783a4c02769/go.mod h1:nWlxsAJXt+lSiWOQn1bbTUc9e79bEnWXo2taH79V8Tk=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=
