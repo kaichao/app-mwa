@@ -13,6 +13,7 @@ import (
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
+		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
 		"copy-unpack":        fromCopyUnpack,
@@ -45,29 +46,6 @@ func main() {
 	}
 
 	logger.Infoln("02, after JSON format verification of headers")
-	if headers["from_job"] == "" {
-		fmt.Println("start-message:", os.Args[1])
-		// 初始的启动消息（数据集ID）
-		ss := strings.Split(os.Args[1], "~")
-		if len(ss) != 3 {
-			fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", os.Args[1])
-			os.Exit(3)
-		}
-		if dataset := parseDataSet(ss[2]); dataset == nil {
-			fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
-			os.Exit(4)
-		} else {
-			// metadata message
-			initDataGrouping(dataset)
-
-			// initCounters(dataset)
-			createRemoveDatSemaphores(dataset)
-		}
-
-		m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
-		scalebox.AppendToFile("/work/messages.txt", m)
-		os.Exit(0)
-	}
 
 	logger.Infoln("04, from-job not null")
 	doMessageRoute := fromFuncs[headers["from_job"]]
@@ -85,6 +63,31 @@ func main() {
 	os.Exit(exitCode)
 }
 
+func defaultFunc(message string, headers map[string]string) int {
+	fmt.Println("start-message:", os.Args[1])
+	// 初始的启动消息（数据集ID）
+	ss := strings.Split(os.Args[1], "~")
+	if len(ss) != 3 {
+		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", os.Args[1])
+		return 3
+	}
+	if dataset := parseDataSet(ss[2]); dataset == nil {
+		fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
+		return 4
+	} else {
+		// metadata message
+		initDataGrouping(dataset)
+
+		createDatUsedSemaphores(dataset)
+
+		createDatReadySemaphores(dataset)
+		createFits1chReadySemaphores(dataset)
+	}
+
+	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
+	scalebox.AppendToFile("/work/messages.txt", m)
+	return 0
+}
 func fromCopyUnpack(message string, headers map[string]string) int {
 	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
 	return 0
@@ -112,11 +115,11 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromBeamMaker()\n", message)
 	}
-	uriDat := fmt.Sprintf("remove-dat-file:%s/ch%s", ss[1], ss[2])
-	n := countDown(uriDat)
-	fmt.Printf("counter: %s,value:%d\n", uriDat, n)
+	sema := fmt.Sprintf("dat-used:%s/ch%s", ss[1], ss[2])
+	n := countDown(sema)
+	fmt.Printf("sema: %s,value:%d\n", sema, n)
 	if n == 0 {
-		removeDatFiles(uriDat)
+		removeDatFiles(sema)
 	}
 
 	if localMode {
@@ -149,15 +152,15 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	return 0
 }
 
-func removeDatFiles(uriDat string) {
+func removeDatFiles(sema string) {
 	// 1257010784/1257010786_1257010795/109
-	// remove-dat-file:1257010784/1257010786_1257010815/ch114
-	ss := regexp.MustCompile("[/_]").Split(uriDat, -1)
+	// dat-used:1257010784/1257010786_1257010815/ch114
+	ss := regexp.MustCompile("[/_]").Split(sema, -1)
 	ds := strings.Split(ss[0], ":")[1]
 	beg, _ := strconv.Atoi(ss[1])
 	end, _ := strconv.Atoi(ss[2])
 	ch := ss[3]
-	fmt.Println("uriDat:", uriDat)
+	fmt.Println("sema:", sema)
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
 	for i := beg; i <= end; i++ {
 		fileName := fmt.Sprintf("mwa/dat/%s/%s_%d_%s.dat", ds, ds, i, ch)
