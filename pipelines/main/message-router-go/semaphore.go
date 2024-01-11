@@ -25,7 +25,13 @@ func init() {
 	}
 }
 
-func createRemoveDatSemaphores(dataset *DataSet) {
+func createDatReadySemaphores(dataset *DataSet) {
+}
+
+func createFits1chReadySemaphores(dataset *DataSet) {
+}
+
+func createDatUsedSemaphores(dataset *DataSet) {
 	begin, err := strconv.Atoi(os.Getenv("POINTING_BEGIN"))
 	if err != nil || begin == 0 {
 		begin = 1
@@ -36,19 +42,19 @@ func createRemoveDatSemaphores(dataset *DataSet) {
 	}
 	initValue := end - begin + 1
 
-	arr := getRange(dataset)
+	arr := getTimeRange(dataset)
 	for ch := 109; ch <= 132; ch++ {
 		for i := 0; i < len(arr); i += 2 {
-			uri := fmt.Sprintf("remove-dat-file:%s/%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
-			fmt.Printf("uri:%s,init-value:%d\n", uri, initValue)
+			sema := fmt.Sprintf("dat-used:%s/%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
+			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			// cmdText := fmt.Sprintf("scalebox semaphore create %s %d", uri, initValue)
 			// scalebox.ExecShellCommand(cmdText)
-			addSemaphore(uri, initValue)
+			addSemaphore(sema, initValue)
 		}
 	}
 }
 
-func getRange(dataset *DataSet) []int {
+func getTimeRange(dataset *DataSet) []int {
 	var ret []int
 
 	step, err := strconv.Atoi(os.Getenv("NUM_SECONDS_PER_CALC"))
@@ -65,6 +71,33 @@ func getRange(dataset *DataSet) []int {
 	}
 	return ret
 }
+
+func getPointingRangeX(dataset *DataSet) []int {
+	begin, err := strconv.Atoi(os.Getenv("POINTING_BEGIN"))
+	if err != nil || begin == 0 {
+		begin = 1
+	}
+	end, err := strconv.Atoi(os.Getenv("POINTING_END"))
+	if err != nil || end == 0 {
+		end = 144
+	}
+	step, err := strconv.Atoi(os.Getenv("NUM_POINTINGS_PER_CALC"))
+	if err != nil || step == 0 {
+		step = 24
+	}
+
+	var ret []int
+
+	for i := begin; i <= end; i += step {
+		j := i + step - 1
+		if j > end {
+			j = end
+		}
+		ret = append(ret, i, j)
+	}
+	return ret
+}
+
 func addSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
 	// scalebox.ExecShellCommand(cmdText)

@@ -11,5 +11,5 @@ func TestGetRange(t *testing.T) {
 		VerticalStart:  1257010786,
 		VerticalHeight: 47,
 	}
-	fmt.Println(getRange(dataset))
+	fmt.Println(getTimeRange(dataset))
 }
