@@ -37,7 +37,7 @@ func fromDirList(message string, headers map[string]string) int {
 		os.Exit(1)
 	}
 	channel, _ := strconv.Atoi(ss[1])
-	return sendChannelAwareMessage(m, sinkJob, channel)
+	return sendNodeAwareMessage(m, sinkJob, channel-109)
 }
 
 func filterDataset(message string) bool {

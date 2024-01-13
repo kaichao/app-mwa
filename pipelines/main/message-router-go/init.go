@@ -58,12 +58,12 @@ func init() {
 	localMode = os.Getenv("LOCAL_MODE") == "yes"
 }
 
-func sendChannelAwareMessage(message string, sinkJob string, channel int) int {
+func sendNodeAwareMessage(message string, sinkJob string, num int) int {
 	if !localMode {
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
 		return 0
 	}
-	toHost := hosts[(channel-109)%numNodesPerGroup]
+	toHost := hosts[num%numNodesPerGroup]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	fmt.Printf("cmd-text:%s\n", cmdTxt)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
