@@ -1,0 +1,12 @@
+name: main.app-mwa
+label: mwa-dataset
+cluster: ${CLUSTER}
+
+datasets:
+  1257010784:
+    base_uri: mwa/1257010784
+    metadata:
+      datasetID: 1257010784
+      horizontalWidth: 24
+      verticalStart: 1257010786
+      verticalHeight: 60
