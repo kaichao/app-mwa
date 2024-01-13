@@ -81,7 +81,7 @@ func defaultFunc(message string, headers map[string]string) int {
 		createDatUsedSemaphores(dataset)
 
 		createDatReadySemaphores(dataset)
-		createFits1chReadySemaphores(dataset)
+		createFits24chReadySemaphores(dataset)
 	}
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
@@ -89,7 +89,47 @@ func defaultFunc(message string, headers map[string]string) int {
 	return 0
 }
 func fromCopyUnpack(message string, headers map[string]string) int {
-	scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
+	// 	1257010784/1257010784_1257010790_ch120.dat
+	re := regexp.MustCompile("^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
+	ss := re.FindStringSubmatch(message)
+	if ss == nil {
+		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromCopyUnpack()\n", message)
+		return 1
+	}
+
+	// 1257010784/1257010784_1257010790/112
+	cmdText := "scalebox dataset get-metadata " + ss[1]
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
+	fmt.Fprintf(os.Stderr, "stderr for dataset-get-metadata:\n%s\n", stderr)
+	if code != 0 {
+		fmt.Fprintf(os.Stderr, "[WARN] error for dataset-get-metadata dataset=%s in fromCopyUnpack()\n", ss[1])
+		return code
+	}
+
+	dataset := parseDataSetX(stdout)
+	if dataset == nil {
+		fmt.Fprintf(os.Stderr, "[WARN] unknown dataset:%s in fromCopyUnpack()\n", ss[1])
+		return 1
+	}
+
+	t, _ := strconv.Atoi(ss[3])
+	t0, t1 := dataset.getTimeRange(t)
+
+	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[4])
+	fmt.Printf("sema:%s\n", sema)
+	n := countDown(sema)
+	if n == 0 {
+		channel, _ := strconv.Atoi(ss[4])
+		for b, e := range getPointingRange() {
+			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[4], b, e)
+			ret := sendNodeAwareMessage(m, "beam-maker", channel-109)
+			if ret != 0 {
+				return ret
+			}
+		}
+	}
+
+	// scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
 	return 0
 }
 
@@ -105,7 +145,7 @@ func fromClusterCopyTar(message string, headers map[string]string) int {
 	// ch := n - 109
 
 	m := "/data/mwa/tar~" + message
-	return sendChannelAwareMessage(m, "copy-unpack", channel)
+	return sendNodeAwareMessage(m, "copy-unpack", channel-109)
 }
 
 func fromBeamMaker(message string, headers map[string]string) int {
@@ -138,16 +178,17 @@ func fromBeamMaker(message string, headers map[string]string) int {
 			format := "/dev/shm/scalebox/mydata/mwa/1ch~%s~root@%s/dev/shm/scalebox/mydata/mwa/1ch"
 			m := fmt.Sprintf(format, message, toIP)
 			cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
-			fmt.Printf("cmdTxt:%s\n", cmdTxt)
 			code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
 			fmt.Printf("stdout for task-add:\n%s\n", stdout)
 			fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 			return code
+		} else {
+			return toFitsMerger(message, headers)
 		}
 	}
-	sinkJob := "data-grouping-main"
-	m := sinkJob + ",fits," + message
-	scalebox.AppendToFile("/work/messages.txt", m)
+	// sinkJob := "data-grouping-main"
+	// m := sinkJob + ",fits," + message
+	// scalebox.AppendToFile("/work/messages.txt", m)
 
 	return 0
 }
@@ -192,13 +233,33 @@ func removeDatFiles(sema string) {
 			}
 		}
 	}
-
 }
 func fromFitsDist(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815/00001/ch129.fits
-	sinkJob := "data-grouping-main"
-	m := sinkJob + ",fits," + message
-	scalebox.AppendToFile("/work/messages.txt", m)
+	// sinkJob := "data-grouping-main"
+	// m := sinkJob + ",fits," + message
+	// scalebox.AppendToFile("/work/messages.txt", m)
+
+	return toFitsMerger(message, headers)
+}
+
+func toFitsMerger(message string, headers map[string]string) int {
+	// input-message:
+	// 		1257010784/1257010786_1257010815/00001/ch129.fits
+	re := regexp.MustCompile("^([0-9]+/[0-9]+_[0-9]+/[0-9]{5})/ch([0-9]{3}).fits$")
+	ss := re.FindStringSubmatch(message)
+	if ss == nil {
+		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromBeamMaker()\n", message)
+	}
+	// semaphore:
+	// 		fits-24ch-ready:1257010784/1257010786_1257010815/00029
+	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
+	n := countDown(sema)
+	fmt.Printf("sema: %s,value:%d\n", sema, n)
+	if n == 0 {
+		// 1257010784/1257010786_1257010815/00022
+		pointing, _ := strconv.Atoi(ss[2])
+		return sendNodeAwareMessage(ss[1], "fits-merger", pointing-1)
+	}
 
 	return 0
 }

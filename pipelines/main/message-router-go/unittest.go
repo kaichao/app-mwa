@@ -35,7 +35,7 @@ func fromDirListTest(message string, headers map[string]string) int {
 	channel := 110
 	for i := b; i <= e; i++ {
 		m := fmt.Sprintf("dat,%s/%s_%d_ch%d.dat", ds, ds, i, channel)
-		sendChannelAwareMessage(m, sinkJob, channel)
+		sendNodeAwareMessage(m, sinkJob, channel-109)
 	}
 	return 0
 }

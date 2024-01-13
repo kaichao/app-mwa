@@ -116,7 +116,7 @@ func doDat(message string, headers map[string]string) int {
 	channel, _ := strconv.Atoi(ch)
 	for b, e := range getPointingRange() {
 		m := fmt.Sprintf("%s/%s_%s/%s/%05d_%05d", ds, start, end, ch, b, e)
-		ret := sendChannelAwareMessage(m, "beam-maker", channel)
+		ret := sendNodeAwareMessage(m, "beam-maker", channel-109)
 		if ret != 0 {
 			return ret
 		}
