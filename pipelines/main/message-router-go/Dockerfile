@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 \
     go build 
 
-FROM hub.cstcloud.cn/scalebox/agent
+FROM debian:12-slim
 
 # install the newest version, rsync 3.2.7, openssh 9.3p1
 RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 
@@ -47,3 +47,7 @@ ENV \
     # 每组计算dat文件数量（秒数）
     NUM_SECONDS_PER_CALC=240 \
     ALWAYS_RUNNING=yes
+
+COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
+WORKDIR /work
+ENTRYPOINT ["goagent"]
