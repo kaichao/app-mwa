@@ -21,19 +21,23 @@ var (
 	hosts            = []string{"10.11.16.79", "10.11.16.80"}
 	numNodesPerGroup int
 
-	numPointingsPerCalc int
-
 	localMode bool
 
-	numSecondsPerCalc int
+	workDir string
 
-	datasetFile = "/work/.scalebox/dataset-v.txt"
+	pBegin, pEnd, pStep int
+
+	tStep int
 )
 
 func init() {
-	var (
-		err error
-	)
+	var err error
+
+	workDir = os.Getenv("WORD_DIR")
+	if workDir == "" {
+		workDir = "/work"
+	}
+
 	logger = logrus.New()
 	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
 	if err != nil {
@@ -46,13 +50,23 @@ func init() {
 	if err != nil || numNodesPerGroup == 0 {
 		numNodesPerGroup = 24
 	}
-	numPointingsPerCalc, err = strconv.Atoi(os.Getenv("NUM_POINTINGS_PER_CALC"))
-	if err != nil || numPointingsPerCalc == 0 {
-		numPointingsPerCalc = 24
+
+	pBegin, err = strconv.Atoi(os.Getenv("POINTING_BEGIN"))
+	if err != nil || pBegin == 0 {
+		pBegin = 1
 	}
-	numSecondsPerCalc, err = strconv.Atoi(os.Getenv("NUM_SECONDS_PER_CALC"))
-	if err != nil || numSecondsPerCalc == 0 {
-		numSecondsPerCalc = 120
+	pEnd, err = strconv.Atoi(os.Getenv("POINTING_END"))
+	if err != nil || pEnd == 0 {
+		pEnd = 144
+	}
+	pStep, err := strconv.Atoi(os.Getenv("NUM_POINTINGS_PER_CALC"))
+	if err != nil || pStep == 0 {
+		pStep = 24
+	}
+
+	tStep, err = strconv.Atoi(os.Getenv("NUM_SECONDS_PER_CALC"))
+	if err != nil || tStep == 0 {
+		tStep = 30
 	}
 
 	localMode = os.Getenv("LOCAL_MODE") == "yes"
@@ -63,6 +77,7 @@ func sendNodeAwareMessage(message string, sinkJob string, num int) int {
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
 		return 0
 	}
+
 	toHost := hosts[num%numNodesPerGroup]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	fmt.Printf("cmd-text:%s\n", cmdTxt)
@@ -72,7 +87,7 @@ func sendNodeAwareMessage(message string, sinkJob string, num int) int {
 	return code
 }
 
-func getPointingRange() map[int]int {
+func getPointingRanges() map[int]int {
 	begin, err := strconv.Atoi(os.Getenv("POINTING_BEGIN"))
 	if err != nil || begin == 0 {
 		begin = 1

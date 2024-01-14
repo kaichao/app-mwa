@@ -34,9 +34,15 @@ func TestGetTimeRange(t *testing.T) {
 	fmt.Println(dataset.getTimeRange(1257010784))
 }
 
-func TestParseDataSet(t *testing.T) {
-	// s := `{"datasetID":"1257010784","verticalStart":"1257010786","verticalHeight":"60","horizontalWidth":"24"}`
-	s := `{"dataset_id":"1257010784","vertical_start":"1257010786","vertical_height":"60","horizontal_width":"24"}`
-	ds := parseDataSetX(s)
+// func TestParseDataSet(t *testing.T) {
+// 	// s := `{"datasetID":"1257010784","verticalStart":"1257010786","verticalHeight":"60","horizontalWidth":"24"}`
+// 	s := `{"dataset_id":"1257010784","vertical_start":"1257010786","vertical_height":"60","horizontal_width":"24"}`
+// 	ds := parseDataSetX(s)
+// 	fmt.Println(ds)
+// }
+
+func TestGetDataSet(t *testing.T) {
+	datasetID := "1257010784"
+	ds := getDataSet(datasetID)
 	fmt.Println(ds)
 }
