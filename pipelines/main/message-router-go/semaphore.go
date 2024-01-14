@@ -56,18 +56,18 @@ func createDatUsedSemaphores(dataset *DataSet) {
 	}
 }
 
-func getPointingRangeX(dataset *DataSet) []int {
-	var ret []int
+// func getPointingRangeX(dataset *DataSet) []int {
+// 	var ret []int
 
-	for i := pBegin; i <= pEnd; i += pStep {
-		j := i + pStep - 1
-		if j > pEnd {
-			j = pEnd
-		}
-		ret = append(ret, i, j)
-	}
-	return ret
-}
+// 	for i := pBegin; i <= pEnd; i += pStep {
+// 		j := i + pStep - 1
+// 		if j > pEnd {
+// 			j = pEnd
+// 		}
+// 		ret = append(ret, i, j)
+// 	}
+// 	return ret
+// }
 
 func addSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)

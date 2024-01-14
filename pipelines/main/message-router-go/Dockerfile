@@ -45,8 +45,8 @@ ENV \
     POINTING_BEGIN=1 \
     POINTING_END=1440 \
     # 每组计算dat文件数量（秒数）
-    NUM_SECONDS_PER_CALC=240 \
-    ALWAYS_RUNNING=yes
+    NUM_SECONDS_PER_CALC=240
+    # ALWAYS_RUNNING=yes
 
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
 WORKDIR /work

@@ -16,12 +16,11 @@ var (
 		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
-		"copy-unpack":        fromCopyUnpack,
-		"cluster-copy-tar":   fromClusterCopyTar,
-		"beam-maker":         fromBeamMaker,
-		"fits-dist":          fromFitsDist,
-		"fits-merger":        fromFitsMerger,
-		"data-grouping-main": fromDataGroupingMain,
+		"copy-unpack":      fromCopyUnpack,
+		"cluster-copy-tar": fromClusterCopyTar,
+		"beam-maker":       fromBeamMaker,
+		"fits-dist":        fromFitsDist,
+		"fits-merger":      fromFitsMerger,
 	}
 )
 
@@ -33,10 +32,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println("arg0:", os.Args[0])
-	fmt.Println("arg1:", os.Args[1])
-	fmt.Println("arg2:", os.Args[2])
-
 	logger.Infof("01, after number of arguments verification, message-body:%s,message-header:%s.\n",
 		os.Args[1], os.Args[2])
 	headers := make(map[string]string)
@@ -47,15 +42,14 @@ func main() {
 
 	logger.Infoln("02, after JSON format verification of headers")
 
-	logger.Infoln("04, from-job not null")
 	doMessageRoute := fromFuncs[headers["from_job"]]
 	if doMessageRoute == nil {
-		logger.Warnf("from_job not set in message-router, from_job=%s ,message=%s\n",
+		logger.Warnf("from_job not set/not existed in message-router, from_job=%s ,message=%s\n",
 			headers["from_job"], os.Args[1])
 		os.Exit(4)
 	}
 
-	logger.Infoln("05, message-router not null")
+	logger.Infoln("03, message-router not null")
 	exitCode := doMessageRoute(os.Args[1], headers)
 	if exitCode != 0 {
 		logger.Errorf("error found, error-code=%d\n", exitCode)
@@ -64,56 +58,49 @@ func main() {
 }
 
 func defaultFunc(message string, headers map[string]string) int {
-	fmt.Println("start-message:", os.Args[1])
 	// 初始的启动消息（数据集ID）
+	// /raid0/scalebox/mydata/mwa/tar~1257010784
 	ss := strings.Split(message, "~")
 	if len(ss) != 2 {
 		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", message)
 		return 3
 	}
-	if dataset := getDataSet(ss[1]); dataset == nil {
+	dataset := getDataSet(ss[1])
+	if dataset == nil {
 		fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
 		return 4
-	} else {
-		// metadata message
-		// initDataGrouping(dataset)
-
-		fmt.Printf("datasetID:%s\n", dataset.DatasetID)
-		fmt.Printf("dataset:%s\n", dataset.DatasetID)
-
-		createDatUsedSemaphores(dataset)
-
-		createDatReadySemaphores(dataset)
-		createFits24chReadySemaphores(dataset)
 	}
+
+	createDatUsedSemaphores(dataset)
+	createDatReadySemaphores(dataset)
+	createFits24chReadySemaphores(dataset)
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
 	scalebox.AppendToFile("/work/messages.txt", m)
 	return 0
 }
+
 func fromCopyUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat
 	re := regexp.MustCompile("^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromCopyUnpack()\n", message)
-		return 1
+		return 11
 	}
 
 	// 1257010784/1257010784_1257010790/112
 	dataset := getDataSet(ss[1])
 	if dataset == nil {
 		fmt.Fprintf(os.Stderr, "[WARN] unknown dataset:%s in fromCopyUnpack()\n", ss[1])
-		return 1
+		return 12
 	}
 
 	t, _ := strconv.Atoi(ss[3])
 	t0, t1 := dataset.getTimeRange(t)
-
 	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[4])
-	fmt.Printf("sema:%s\n", sema)
-	n := countDown(sema)
-	if n == 0 {
+
+	if n := countDown(sema); n == 0 {
 		channel, _ := strconv.Atoi(ss[4])
 		for b, e := range getPointingRanges() {
 			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[4], b, e)
@@ -124,7 +111,6 @@ func fromCopyUnpack(message string, headers map[string]string) int {
 		}
 	}
 
-	// scalebox.AppendToFile("/work/messages.txt", "data-grouping-main,dat,"+message)
 	return 0
 }
 
@@ -133,11 +119,9 @@ func fromClusterCopyTar(message string, headers map[string]string) int {
 	ss := regexp.MustCompile("ch([0-9]{3})").FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
-		return 91
+		return 21
 	}
-	fmt.Println("[INFO]input-message:", message)
 	channel, _ := strconv.Atoi(ss[1])
-	// ch := n - 109
 
 	m := "/data/mwa/tar~" + message
 	return sendNodeAwareMessage(m, "copy-unpack", channel-109)
@@ -181,9 +165,6 @@ func fromBeamMaker(message string, headers map[string]string) int {
 			return toFitsMerger(message, headers)
 		}
 	}
-	// sinkJob := "data-grouping-main"
-	// m := sinkJob + ",fits," + message
-	// scalebox.AppendToFile("/work/messages.txt", m)
 
 	return 0
 }
@@ -231,9 +212,6 @@ func removeDatFiles(sema string) {
 }
 
 func fromFitsDist(message string, headers map[string]string) int {
-	// sinkJob := "data-grouping-main"
-	// m := sinkJob + ",fits," + message
-	// scalebox.AppendToFile("/work/messages.txt", m)
 	// 1257010784/1257010786_1257010815/00005/ch124.fits
 	return toFitsMerger(message, headers)
 }
@@ -250,10 +228,8 @@ func toFitsMerger(message string, headers map[string]string) int {
 	// semaphore:
 	// 		fits-24ch-ready:1257010784/1257010786_1257010815/00029
 	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
-	n := countDown(sema)
-	fmt.Printf("sema: %s,value:%d\n", sema, n)
-	fmt.Printf("pointing: %s\n", ss[2])
-	if n == 0 {
+
+	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		pointing, _ := strconv.Atoi(ss[2])
 		return sendNodeAwareMessage(ss[1], "fits-merger", pointing-1)

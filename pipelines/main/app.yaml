@@ -10,9 +10,6 @@ jobs:
     base_image: hub.cstcloud.cn/scalebox/dir-list
     cluster: ${CLUSTER_LOCAL}
     schedule_mode: HEAD
-    variables:
-      # 10 minutes
-      max_sleep_count: 100
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
       # - REGEX_2D_DATASET=${REGEX_DAT}
@@ -22,7 +19,7 @@ jobs:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy
     cluster: ${CLUSTER_LOCAL}
     variables:
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: 1800
     parameters:
       # user@host/remote-path~1257010784/1257010786_1257010815_ch109.dat.zst.tar~/data/mwa/tar
@@ -36,7 +33,7 @@ jobs:
     base_image: ${LOCAL_COPY_TAR}
     queue_mode: ${QUEUE_MODE}
     variables:
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: 1800
     hosts:
       -  n[01]:1
@@ -47,7 +44,7 @@ jobs:
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: 1800
     parameters:
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
@@ -75,7 +72,7 @@ jobs:
     #     --security-opt seccomp=unconfined 
     #     --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
       # output_text_size: 1048576
     parameters:
@@ -108,7 +105,7 @@ jobs:
     queue_mode: ${QUEUE_MODE}
     variables:
     # 10-min
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: 60
     environments:
       - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
@@ -121,7 +118,7 @@ jobs:
     queue_mode: ${QUEUE_MODE}
     variables:
     # 10-min
-      max_sleep_count: 100
+      max_sleep_count: 10
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
     parameters:
       # 1257010784/1257010786_1257010795/00001
@@ -140,10 +137,8 @@ jobs:
     cluster: ${CLUSTER_LOCAL}
     schedule_mode: HEAD
     variables:
-      max_sleep_count: 50
+      max_sleep_count: 10
     parameters:
-      # data-grouping-2d输出:
-      # 1257010784/1257010784_1257010786_ch109.dat,...,1257010784/1257010784_1257011025_ch109.dat
       key_group_regex:
       key_group_index:
       start_message: ${START_MESSAGE}
@@ -162,36 +157,12 @@ jobs:
       # 单次计算的数据时长（秒数）
       - NUM_SECONDS_PER_CALC=${NUM_SECONDS_PER_CALC}
       # - TRACE=yes
-    paths:
-      - ${HOME}/.scalebox/var/message-router-main:/work/.scalebox
     sink_jobs:
       - dir-list
       - cluster-copy-tar
+      - local-copy-tar
       - copy-unpack
       - beam-maker
       - down-sampler
       - fits-dist
-      - fits-merger
-      - data-grouping-main
-
-  data-grouping-main:
-    label: dat/fits分组
-    base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
-    cluster: ${CLUSTER_LOCAL}
-    schedule_mode: HEAD
-    command: docker run -d -P {{ENVS}} {{VOLUMES}} {{IMAGE}}
-    parameters:
-      key_group_regex: ${DAT_REGEX}
-      key_group_index: ${DAT_INDEX}
-      visiable: no
-      # exit_code=1, entity message precedes metadata message, retry
-      retry_rules: "['1']"
-    environments:
-      - COORD_TYPE=integer
-      - DATASET_PREFIX=mwa
-      # - ALWAYS_RUNNING=
-    paths:
-      - ${HOME}/.scalebox/var/data-grouping-main:/work/.scalebox
-    sink_jobs:
-      - beam-maker
       - fits-merger
