@@ -66,17 +66,20 @@ func main() {
 func defaultFunc(message string, headers map[string]string) int {
 	fmt.Println("start-message:", os.Args[1])
 	// 初始的启动消息（数据集ID）
-	ss := strings.Split(os.Args[1], "~")
-	if len(ss) != 3 {
-		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", os.Args[1])
+	ss := strings.Split(message, "~")
+	if len(ss) != 2 {
+		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", message)
 		return 3
 	}
-	if dataset := parseDataSet(ss[2]); dataset == nil {
+	if dataset := getDataSet(ss[1]); dataset == nil {
 		fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
 		return 4
 	} else {
 		// metadata message
-		initDataGrouping(dataset)
+		// initDataGrouping(dataset)
+
+		fmt.Printf("datasetID:%s\n", dataset.DatasetID)
+		fmt.Printf("dataset:%s\n", dataset.DatasetID)
 
 		createDatUsedSemaphores(dataset)
 
@@ -98,15 +101,7 @@ func fromCopyUnpack(message string, headers map[string]string) int {
 	}
 
 	// 1257010784/1257010784_1257010790/112
-	cmdText := "scalebox dataset get-metadata " + ss[1]
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
-	fmt.Fprintf(os.Stderr, "stderr for dataset-get-metadata:\n%s\n", stderr)
-	if code != 0 {
-		fmt.Fprintf(os.Stderr, "[WARN] error for dataset-get-metadata dataset=%s in fromCopyUnpack()\n", ss[1])
-		return code
-	}
-
-	dataset := parseDataSetX(stdout)
+	dataset := getDataSet(ss[1])
 	if dataset == nil {
 		fmt.Fprintf(os.Stderr, "[WARN] unknown dataset:%s in fromCopyUnpack()\n", ss[1])
 		return 1
@@ -120,7 +115,7 @@ func fromCopyUnpack(message string, headers map[string]string) int {
 	n := countDown(sema)
 	if n == 0 {
 		channel, _ := strconv.Atoi(ss[4])
-		for b, e := range getPointingRange() {
+		for b, e := range getPointingRanges() {
 			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[4], b, e)
 			ret := sendNodeAwareMessage(m, "beam-maker", channel-109)
 			if ret != 0 {
@@ -234,27 +229,30 @@ func removeDatFiles(sema string) {
 		}
 	}
 }
+
 func fromFitsDist(message string, headers map[string]string) int {
 	// sinkJob := "data-grouping-main"
 	// m := sinkJob + ",fits," + message
 	// scalebox.AppendToFile("/work/messages.txt", m)
-
+	// 1257010784/1257010786_1257010815/00005/ch124.fits
 	return toFitsMerger(message, headers)
 }
 
 func toFitsMerger(message string, headers map[string]string) int {
 	// input-message:
 	// 		1257010784/1257010786_1257010815/00001/ch129.fits
-	re := regexp.MustCompile("^([0-9]+/[0-9]+_[0-9]+/[0-9]{5})/ch([0-9]{3}).fits$")
+	re := regexp.MustCompile("^([0-9]+/[0-9]+_[0-9]+/([0-9]{5}))/ch[0-9]{3}.fits$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
-		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromBeamMaker()\n", message)
+		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in toFitsMerger()\n", message)
+		return 1
 	}
 	// semaphore:
 	// 		fits-24ch-ready:1257010784/1257010786_1257010815/00029
 	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
 	n := countDown(sema)
 	fmt.Printf("sema: %s,value:%d\n", sema, n)
+	fmt.Printf("pointing: %s\n", ss[2])
 	if n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		pointing, _ := strconv.Atoi(ss[2])

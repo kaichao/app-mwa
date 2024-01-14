@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -11,31 +10,10 @@ import (
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
-// DataSet ...
-type DataSet struct {
-	// prefix ':' type ':' sub-id
-	DatasetID string
-
-	// for type "H", x-coord
-	HorizontalWidth int
-
-	// for type "V", y-coord
-	VerticalStart  int
-	VerticalHeight int
-}
-
-func parseDataSet(t string) *DataSet {
-	var ds DataSet
-	if err := json.Unmarshal([]byte(t), &ds); err != nil {
-		// skip non-json format error
-		if !strings.HasPrefix(err.Error(), "invalid character") {
-			fmt.Printf("error parsing, err-info:%v\n", err)
-		}
-		// non-dataset definition
-		return nil
-	}
-	return &ds
-}
+var (
+	numSecondsPerCalc   int
+	numPointingsPerCalc int
+)
 
 func initDataGrouping(dataset *DataSet) {
 
@@ -59,7 +37,7 @@ func initDataGrouping(dataset *DataSet) {
 
 	// save dataset filter info
 	s = fmt.Sprintf("%s,%d,%d", dataset.DatasetID, dataset.VerticalStart, dataset.VerticalStart+dataset.VerticalHeight-1)
-	scalebox.AppendToFile(datasetFile, s)
+	// scalebox.AppendToFile(datasetFile, s)
 
 	fmtFitsDataSet := ` {
 		"datasetID":"fits:%s",
@@ -114,7 +92,7 @@ func doDat(message string, headers map[string]string) int {
 	ch := ss[3]
 	end := ss[5]
 	channel, _ := strconv.Atoi(ch)
-	for b, e := range getPointingRange() {
+	for b, e := range getPointingRanges() {
 		m := fmt.Sprintf("%s/%s_%s/%s/%05d_%05d", ds, start, end, ch, b, e)
 		ret := sendNodeAwareMessage(m, "beam-maker", channel-109)
 		if ret != 0 {
