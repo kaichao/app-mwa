@@ -168,25 +168,21 @@ flowchart TD
   remote-dir-list --> cluster-copy-tar
   ftp-pull-tar --> cluster-copy-tar
   dir-list --> cluster-copy-tar
-  dir-list --> copy-unpack
-  cluster-copy-tar --> copy-unpack
-  copy-unpack --> data-grouping-main_1
-  data-grouping-main_1 --> beam-maker
+  dir-list --> copy-untar
+  cluster-copy-tar --> copy-untar
+  copy-untar --> beam-maker
   beam-maker --> down-sampler
   down-sampler --> fits-dist
-  down-sampler --> data-grouping-main_2
-  fits-dist --> data-grouping-main_2
-  data-grouping-main_2 --> fits-merger
+  down-sampler --> fits-merger
+  fits-dist --> fits-merger
   fits-merger --> presto
   subgraph cluster2
     dir-list
     cluster-copy-tar
-    copy-unpack
+    copy-untar
     beam-maker
     down-sampler
     fits-dist
-    data-grouping-main_1
-    data-grouping-main_2
     fits-merger
     presto
   end
@@ -197,7 +193,7 @@ flowchart TD
   
 ```
 
-如果不涉及到ftp的数据，可以用单集群，list-dir模块可以放在计算集群。
+如果不涉及到ftp的数据，可以用单集群，dir-list模块可以放在计算集群。
 - cluster-copy-tar: 从外部集群拷贝数据到计算集群共享存储；
 - copy-unpack：从计算集群共享存储，拷贝数据到节点存储；
 - copy-unpack、beam-maker、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND

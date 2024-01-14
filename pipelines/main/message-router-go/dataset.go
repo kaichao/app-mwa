@@ -35,20 +35,6 @@ type DataSet struct {
 	VerticalHeight int
 }
 
-/*
-	func parseDataSet(t string) *DataSet {
-		var ds DataSet
-		if err := json.Unmarshal([]byte(t), &ds); err != nil {
-			// skip non-json format error
-			if !strings.HasPrefix(err.Error(), "invalid character") {
-				fmt.Printf("error parsing, err-info:%v\n", err)
-			}
-			// non-dataset definition
-			return nil
-		}
-		return &ds
-	}
-*/
 func getDataSet(datasetID string) *DataSet {
 	cmdText := "scalebox dataset get-metadata " + datasetID
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
