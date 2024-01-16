@@ -17,35 +17,43 @@
 
 # 1. set the input / output directory
 
-# m="/directory/root~/path/to/downsample"
+# m="1257010784/1257010786_1257010795/00001/ch123.fits"
 
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_IN="/local${LOCAL_INPUT_ROOT}/mwa/in"
+    DIR_1CH="/local${LOCAL_INPUT_ROOT}/mwa/1ch"
 else
-    DIR_IN=/data/mwa/in
+    DIR_1CH=/data/mwa/1ch
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_OUT="/local${LOCAL_OUTPUT_ROOT}/mwa/out"
+    DIR_1CHX="/local${LOCAL_OUTPUT_ROOT}/mwa/1chx"
 else
-    DIR_OUT=/data/mwa/out
+    DIR_1CHX=/data/mwa/1chx
 fi
-
+echo "DIR_1CH:${DIR_1CH}, DIR_1CHX:${DIR_1CHX}"
 
 # 2. check if the directory exists
 m=$1
-arr=($(echo $m | tr "~" "\n"))
-f_dir=${arr[1]}
-if [ ! -d "$DIR_IN/$f_dir" ]; then
-    echo "[ERROR]invalid input message:$f_dir" >&2 && exit 5
-fi
+dir=$(dirname $DIR_1CHX/$m)
+mkdir -p $dir; code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir" >&2 && exit $code
+
+# if [ ! -f "$DIR_FITS/$m" ]; then
+#     echo "[ERROR]invalid input message:$f_dir" >&2 && exit 5
+# fi
+
 # 3. run the programs to downsample the files
 
-for file in $(ls ${DIR_IN}/${f_dir}/*.fits)
-do
-    filename=$(basename $file)
-    filename=${filename%.*}
-    psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_OUT}/${f_dir}/${filename}_4dt ${DIR_IN}/${f_dir}/${filename}.fits
-done
-
+psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_1CHX}/${m} ${DIR_1CH}/${m}
 code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband " >&2 && exit $code
+
+[ "$KEEP_SOURCE_FILE" == "no" ] && rm -f ${DIR_1CH}/${m}
+
+# rename file to normalized
+mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --rm ${DIR_1CHX}/${m}
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
+
+echo "${m}.zst" >> /work/messages.txt
+
 exit $code

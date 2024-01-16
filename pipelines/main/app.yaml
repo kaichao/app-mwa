@@ -118,7 +118,7 @@ jobs:
     base_image: ${FITS_MERGER}
     queue_mode: ${QUEUE_MODE}
     variables:
-    # 10-min
+    # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
     parameters:
@@ -126,7 +126,7 @@ jobs:
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
       key_group_index: 1,2,3
     environments:
-      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - KEEP_SOURCE_FILE=yes
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
