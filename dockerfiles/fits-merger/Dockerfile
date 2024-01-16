@@ -1,5 +1,10 @@
 FROM mwa-vcstools-rocm-4.0.1:latest
 
+RUN apt-get update \
+    && apt-get install -y zstd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY run.sh /app/bin/run.sh
 
 ENV \

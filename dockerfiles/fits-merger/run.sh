@@ -1,20 +1,22 @@
 #!/bin/bash
 
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_1CH="/local${LOCAL_INPUT_ROOT}/mwa/1ch"
+    DIR_1CHX="/local${LOCAL_INPUT_ROOT}/mwa/1chx"
 else
-    DIR_1CH=/data/mwa/1ch
+    DIR_1CHX=/data/mwa/1chx
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_24CH="/local${LOCAL_OUTPUT_ROOT}/mwa/24ch"
 else
     DIR_24CH=/data/mwa/24ch
 fi
-echo "DIR_1CH:${DIR_1CH}, DIR_24CH:${DIR_24CH}"
+echo "DIR_1CHX:${DIR_1CHX}, DIR_24CH:${DIR_24CH}"
 
 # 应该是 ${单通道目录根}/${观测号}/${起始时间戳}_${结尾时间戳}/指向号
 # m="1257010784/1257010986_1257011185/00001"
-cd ${DIR_1CH}/$1
+cd ${DIR_1CHX}/$1
+zstd -d --rm *.zst
+
 input_files=$(ls *.fits)
 echo input_files:${input_files}
 splice_psrfits ${input_files} /work/all; code=$?
@@ -25,16 +27,22 @@ mkdir -p $(dirname ${output_file}) && mv /work/all*.fits ${output_file}
 code=$?
 [[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
 
+cd $(dirname ${output_file}) && zstd --rm $(basename ${output_file})
+code=$?
+[[ $code -ne 0 ]] && echo "ztd compress target fits file " >&2 && exit $code
+
 # for f in $input_files ; do
-#     echo ${DIR_1CH}/$1/$f >> /work/input-files.txt
+#     echo ${DIR_1CHX}/$1/$f >> /work/input-files.txt
 # done
-echo $output_file > /work/output-files.txt
+echo "${output_file}.zst" > /work/output-files.txt
 
 if [ "$KEEP_SOURCE_FILE" = "no" ]; then
     # PUSH
-    full_path="${DIR_1CH}/$1"
+    full_path="${DIR_1CHX}/$1"
     echo [DEBUG]full_path:$full_path
     rm -rf $full_path; code=$?
 fi
+
+echo $1 > /work/messages
 
 exit $code
