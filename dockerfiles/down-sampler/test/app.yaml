@@ -5,16 +5,22 @@ parameters:
   initial_status: RUNNING
 
 jobs:
-  down-sample:
-    label: down-sampler-test
+  down-sampler:
     base_image: app-mwa/down-sampler
-    command: docker run -d --rm
-        --security-opt seccomp=unconfined 
-        --network=host
-        -v /raid0/zhzhang/data:/data/
-        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    variables:
+      # 20-min
+      max_sleep_count: 200
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
+    environments:
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - KEEP_SOURCE_FILE=yes
     hosts:
       - n0:1
+    sink_jobs:
+      - next-job
+
+  next-job:
+    base_image: hub.cstcloud.cn/scalebox/agent
