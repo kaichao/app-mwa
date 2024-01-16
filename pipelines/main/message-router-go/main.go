@@ -19,6 +19,7 @@ var (
 		"copy-unpack":      fromCopyUnpack,
 		"cluster-copy-tar": fromClusterCopyTar,
 		"beam-maker":       fromBeamMaker,
+		"down-sampler":     fromDownSampler,
 		"fits-dist":        fromFitsDist,
 		"fits-merger":      fromFitsMerger,
 	}
@@ -138,38 +139,43 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	n := countDown(sema)
 	fmt.Printf("sema: %s,value:%d\n", sema, n)
 	if n == 0 {
-		removeDatFiles(sema)
+		removeLocalDatFiles(sema)
 	}
 
-	if localMode {
-		ss := strings.Split(message, "/")
-		if len(ss) != 4 {
-			fmt.Fprintf(os.Stderr, "invalid message format, message=%s \n", message)
-		}
-		nPointing, _ := strconv.Atoi(ss[2])
-		fromIP := headers["from_ip"]
-		fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, numNodesPerGroup)
-		fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%numNodesPerGroup)
-		toIP := hosts[(nPointing-1)%numNodesPerGroup]
-
-		if fromIP != toIP {
-			sinkJob := "fits-dist"
-			format := "/dev/shm/scalebox/mydata/mwa/1ch~%s~root@%s/dev/shm/scalebox/mydata/mwa/1ch"
-			m := fmt.Sprintf(format, message, toIP)
-			cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
-			code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
-			fmt.Printf("stdout for task-add:\n%s\n", stdout)
-			fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-			return code
-		} else {
-			return toFitsMerger(message, headers)
-		}
-	}
-
-	return 0
+	ch, _ := strconv.Atoi(ss[2])
+	return sendNodeAwareMessage(message, "down-sampler", ch-109)
 }
 
-func removeDatFiles(sema string) {
+func fromDownSampler(message string, headers map[string]string) int {
+	// 1257010784/1257010786_1257010795/00001/ch123.fits
+	if !localMode {
+		return 0
+	}
+
+	ss := strings.Split(message, "/")
+	if len(ss) != 4 {
+		fmt.Fprintf(os.Stderr, "invalid message format, message=%s \n", message)
+	}
+	nPointing, _ := strconv.Atoi(ss[2])
+	fromIP := headers["from_ip"]
+	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, numNodesPerGroup)
+	fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%numNodesPerGroup)
+	toIP := hosts[(nPointing-1)%numNodesPerGroup]
+
+	if fromIP != toIP {
+		sinkJob := "fits-dist"
+		format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
+		m := fmt.Sprintf(format, message, toIP)
+		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
+		fmt.Printf("stdout for task-add:\n%s\n", stdout)
+		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+		return code
+	}
+	return toFitsMerger(message, headers)
+}
+
+func removeLocalDatFiles(sema string) {
 	// 1257010784/1257010786_1257010795/109
 	// dat-used:1257010784/1257010786_1257010815/ch114
 	ss := regexp.MustCompile("[/_]").Split(sema, -1)
@@ -212,14 +218,14 @@ func removeDatFiles(sema string) {
 }
 
 func fromFitsDist(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815/00005/ch124.fits
+	// 1257010784/1257010786_1257010815/00005/ch124.fits.zst
 	return toFitsMerger(message, headers)
 }
 
 func toFitsMerger(message string, headers map[string]string) int {
 	// input-message:
-	// 		1257010784/1257010786_1257010815/00001/ch129.fits
-	re := regexp.MustCompile("^([0-9]+/[0-9]+_[0-9]+/([0-9]{5}))/ch[0-9]{3}.fits$")
+	// 		1257010784/1257010786_1257010815/00001/ch129.fits.zst
+	re := regexp.MustCompile("^([0-9]+/[0-9]+_[0-9]+/([0-9]{5}))/ch[0-9]{3}.fits.zst$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in toFitsMerger()\n", message)
