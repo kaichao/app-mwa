@@ -117,7 +117,7 @@ jobs:
     parameters:
       slot_timeout_seconds: 60
     environments:
-      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - KEEP_SOURCE_FILE=no
     hosts:
       - n[01]:1
 
