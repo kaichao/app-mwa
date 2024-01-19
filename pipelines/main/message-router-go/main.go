@@ -147,9 +147,9 @@ func fromBeamMaker(message string, headers map[string]string) int {
 }
 
 func fromDownSampler(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010795/00001/ch123.fits
+	// 1257010784/1257010786_1257010795/00001/ch123.fits.zst
 	if !localMode {
-		return 0
+		return toFitsMerger(message, headers)
 	}
 
 	ss := strings.Split(message, "/")

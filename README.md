@@ -205,33 +205,41 @@ flowchart TB
 ```mermaid
 
 flowchart TD
+  remote-dir-list --> mwa-down
+  mwa-down --> unpack
+  unpack --> repack
+  repack --> ftp-push-tar
+  repack --> cluster-copy-tar
   remote-dir-list --> ftp-pull-tar
-  remote-dir-list --> cluster-copy-tar
   ftp-pull-tar --> cluster-copy-tar
   dir-list --> cluster-copy-tar
-  dir-list --> copy-untar
-  cluster-copy-tar --> copy-untar
-  copy-untar --> beam-maker
+  dir-list --> copy-unpack
+  cluster-copy-tar --> copy-unpack
+  copy-unpack --> beam-maker
   beam-maker --> down-sampler
   down-sampler --> fits-dist
   down-sampler --> fits-merger
   fits-dist --> fits-merger
   fits-merger --> presto
-  subgraph cluster2
+  subgraph HPC
     dir-list
     cluster-copy-tar
-    copy-untar
+    copy-unpack
     beam-maker
     down-sampler
     fits-dist
     fits-merger
     presto
   end
-  subgraph cluster1
+  subgraph prep-cluster
     remote-dir-list
     ftp-pull-tar
+    mwa-down
+    unpack
+    repack
+    ftp-push-tar
   end
-  
+
 ```
 
 如果不涉及到ftp的数据，可以用单集群，dir-list模块可以放在计算集群。
