@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch121.dat.zst.tar
+# /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch121.dat.zst.tar~1257010786_1257010875
 m=$1
 
 arr=($(echo $m | tr "~" " ")) 
@@ -11,7 +11,7 @@ if [[ ${arr[1]} =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat.zst.tar$ ]]; the
     end=${BASH_REMATCH[3]}
     ch=${BASH_REMATCH[4]}
 else
-    echo "[ERROR]invalid input message:$1" >&2 && exit 5
+    echo "[ERROR] Invalid input message:$1" >&2 && exit 5
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
@@ -27,7 +27,7 @@ else
 fi
 
 tmp_dir="/local/dev/shm/scalebox/copy-unpack"
-target_dir="${DIR_DAT}/${dataset}"
+target_dir="${DIR_DAT}/${dataset}/ch${ch}/${arr[2]}"
 
 echo source_file:$tar_file
 echo target_dir:$target_dir
