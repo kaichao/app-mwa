@@ -29,6 +29,7 @@ if [ $LOCAL_OUTPUT_ROOT ]; then
 else
     DIR_1CH=/data/mwa/1ch
 fi
+dat_dir="${DIR_DAT}/${OBSID}/ch${ch}/${BEG}_${END}"
 
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
@@ -43,7 +44,7 @@ cd /work
 make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
         -z ${UTT} \
-        -d ${DIR_DAT}/${OBSID} -f ${ch} \
+        -d ${dat_dir} -f ${ch} \
         -m ${DIR_CAL}/${OBSID}/metafits_ppds.fits \
         -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
@@ -82,12 +83,14 @@ echo '{
 }' > /work/task-exec.json
 
 if [ -n "$KEEP_SOURCE_FILE" ] && [ "$KEEP_SOURCE_FILE" = "no" ]; then
+    # only used for test
     echo "remove dat files"
-    for ((n=BEG; n<=END; n++)); do
-        file_name="${OBSID}/${OBSID}_${n}_ch${ch}.dat"
-        echo "file_name to remove:${DIR_DAT}/${file_name}"
-        rm -f "${DIR_DAT}/${file_name}"
-    done
+    # for ((n=BEG; n<=END; n++)); do
+    #     file_name="${OBSID}/${OBSID}_${n}_ch${ch}.dat"
+    #     echo "file_name to remove:${DIR_DAT}/${file_name}"
+    #     rm -f "${DIR_DAT}/${file_name}"
+    # done
+    rm -rf ${dat_dir}
 fi
 
 # 仅用于实验环境中单节点的压力测试，测试完成后删除目标文件（fits文件）

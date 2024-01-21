@@ -117,14 +117,18 @@ func fromCopyUnpack(message string, headers map[string]string) int {
 
 func fromClusterCopyTar(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
-	ss := regexp.MustCompile("ch([0-9]{3})").FindStringSubmatch(message)
+	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
 		return 21
 	}
-	channel, _ := strconv.Atoi(ss[1])
+	dataset := getDataSet(ss[1])
+	ts, _ := strconv.Atoi(ss[2])
+	b, e := dataset.getTimeRange(ts)
+	channel, _ := strconv.Atoi(ss[3])
 
-	m := "/data/mwa/tar~" + message
+	m := fmt.Sprintf("/data/mwa/tar~%s~%d_%d", message, b, e)
+
 	return sendNodeAwareMessage(m, "copy-unpack", channel-109)
 }
 
@@ -167,7 +171,7 @@ func fromDownSampler(message string, headers map[string]string) int {
 		format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
 		m := fmt.Sprintf(format, message, toIP)
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
-		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 20)
 		fmt.Printf("stdout for task-add:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 		return code
@@ -185,34 +189,29 @@ func removeLocalDatFiles(sema string) {
 	ch := ss[3]
 	fmt.Println("sema:", sema)
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
-	for i := beg; i <= end; i++ {
-		fileName := fmt.Sprintf("mwa/dat/%s/%s_%d_%s.dat", ds, ds, i, ch)
-		fmt.Printf(" file-name:%s\n", fileName)
-		if localMode {
-			cmdTxt := "ssh 10.11.16.79 rm -f /tmp/scalebox/mydata/" + fileName
-			fmt.Println("cmd-text:", cmdTxt)
-			code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
-			fmt.Printf("stdout for rm-file:\n%s\n", stdout)
-			fmt.Fprintf(os.Stderr, "stderr for rm-file:\n%s\n", stderr)
-			if code != 0 {
-				os.Exit(code)
-			}
-			cmdTxt = "ssh 10.11.16.80 rm -f /tmp/scalebox/mydata/" + fileName
-			code, stdout, stderr = scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
-			fmt.Printf("stdout for rm-file:\n%s\n", stdout)
-			fmt.Fprintf(os.Stderr, "stderr for rm-file:\n%s\n", stderr)
-			if code != 0 {
-				os.Exit(code)
-			}
-		} else {
-			cmdTxt := "rm -f /data/" + fileName
-			fmt.Println("cmd-text:", cmdTxt)
-			code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
-			fmt.Printf("stdout for rm-file:\n%s\n", stdout)
-			fmt.Fprintf(os.Stderr, "stderr for rm-file:\n%s\n", stderr)
-			if code != 0 {
-				os.Exit(code)
-			}
+
+	if localMode {
+		dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
+		num, _ := strconv.Atoi(ch[2:])
+		i := (num - 109) % numNodesPerGroup
+		fmt.Printf("\n")
+		cmdTxt := fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
+		fmt.Println("cmd-text:", cmdTxt)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
+		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
+		if code != 0 {
+			os.Exit(code)
+		}
+	} else {
+		dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
+		cmdTxt := fmt.Sprintf("rm -rf %s", dir)
+		fmt.Println("cmd-text:", cmdTxt)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
+		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
+		if code != 0 {
+			os.Exit(code)
 		}
 	}
 }

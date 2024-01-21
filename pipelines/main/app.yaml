@@ -49,7 +49,8 @@ jobs:
     parameters:
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
       key_group_regex: ${REGEX_TAR}
-      key_group_index: 1,2,3
+      key_group_index: 1,3,2
+#      key_group_index: 1,2,3
     environments:
       # - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
