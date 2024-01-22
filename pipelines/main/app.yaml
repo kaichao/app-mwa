@@ -45,7 +45,7 @@ jobs:
     command: ${UNPACK_COMMAND}
     variables:
       max_sleep_count: 10
-      task_timeout_seconds: 1800
+      task_timeout_seconds: ${COPY_UNPACK_TIMEOUT}
     parameters:
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
       key_group_regex: ${REGEX_TAR}
@@ -97,7 +97,7 @@ jobs:
     variables:
       # 1-min
       max_sleep_count: 10
-      task_timeout_seconds: 120
+      task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
     parameters:
       slot_timeout_seconds: 60
     environments:
