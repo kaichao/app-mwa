@@ -11,14 +11,10 @@
 # psrfits_subband -dstime 4 -outbits 4 -adjustlevels -o 1165080856_J0630_4dt 1165080856_J0630_5s.fits
 ##### also changes the output file to 4-bit format
 
-# command line args:
-# $1: the input message
-
-
-# 1. set the input / output directory
 
 # m="1257010784/1257010786_1257010795/00001/ch123.fits"
 
+# 1. set the input / output directory
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_1CH="/local${LOCAL_INPUT_ROOT}/mwa/1ch"
 else
@@ -37,9 +33,8 @@ dir=$(dirname $DIR_1CHX/$m)
 mkdir -p $dir; code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir" >&2 && exit $code
 
-# if [ ! -f "$DIR_FITS/$m" ]; then
-#     echo "[ERROR]invalid input message:$f_dir" >&2 && exit 5
-# fi
+# remove existing intermediate files in output dir
+rm -f ${DIR_1CHX}/${m}*
 
 # 3. run the programs to downsample the files
 
