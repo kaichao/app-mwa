@@ -83,10 +83,12 @@ if __name__ == '__main__':
 
                 
                 # call prepsubband_gpu to process the file
+                myexecute("date --iso-8601=ns >> /work/timestamps.txt")
                 myexecute("realfft *.dat")
                 myexecute("rm -f *.dat")
                 myexecute("ls *.fft | xargs -n 1 accelsearch_gpu_4 -cuda 0 " + searchargs)
                 myexecute("rm -f *.fft")
+                myexecute("date --iso-8601=ns >> /work/timestamps.txt")
     except:
         exit(1)
 

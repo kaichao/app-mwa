@@ -1,9 +1,11 @@
 from presto-rocm:1.3
 
 ENV NSUB=128 \  
-    RFIARGS= \
+    RFIARGS="-time 1.0" \
     SEARCHARGS= \
-    SETTINGS_FILE= 
+    LOCAL_INPUT_ROOT= \
+    LOCAL_OUTPUT_ROOT= \
+    ROCR_VISIBLE_DEVICES= 
 
 COPY ./scripts/* /app/bin/
 
