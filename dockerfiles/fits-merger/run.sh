@@ -23,17 +23,14 @@ splice_psrfits ${input_files} /work/all; code=$?
 [[ $code -ne 0 ]] && echo exit after splice_psrfits, error_code:$code >&2 && exit $code
 
 output_file=${DIR_24CH}/$1.fits
-mkdir -p $(dirname ${output_file}) && mv /work/all*.fits ${output_file}
+mkdir -p $(dirname ${output_file}) && mv -f /work/all*.fits ${output_file}
 code=$?
 [[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
 
-cd $(dirname ${output_file}) && zstd --rm $(basename ${output_file})
+cd $(dirname ${output_file}) && rm -f $(basename ${output_file}).zst && zstd --rm $(basename ${output_file})
 code=$?
 [[ $code -ne 0 ]] && echo "ztd compress target fits file " >&2 && exit $code
 
-# for f in $input_files ; do
-#     echo ${DIR_1CHX}/$1/$f >> /work/input-files.txt
-# done
 echo "${output_file}.zst" > /work/output-files.txt
 
 if [ "$KEEP_SOURCE_FILE" = "no" ]; then
