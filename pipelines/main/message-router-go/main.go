@@ -105,7 +105,7 @@ func fromCopyUnpack(message string, headers map[string]string) int {
 		channel, _ := strconv.Atoi(ss[4])
 		for b, e := range getPointingRanges() {
 			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[4], b, e)
-			ret := sendNodeAwareMessage(m, "beam-maker", channel-109)
+			ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
 			if ret != 0 {
 				return ret
 			}
@@ -129,7 +129,7 @@ func fromClusterCopyTar(message string, headers map[string]string) int {
 
 	m := fmt.Sprintf("/data/mwa/tar~%s~%d_%d", message, b, e)
 
-	return sendNodeAwareMessage(m, "copy-unpack", channel-109)
+	return sendNodeAwareMessage(m, make(map[string]string), "copy-unpack", channel-109)
 }
 
 func fromBeamMaker(message string, headers map[string]string) int {
@@ -147,7 +147,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	}
 
 	ch, _ := strconv.Atoi(ss[2])
-	return sendNodeAwareMessage(message, "down-sampler", ch-109)
+	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 }
 
 func fromDownSampler(message string, headers map[string]string) int {
@@ -237,7 +237,7 @@ func toFitsMerger(message string, headers map[string]string) int {
 	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		pointing, _ := strconv.Atoi(ss[2])
-		return sendNodeAwareMessage(ss[1], "fits-merger", pointing-1)
+		return sendNodeAwareMessage(ss[1], make(map[string]string), "fits-merger", pointing-1)
 	}
 
 	return 0
