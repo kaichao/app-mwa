@@ -263,7 +263,7 @@ flowchart TD
 
 |  模块名 | 传统计算  | 本地计算 | 加速比 |
 |  ----  | ----| ----| ---- |
-| 波束合成<br/>beam-maker  | <p align="right"> 10110.76 </p>| <p align="right"> 744.11 </p>| <p align="right"> 13.59 </p>|
+| 波束合成<br/>beam-maker  | <p align="right"> 9910.76 </p>| <p align="right"> 744.11 </p>| <p align="right"> 13.32 </p>|
 | 下采样<br/>down-sampler  | <p align="right"> 64.38 </p>| <p align="right"> 3.67</p>| <p align="right"> 17.54 </p>|
 | fits合并<br/>fits-merger | <p align="right"> 542.12 </p>| <p align="right"> 38.58</p>| <p align="right"> 14.05 </p>|
 
