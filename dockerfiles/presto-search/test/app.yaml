@@ -8,15 +8,18 @@ jobs:
   presto-search:
     label: presto-search-test
     base_image: app-mwa/presto-search
-    command: docker run -d --rm
+    command: docker run -d
         --group-add video 
         --device /dev/kfd 
-        --device /dev/dri/card1
-        --device /dev/dri/renderD129 
+        --device /dev/dri
         --security-opt seccomp=unconfined 
         --network=host
-        -v /raid0/zhzhang/data:/data/
         {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    environments:
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - ROCR_VISIBLE_DEVICES=${DEVICE_TO_USE}
+      - SEARCHARGS=${SEARCHARGS}
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
