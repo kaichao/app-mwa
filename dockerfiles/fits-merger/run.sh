@@ -40,6 +40,7 @@ if [ "$KEEP_SOURCE_FILE" = "no" ]; then
     rm -rf $full_path; code=$?
 fi
 
-echo $1 > /work/messages
+echo "send-message to sink-job"
+echo $1 > /work/messages.txt
 
 exit $code
