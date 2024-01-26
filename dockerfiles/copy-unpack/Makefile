@@ -4,8 +4,13 @@ build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
 dist:
-	docker save $(IMAGE_NAME) | pv | ssh node1 'docker load'
-	docker save $(IMAGE_NAME) | pv | ssh node2 'docker load'
+	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
+	@ date
+	docker save $(IMAGE_NAME) | zstd > /raid0/tmp/my.img.zst
+	@ date
+	ssh node1 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	ssh node2 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	@ date
 
 push:
 	docker push $(IMAGE_NAME)

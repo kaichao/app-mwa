@@ -1,8 +1,8 @@
-from presto-rocm:1.3
+FROM presto-rocm:1.3
 
 ENV NSUB=128 \  
     RFIARGS="-time 1.0" \
-    SEARCHARGS= \
+    SEARCHARGS='"-zmax 50 -numharm 16"' \
     LOCAL_INPUT_ROOT= \
     LOCAL_OUTPUT_ROOT= \
     ROCR_VISIBLE_DEVICES= 
