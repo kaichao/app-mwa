@@ -3,7 +3,7 @@ label: mwa-comput-${NUM_POINTINGS_PER_CALC}
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  default_message_router: message-router-main
+  message_router: message-router-main
 
 jobs:
   dir-list:
@@ -149,6 +149,7 @@ jobs:
     # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${PRESTO_SEARCH_TIMEOUT}
+      output_text_size: 1048576
     parameters:
       # 1257010784/1257010786_1257010795/00001
     environments:
