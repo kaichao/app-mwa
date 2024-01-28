@@ -36,9 +36,9 @@ cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -
 # 2. check if the file exists
 m=$1
 f_dir=${m}.fits
-# if [ ! -f "$DIR_FITS/$f_dir" ]; then
-#     echo "[ERROR]invalid input message:$f_dir" >&2 && exit 5
-# fi
+readfile $DIR_FITS/$f_dir
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
 # get the filename without extension
 # arr=($(echo $f_dir | tr "/" "\n"))
 # fname=${arr[2]}

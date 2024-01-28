@@ -7,7 +7,7 @@ RUN apt-get update \
 
 ENV NSUB=128 \  
     RFIARGS="-time 1.0" \
-    SEARCHARGS='"-zmax 50 -numharm 16"' \
+    SEARCHARGS="-zmax 50 -numharm 16" \
     LOCAL_INPUT_ROOT= \
     LOCAL_OUTPUT_ROOT= \
     ROCR_VISIBLE_DEVICES= 
