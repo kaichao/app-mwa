@@ -1,5 +1,10 @@
 FROM presto-rocm:1.3
 
+RUN apt-get update \
+    && apt-get install -y zstd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV NSUB=128 \  
     RFIARGS="-time 1.0" \
     SEARCHARGS='"-zmax 50 -numharm 16"' \

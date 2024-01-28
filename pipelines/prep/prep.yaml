@@ -3,7 +3,7 @@ cluster: ${CLUSTER}
 label: mwa数据分组
 parameters:
   initial_status: RUNNING
-  default_message_router: message-router-mwa
+  message_router: message-router-mwa
 jobs:
   list-dir:
     label: 打包文件列表

@@ -27,9 +27,11 @@ mkdir -p $(dirname ${output_file}) && mv -f /work/all*.fits ${output_file}
 code=$?
 [[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
 
-cd $(dirname ${output_file}) && rm -f $(basename ${output_file}).zst && zstd --rm $(basename ${output_file})
+dir=$(dirname ${output_file})
+file=$(basename ${output_file})
+cd ${dir} && rm -f ${file}.zst && zstd --rm ${file}
 code=$?
-[[ $code -ne 0 ]] && echo "ztd compress target fits file " >&2 && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file " >&2 && exit $code
 
 echo "${output_file}.zst" > /work/output-files.txt
 
