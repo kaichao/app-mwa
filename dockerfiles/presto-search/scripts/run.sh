@@ -36,9 +36,14 @@ cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -
 # 2. check if the file exists
 m=$1
 f_dir=${m}.fits
-readfile $DIR_FITS/$f_dir
-code=$?
-[[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
+
+echo "fits file:$DIR_FITS/$f_dir"
+
+# readfile $DIR_FITS/$f_dir
+# code=$?
+# [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$f_dir, ret-code:$code" >&2 && exit 10
+[[ ! -f $DIR_FITS/$f_dir ]] && echo "[ERROR] In checking file exits:$f_dir, ret-code:$code" >&2 && exit 10
+
 # get the filename without extension
 # arr=($(echo $f_dir | tr "/" "\n"))
 # fname=${arr[2]}
@@ -53,32 +58,33 @@ mkdir -p $DIR_DEDISP/$bname $DIR_PNG/$bname
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in mkdir:$bname, ret-code:$code" >&2 && exit 11
 
-echo 1111111
+date --iso-8601=ns >> /work/timestamps.txt
 
 cd $DIR_DEDISP/$bname
 rfifind $RFIARGS -o RFIfile $DIR_FITS/$f_dir
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 12
 
-echo 2222222
+date --iso-8601=ns >> /work/timestamps.txt
 
 /app/bin/dedisp.py $DIR_FITS/$f_dir RFIfile_rfifind.mask
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 13
 
-echo 3333333
+date --iso-8601=ns >> /work/timestamps.txt
 
 python3 /code/presto/examplescripts/ACCEL_sift.py > candidates.txt
 [[ $code -ne 0 ]] && echo "[ERROR]Error in ACCEL_sift:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 14
 
-echo 4444444
+date --iso-8601=ns >> /work/timestamps.txt
 
 # 4. parse candidates.txt, fold at each dm
 /app/bin/fold.py $DIR_FITS/$f_dir candidates.txt
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in folding:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 15
 
-echo 5555555
+date --iso-8601=ns >> /work/timestamps.txt
+
 echo "DIR_DEDISP:$DIR_DEDISP/$bname"
 echo "DIR_PNG:$DIR_PNG/$bname"
 
@@ -89,4 +95,6 @@ code=$?
 
 # clean up
 rm -r $DIR_DEDISP/$bname
+[ "$KEEP_SOURCE_FILE" == "no" ] && rm -f $DIR_FITS/$f_dir
+
 exit $code
