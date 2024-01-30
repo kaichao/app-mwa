@@ -31,14 +31,21 @@ else
 fi
 
 # decompress zst file
-cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
-
-# 2. check if the file exists
 m=$1
 f_dir=${m}.fits
+full_name="$DIR_FITS/${f_dir}"
+zst_file="${full_name}.zst"
+echo "full_name:${full_name}" >> /work/user-file.txt
+echo '"before decompress, ls $zst_file*' >> /work/user-file.txt
+ls -l $(dirname ${zst_file}) >> /work/user-file.txt
 
-echo "fits file:$DIR_FITS/$f_dir"
+[ -f "${zst_file}" ] && cd $(dirname ${zst_file}) && zstd -d --rm -f $(basename ${zst_file})
 
+# cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
+echo '"after decompress, ls $zst_file*' >> /work/user-file.txt
+ls -l $(dirname ${zst_file}) >> /work/user-file.txt
+
+# 2. check if the file exists
 # readfile $DIR_FITS/$f_dir
 # code=$?
 # [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$f_dir, ret-code:$code" >&2 && exit 10

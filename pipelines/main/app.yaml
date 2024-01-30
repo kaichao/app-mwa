@@ -63,7 +63,7 @@ jobs:
     label: beam-maker
     base_image: ${BEAM_MAKER}
     queue_mode: ${QUEUE_MODE}
-    command: ${ROCM_COMMAND}
+    command: ${ROCM_COMMAND_P1}
     # command: docker run -d --rm
     #     --group-add video 
     #     --device /dev/kfd 
@@ -144,7 +144,7 @@ jobs:
   presto-search:
     label: presto-search
     base_image: ${PRESTO_SEARCH}
-    command: ${PRESTO_COMMAND}
+    command: ${ROCM_COMMAND}
     variables:
     # 1-min
       max_sleep_count: 10
