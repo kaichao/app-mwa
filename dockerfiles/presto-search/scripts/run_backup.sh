@@ -12,7 +12,7 @@
 
 # m="/1257010784/1257010786_1257011025/00024.fits"
 source /root/.bashrc
-date --iso-8601=ns >> /work/timestamps.txt
+
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"
 else
@@ -36,9 +36,9 @@ cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -
 # 2. check if the file exists
 m=$1
 f_dir=${m}.fits
-# readfile $DIR_FITS/$f_dir
-# code=$?
-# [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
+readfile $DIR_FITS/$f_dir
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
 # get the filename without extension
 # arr=($(echo $f_dir | tr "/" "\n"))
 # fname=${arr[2]}
@@ -60,18 +60,9 @@ rfifind $RFIARGS -o RFIfile $DIR_FITS/$f_dir
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 12
 
-date --iso-8601=ns >> /work/timestamps.txt
 echo 2222222
 
-/app/bin/dedisp_all.py $DIR_FITS/$f_dir RFIfile_rfifind.mask
-# for filename in $( ls *.dat )
-# do
-#     datname=$(basename $filename .dat)
-#     realfft $filename
-#     accelsearch_gpu_4 -cuda 0 $SEARCHARGS $datname.fft | grep Total
-#     rm $datname.fft
-# done
-# date --iso-8601=ns >> /work/timestamps.txt && du . -sh
+/app/bin/dedisp.py $DIR_FITS/$f_dir RFIfile_rfifind.mask
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 13
 
@@ -83,7 +74,7 @@ python3 /code/presto/examplescripts/ACCEL_sift.py > candidates.txt
 echo 4444444
 
 # 4. parse candidates.txt, fold at each dm
-/app/bin/fold_dat.py $DIR_FITS/$f_dir candidates.txt
+/app/bin/fold.py $DIR_FITS/$f_dir candidates.txt
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in folding:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 15
 
