@@ -12,7 +12,7 @@
 
 # m="/1257010784/1257010786_1257011025/00024.fits"
 source /root/.bashrc
-date --iso-8601=ns >> /work/timestamps.txt
+
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"
 else
@@ -31,28 +31,14 @@ else
 fi
 
 # decompress zst file
-m=$1
-f_dir=${m}.fits
-
-full_name="$DIR_FITS/${f_dir}"
-zst_file="${full_name}.zst"
-echo "full_name:${full_name}" >> /work/user-file.txt
-echo '"before decompress, ls $zst_file*' >> /work/user-file.txt
-ls -l $(dirname ${zst_file}) >> /work/user-file.txt
-
-[ -f "${zst_file}" ] && cd $(dirname ${zst_file}) && zstd -d --rm -f $(basename ${zst_file})
-
-# cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
-echo '"after decompress, ls $zst_file*' >> /work/user-file.txt
-ls -l $(dirname ${zst_file}) >> /work/user-file.txt
+cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
 
 # 2. check if the file exists
-
-# readfile $DIR_FITS/$f_dir
-# code=$?
-# [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
-[[ ! -f $DIR_FITS/$f_dir ]] && echo "[ERROR] In checking file exits:$f_dir, ret-code:$code" >&2 && exit 10
-
+m=$1
+f_dir=${m}.fits
+readfile $DIR_FITS/$f_dir
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
 # get the filename without extension
 # arr=($(echo $f_dir | tr "/" "\n"))
 # fname=${arr[2]}
@@ -67,41 +53,32 @@ mkdir -p $DIR_DEDISP/$bname $DIR_PNG/$bname
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in mkdir:$bname, ret-code:$code" >&2 && exit 11
 
-date --iso-8601=ns >> /work/timestamps.txt
+echo 1111111
 
 cd $DIR_DEDISP/$bname
 rfifind $RFIARGS -o RFIfile $DIR_FITS/$f_dir
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 12
 
-date --iso-8601=ns >> /work/timestamps.txt
+echo 2222222
 
-/app/bin/dedisp_all.py $DIR_FITS/$f_dir RFIfile_rfifind.mask
-# for filename in $( ls *.dat )
-# do
-#     datname=$(basename $filename .dat)
-#     realfft $filename
-#     accelsearch_gpu_4 -cuda 0 $SEARCHARGS $datname.fft | grep Total
-#     rm $datname.fft
-# done
-# date --iso-8601=ns >> /work/timestamps.txt && du . -sh
+/app/bin/dedisp.py $DIR_FITS/$f_dir RFIfile_rfifind.mask
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 13
 
-date --iso-8601=ns >> /work/timestamps.txt
+echo 3333333
 
 python3 /code/presto/examplescripts/ACCEL_sift.py > candidates.txt
 [[ $code -ne 0 ]] && echo "[ERROR]Error in ACCEL_sift:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 14
 
-date --iso-8601=ns >> /work/timestamps.txt
+echo 4444444
 
 # 4. parse candidates.txt, fold at each dm
-/app/bin/fold_dat.py $DIR_FITS/$f_dir candidates.txt
+/app/bin/fold.py $DIR_FITS/$f_dir candidates.txt
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in folding:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 15
 
-date --iso-8601=ns >> /work/timestamps.txt
-
+echo 5555555
 echo "DIR_DEDISP:$DIR_DEDISP/$bname"
 echo "DIR_PNG:$DIR_PNG/$bname"
 
@@ -112,6 +89,4 @@ code=$?
 
 # clean up
 rm -r $DIR_DEDISP/$bname
-[ "$KEEP_SOURCE_FILE" == "no" ] && rm -f $DIR_FITS/$f_dir
-
 exit $code
