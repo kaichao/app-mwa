@@ -36,15 +36,15 @@ f_dir=${m}.fits
 
 full_name="$DIR_FITS/${f_dir}"
 zst_file="${full_name}.zst"
-echo "full_name:${full_name}" >> /work/user-file.txt
-echo '"before decompress, ls $zst_file*' >> /work/user-file.txt
-ls -l $(dirname ${zst_file}) >> /work/user-file.txt
+echo "full_name:${full_name}" >> /work/custom-out.txt
+echo '"before decompress, ls $zst_file*' >> /work/custom-out.txt
+ls -l $(dirname ${zst_file}) >> /work/custom-out.txt
 
 [ -f "${zst_file}" ] && cd $(dirname ${zst_file}) && zstd -d --rm -f $(basename ${zst_file})
 
 # cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
-echo '"after decompress, ls $zst_file*' >> /work/user-file.txt
-ls -l $(dirname ${zst_file}) >> /work/user-file.txt
+echo '"after decompress, ls $zst_file*' >> /work/custom-out.txt
+ls -l $(dirname ${zst_file}) >> /work/custom-out.txt
 
 # 2. check if the file exists
 
