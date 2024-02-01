@@ -145,6 +145,7 @@ jobs:
     label: presto-search
     base_image: ${PRESTO_SEARCH}
     command: ${ROCM_COMMAND}
+    queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
@@ -153,11 +154,11 @@ jobs:
     parameters:
       # 1257010784/1257010786_1257010795/00001
     environments:
-      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - KEEP_SOURCE_FILE=yes
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
-      - n[01]:1
+      - n[01]:2
 
   message-router-main:
     label: 主消息路由
