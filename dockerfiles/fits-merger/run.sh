@@ -19,11 +19,11 @@ zstd -d --rm *.zst
 
 input_files=$(ls *.fits)
 echo input_files:${input_files}
-splice_psrfits ${input_files} /work/all; code=$?
+splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
 [[ $code -ne 0 ]] && echo exit after splice_psrfits, error_code:$code >&2 && exit $code
 
 output_file=${DIR_24CH}/$1.fits
-mkdir -p $(dirname ${output_file}) && mv -f /work/all*.fits ${output_file}
+mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
 code=$?
 [[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
 
@@ -33,16 +33,21 @@ cd ${dir} && rm -f ${file}.zst && zstd --rm ${file}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file " >&2 && exit $code
 
-echo "${output_file}.zst" > /work/output-files.txt
+echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
 
-if [ "$KEEP_SOURCE_FILE" = "no" ]; then
-    # PUSH
-    full_path="${DIR_1CHX}/$1"
-    echo [DEBUG]full_path:$full_path
-    rm -rf $full_path; code=$?
-fi
+# if [ "$KEEP_SOURCE_FILE" = "no" ]; then
+#     # PUSH
+#     full_path="${DIR_1CHX}/$1"
+#     echo [DEBUG]full_path:$full_path
+#     rm -rf $full_path; code=$?
+# fi
+
+full_path="${DIR_1CHX}/$1"
+echo [DEBUG]full_path:$full_path
+[ "$KEEP_SOURCE_FILE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
+echo $full_path >> ${WORK_DIR}/input-files.txt
 
 echo "send-message to sink-job"
-echo $1 > /work/messages.txt
+echo $1 > ${WORK_DIR}/messages.txt
 
 exit $code
