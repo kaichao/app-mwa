@@ -42,13 +42,16 @@ psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_1CHX}/${m} ${DIR_1CH}/$
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband " >&2 && exit $code
 
-[ "$KEEP_SOURCE_FILE" == "no" ] && rm -f ${DIR_1CH}/${m}
+# [ "$KEEP_SOURCE_FILE" == "no" ] && rm -f ${DIR_1CH}/${m}
+[ "$KEEP_SOURCE_FILE" == "no" ] && echo "${DIR_1CH}/${m}" > ${WORK_DIR}/removed-files.txt
 
 # rename file to normalized
 mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --rm ${DIR_1CHX}/${m}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
 
-echo "${m}.zst" >> /work/messages.txt
+echo "${DIR_1CH}/${m}" > ${WORK_DIR}/input-files.txt
+echo "${DIR_1CHX}/${m}.zst" > ${WORK_DIR}/output-files.txt
+echo "${m}.zst" >> ${WORK_DIR}/messages.txt
 
 exit $code

@@ -32,10 +32,10 @@ target_dir="${DIR_DAT}/${dataset}/ch${ch}/${arr[2]}"
 echo source_file:$tar_file
 echo target_dir:$target_dir
 
-mkdir -p $tmp_dir $target_dir && \
-cd $tmp_dir && \
-tar xf $tar_file && \
-if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f tar_file;fi
+# if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f tar_file;fi
+[ "$KEEP_SOURCE_FILE" = "no" ] && echo $tar_file >> $WORK_DIR/removed-files.txt
+
+mkdir -p $tmp_dir $target_dir && cd $tmp_dir && tar xf $tar_file
 code=$?
 [[ $code -ne 0 ]] && echo "error untar file:$tar_file" >&2 && exit $code
 
@@ -62,14 +62,14 @@ cd $target_dir && chmod 644 *.dat
 
 # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch132.dat.zst.tar
 # 1257010784/1257010784_1257010801_ch132.dat
-
-# for n in {$begin..$end}; do
-#     echo "${dataset}/${dataset}_${n}_ch${ch}.dat" > ${WORK_DIR}/messages.txt
-# done
-
 for ((n=$begin; n<=$end; n++))
 do
-    echo "${dataset}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/messages.txt
+    echo "${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/messages.txt
+    # echo "${DIR_DAT}/${dataset}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
+    echo "${target_dir}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
+    echo "output-file: ${target_dir}/${dataset}_${n}_ch${ch}.dat"
 done
+
+echo $tar_file >> ${WORK_DIR}/input-files.txt
 
 exit $code

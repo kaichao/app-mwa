@@ -40,7 +40,7 @@ echo UTT=${UTT}
 PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 
-cd /work
+cd ${WORK_DIR}
 make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
         -z ${UTT} \
@@ -60,15 +60,15 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     pi=$(printf "%05d" $ii)
     dest_file_r=${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
     dest_file=${DIR_1CH}/${dest_file_r}
-    orig_file=/work/${point_arr[${i}]}/*.fits
+    orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
 
     mkdir -p $(dirname ${dest_file}) && mv $orig_file $dest_file
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" && exit $code
     # 输出消息 
-    echo $dest_file_r >> /work/messages.txt
+    echo $dest_file_r >> ${WORK_DIR}/messages.txt
     # 统计输出文件的字节数
-    echo $dest_file >> /work/output-files.txt
+    echo $dest_file >> ${WORK_DIR}/output-files.txt
 
     i=$((i + 1))
 done
@@ -80,7 +80,7 @@ file_length=327680000
 input_bytes=$(( (num_files+1) * file_length * num_points ))
 echo '{
     "inputBytes":'${input_bytes}'
-}' > /work/task-exec.json
+}' > ${WORK_DIR}/task-exec.json
 
 if [ -n "$KEEP_SOURCE_FILE" ] && [ "$KEEP_SOURCE_FILE" = "no" ]; then
     # only used for test
@@ -101,7 +101,6 @@ if [ "$KEEP_TARGET_FILE" = "no" ]; then
         dest_file=${DIR_1CH}/${dest_file_r}
         rm -f $dest_file
     done
-    rm -f /work/output-files.txt
 fi
 
 exit $code

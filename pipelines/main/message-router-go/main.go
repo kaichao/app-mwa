@@ -83,28 +83,28 @@ func defaultFunc(message string, headers map[string]string) int {
 
 func fromCopyUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat
-	re := regexp.MustCompile("^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
+	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromCopyUnpack()\n", message)
 		return 11
 	}
 
-	// 1257010784/1257010784_1257010790/112
+	// 1257010784_1257010790_ch112.dat
 	dataset := getDataSet(ss[1])
 	if dataset == nil {
 		fmt.Fprintf(os.Stderr, "[WARN] unknown dataset:%s in fromCopyUnpack()\n", ss[1])
 		return 12
 	}
 
-	t, _ := strconv.Atoi(ss[3])
+	t, _ := strconv.Atoi(ss[2])
 	t0, t1 := dataset.getTimeRange(t)
-	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[4])
+	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[3])
 
 	if n := countDown(sema); n == 0 {
-		channel, _ := strconv.Atoi(ss[4])
+		channel, _ := strconv.Atoi(ss[3])
 		for b, e := range getPointingRanges() {
-			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[4], b, e)
+			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], b, e)
 			ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
 			if ret != 0 {
 				return ret
