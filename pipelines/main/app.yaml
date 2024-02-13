@@ -9,7 +9,9 @@ jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-list
     cluster: ${CLUSTER_LOCAL}
-    schedule_mode: HEAD
+    # schedule_mode: HEAD
+    parameters:
+      slot_on_head: yes
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
       # - REGEX_2D_DATASET=${REGEX_DAT}
@@ -31,7 +33,9 @@ jobs:
   local-copy-tar:
     # keep source file controlled by message-router
     base_image: ${LOCAL_COPY_TAR}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
     variables:
       max_sleep_count: 10
       task_timeout_seconds: 1800
@@ -40,13 +44,14 @@ jobs:
 
   copy-unpack:
     base_image: ${COPY_UNPACK}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
       max_sleep_count: 10
       task_timeout_seconds: ${COPY_UNPACK_TIMEOUT}
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
       key_group_regex: ${REGEX_TAR}
       key_group_index: 1,3,2
@@ -62,7 +67,7 @@ jobs:
   beam-maker:
     label: beam-maker
     base_image: ${BEAM_MAKER}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     command: ${ROCM_COMMAND_P1}
     # command: docker run -d --rm
     #     --group-add video 
@@ -76,6 +81,7 @@ jobs:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
       # output_text_size: 1048576
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
       # 1257010784/1257010806_1257010815/131/00001_00003
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]{3})/[0-9]{5}_[0-9]{5}$
@@ -93,12 +99,13 @@ jobs:
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     variables:
       # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
     environments:
       - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
@@ -110,12 +117,13 @@ jobs:
   # push 
   fits-dist:
     base_image: ${FITS_DIST}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
       task_timeout_seconds: 60
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
     environments:
       - KEEP_SOURCE_FILE=no
@@ -125,12 +133,13 @@ jobs:
   fits-merger:
     label: 24通道fits合并
     base_image: ${FITS_MERGER}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/[0-9]{5}$
       key_group_index: 1,2,3
@@ -145,13 +154,14 @@ jobs:
     label: presto-search
     base_image: ${PRESTO_SEARCH}
     command: ${ROCM_COMMAND}
-    queue_mode: ${QUEUE_MODE}
+    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${PRESTO_SEARCH_TIMEOUT}
       output_text_size: 1048576
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001
     environments:
       - KEEP_SOURCE_FILE=yes
@@ -168,6 +178,7 @@ jobs:
     variables:
       max_sleep_count: 10
     parameters:
+      slot_on_head: yes
       key_group_regex:
       key_group_index:
       start_message: ${START_MESSAGE}
