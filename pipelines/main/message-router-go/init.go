@@ -19,7 +19,8 @@ var (
 	// 每次观测最大序列号
 	// maxSequence int
 
-	hosts            = []string{"10.11.16.79", "10.11.16.80"}
+	// hosts            = []string{"10.11.16.79", "10.11.16.80"}
+	hosts            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76"}
 	numNodesPerGroup int
 
 	localMode bool
@@ -49,7 +50,8 @@ func init() {
 
 	numNodesPerGroup, err = strconv.Atoi(os.Getenv("NUM_NODES_PER_GROUP"))
 	if err != nil || numNodesPerGroup == 0 {
-		numNodesPerGroup = 24
+		// numNodesPerGroup = 24
+		numNodesPerGroup = len(hosts)
 	}
 
 	pBegin, err = strconv.Atoi(os.Getenv("POINTING_BEGIN"))
