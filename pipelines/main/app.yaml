@@ -9,7 +9,6 @@ jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-list
     cluster: ${CLUSTER_LOCAL}
-    # schedule_mode: HEAD
     parameters:
       slot_on_head: yes
     environments:
@@ -33,18 +32,16 @@ jobs:
   local-copy-tar:
     # keep source file controlled by message-router
     base_image: ${LOCAL_COPY_TAR}
-    # queue_mode: ${QUEUE_MODE}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
     variables:
       max_sleep_count: 10
       task_timeout_seconds: 1800
     hosts:
-      -  n[01]:1
+      -  ${NODES}:1
 
   copy-unpack:
     base_image: ${COPY_UNPACK}
-    # queue_mode: ${QUEUE_MODE}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
@@ -62,12 +59,11 @@ jobs:
       - KEEP_SOURCE_FILE=yes
       - DIR_LIMIT_GB=${UNPACK_DIR_LIMIT_GB}
     hosts:
-      - n[01]:1
+      - ${NODES}:1
 
   beam-maker:
     label: beam-maker
     base_image: ${BEAM_MAKER}
-    # queue_mode: ${QUEUE_MODE}
     command: ${ROCM_COMMAND_P1}
     # command: docker run -d --rm
     #     --group-add video 
@@ -95,11 +91,10 @@ jobs:
       # 压力测试专用
       # - KEEP_TARGET_FILE=no
     hosts:
-      - n[01]:1
+      - ${NODES}:1
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
-    # queue_mode: ${QUEUE_MODE}
     variables:
       # 1-min
       max_sleep_count: 10
@@ -112,12 +107,11 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
-      - n[01]:1
+      - ${NODES}:1
 
   # push 
   fits-dist:
     base_image: ${FITS_DIST}
-    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
@@ -128,12 +122,11 @@ jobs:
     environments:
       - KEEP_SOURCE_FILE=no
     hosts:
-      - n[01]:1
+      - ${NODES}:1
 
   fits-merger:
     label: 24通道fits合并
     base_image: ${FITS_MERGER}
-    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
@@ -148,13 +141,12 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
-      - n[01]:1
+      - ${NODES}:1
 
   presto-search:
     label: presto-search
     base_image: ${PRESTO_SEARCH}
     command: ${ROCM_COMMAND}
-    # queue_mode: ${QUEUE_MODE}
     variables:
     # 1-min
       max_sleep_count: 10
@@ -168,13 +160,12 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
-      - n[01]:2
+      - ${NODES}:2
 
   message-router-main:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     cluster: ${CLUSTER_LOCAL}
-    schedule_mode: HEAD
     variables:
       max_sleep_count: 10
     parameters:
@@ -187,7 +178,7 @@ jobs:
       - NUM_PER_GROUP=${NUM_PER_GROUP}
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
-      - NUM_NODES_PER_GROUP=2
+      - NUM_NODES_PER_GROUP=
       # 指向起始号
       - POINTING_BEGIN=${POINTING_BEGIN}
       # 指向结束号

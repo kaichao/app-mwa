@@ -10,6 +10,8 @@ dist:
 	@ date
 	ssh node1 'zstd -dc /raid0/tmp/my.img.zst | docker load'
 	ssh node2 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	ssh node3 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	# pdsh -w node[1-3] -l root 'zstd -dc /raid0/tmp/my.img.zst | docker load' | dshbak -c
 	@ date
 
 push:

@@ -85,6 +85,14 @@ ${DIR_24CH}
 CLUSTER=dcu scalebox app create dataset.yaml
 ```
 
+- 将cal目录拷贝到本机缓存中
+
+```sh
+
+scp -r cal node3:/dev/shm/scalebox/mydata/mwa/
+
+```
+
 - 启动应用
 ```sh
 make
