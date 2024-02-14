@@ -10,3 +10,6 @@ clean:
 	ssh node2 rm -rf /tmp/scalebox/mydata/mwa/dat/ /dev/shm/scalebox/mydata/mwa/{1ch,1chx,24ch,dedisp,png}/ /dev/shm/scalebox/copy-unpack/
 	@ # non-local-mode
 	rm -rf /raid0/scalebox/mydata/mwa/{1ch,1chx,24ch,dat}/
+
+dataset-import:
+	CLUSTER=dcu scalebox app create dataset.yaml
