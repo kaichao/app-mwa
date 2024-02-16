@@ -1,4 +1,4 @@
-dirs:=beam-maker copy-unpack down-sampler fits-merger repack unpack
+dirs:=mwa-vcstools copy-unpack down-sampler presto-search repack unpack
 
 build:
 	@for dir in $(dirs); do \

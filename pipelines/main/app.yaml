@@ -63,7 +63,7 @@ jobs:
 
   beam-maker:
     label: beam-maker
-    base_image: ${BEAM_MAKER}
+    base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND_P1}
     # command: docker run -d --rm
     #     --group-add video 
@@ -75,6 +75,7 @@ jobs:
     variables:
       max_sleep_count: 10
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
+      code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -126,11 +127,12 @@ jobs:
 
   fits-merger:
     label: 24通道fits合并
-    base_image: ${FITS_MERGER}
+    base_image: ${MWA_VCSTOOLS}
     variables:
     # 1-min
       max_sleep_count: 10
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
+      code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001

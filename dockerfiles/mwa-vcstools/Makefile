@@ -1,4 +1,4 @@
-IMAGE_NAME:=app-mwa/beam-maker
+IMAGE_NAME:=app-mwa/mwa-vcstools:rocm-4.0.1
 
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
