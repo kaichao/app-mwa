@@ -156,7 +156,7 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001
     environments:
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
@@ -172,10 +172,10 @@ jobs:
       slot_on_head: yes
       key_group_regex:
       key_group_index:
-      start_message: ${START_MESSAGE}
+      start_message: ${DATASET_URI}
       visiable: no
     environments:
-      - NUM_PER_GROUP=${NUM_PER_GROUP}
+      # - NUM_PER_GROUP=${NUM_PER_GROUP}
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
       - NUM_NODES_PER_GROUP=
