@@ -94,13 +94,13 @@ if [ -n "$KEEP_SOURCE_FILE" ] && [ "$KEEP_SOURCE_FILE" = "no" ]; then
 fi
 
 # 仅用于实验环境中单节点的压力测试，测试完成后删除目标文件（fits文件）
-if [ "$KEEP_TARGET_FILE" = "no" ]; then
-    for ii in $(seq $PTHEAD $PTTAIL); do
-        pi=$(printf "%05d" $ii)
-        dest_file_r=${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
-        dest_file=${DIR_1CH}/${dest_file_r}
-        rm -f $dest_file
-    done
-fi
+# if [ "$KEEP_TARGET_FILE" = "no" ]; then
+#     for ii in $(seq $PTHEAD $PTTAIL); do
+#         pi=$(printf "%05d" $ii)
+#         dest_file_r=${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
+#         dest_file=${DIR_1CH}/${dest_file_r}
+#         rm -f $dest_file
+#     done
+# fi
 
 exit $code
