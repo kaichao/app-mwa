@@ -4,16 +4,6 @@
 m=$1
 # m="1257010784/1257010986_1257011185/132/00001_00003"
 
-my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
-OBSID=${my_arr[0]}
-BEG=${my_arr[1]}
-END=${my_arr[2]}
-ch=${my_arr[3]}
-PTHEAD=${my_arr[4]}
-PTTAIL=${my_arr[5]}
-let ii=$((10#${ch}))-108
-printf -v i "%02d" $ii
-
 if [ $LOCAL_CAL_ROOT ]; then
     DIR_CAL="/local${LOCAL_CAL_ROOT}/mwa/cal"
 else
@@ -31,6 +21,16 @@ else
 fi
 dat_dir="${DIR_DAT}/${OBSID}/ch${ch}/${BEG}_${END}"
 
+my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
+OBSID=${my_arr[0]}
+BEG=${my_arr[1]}
+END=${my_arr[2]}
+ch=${my_arr[3]}
+PTHEAD=${my_arr[4]}
+PTTAIL=${my_arr[5]}
+let ii=$((10#${ch}))-108
+printf -v i "%02d" $ii
+
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
 
@@ -41,7 +41,8 @@ PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 
 cd ${WORK_DIR}
-make_beam -o ${OBSID} -b ${BEG} -e ${END} \
+
+cmd="make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
         -z ${UTT} \
         -d ${dat_dir} -f ${ch} \
@@ -49,7 +50,18 @@ make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
         -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
-        -t 6000 -W 10000 -s 
+        -t 6000 -W 10000 -s "
+echo cmd:$cmd
+eval $cmd
+# make_beam -o ${OBSID} -b ${BEG} -e ${END} \
+#         -P ${POINTS} \
+#         -z ${UTT} \
+#         -d ${dat_dir} -f ${ch} \
+#         -m ${DIR_CAL}/${OBSID}/metafits_ppds.fits \
+#         -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
+#         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
+#         -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
+#         -t 6000 -W 10000 -s 
 code=$?
 [[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 

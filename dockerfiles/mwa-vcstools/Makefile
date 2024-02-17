@@ -3,6 +3,16 @@ IMAGE_NAME:=app-mwa/mwa-vcstools:rocm-4.0.1
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
+build-singularity:
+	mkdir -p ~/singularity/app-mwa/
+	rm -f ~/singularity/app-mwa/mwa-vcstools.sif
+	date
+	singularity build ~/singularity/app-mwa/mwa-vcstools.sif docker-daemon://$(IMAGE_NAME)
+	date
+
+	mkdir -p /raid0/singularity/app-mwa/
+	mv -f ~/singularity/app-mwa/mwa-vcstools.sif /raid0/singularity/app-mwa/
+
 dist:
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
 	@ date

@@ -1,7 +1,17 @@
-IMAGE_NAME:=app-mwa/copy-unpack
+IMAGE_NAME:=app-mwa/copy-unpack:latest
 
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
+
+build-singularity:
+	mkdir -p ~/singularity/app-mwa/
+	rm -f ~/singularity/app-mwa/copy-unpack.sif
+	date
+	singularity build ~/singularity/app-mwa/copy-unpack.sif docker-daemon://$(IMAGE_NAME)
+	date
+
+	mkdir -p /raid0/singularity/app-mwa/
+	mv -f ~/singularity/app-mwa/copy-unpack.sif /raid0/singularity/app-mwa/
 
 dist:
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
