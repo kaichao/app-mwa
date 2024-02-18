@@ -116,7 +116,7 @@ echo $DIR_PNG/$bname >> ${WORK_DIR}/output-files.txt
 # clean up
 rm -r $DIR_DEDISP/$bname
 # [ "$KEEP_SOURCE_FILE" == "no" ] && rm -f $DIR_FITS/$f_dir
-[ "$KEEP_SOURCE_FILE" == "no" ] && echo $DIR_FITS/$f_dir >> ${WORK_DIR}/removed-files.txt
 echo $DIR_FITS/$f_dir >> ${WORK_DIR}/input-files.txt
+[[ $code -eq 0 ]] && [ "$KEEP_SOURCE_FILE" == "no" ] && echo $DIR_FITS/$f_dir >> ${WORK_DIR}/removed-files.txt
 
 exit $code

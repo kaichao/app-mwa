@@ -3,7 +3,7 @@ IMAGE_NAME:=app-mwa/copy-unpack:latest
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
-build-singularity:
+singularity:
 	mkdir -p ~/singularity/app-mwa/
 	rm -f ~/singularity/app-mwa/copy-unpack.sif
 	date

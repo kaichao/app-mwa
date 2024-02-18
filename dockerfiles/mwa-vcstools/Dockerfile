@@ -9,7 +9,8 @@ ENV \
     LOCAL_INPUT_ROOT= \
     LOCAL_OUTPUT_ROOT= \
     LOCAL_CAL_ROOT= \
-    KEEP_SOURCE_FILE=yes
+    KEEP_SOURCE_FILE=yes \
+    LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
 RUN mkdir -p /work/.scalebox /app/bin && echo "PATH=/app/bin:\${PATH}" >> /root/.bashrc

@@ -10,13 +10,12 @@ ENV NSUB=128 \
     SEARCHARGS="-zmax 50 -numharm 16" \
     LOCAL_INPUT_ROOT= \
     LOCAL_OUTPUT_ROOT= \
+    LD_LIBRARY_PATH=/opt/dtk/lib:$LD_LIBRARY_PATH \
     ROCR_VISIBLE_DEVICES= 
 
-COPY ./scripts/* /app/bin/
+COPY ./code/* /app/bin/
 
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
 RUN mkdir -p /work /app/bin && echo "PATH=/app/bin:/code/presto/bin:\${PATH}" >> /root/.bashrc
 WORKDIR /work
 ENTRYPOINT ["goagent"]
-
-
