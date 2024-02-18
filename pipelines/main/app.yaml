@@ -47,6 +47,7 @@ jobs:
     variables:
       max_sleep_count: 10
       task_timeout_seconds: ${COPY_UNPACK_TIMEOUT}
+      dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
@@ -57,7 +58,6 @@ jobs:
       # - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - KEEP_SOURCE_FILE=yes
-      - DIR_LIMIT_GB=${UNPACK_DIR_LIMIT_GB}
     hosts:
       - ${NODES}:1
 
@@ -154,6 +154,7 @@ jobs:
       max_sleep_count: 10
       task_timeout_seconds: ${PRESTO_SEARCH_TIMEOUT}
       output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-search/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001

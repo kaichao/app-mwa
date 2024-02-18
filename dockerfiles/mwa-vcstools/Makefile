@@ -3,7 +3,7 @@ IMAGE_NAME:=app-mwa/mwa-vcstools:rocm-4.0.1
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
-build-singularity:
+singularity:
 	mkdir -p ~/singularity/app-mwa/
 	rm -f ~/singularity/app-mwa/mwa-vcstools.sif
 	date

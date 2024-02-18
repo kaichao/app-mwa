@@ -3,7 +3,7 @@ IMAGE_NAME:=app-mwa/down-sampler:latest
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
 
-build-singularity:
+singularity:
 	mkdir -p ~/singularity/app-mwa/
 	rm -f ~/singularity/app-mwa/down-sampler.sif
 	date

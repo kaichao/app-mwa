@@ -8,8 +8,9 @@ RUN apt-get update \
 ENV \
     KEEP_SOURCE_FILE=yes
 
+# COPY run.sh check.sh /app/bin/
+COPY run.sh /app/bin/
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
-COPY run.sh check.sh /app/bin/
 WORKDIR /work
 
 ENTRYPOINT ["goagent"]

@@ -5,6 +5,11 @@ build:
 		$(MAKE) -C $$dir build; \
 	done
 
+singularity:
+	@for dir in $(dirs); do \
+		$(MAKE) -C $$dir singularity; \
+	done
+
 push:
 	@for dir in $(dirs); do \
 		$(MAKE) -C $$dir push; \
