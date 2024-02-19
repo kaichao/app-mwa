@@ -1,4 +1,6 @@
 IMAGE_NAME:=app-mwa/down-sampler:latest
+# set default dir
+SINGULARITY_DIR ?= /raid0/root/singularity
 
 build:
 	docker build --network=host -t $(IMAGE_NAME) .
@@ -10,8 +12,8 @@ singularity:
 	singularity build ~/singularity/app-mwa/down-sampler.sif docker-daemon://$(IMAGE_NAME)
 	date
 
-	mkdir -p /raid0/singularity/app-mwa/
-	mv -f ~/singularity/app-mwa/down-sampler.sif /raid0/singularity/app-mwa/
+	mkdir -p $(SINGULARITY_DIR)/app-mwa/
+	mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
 
 dist:
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
