@@ -30,7 +30,7 @@ flowchart TD
   - 通道数：24个，109~132
   - 每个文件字节数：327680000，313MiB
   - 文件总数：4800*24=115,200 个
-  - 总数据量：3.775*10^13 Byte = 3.6*10^7 MiB ≈ 34.33 TiB
+  - 总数据量：3.775*10^13 Bytes = 3.6*10^7 MiB ≈ 34.33 TiB
 - 按12960指向计，数据处理中需读取总量：12960 * 34.33TiB ≈ 434.5 PiB
 
 ### 2.2 定标数据(DIR_CAL)
@@ -144,14 +144,16 @@ flowchart TD
 
 - 附表 数据访问链路中硬件部件的访问带宽、延时的典型数值范围
 
-|  部件名称 | 访问带宽  | 延时 |
+|  部件名称 | 读写带宽  | 访问延时 |
 |  ----  | ----  | ---- |
 | CPU Cache | 100GB/s | 1ns |
 | GPU Memory | 100~300GB/s | 5~10ns |
-| Main Memory | 20~50GB/s | 10ns |
+| Main Memory | 10GB/s | 10ns |
 | Infiniband | 5~20GB/s | 5us |
+| IB Backplane | 50~400GB/s | 1us |
 | EtherNet | 1~10GB/s | 50us |
-| NVMe SSD | 4GB/s | 10us |
+| Eth Backplane | 30~300GB/s | 1us |
+| NVMe SSD | 4GB/s | 100us |
 | HDD | 200MB/s | 10ms |
 
 其中Ethernet、Infiniband部件为网络设备，是整个系统需共享的单元，针对HPC系统，其聚合带宽通常在20GB/s~200GB/s.
@@ -185,11 +187,13 @@ flowchart TD
 按前面分析，输入数据量最大的模块为beam-maker，按12960指向的数据处理，单观测数据集的输入数据超过400PiB。如果完全基于网络存储做数据读取，将会有极大的I/O存储性能瓶颈。为此设计利用本地磁盘、本地SSD、本地内存缓存的多层级的读取方式，提高加载效率。
 
 beam-maker的数据处理过程，涉及到时间、channel、指向三个维度。
+
 ![tpc-3d](docs/diagram/tpc-3d.drawio.svg)
 
 考虑到本地存储、本地内存的容量不可能支持24通道的数据存储，目前方案将单个测试时间长度的24通道数据分布于24个（组）计算节点上。
 
 每个（组）节点对应一个channel的数据处理，考虑到减少中间存储占用，可采取如下图的顺序做波束合成。
+
 ![tp-2d](docs/diagram/tp-2d.drawio.svg)
 
 通过增加传输次数，使得尽早生成后续单指向全时间序列的数据，进而合成24-channel的fits数据，供presto做分析。
