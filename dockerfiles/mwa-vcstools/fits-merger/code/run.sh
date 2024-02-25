@@ -22,7 +22,12 @@ echo input_files:${input_files}
 splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
 [[ $code -ne 0 ]] && echo exit after splice_psrfits, error_code:$code >&2 && exit $code
 
-output_file=${DIR_24CH}/$1.fits
+# Swap the time_range and the pointing parts
+IFS='/' read -r dataset time_range pointing <<< $(echo "$1")
+new_id="${dataset}/${pointing}/${time_range}"
+
+output_file=${DIR_24CH}/$new_id.fits
+
 mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
 code=$?
 [[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
@@ -48,6 +53,6 @@ echo [DEBUG]full_path:$full_path
 echo $full_path >> ${WORK_DIR}/input-files.txt
 
 echo "send-message to sink-job"
-echo $1 > ${WORK_DIR}/messages.txt
+echo $new_id > ${WORK_DIR}/messages.txt
 
 exit $code
