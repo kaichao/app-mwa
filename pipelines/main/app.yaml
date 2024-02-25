@@ -104,7 +104,7 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
     environments:
-      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
+      - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:

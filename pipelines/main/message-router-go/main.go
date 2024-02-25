@@ -244,9 +244,9 @@ func toFitsMerger(message string, headers map[string]string) int {
 }
 
 func fromFitsMerger(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815/00022
+	// 1257010784/00022/1257010786_1257010815
 	ss := strings.Split(message, "/")
-	pointing, _ := strconv.Atoi(ss[2])
+	pointing, _ := strconv.Atoi(ss[1])
 	fmt.Printf("pointing:%d\n", pointing)
 	return sendNodeAwareMessage(message, make(map[string]string), "presto-search", pointing-1)
 }
