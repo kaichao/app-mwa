@@ -27,10 +27,10 @@ jobs:
     environments:
       - NUM_PER_GROUP=${NUM_PER_GROUP}
     sink_jobs:
-      - unpack
+      - untar
       - data-grouping-fits
-  unpack:
-    base_image: app-mwa/unpack
+  untar:
+    base_image: app-mwa/untar
     schedule_mode: HEAD
     parameters:
       tasks_per_queue: 500

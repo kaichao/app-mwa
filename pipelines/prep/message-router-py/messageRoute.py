@@ -48,7 +48,7 @@ class messageRoute():
             print(message)
             with open('/work/messages.txt', 'a') as file:
                 arr1=message
-                data='unpack,'+arr1
+                data='untar,'+arr1
                 file.write(data + '\n')
         
     
