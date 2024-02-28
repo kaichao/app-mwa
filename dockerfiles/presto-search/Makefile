@@ -22,7 +22,8 @@ dist:
 	@ date
 	ssh node1 'zstd -dc /raid0/tmp/my.img.zst | docker load'
 	ssh node2 'zstd -dc /raid0/tmp/my.img.zst | docker load'
-	ssh node3 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	# ssh node3 'zstd -dc /raid0/tmp/my.img.zst | docker load'
+	ssh node4 'zstd -dc /raid0/tmp/my.img.zst | docker load'
 	@ date
 
 push:

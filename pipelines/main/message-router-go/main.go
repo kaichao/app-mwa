@@ -16,12 +16,12 @@ var (
 		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
-		"unpack":           fromUnpack,
-		"cluster-copy-tar": fromClusterCopyTar,
-		"beam-maker":       fromBeamMaker,
-		"down-sampler":     fromDownSampler,
-		"fits-dist":        fromFitsDist,
-		"fits-merger":      fromFitsMerger,
+		"unpack":       fromUnpack,
+		"cluster-copy": fromClusterCopy,
+		"beam-maker":   fromBeamMaker,
+		"down-sampler": fromDownSampler,
+		"fits-dist":    fromFitsDist,
+		"fits-merger":  fromFitsMerger,
 	}
 )
 
@@ -115,7 +115,7 @@ func fromUnpack(message string, headers map[string]string) int {
 	return 0
 }
 
-func fromClusterCopyTar(message string, headers map[string]string) int {
+func fromClusterCopy(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(message)
 	if ss == nil {

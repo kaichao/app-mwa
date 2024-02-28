@@ -253,12 +253,12 @@ flowchart TD
   mwa-down --> unpack
   unpack --> repack
   repack --> ftp-push-tar
-  repack --> cluster-copy-tar
+  repack --> cluster-copy
   remote-dir-list --> ftp-pull-tar
-  ftp-pull-tar --> cluster-copy-tar
-  dir-list --> cluster-copy-tar
+  ftp-pull-tar --> cluster-copy
+  dir-list --> cluster-copy
   dir-list --> unpack
-  cluster-copy-tar --> unpack
+  cluster-copy --> unpack
   unpack --> beam-maker
   beam-maker --> down-sampler
   down-sampler --> fits-dist
@@ -267,7 +267,7 @@ flowchart TD
   fits-merger --> presto
   subgraph HPC
     dir-list
-    cluster-copy-tar
+    cluster-copy
     unpack
     beam-maker
     down-sampler
@@ -287,7 +287,7 @@ flowchart TD
 ```
 
 若不涉及到ftp数据，可以用单集群，dir-list模块可以放在计算集群。
-- cluster-copy-tar: 从外部集群拷贝数据到计算集群共享存储；
+- cluster-copy: 从外部集群拷贝数据到计算集群共享存储；
 - local-copy-tar: 从本集群存储拷贝数据到计算节点；
 - unpack：从计算集群共享存储，拷贝数据到节点存储；
 - unpack、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND

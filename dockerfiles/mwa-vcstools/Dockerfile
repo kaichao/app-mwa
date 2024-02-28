@@ -1,4 +1,5 @@
-FROM mwa-vcstools-rocm-4.0.1:latest
+# FROM mwa-vcstools-rocm-4.0.1:latest
+FROM mwa-vcstools-rocm-4.0.1:20240225
 
 RUN apt-get update \
     && apt-get install -y zstd \
