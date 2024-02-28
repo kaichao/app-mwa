@@ -16,7 +16,7 @@ var (
 		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
-		"copy-unpack":      fromCopyUnpack,
+		"unpack":           fromUnpack,
 		"cluster-copy-tar": fromClusterCopyTar,
 		"beam-maker":       fromBeamMaker,
 		"down-sampler":     fromDownSampler,
@@ -81,7 +81,7 @@ func defaultFunc(message string, headers map[string]string) int {
 	return 0
 }
 
-func fromCopyUnpack(message string, headers map[string]string) int {
+func fromUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat
 	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
 	ss := re.FindStringSubmatch(message)
@@ -129,7 +129,7 @@ func fromClusterCopyTar(message string, headers map[string]string) int {
 
 	m := fmt.Sprintf("/data/mwa/tar~%s~%d_%d", message, b, e)
 
-	return sendNodeAwareMessage(m, make(map[string]string), "copy-unpack", channel-109)
+	return sendNodeAwareMessage(m, make(map[string]string), "unpack", channel-109)
 }
 
 func fromBeamMaker(message string, headers map[string]string) int {

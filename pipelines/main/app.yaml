@@ -37,16 +37,18 @@ jobs:
     variables:
       max_sleep_count: 10
       task_timeout_seconds: 1800
+    environments:
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
       -  ${NODES}:1
 
-  copy-unpack:
-    base_image: ${COPY_UNPACK}
+  unpack:
+    base_image: ${UNPACK}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
       max_sleep_count: 10
-      task_timeout_seconds: ${COPY_UNPACK_TIMEOUT}
+      task_timeout_seconds: ${UNPACK_TIMEOUT}
       dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -55,7 +57,7 @@ jobs:
       key_group_index: 1,3,2
 #      key_group_index: 1,2,3
     environments:
-      # - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - KEEP_SOURCE_FILE=yes
     hosts:
@@ -195,7 +197,7 @@ jobs:
       - dir-list
       - cluster-copy-tar
       - local-copy-tar
-      - copy-unpack
+      - unpack
       - beam-maker
       - down-sampler
       - fits-dist
