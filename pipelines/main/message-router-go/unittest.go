@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-// 性能测试专用，绕过将全局存储拷贝到本机存储的copy-unpack模块
+// 性能测试专用，绕过将全局存储拷贝到本机存储的unpack模块
 func fromDirListTest(message string, headers map[string]string) int {
 	fmt.Println("input-message:", message)
 

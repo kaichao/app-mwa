@@ -22,7 +22,7 @@ func fromDirList(message string, headers map[string]string) int {
 		// filtered
 		return 0
 	}
-	// sinkJob := "copy-unpack"
+	// sinkJob := "unpack"
 	if !strings.HasPrefix(message, "/") {
 		// remote file, copy to global storage
 		sinkJob := "cluster-copy-tar"
@@ -45,10 +45,10 @@ func fromDirList(message string, headers map[string]string) int {
 
 	h := make(map[string]string)
 	h["sorted_tag"] = fmt.Sprintf("%06d", dataset.getSortedNumber(ts, channel, tStep))
-	return sendNodeAwareMessage(m, h, "copy-unpack", channel-109)
+	return sendNodeAwareMessage(m, h, "unpack", channel-109)
 }
 
-// copy-unpack的处理顺序编号
+// unpack的处理顺序编号
 func (dataset *DataSet) getSortedNumber(t int, channel int, groupSize int) int {
 	x := channel - 109
 	y := (t - dataset.VerticalStart) / groupSize

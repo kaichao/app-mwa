@@ -32,7 +32,6 @@ target_dir="${DIR_DAT}/${dataset}/ch${ch}/${arr[2]}"
 echo source_file:$tar_file
 echo target_dir:$target_dir
 
-# if [ "$KEEP_SOURCE_FILE" = "no" ]; then rm -f tar_file;fi
 [ "$KEEP_SOURCE_FILE" = "no" ] && echo $tar_file >> $WORK_DIR/removed-files.txt
 
 mkdir -p $tmp_dir $target_dir && cd $tmp_dir && tar xf $tar_file

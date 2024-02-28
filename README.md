@@ -257,9 +257,9 @@ flowchart TD
   remote-dir-list --> ftp-pull-tar
   ftp-pull-tar --> cluster-copy-tar
   dir-list --> cluster-copy-tar
-  dir-list --> copy-unpack
-  cluster-copy-tar --> copy-unpack
-  copy-unpack --> beam-maker
+  dir-list --> unpack
+  cluster-copy-tar --> unpack
+  unpack --> beam-maker
   beam-maker --> down-sampler
   down-sampler --> fits-dist
   down-sampler --> fits-merger
@@ -268,7 +268,7 @@ flowchart TD
   subgraph HPC
     dir-list
     cluster-copy-tar
-    copy-unpack
+    unpack
     beam-maker
     down-sampler
     fits-dist
@@ -288,8 +288,9 @@ flowchart TD
 
 若不涉及到ftp数据，可以用单集群，dir-list模块可以放在计算集群。
 - cluster-copy-tar: 从外部集群拷贝数据到计算集群共享存储；
-- copy-unpack：从计算集群共享存储，拷贝数据到节点存储；
-- copy-unpack、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
+- local-copy-tar: 从本集群存储拷贝数据到计算节点；
+- unpack：从计算集群共享存储，拷贝数据到节点存储；
+- unpack、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
 - beam-maker设定为HOST-BOUND或GROUP-BOUND
 
 - 以scalebox支持本地内存缓存、本地SSD的文件加载，实现模块间存储共享，极大提升I/O能力

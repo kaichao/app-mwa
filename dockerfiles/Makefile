@@ -1,4 +1,4 @@
-dirs:=mwa-vcstools copy-unpack down-sampler presto-search repack unpack
+dirs:=mwa-vcstools unpack down-sampler presto-search repack unpack
 
 build:
 	@for dir in $(dirs); do \
