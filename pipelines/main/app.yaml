@@ -16,7 +16,7 @@ jobs:
       # - REGEX_2D_DATASET=${REGEX_DAT}
       # - INDEX_2D_DATASET=${INDEX_DAT}
 
-  cluster-copy-tar:
+  cluster-copy:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy
     cluster: ${CLUSTER_LOCAL}
     variables:
@@ -29,7 +29,7 @@ jobs:
     hosts:
       - h0:2
 
-  local-copy-tar:
+  local-copy:
     # keep source file controlled by message-router
     base_image: ${LOCAL_COPY_TAR}
     parameters:
@@ -195,8 +195,8 @@ jobs:
       # - TRACE=yes
     sink_jobs:
       - dir-list
-      - cluster-copy-tar
-      - local-copy-tar
+      - cluster-copy
+      - local-copy
       - unpack
       - beam-maker
       - down-sampler

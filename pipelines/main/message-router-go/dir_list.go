@@ -25,7 +25,7 @@ func fromDirList(message string, headers map[string]string) int {
 	// sinkJob := "unpack"
 	if !strings.HasPrefix(message, "/") {
 		// remote file, copy to global storage
-		sinkJob := "cluster-copy-tar"
+		sinkJob := "cluster-copy"
 		m = message + "~/data/mwa/tar"
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
 		return 0
