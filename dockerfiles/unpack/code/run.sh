@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch121.dat.zst.tar~1257010786_1257010875
+# 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 m=$1
 
 arr=($(echo $m | tr "~" " ")) 
 
-if [[ ${arr[1]} =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat.zst.tar$ ]]; then
+if [[ ${arr[0]} =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]{3}).dat.zst.tar$ ]]; then
     dataset=${BASH_REMATCH[1]}
     begin=${BASH_REMATCH[2]}
     end=${BASH_REMATCH[3]}
@@ -20,14 +21,16 @@ else
     DIR_DAT=/data/mwa/dat
 fi
 
-if [[ ${arr[0]} == /data* ]]; then
-    tar_file="${arr[0]}/${arr[1]}"
-else
-    tar_file="/local${arr[0]}/${arr[1]}"
-fi
+
+tar_file="/local${LOCAL_INPUT_ROOT}/mwa/tar/${arr[0]}"
+# if [[ ${arr[0]} == /data* ]]; then
+#     tar_file="${arr[0]}/${arr[1]}"
+# else
+#     tar_file="/local${arr[0]}/${arr[1]}"
+# fi
 
 tmp_dir="/local/dev/shm/scalebox/copy-unpack"
-target_dir="${DIR_DAT}/${dataset}/ch${ch}/${arr[2]}"
+target_dir="${DIR_DAT}/${dataset}/ch${ch}/${arr[1]}"
 
 echo source_file:$tar_file
 echo target_dir:$target_dir
