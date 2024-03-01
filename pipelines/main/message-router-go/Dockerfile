@@ -29,7 +29,7 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/mwa-2309.message-router /app/bin/message-router 
+COPY --from=0 /go/src/mwa.message-router /app/bin/message-router 
 
 ENV \
     WITH_HEADERS=yes \
