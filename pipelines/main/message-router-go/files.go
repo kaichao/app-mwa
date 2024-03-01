@@ -94,6 +94,39 @@ func fromLocalCopy(message string, headers map[string]string) int {
 	return sendNodeAwareMessage(m, make(map[string]string), "unpack", ch-109)
 }
 
+func fromUnpack(message string, headers map[string]string) int {
+	// 	1257010784/1257010784_1257010790_ch120.dat
+	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
+	ss := re.FindStringSubmatch(message)
+	if ss == nil {
+		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromCopyUnpack()\n", message)
+		return 11
+	}
+
+	// 1257010784_1257010790_ch112.dat
+	dataset := getDataSet(ss[1])
+	if dataset == nil {
+		fmt.Fprintf(os.Stderr, "[WARN] unknown dataset:%s in fromCopyUnpack()\n", ss[1])
+		return 12
+	}
+
+	t, _ := strconv.Atoi(ss[2])
+	t0, t1 := dataset.getTimeRange(t)
+	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[3])
+	if n := countDown(sema); n == 0 {
+		channel, _ := strconv.Atoi(ss[3])
+		for b, e := range getPointingRanges() {
+			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], b, e)
+			ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
+			if ret != 0 {
+				return ret
+			}
+		}
+	}
+
+	return 0
+}
+
 // unpack的处理顺序编号
 func (dataset *DataSet) getSortedNumber(t int, channel int, groupSize int) int {
 	x := channel - 109
@@ -114,4 +147,41 @@ func filterDataset(message string) bool {
 	end2 := dataset.VerticalStart + dataset.VerticalHeight - 1
 	// interleaved
 	return begin1 <= end2 && begin2 <= end1
+}
+
+func removeLocalDatFiles(sema string) {
+	// 1257010784/1257010786_1257010795/109
+	// dat-used:1257010784/1257010786_1257010815/ch114
+	ss := regexp.MustCompile("[/_]").Split(sema, -1)
+	ds := strings.Split(ss[0], ":")[1]
+	beg, _ := strconv.Atoi(ss[1])
+	end, _ := strconv.Atoi(ss[2])
+	ch := ss[3]
+	fmt.Println("sema:", sema)
+	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
+
+	if localMode {
+		dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
+		num, _ := strconv.Atoi(ch[2:])
+		i := (num - 109) % numNodesPerGroup
+		fmt.Printf("\n")
+		cmdTxt := fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
+		fmt.Println("cmd-text:", cmdTxt)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
+		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
+		if code != 0 {
+			os.Exit(code)
+		}
+	} else {
+		dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
+		cmdTxt := fmt.Sprintf("rm -rf %s", dir)
+		fmt.Println("cmd-text:", cmdTxt)
+		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
+		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
+		if code != 0 {
+			os.Exit(code)
+		}
+	}
 }

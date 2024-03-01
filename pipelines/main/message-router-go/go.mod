@@ -1,4 +1,4 @@
-module mwa-2309.message-router
+module mwa.message-router
 
 go 1.20
 
