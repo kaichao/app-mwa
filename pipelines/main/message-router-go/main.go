@@ -16,8 +16,9 @@ var (
 		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
-		"unpack":       fromUnpack,
 		"cluster-copy": fromClusterCopy,
+		"local-copy":   fromLocalCopy,
+		"unpack":       fromUnpack,
 		"beam-maker":   fromBeamMaker,
 		"down-sampler": fromDownSampler,
 		"fits-dist":    fromFitsDist,
@@ -113,23 +114,6 @@ func fromUnpack(message string, headers map[string]string) int {
 	}
 
 	return 0
-}
-
-func fromClusterCopy(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
-	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(message)
-	if ss == nil {
-		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
-		return 21
-	}
-	dataset := getDataSet(ss[1])
-	ts, _ := strconv.Atoi(ss[2])
-	b, e := dataset.getTimeRange(ts)
-	channel, _ := strconv.Atoi(ss[3])
-
-	m := fmt.Sprintf("/data/mwa/tar~%s~%d_%d", message, b, e)
-
-	return sendNodeAwareMessage(m, make(map[string]string), "unpack", channel-109)
 }
 
 func fromBeamMaker(message string, headers map[string]string) int {
@@ -233,7 +217,6 @@ func toFitsMerger(message string, headers map[string]string) int {
 	// semaphore:
 	// 		fits-24ch-ready:1257010784/1257010786_1257010815/00029
 	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
-
 	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		pointing, _ := strconv.Atoi(ss[2])

@@ -37,6 +37,7 @@ jobs:
     variables:
       max_sleep_count: 10
       task_timeout_seconds: 1800
+      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
@@ -50,6 +51,7 @@ jobs:
       max_sleep_count: 10
       task_timeout_seconds: ${UNPACK_TIMEOUT}
       dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
+      code_path: ${CODE_BASE}/dockerfiles/unpack/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
@@ -59,7 +61,7 @@ jobs:
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}:1
 
@@ -67,13 +69,6 @@ jobs:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND_P1}
-    # command: docker run -d --rm
-    #     --group-add video 
-    #     --device /dev/kfd 
-    #     --device /dev/dri/card1
-    #     --device /dev/dri/renderD129 
-    #     --security-opt seccomp=unconfined 
-    #     --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     variables:
       max_sleep_count: 10
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
