@@ -25,7 +25,7 @@ func fromDirList(message string, headers map[string]string) int {
 
 	if !strings.HasPrefix(message, "/") {
 		// remote file, copy to global storage
-		sinkJob := "cluster-copy"
+		sinkJob := "cluster-tar-pull"
 		m = message + "~/data/mwa/tar"
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
 		return 0
@@ -36,14 +36,14 @@ func fromDirList(message string, headers map[string]string) int {
 	if len(ss) != 2 {
 		fmt.Fprintf(os.Stderr, "invalide message format, message:%s\n", message)
 	}
-	return toLocalPull(ss[1], headers)
+	return toLocalTarPull(ss[1], headers)
 }
 
-func fromClusterCopy(message string, headers map[string]string) int {
-	return toLocalPull(message, headers)
+func fromClusterTarPull(message string, headers map[string]string) int {
+	return toLocalTarPull(message, headers)
 }
 
-func toLocalPull(message string, headers map[string]string) int {
+func toLocalTarPull(message string, headers map[string]string) int {
 	// message: 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 
 	fmt.Printf("to-local-pull,message:%s\n", message)
@@ -69,10 +69,10 @@ func toLocalPull(message string, headers map[string]string) int {
 	h := make(map[string]string)
 	h["sorted_tag"] = fmt.Sprintf("%06d", dataset.getSortedNumber(ts, channel, tStep))
 
-	return sendNodeAwareMessage(m, h, "local-copy", channel-109)
+	return sendNodeAwareMessage(m, h, "local-tar-pull", channel-109)
 }
 
-func fromLocalCopy(message string, headers map[string]string) int {
+func fromLocalTarPull(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 	re := regexp.MustCompile(`^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)`)
 	matches := re.FindStringSubmatch(message)
@@ -80,7 +80,7 @@ func fromLocalCopy(message string, headers map[string]string) int {
 	fmt.Printf("message:%s, matches:%v\n", message, matches)
 
 	if len(matches) < 4 {
-		fmt.Fprintf(os.Stderr, "invalid message format, message:%s\n", message)
+		fmt.Fprintf(os.Stderr, "Invalid message format, message:%s\n", message)
 		return 1
 	}
 	ch, _ := strconv.Atoi(matches[3])
