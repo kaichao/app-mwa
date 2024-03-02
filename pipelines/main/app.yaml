@@ -20,7 +20,6 @@ jobs:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy
     cluster: ${CLUSTER_LOCAL}
     variables:
-      max_sleep_count: 10
       task_timeout_seconds: 1800
     parameters:
       # user@host/remote-path~1257010784/1257010786_1257010815_ch109.dat.zst.tar~/data/mwa/tar
@@ -35,7 +34,6 @@ jobs:
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
     variables:
-      max_sleep_count: 10
       task_timeout_seconds: 1800
       dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
     environments:
@@ -48,7 +46,6 @@ jobs:
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
-      max_sleep_count: 10
       task_timeout_seconds: ${UNPACK_TIMEOUT}
       dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
       code_path: ${CODE_BASE}/dockerfiles/unpack/code
@@ -70,7 +67,6 @@ jobs:
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND_P1}
     variables:
-      max_sleep_count: 10
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
@@ -94,8 +90,6 @@ jobs:
   down-sampler:
     base_image: ${DOWN_SAMPLER}
     variables:
-      # 1-min
-      max_sleep_count: 10
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -111,8 +105,6 @@ jobs:
   fits-redist:
     base_image: ${FITS_DIST}
     variables:
-    # 1-min
-      max_sleep_count: 10
       task_timeout_seconds: 60
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -126,8 +118,6 @@ jobs:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
     variables:
-    # 1-min
-      max_sleep_count: 10
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
@@ -147,8 +137,6 @@ jobs:
     base_image: ${PRESTO_SEARCH}
     command: ${ROCM_COMMAND}
     variables:
-    # 1-min
-      max_sleep_count: 10
       task_timeout_seconds: ${PRESTO_SEARCH_TIMEOUT}
       output_text_size: 1048576
       code_path: ${CODE_BASE}/dockerfiles/presto-search/code
@@ -166,8 +154,6 @@ jobs:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     cluster: ${CLUSTER_LOCAL}
-    variables:
-      max_sleep_count: 10
     parameters:
       slot_on_head: yes
       key_group_regex:
