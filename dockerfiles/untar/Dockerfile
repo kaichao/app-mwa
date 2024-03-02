@@ -5,7 +5,9 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install psycopg2-binary
-COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
+
+COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local/bin /usr/local/bin
+COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local/sbin /usr/local/sbin
 COPY run.sh /app/bin/
 RUN chmod +x /app/bin/run.sh
 WORKDIR /work

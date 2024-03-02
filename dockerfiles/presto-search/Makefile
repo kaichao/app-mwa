@@ -1,4 +1,5 @@
 IMAGE_NAME:=app-mwa/presto-search:latest
+
 # set default dir
 SINGULARITY_DIR ?= /raid0/root/singularity
 
