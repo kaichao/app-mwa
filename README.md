@@ -198,13 +198,15 @@ flowchart TD
 
 zstd是一种高效的压缩方法；合理利用，则可以在增加CPU的同时，较为显著地降低数据规模。原始数据（tar/dat）经过自适应压缩处理后，压缩比达到0.68~0.70。
 
-单观测集数据压缩前数据为34.3TiB，采用zstd压缩后，数据量约23.7TiB。
+单观测集数据压缩前数据量为34.3TiB，采用zstd压缩后，数据量约23.7TiB。
 
 #### 中间结果压缩
 
 针对中间结果，在时间维度上做1:4的重采样，将数据量减少到之前的1/4。采样后数据在用zstd做无损压缩，进一步减少数据量。
 
-经测试，中间结果的fits文件，其压缩比约为0.82，中间结果压缩比达到原始数据的0.205。
+经测试，采用zstd压缩中间结果fits文件，其压缩比约为0.82。
+
+中间结果的最终压缩比达到原始数据的0.205。
 
 针对单观测集、单指向的中间结果数据，单通道/24通道压缩后数据量大约都是28GiB。
 
@@ -234,11 +236,21 @@ MWA数据处理过程中，读写数据量为原始数据万倍以上，达到�
 
 ```mermaid
 
-flowchart TB
-  mwa-down --> dir-list
-  dir-list --> unpack
-  unpack --> repack
-  repack --> ftp-push-tar
+flowchart TD
+  remote-dir-list --> mwa-down
+  remote-dir-list --> ftp-tar-pull
+  mwa-down --> untar
+  untar --> repack
+  repack --> ftp-tar-push
+
+  subgraph prep-cluster
+    remote-dir-list
+    ftp-tar-pull
+    mwa-down
+    untar
+    repack
+    ftp-tar-push
+  end
 
 ```
 
@@ -249,54 +261,46 @@ flowchart TB
 ```mermaid
 
 flowchart TD
-  remote-dir-list --> mwa-down
-  mwa-down --> unpack
-  unpack --> repack
-  repack --> ftp-push-tar
-  repack --> cluster-copy
-  remote-dir-list --> ftp-pull-tar
-  ftp-pull-tar --> cluster-copy
-  dir-list --> cluster-copy
-  dir-list --> unpack
-  cluster-copy --> unpack
+  dir-list --> cluster-tar-pull
+  dir-list --> local-tar-pull
+  cluster-tar-pull --> local-tar-pull
+  local-tar-pull --> unpack
   unpack --> beam-maker
   beam-maker --> down-sampler
-  down-sampler --> fits-dist
+  down-sampler --> fits-redist
   down-sampler --> fits-merger
-  fits-dist --> fits-merger
-  fits-merger --> presto
+  fits-redist --> fits-merger
+  fits-merger --> fits-24ch-push
+  fits-24ch-push --> fits-24ch-pull
+  fits-24ch-pull --> rfi-find
+  rfi-find --> presto
   subgraph HPC
     dir-list
-    cluster-copy
+    cluster-tar-pull
+    local-tar-pull
     unpack
     beam-maker
     down-sampler
-    fits-dist
+    fits-redist
     fits-merger
+    fits-24ch-push
+    fits-24ch-pull
+    rfi-find
     presto
-  end
-  subgraph prep-cluster
-    remote-dir-list
-    ftp-pull-tar
-    mwa-down
-    unpack
-    repack
-    ftp-push-tar
   end
 
 ```
 
 若不涉及到ftp数据，可以用单集群，dir-list模块可以放在计算集群。
-- cluster-copy: 从外部集群拷贝数据到计算集群共享存储；
-- local-copy-tar: 从本集群存储拷贝数据到计算节点；
+- cluster-tar-pull: 从外部集群拷贝数据到本集群共享存储；
+- local-tar-pull: 从本集群存储拷贝数据到计算节点；
 - unpack：从计算集群共享存储，拷贝数据到节点存储；
-- unpack、down-sampler、fits-dist、fits-merger都需指定为HOST-BOUND
+- local-tar-pull、unpack、down-sampler、fits-redist、fits-merger都需指定为HOST-BOUND
 - beam-maker设定为HOST-BOUND或GROUP-BOUND
 
 - 以scalebox支持本地内存缓存、本地SSD的文件加载，实现模块间存储共享，极大提升I/O能力
 
 ### 4.3 脉冲搜索流水线
-
 
 
 ## 五、原型测试

@@ -45,7 +45,7 @@ func fromDownSampler(message string, headers map[string]string) int {
 	toIP := hosts[(nPointing-1)%numNodesPerGroup]
 
 	if fromIP != toIP {
-		sinkJob := "fits-dist"
+		sinkJob := "fits-redist"
 		format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
 		m := fmt.Sprintf(format, message, toIP)
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
@@ -57,7 +57,7 @@ func fromDownSampler(message string, headers map[string]string) int {
 	return toFitsMerger(message, headers)
 }
 
-func fromFitsDist(message string, headers map[string]string) int {
+func fromFitsRedist(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010815/00005/ch124.fits.zst
 	return toFitsMerger(message, headers)
 }

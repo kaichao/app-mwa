@@ -14,13 +14,13 @@ var (
 		"":         defaultFunc,
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
-		"cluster-copy": fromClusterCopy,
-		"local-copy":   fromLocalCopy,
-		"unpack":       fromUnpack,
-		"beam-maker":   fromBeamMaker,
-		"down-sampler": fromDownSampler,
-		"fits-dist":    fromFitsDist,
-		"fits-merger":  fromFitsMerger,
+		"cluster-tar-pull": fromClusterTarPull,
+		"local-tar-pull":   fromLocalTarPull,
+		"unpack":           fromUnpack,
+		"beam-maker":       fromBeamMaker,
+		"down-sampler":     fromDownSampler,
+		"fits-redist":      fromFitsRedist,
+		"fits-merger":      fromFitsMerger,
 	}
 )
 
@@ -60,6 +60,7 @@ func main() {
 func defaultFunc(message string, headers map[string]string) int {
 	// 初始的启动消息（数据集ID）
 	// /raid0/scalebox/mydata/mwa/tar~1257010784
+	// <user>@<remote-ip>/raid0/scalebox/mydata/mwa/tar~1257010784
 	ss := strings.Split(message, "~")
 	if len(ss) != 2 {
 		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", message)
