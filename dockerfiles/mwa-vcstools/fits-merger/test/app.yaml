@@ -7,11 +7,12 @@ parameters:
 jobs:
   fits-merger:
     label: 24通道fits合并
-    base_image: app-mwa/fits-merger
+    base_image: app-mwa/mwa-vcstools:rocm-4.0.1
     variables:
     # 1 hour
       max_sleep_count: 720
-    #   slot_options: reserved_on_exit
+      slot_options: reserved_on_exit
+      code_path: /raid0/root/app-mwa/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
