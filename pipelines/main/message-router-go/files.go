@@ -61,8 +61,23 @@ func toLocalTarPull(message string, headers map[string]string) int {
 	channel, _ := strconv.Atoi(ss[3])
 
 	// m = fmt.Sprintf("%s~%d_%d", m, b, e)
+	cmdTxt := `scalebox cluster get-parameter rsync_info`
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
+	if code != 0 {
+		return code
+	}
+	ss = strings.Split(strings.TrimSpace(stdout), "#")
+	sss := strings.Split(ss[0], ":")
+	if len(ss) != 4 || len(sss) != 2 {
+		fmt.Fprintf(os.Stderr, "Invalid return text from get-cluster-parameter rsync_info:\n%s\n", stdout)
+		return 1
+	}
 
-	prefix := "root@10.200.1.100/raid0/scalebox/mydata/mwa/tar~"
+	prefix := fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
+	fmt.Println("prefix:", prefix)
+	// prefix := "root@10.200.1.100/raid0/scalebox/mydata/mwa/tar~"
 	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
 	m := prefix + message + suffix
 
@@ -149,7 +164,7 @@ func filterDataset(message string) bool {
 	return begin1 <= end2 && begin2 <= end1
 }
 
-func removeLocalDatFiles(sema string) {
+func removeLocalDatFiles(sema string) int {
 	// 1257010784/1257010786_1257010795/109
 	// dat-used:1257010784/1257010786_1257010815/ch114
 	ss := regexp.MustCompile("[/_]").Split(sema, -1)
@@ -164,14 +179,13 @@ func removeLocalDatFiles(sema string) {
 		dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 		num, _ := strconv.Atoi(ch[2:])
 		i := (num - 109) % numNodesPerGroup
-		fmt.Printf("\n")
 		cmdTxt := fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
 		fmt.Println("cmd-text:", cmdTxt)
 		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
 		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
 		if code != 0 {
-			os.Exit(code)
+			return code
 		}
 	} else {
 		dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
@@ -181,7 +195,8 @@ func removeLocalDatFiles(sema string) {
 		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
 		if code != 0 {
-			os.Exit(code)
+			return code
 		}
 	}
+	return 0
 }

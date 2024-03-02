@@ -19,7 +19,7 @@ singularity:
 dist:
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
 	@ date
-	docker save $(IMAGE_NAME) | zstd > /raid0/tmp/my.img.zst
+	docker save $(IMAGE_NAME) | zstd -T4 > /raid0/tmp/my.img.zst
 	@ date
 	ssh node1 'zstd -dc /raid0/tmp/my.img.zst | docker load'
 	ssh node2 'zstd -dc /raid0/tmp/my.img.zst | docker load'
