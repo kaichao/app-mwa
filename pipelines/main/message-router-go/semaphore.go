@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
@@ -16,7 +18,7 @@ func createDatReadySemaphores(dataset *DataSet) {
 		// all dat files in current range
 		initValue := arr[i+1] - arr[i] + 1
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("dat-ready:%s/%d_%d/%d",
+			sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
 				dataset.DatasetID, arr[i], arr[i+1], ch)
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
@@ -26,8 +28,7 @@ func createDatReadySemaphores(dataset *DataSet) {
 
 func createFits24chReadySemaphores(dataset *DataSet) {
 	// TARGET: fits-merger
-	// 1257010784/1257010786_1257010815/00024
-
+	// 1257010784/p00024/t1257010786_1257010815
 	// 24-channel
 	initValue := 24
 
@@ -35,7 +36,7 @@ func createFits24chReadySemaphores(dataset *DataSet) {
 
 	for p := pBegin; p <= pEnd; p++ {
 		for i := 0; i < len(arr); i += 2 {
-			sema := fmt.Sprintf("fits-24ch-ready:%s/%d_%d/%05d", dataset.DatasetID, arr[i], arr[i+1], p)
+			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d", dataset.DatasetID, p, arr[i], arr[i+1])
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
 		}
@@ -49,7 +50,7 @@ func createDatUsedSemaphores(dataset *DataSet) {
 	arr := dataset.getTimeRanges()
 	for i := 0; i < len(arr); i += 2 {
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("dat-used:%s/%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
+			sema := fmt.Sprintf("dat-used:%s/t%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
 		}
@@ -72,7 +73,7 @@ func createDatUsedSemaphores(dataset *DataSet) {
 func addSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
 	// scalebox.ExecShellCommand(cmdText)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -80,8 +81,18 @@ func addSemaphore(semaName string, defaultValue int) int {
 
 func countDown(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore countdown %s", semaName)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
+	fmt.Printf("exit-code for semaphore countdown:\n%d\n", code)
+	fmt.Printf("stdout for semaphore countdown:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for semaphore countdown:\n%s\n", stderr)
+	if code > 0 {
+		return -1
+	}
+	code, err := strconv.Atoi(strings.TrimSpace(stdout))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore countdown:\n%v\n", err)
+		return -2
+	}
+
 	return code
 }

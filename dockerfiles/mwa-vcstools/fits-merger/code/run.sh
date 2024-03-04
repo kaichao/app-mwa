@@ -12,8 +12,8 @@ else
 fi
 echo "DIR_1CHX:${DIR_1CHX}, DIR_24CH:${DIR_24CH}"
 
-# 应该是 ${单通道目录根}/${观测号}/${起始时间戳}_${结尾时间戳}/指向号
-# m="1257010784/1257010986_1257011185/00001"
+# 应该是 ${单通道目录根}/${观测号}/指向号/${起始时间戳}_${结尾时间戳}
+# m="1257010784/p00001/t1257010986_1257011185"
 cd ${DIR_1CHX}/$1
 zstd -d --rm *.zst
 
@@ -23,7 +23,7 @@ splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
 [[ $code -ne 0 ]] && echo exit after splice_psrfits, error_code:$code >&2 && exit $code
 
 # Swap the time_range and the pointing parts
-IFS='/' read -r dataset time_range pointing <<< $(echo "$1")
+IFS='/' read -r dataset pointing time_range <<< $(echo "$1")
 new_id="${dataset}/${pointing}/${time_range}"
 
 output_file=${DIR_24CH}/$new_id.fits
