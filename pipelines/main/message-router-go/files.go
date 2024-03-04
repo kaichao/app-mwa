@@ -91,7 +91,6 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 	re := regexp.MustCompile(`^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)`)
 	matches := re.FindStringSubmatch(message)
-
 	fmt.Printf("message:%s, matches:%v\n", message, matches)
 
 	if len(matches) < 4 {
@@ -127,7 +126,7 @@ func fromUnpack(message string, headers map[string]string) int {
 
 	t, _ := strconv.Atoi(ss[2])
 	t0, t1 := dataset.getTimeRange(t)
-	sema := fmt.Sprintf("dat-ready:%s/%d_%d/%s", ss[1], t0, t1, ss[3])
+	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
 	if n := countDown(sema); n == 0 {
 		channel, _ := strconv.Atoi(ss[3])
 		for b, e := range getPointingRanges() {
@@ -166,12 +165,13 @@ func filterDataset(message string) bool {
 
 func removeLocalDatFiles(sema string) int {
 	// 1257010784/1257010786_1257010795/109
-	// dat-used:1257010784/1257010786_1257010815/ch114
-	ss := regexp.MustCompile("[/_]").Split(sema, -1)
-	ds := strings.Split(ss[0], ":")[1]
-	beg, _ := strconv.Atoi(ss[1])
-	end, _ := strconv.Atoi(ss[2])
-	ch := ss[3]
+	// dat-used:1257010784/t1257010786_1257010815/ch114
+	re := regexp.MustCompile("dat-used:([0-9]+)/t([0-9]+)_([0-9]+)/(ch[0-9]+)")
+	ss := re.FindStringSubmatch(sema)
+	ds := ss[1]
+	beg, _ := strconv.Atoi(ss[2])
+	end, _ := strconv.Atoi(ss[3])
+	ch := ss[4]
 	fmt.Println("sema:", sema)
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
 

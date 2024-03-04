@@ -60,7 +60,7 @@ declare -i i=0
 point_arr=($(echo $POINTS | tr "," "\n" ))
 for ii in $(seq $PTHEAD $PTTAIL); do
     pi=$(printf "%05d" $ii)
-    dest_file_r=${OBSID}/${BEG}_${END}/${pi}/ch${ch}.fits
+    dest_file_r=${OBSID}/p${pi}/t${BEG}_${END}/ch${ch}.fits
     dest_file=${DIR_1CH}/${dest_file_r}
     orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
 
