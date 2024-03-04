@@ -1,4 +1,4 @@
-dirs:=mwa-vcstools unpack down-sampler presto-search repack unpack
+dirs:=mwa-vcstools down-sampler presto-search
 
 build:
 	@for dir in $(dirs); do \
@@ -8,6 +8,11 @@ build:
 singularity:
 	@for dir in $(dirs); do \
 		$(MAKE) -C $$dir singularity; \
+	done
+
+dist:
+	@for dir in $(dirs); do \
+		$(MAKE) -C $$dir dist; \
 	done
 
 push:

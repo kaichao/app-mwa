@@ -98,17 +98,20 @@ scp -r cal node3:/dev/shm/scalebox/mydata/mwa/
 make
 ```
 
-## rsync-copy的镜像转为singularity
+## agent/rsync-copy的镜像转为singularity
 
 ```sh
 
 mkdir -p ~/singularity/scalebox/
-rm -f ~/singularity/scalebox/rsync-copy.sif
+rm -f ~/singularity/scalebox/rsync-copy.sif ~/singularity/scalebox/agent.sif
+
 date
+singularity build ~/singularity/scalebox/agent.sif docker-daemon://hub.cstcloud.cn/scalebox/agent:latest
 singularity build ~/singularity/scalebox/rsync-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/rsync-copy:latest
 date
 
 mkdir -p /raid0/root/singularity/scalebox/
+mv -f ~/singularity/scalebox/agent.sif /raid0/root/singularity/scalebox/
 mv -f ~/singularity/scalebox/rsync-copy.sif /raid0/root/singularity/scalebox/
 
 ```

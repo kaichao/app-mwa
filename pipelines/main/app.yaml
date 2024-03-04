@@ -33,6 +33,9 @@ jobs:
     base_image: ${LOCAL_COPY_TAR}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
+      # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.zst.tar~/dev/shm/scalebox/mydata/mwa/tar
+      key_group_regex: ^.+~([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
+      key_group_index: 1,3,2
     variables:
       task_timeout_seconds: 1800
       dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
@@ -51,7 +54,7 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/unpack/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
-      # /data/mwa/tar~1257010784/1257010846_1257010875_ch120.dat.zst.tar
+      # 1257010784/1257010816_1257010845_ch113.dat.zst.tar~1257010786_1257010845
       key_group_regex: ${REGEX_TAR}
       key_group_index: 1,3,2
 #      key_group_index: 1,2,3
@@ -73,7 +76,7 @@ jobs:
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
-      # 1257010784/1257010806_1257010815/131/00001_00003
+      # 1257010784/1257010786_1257010845/109/00001_00024
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]{3})/[0-9]{5}_[0-9]{5}$
       key_group_index: 1,2,3
     environments:
