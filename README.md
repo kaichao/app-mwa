@@ -280,7 +280,7 @@ flowchart TD
     fits-24ch-push
     fits-24ch-pull
     rfi-find
-    presto
+    presto-search
   end
 
 ```
