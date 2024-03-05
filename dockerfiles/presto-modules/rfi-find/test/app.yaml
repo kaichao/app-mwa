@@ -1,0 +1,32 @@
+name: rfi-find.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  rfi-find:
+    label: rfi-find-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --tmpfs /work 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/rfi-find/code
+      
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+    parameters:
+      # task_dist_mode: HOST-BOUND
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - n0:1

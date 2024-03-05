@@ -35,6 +35,7 @@ dat_dir="${DIR_DAT}/${OBSID}/ch${ch}/${BEG}_${END}"
 # 加载UTT等元数据信息
 source ${DIR_CAL}/${OBSID}/mb_meta.env
 
+UTT=$( /app/bin/gps2utc.py ${BEG} )
 echo UTT=${UTT}
 # UTT=2019-11-05T17:43:25.00
 # PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
