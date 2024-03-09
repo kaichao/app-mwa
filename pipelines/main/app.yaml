@@ -30,7 +30,7 @@ jobs:
 
   local-tar-pull:
     # keep source file controlled by message-router
-    base_image: ${LOCAL_COPY_TAR}
+    base_image: ${RSYNC_COPY}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.zst.tar~/dev/shm/scalebox/mydata/mwa/tar
@@ -41,11 +41,12 @@ jobs:
       dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - JUMP_SERVERS=${JUMP_SERVERS}
     hosts:
       -  ${NODES}:1
 
   unpack:
-    base_image: ${UNPACK}
+    base_image: ${SCALEBOX_AGENT}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
     variables:
@@ -106,7 +107,7 @@ jobs:
 
   # push 
   fits-redist:
-    base_image: ${FITS_DIST}
+    base_image: ${RSYNC_COPY}
     variables:
       task_timeout_seconds: 60
     parameters:
@@ -134,6 +135,19 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
     hosts:
       - ${NODES}:1
+
+  fits-24ch-push:
+    base_image: ${RSYNC_COPY}
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.zst.tar~/dev/shm/scalebox/mydata/mwa/tar
+    variables:
+      task_timeout_seconds: 1800
+    environments:
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - JUMP_SERVERS=${JUMP_SERVERS}
+    hosts:
+      -  ${NODES}:1
 
   presto-search:
     label: presto-search
@@ -176,6 +190,8 @@ jobs:
       - NUM_POINTINGS_PER_CALC=${NUM_POINTINGS_PER_CALC}
       # 单次计算的数据时长（秒数）
       - NUM_SECONDS_PER_CALC=${NUM_SECONDS_PER_CALC}
+      # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
+      - JUMP_SERVERS=${JUMP_SERVERS}
       # - TRACE=yes
     sink_jobs:
       - dir-list

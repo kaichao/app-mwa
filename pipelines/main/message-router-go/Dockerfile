@@ -33,6 +33,7 @@ COPY --from=0 /go/src/mwa.message-router /app/bin/message-router
 
 ENV \
     WITH_HEADERS=yes \
+    WORK_DIR= \
     ACTION_RUN=/app/bin/message-router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
