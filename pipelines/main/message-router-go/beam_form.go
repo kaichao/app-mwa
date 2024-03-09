@@ -95,5 +95,5 @@ func fromFitsMerger(message string, headers map[string]string) int {
 	}
 	pointing, _ := strconv.Atoi(ss[1])
 	fmt.Printf("pointing:%d\n", pointing)
-	return sendNodeAwareMessage(message, make(map[string]string), "presto-search", pointing-1)
+	return sendNodeAwareMessage(message, make(map[string]string), "fits-24ch-push", pointing-1)
 }

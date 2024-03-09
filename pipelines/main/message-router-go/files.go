@@ -23,34 +23,42 @@ func fromDirList(message string, headers map[string]string) int {
 		return 0
 	}
 
-	if !strings.HasPrefix(message, "/") {
-		// remote file, copy to global storage
+	if os.Getenv("JUMP_SERVERS") == "" && !strings.HasPrefix(message, "/") {
+		// no jump servers && remote file, copy to global storage
 		sinkJob := "cluster-tar-pull"
 		m = message + "~/data/mwa/tar"
 		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
 		return 0
 	}
 
-	// /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
-	ss := strings.Split(message, "~")
-	if len(ss) != 2 {
-		fmt.Fprintf(os.Stderr, "invalide message format, message:%s\n", message)
-	}
-	return toLocalTarPull(ss[1], headers)
+	// remote cluster(with jump-servers)
+	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// local cluster
+	// 	message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+	return toLocalTarPull(message, headers)
 }
 
 func fromClusterTarPull(message string, headers map[string]string) int {
+	// message: 1257010784/1257010786_1257010815_ch111.dat.zst.tar
 	return toLocalTarPull(message, headers)
 }
 
 func toLocalTarPull(message string, headers map[string]string) int {
+	// remote cluster(with jump-servers)
+	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// from dir-list && local
+	// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+	// from cluster-tar-pull
 	// message: 1257010784/1257010786_1257010815_ch109.dat.zst.tar
 
 	fmt.Printf("to-local-pull,message:%s\n", message)
 
+	ss := strings.Split(message, "~")
+	m := ss[len(ss)-1]
+
 	// input-message:
 	// 		1257010784/1257010786_1257010815/00001/ch129.fits.zst
-	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(message)
+	ss = regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(m)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
 		return 21
@@ -60,31 +68,51 @@ func toLocalTarPull(message string, headers map[string]string) int {
 	// b, e := dataset.getTimeRange(ts)
 	channel, _ := strconv.Atoi(ss[3])
 
-	// m = fmt.Sprintf("%s~%d_%d", m, b, e)
+	h := make(map[string]string)
+	// 设定排序号
+	h["sorted_tag"] = fmt.Sprintf("%06d", dataset.getSortedNumber(ts, channel, tStep))
+
+	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
+	prefix := ""
+	if os.Getenv("JUMP_SERVERS") != "" {
+		// remote && jump-servers
+		// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+		m = message + suffix
+	} else {
+		prefix = getLocalRsyncPrefix()
+		if strings.HasPrefix(message, "/") {
+			// local
+			// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+			ss := strings.Split(message, "~")
+			m = ss[len(ss)-1]
+			m = prefix + m + suffix
+		} else {
+			// from cluster-tar-pull
+			// message: 1257010784/1257010786_1257010815_ch109.dat.zst.tar
+			m = prefix + message + suffix
+		}
+	}
+
+	return sendNodeAwareMessage(m, h, "local-tar-pull", channel-109)
+}
+
+func getLocalRsyncPrefix() string {
 	cmdTxt := `scalebox cluster get-parameter rsync_info`
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
 	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
 	if code != 0 {
-		return code
+		return ""
 	}
-	ss = strings.Split(strings.TrimSpace(stdout), "#")
+	ss := strings.Split(strings.TrimSpace(stdout), "#")
 	sss := strings.Split(ss[0], ":")
 	if len(ss) != 4 || len(sss) != 2 {
 		fmt.Fprintf(os.Stderr, "Invalid return text from get-cluster-parameter rsync_info:\n%s\n", stdout)
-		return 1
+		return ""
 	}
 
-	prefix := fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
-	fmt.Println("prefix:", prefix)
-	// prefix := "root@10.200.1.100/raid0/scalebox/mydata/mwa/tar~"
-	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
-	m := prefix + message + suffix
+	return fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
 
-	h := make(map[string]string)
-	h["sorted_tag"] = fmt.Sprintf("%06d", dataset.getSortedNumber(ts, channel, tStep))
-
-	return sendNodeAwareMessage(m, h, "local-tar-pull", channel-109)
 }
 
 func fromLocalTarPull(message string, headers map[string]string) int {
