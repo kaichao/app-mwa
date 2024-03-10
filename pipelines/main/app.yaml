@@ -69,7 +69,7 @@ jobs:
   beam-maker:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
-    command: ${ROCM_COMMAND_P1}
+    command: ${ROCM_COMMAND}
     variables:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
@@ -84,12 +84,9 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
-      - KEEP_SOURCE_FILE=yes
-      # - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
-      # 压力测试专用
-      # - KEEP_TARGET_FILE=no
+      # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
     hosts:
-      - ${NODES}:1
+      - ${NODES}:4
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}

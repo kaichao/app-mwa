@@ -49,6 +49,6 @@ ENV \
     NUM_SECONDS_PER_CALC=240
     # ALWAYS_RUNNING=yes
 
-COPY --from=hub.cstcloud.cn/scalebox/base /usr/local/sbin /usr/local/sbin
+COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local
 WORKDIR /work
 ENTRYPOINT ["goagent"]

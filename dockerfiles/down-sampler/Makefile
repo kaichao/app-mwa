@@ -15,7 +15,7 @@ singularity:
 	mkdir -p $(SINGULARITY_DIR)/app-mwa/
 	mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
 
-dist:
+dist: build
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
 	@ date
 	docker save $(IMAGE_NAME) | zstd -T4 > /raid0/tmp/my.img.zst

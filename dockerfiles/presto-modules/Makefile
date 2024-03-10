@@ -15,7 +15,7 @@ singularity:
 	mkdir -p $(SINGULARITY_DIR)/app-mwa/
 	mv -f ~/singularity/app-mwa/presto-search.sif $(SINGULARITY_DIR)/app-mwa/
 
-dist:
+dist: build
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'
 	@ date
 	docker save $(IMAGE_NAME) | zstd > /raid0/tmp/my.img.zst
