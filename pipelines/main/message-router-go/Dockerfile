@@ -37,17 +37,16 @@ ENV \
     ACTION_RUN=/app/bin/message-router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
-    LOCAL_MODE= \
+    LOCAL_MODE=
     # 2/3/4/6/8/12/24
-    NUM_NODES_PER_GROUP=24 \
+    # NUM_NODES_PER_GROUP=24 \
     # 单次计算的指向数，可为节点的倍数
-    NUM_POINTINGS_PER_CALC=24 \
+    # NUM_POINTINGS_PER_CALC=24 \
     # 指向设置
-    POINTING_BEGIN=1 \
-    POINTING_END=1440 \
+    # POINTING_BEGIN=1 \
+    # POINTING_END=1440 \
     # 每组计算dat文件数量（秒数）
-    NUM_SECONDS_PER_CALC=240
-    # ALWAYS_RUNNING=yes
+    # NUM_SECONDS_PER_CALC=240
 
 COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local
 WORKDIR /work

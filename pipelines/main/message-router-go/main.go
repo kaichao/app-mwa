@@ -66,15 +66,15 @@ func defaultFunc(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", message)
 		return 3
 	}
-	dataset := getDataSet(ss[1])
-	if dataset == nil {
-		fmt.Fprintf(os.Stderr, "Invalid dataset format, metadata:%s\n", ss[2])
+	datacube := getDataCube(ss[1])
+	if datacube == nil {
+		fmt.Fprintf(os.Stderr, "Invalid datacube format, metadata:%s\n", ss[2])
 		return 4
 	}
 
-	createDatUsedSemaphores(dataset)
-	createDatReadySemaphores(dataset)
-	createFits24chReadySemaphores(dataset)
+	createDatUsedSemaphores(datacube)
+	createDatReadySemaphores(datacube)
+	createFits24chReadySemaphores(datacube)
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
 	scalebox.AppendToFile("/work/messages.txt", m)

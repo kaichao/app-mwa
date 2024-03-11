@@ -9,7 +9,23 @@ datasets:
     # <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784/1257010784
     metadata:
       datasetID: 1257010784
-      horizontalWidth: 24
       # 1257010786 ~ 1257015583, 4798
-      verticalStart: 1257010786
-      verticalHeight: 240
+
+      # horizontalWidth: 24
+      # verticalStart: 1257010786
+      # verticalHeight: 240
+
+      # channel dimension
+      channelBegin: 109
+      channelSize: 24
+
+      # time dimenstion
+      timeBegin: 1257010786
+      timeLength: 120
+      timeStep: 60
+
+      # pointing dimension
+      pointingBegin: 1
+      pointingEnd: 192
+      pointingStep: 24
+      numPerBatch: 2

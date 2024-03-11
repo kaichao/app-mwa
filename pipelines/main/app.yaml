@@ -189,13 +189,13 @@ jobs:
       - LOCAL_MODE=${LOCAL_MODE}
       - NUM_NODES_PER_GROUP=
       # 指向起始号
-      - POINTING_BEGIN=${POINTING_BEGIN}
+      # - POINTING_BEGIN=${POINTING_BEGIN}
       # 指向结束号
-      - POINTING_END=${POINTING_END}
+      # - POINTING_END=${POINTING_END}
       # 单次计算的指向数
-      - NUM_POINTINGS_PER_CALC=${NUM_POINTINGS_PER_CALC}
+      # - NUM_POINTINGS_PER_CALC=${NUM_POINTINGS_PER_CALC}
       # 单次计算的数据时长（秒数）
-      - NUM_SECONDS_PER_CALC=${NUM_SECONDS_PER_CALC}
+      # - NUM_SECONDS_PER_CALC=${NUM_SECONDS_PER_CALC}
       # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
       - JUMP_SERVERS=${JUMP_SERVERS}
       # - TRACE=yes
