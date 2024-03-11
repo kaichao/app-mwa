@@ -17,7 +17,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromBeamMaker()\n", message)
 		return 3
 	}
-	sema := fmt.Sprintf("dat-used:%s/%s/%s", ss[1], ss[2], ss[3])
+	sema := fmt.Sprintf("dat-processed:%s/%s/%s", ss[1], ss[2], ss[3])
 	n := countDown(sema)
 	fmt.Printf("sema: %s,value:%d\n", sema, n)
 	if n == 0 {
@@ -42,9 +42,9 @@ func fromDownSampler(message string, headers map[string]string) int {
 	}
 	nPointing, _ := strconv.Atoi(ss[1])
 	fromIP := headers["from_ip"]
-	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, numNodesPerGroup)
-	fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%numNodesPerGroup)
-	toIP := hosts[(nPointing-1)%numNodesPerGroup]
+	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(hosts))
+	fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%len(hosts))
+	toIP := hosts[(nPointing-1)%len(hosts)]
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"

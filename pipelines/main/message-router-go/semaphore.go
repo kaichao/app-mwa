@@ -9,66 +9,53 @@ import (
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
-func createDatReadySemaphores(dataset *DataSet) {
+func createDatReadySemaphores(datacube *DataCube) {
 	// TARGET: beam-maker
 	// 1257010784/1257010786_1257010815/112/00001_00024
 	// 1257010784/1257010786_1257010815/112
-	arr := dataset.getTimeRanges()
+	arr := datacube.getTimeRanges()
 	for i := 0; i < len(arr); i += 2 {
 		// all dat files in current range
 		initValue := arr[i+1] - arr[i] + 1
 		for ch := 109; ch <= 132; ch++ {
 			sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-				dataset.DatasetID, arr[i], arr[i+1], ch)
+				datacube.DatasetID, arr[i], arr[i+1], ch)
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
 		}
 	}
 }
 
-func createFits24chReadySemaphores(dataset *DataSet) {
+func createFits24chReadySemaphores(datacube *DataCube) {
 	// TARGET: fits-merger
 	// 1257010784/p00024/t1257010786_1257010815
 	// 24-channel
 	initValue := 24
 
-	arr := dataset.getTimeRanges()
+	arr := datacube.getTimeRanges()
 
-	for p := pBegin; p <= pEnd; p++ {
+	for p := datacube.PointingBegin; p <= datacube.PointingEnd; p++ {
 		for i := 0; i < len(arr); i += 2 {
-			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d", dataset.DatasetID, p, arr[i], arr[i+1])
+			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d", datacube.DatasetID, p, arr[i], arr[i+1])
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
 		}
 	}
 }
 
-func createDatUsedSemaphores(dataset *DataSet) {
+func createDatUsedSemaphores(datacube *DataCube) {
 	// all pointing
-	initValue := pEnd - pBegin + 1
+	initValue := datacube.PointingEnd - datacube.PointingBegin + 1
 
-	arr := dataset.getTimeRanges()
+	arr := datacube.getTimeRanges()
 	for i := 0; i < len(arr); i += 2 {
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("dat-used:%s/t%d_%d/ch%d", dataset.DatasetID, arr[i], arr[i+1], ch)
+			sema := fmt.Sprintf("dat-processed:%s/t%d_%d/ch%d", datacube.DatasetID, arr[i], arr[i+1], ch)
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
 			addSemaphore(sema, initValue)
 		}
 	}
 }
-
-// func getPointingRangeX(dataset *DataSet) []int {
-// 	var ret []int
-
-// 	for i := pBegin; i <= pEnd; i += pStep {
-// 		j := i + pStep - 1
-// 		if j > pEnd {
-// 			j = pEnd
-// 		}
-// 		ret = append(ret, i, j)
-// 	}
-// 	return ret
-// }
 
 func addSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
