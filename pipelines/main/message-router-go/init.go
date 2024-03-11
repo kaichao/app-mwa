@@ -82,13 +82,13 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 	}
 
 	toHost := hosts[num%numNodesPerGroup]
-	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
+	cmdTxt := fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	if len(headers) > 0 {
 		h, err := json.Marshal(headers)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "headers:%v,JSON marshaling failed:%v\n", headers, err)
 		} else {
-			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s --headers '%s' %s", sinkJob, toHost, h, message)
+			cmdTxt = fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s --headers '%s' %s", sinkJob, toHost, h, message)
 		}
 	}
 

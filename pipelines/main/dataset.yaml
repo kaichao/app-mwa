@@ -5,8 +5,11 @@ cluster: ${CLUSTER}
 datasets:
   1257010784:
     base_uri: mwa/1257010784
+    # <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784
+    # <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784/1257010784
     metadata:
       datasetID: 1257010784
       horizontalWidth: 24
+      # 1257010786 ~ 1257015583, 4798
       verticalStart: 1257010786
-      verticalHeight: 120
+      verticalHeight: 240
