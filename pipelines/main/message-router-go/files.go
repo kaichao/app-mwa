@@ -12,8 +12,8 @@ import (
 
 func fromDirList(message string, headers map[string]string) int {
 	fmt.Println("message:", message)
-	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.zst.tar
-	// /data/mwa/tar~1257010784/1257010786_1257010815_ch129.dat.zst.tar
+	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.tar.zst
+	// /data/mwa/tar~1257010784/1257010786_1257010815_ch129.dat.tar.zst
 	m := message
 	if !strings.Contains(message, "~") {
 		m = "/data/mwa/tar~" + message
@@ -32,24 +32,24 @@ func fromDirList(message string, headers map[string]string) int {
 	}
 
 	// remote cluster(with jump-servers)
-	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	// local cluster
-	// 	message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+	// 	message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
 	return toLocalTarPull(message, headers)
 }
 
 func fromClusterTarPull(message string, headers map[string]string) int {
-	// message: 1257010784/1257010786_1257010815_ch111.dat.zst.tar
+	// message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 	return toLocalTarPull(message, headers)
 }
 
 func toLocalTarPull(message string, headers map[string]string) int {
 	// remote cluster(with jump-servers)
-	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	// from dir-list && local
-	// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+	// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
 	// from cluster-tar-pull
-	// message: 1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 
 	fmt.Printf("to-local-pull,message:%s\n", message)
 
@@ -76,19 +76,19 @@ func toLocalTarPull(message string, headers map[string]string) int {
 	prefix := ""
 	if os.Getenv("JUMP_SERVERS") != "" {
 		// remote && jump-servers
-		// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.zst.tar
+		// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 		m = message + suffix
 	} else {
 		prefix = getLocalRsyncPrefix()
 		if strings.HasPrefix(message, "/") {
 			// local
-			// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.zst.tar
+			// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
 			ss := strings.Split(message, "~")
 			m = ss[len(ss)-1]
 			m = prefix + m + suffix
 		} else {
 			// from cluster-tar-pull
-			// message: 1257010784/1257010786_1257010815_ch109.dat.zst.tar
+			// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 			m = prefix + message + suffix
 		}
 	}
@@ -116,7 +116,7 @@ func getLocalRsyncPrefix() string {
 }
 
 func fromLocalTarPull(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815_ch109.dat.zst.tar
+	// 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	re := regexp.MustCompile(`^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)`)
 	matches := re.FindStringSubmatch(message)
 	fmt.Printf("message:%s, matches:%v\n", message, matches)
@@ -177,7 +177,7 @@ func (dataset *DataSet) getSortedNumber(t int, channel int, groupSize int) int {
 }
 
 func filterDataset(message string) bool {
-	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.zst.tar
+	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.tar.zst
 	re := regexp.MustCompile(".+~([0-9]+)/([0-9]+)_([0-9]+)_ch.+")
 	ss := re.FindStringSubmatch(message)
 	datasetID := ss[1]
