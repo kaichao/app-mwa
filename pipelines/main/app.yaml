@@ -13,8 +13,6 @@ jobs:
       slot_on_head: yes
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
-      # - REGEX_2D_DATASET=${REGEX_DAT}
-      # - INDEX_2D_DATASET=${INDEX_DAT}
 
   cluster-tar-pull:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy

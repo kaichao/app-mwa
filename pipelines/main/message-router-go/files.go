@@ -72,7 +72,7 @@ func toLocalTarPull(message string, headers map[string]string) int {
 
 	h := make(map[string]string)
 	// 通过headers中的sorted_tag，设定显式排序
-	h["sorted_tag"] = fmt.Sprintf("%06d", datacube.getSortedNumber(ts, channel))
+	h["sorted_tag"] = fmt.Sprintf("%06d", datacube.getBlockOrder(ts, channel))
 
 	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
 	prefix := ""
@@ -158,8 +158,19 @@ func fromUnpack(message string, headers map[string]string) int {
 	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
 	if n := countDown(sema); n == 0 {
 		channel, _ := strconv.Atoi(ss[3])
-		for b, e := range datacube.getPointingRanges() {
-			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], b, e)
+		// for p0, p1 := range datacube.getPointingRanges() {
+		// 	m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
+		// 	ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
+		// 	if ret != 0 {
+		// 		return ret
+		// 	}
+		// }
+
+		arr := datacube.getPointingRanges()
+		for i := 0; i < len(arr); i += 2 {
+			p0 := arr[i]
+			p1 := arr[i+1]
+			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
 			ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
 			if ret != 0 {
 				return ret
@@ -168,19 +179,6 @@ func fromUnpack(message string, headers map[string]string) int {
 	}
 
 	return 0
-}
-
-// 三维datacube中，block的顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
-func (datacube *DataCube) getSortedNumber(t int, channel int) int {
-	ch := channel - datacube.ChannelBegin
-	tm := (t - datacube.TimeBegin) / datacube.TimeStep
-	fmt.Printf("datacube.channelBegin:%d\n", datacube.ChannelBegin)
-	fmt.Printf("datacube:%v\n", datacube)
-	fmt.Println("ch=", ch)
-	fmt.Println("tm=", tm)
-
-	// 2位时间编码 + 2位通道编码
-	return tm*100 + ch
 }
 
 func filterDataCube(message string) bool {
@@ -193,7 +191,7 @@ func filterDataCube(message string) bool {
 
 	datacube := getDataCube(datasetID)
 	begin2 := datacube.TimeBegin
-	end2 := datacube.TimeBegin + datacube.TimeLength - 1
+	end2 := datacube.TimeBegin + datacube.NumOfSeconds - 1
 	// interleaved
 	return begin1 <= end2 && begin2 <= end1
 }
