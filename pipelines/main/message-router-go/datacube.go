@@ -98,20 +98,6 @@ func (datacube *DataCube) getTimeIndex(t int) int {
 }
 
 func (datacube *DataCube) getTimeRange(t int) (int, int) {
-	// for y := 0; y < datacube.NumOfSeconds; y += datacube.TimeStep {
-	// 	y0 := datacube.TimeBegin + y
-	// 	y1 := y0 + datacube.TimeStep - 1
-	// 	if y1 > datacube.TimeBegin+datacube.NumOfSeconds-1 {
-	// 		y1 = datacube.TimeBegin + datacube.NumOfSeconds - 1
-	// 	}
-	// 	if y0 <= t && t <= y1 {
-	// 		return y0, y1
-	// 	}
-	// }
-	// fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
-	// 	t, datacube.TimeBegin, datacube.TimeBegin+datacube.NumOfSeconds-1)
-	// return -1, -1
-
 	t -= datacube.TimeBegin
 	if 0 > t || t >= datacube.NumOfSeconds {
 		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",

@@ -42,6 +42,5 @@ func fromDirListTest(message string, headers map[string]string) int {
 
 func fromBeamMakerTest(message string, headers map[string]string) int {
 	// 1257010784/1257010786_1257010795/00001/ch123.fits
-
 	return 0
 }
