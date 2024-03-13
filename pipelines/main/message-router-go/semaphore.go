@@ -43,7 +43,7 @@ func createFits24chReadySemaphores(datacube *DataCube) {
 	}
 }
 
-func createDatUsedSemaphores(datacube *DataCube) {
+func createDatProcessedSemaphores(datacube *DataCube) {
 	// all pointing
 	initValue := datacube.PointingEnd - datacube.PointingBegin + 1
 

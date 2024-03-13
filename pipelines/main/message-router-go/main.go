@@ -72,7 +72,7 @@ func defaultFunc(message string, headers map[string]string) int {
 		return 4
 	}
 
-	createDatUsedSemaphores(datacube)
+	createDatProcessedSemaphores(datacube)
 	createDatReadySemaphores(datacube)
 	createFits24chReadySemaphores(datacube)
 
