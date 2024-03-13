@@ -158,13 +158,6 @@ func fromUnpack(message string, headers map[string]string) int {
 	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
 	if n := countDown(sema); n == 0 {
 		channel, _ := strconv.Atoi(ss[3])
-		// for p0, p1 := range datacube.getPointingRanges() {
-		// 	m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
-		// 	ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
-		// 	if ret != 0 {
-		// 		return ret
-		// 	}
-		// }
 
 		arr := datacube.getPointingRanges()
 		for i := 0; i < len(arr); i += 2 {
@@ -208,28 +201,23 @@ func removeLocalDatFiles(sema string) int {
 	fmt.Println("sema:", sema)
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
 
+	var cmdTxt string
 	if localMode {
 		dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 		num, _ := strconv.Atoi(ch[2:])
 		i := (num - 109) % len(hosts)
-		cmdTxt := fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
-		fmt.Println("cmd-text:", cmdTxt)
-		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
-		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
-		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
-		if code != 0 {
-			return code
-		}
+		cmdTxt = fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
 	} else {
 		dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
-		cmdTxt := fmt.Sprintf("rm -rf %s", dir)
-		fmt.Println("cmd-text:", cmdTxt)
-		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
-		fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
-		fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
-		if code != 0 {
-			return code
-		}
+		cmdTxt = fmt.Sprintf("rm -rf %s", dir)
 	}
+	fmt.Println("cmd-text:", cmdTxt)
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+	fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
+	if code != 0 {
+		return code
+	}
+
 	return 0
 }
