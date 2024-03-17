@@ -65,14 +65,16 @@ func toLocalTarPull(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
 		return 21
 	}
-	datacube := getDataCube(ss[1])
+	cube := getDataCube(ss[1])
 	ts, _ := strconv.Atoi(ss[2])
 	// b, e := datacube.getTimeRange(ts)
 	channel, _ := strconv.Atoi(ss[3])
 
-	h := make(map[string]string)
+	batchIndex := countDownPointingBatchIndex(cube, ts, channel)
 	// 通过headers中的sorted_tag，设定显式排序
-	h["sorted_tag"] = fmt.Sprintf("%06d", datacube.getBlockOrder(ts, channel))
+	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, ts, channel)}
+	// h := make(map[string]string)
+	// h["sorted_tag"] = cube.getSortedTag(batchIndex, ts, channel)
 
 	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
 	prefix := ""
@@ -127,19 +129,23 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 		return 1
 	}
 	ch, _ := strconv.Atoi(matches[3])
-	datacube := getDataCube(matches[1])
-	ts, _ := strconv.Atoi(matches[2])
-	b, e := datacube.getTimeRange(ts)
-	m := fmt.Sprintf("%s~%d_%d", message, b, e)
+	cube := getDataCube(matches[1])
+	t, _ := strconv.Atoi(matches[2])
 
+	batchIndex := getPointingBatchIndex(cube, t, ch)
+	// 通过headers中的sorted_tag，设定显式排序
+	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t, ch)}
+
+	b, e := cube.getTimeRange(t)
+	m := fmt.Sprintf("%s~%d_%d~%02d", message, b, e, batchIndex)
 	fmt.Printf("message:%s, matches:%v,channel:%d\n", m, matches, ch)
 
-	return sendNodeAwareMessage(m, make(map[string]string), "unpack", ch-109)
+	return sendNodeAwareMessage(m, h, "unpack", ch-109)
 }
 
 func fromUnpack(message string, headers map[string]string) int {
-	// 	1257010784/1257010784_1257010790_ch120.dat
-	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat$")
+	// 	1257010784/1257010784_1257010790_ch120.dat~01
+	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat~(.+)$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromCopyUnpack()\n", message)
@@ -147,27 +153,36 @@ func fromUnpack(message string, headers map[string]string) int {
 	}
 
 	// 1257010784_1257010790_ch112.dat
-	datacube := getDataCube(ss[1])
-	if datacube == nil {
+	cube := getDataCube(ss[1])
+	if cube == nil {
 		fmt.Fprintf(os.Stderr, "[WARN] unknown datacube:%s in fromCopyUnpack()\n", ss[1])
 		return 12
 	}
 
 	t, _ := strconv.Atoi(ss[2])
-	t0, t1 := datacube.getTimeRange(t)
+	t0, t1 := cube.getTimeRange(t)
 	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
-	if n := countDown(sema); n == 0 {
-		channel, _ := strconv.Atoi(ss[3])
+	if n := countDown(sema); n != 0 {
+		return 0
+	}
 
-		arr := datacube.getPointingRanges()
-		for i := 0; i < len(arr); i += 2 {
-			p0 := arr[i]
-			p1 := arr[i+1]
-			m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
-			ret := sendNodeAwareMessage(m, make(map[string]string), "beam-maker", channel-109)
-			if ret != 0 {
-				return ret
-			}
+	channel, _ := strconv.Atoi(ss[3])
+	sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
+	n := countDown(sema)
+	batchIndex := cube.getNumOfPointingBatch() - n
+	arr := cube.getPointingRangesByBatchIndex(batchIndex)
+	fmt.Printf("In fromUnpack(), p-ranges:%v\n", arr)
+	for i := 0; i < len(arr); i += 2 {
+		p0 := arr[i]
+		p1 := arr[i+1]
+
+		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
+		batchIndex := getPointingBatchIndex(cube, t0, channel)
+		// 通过headers中的sorted_tag，设定显式排序
+		h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t0, channel)}
+		ret := sendNodeAwareMessage(m, h, "beam-maker", channel-109)
+		if ret != 0 {
+			return ret
 		}
 	}
 
@@ -192,7 +207,8 @@ func filterDataCube(message string) bool {
 func removeLocalDatFiles(sema string) int {
 	// 1257010784/1257010786_1257010795/109
 	// dat-processed:1257010784/t1257010786_1257010815/ch114
-	re := regexp.MustCompile("dat-processed:([0-9]+)/t([0-9]+)_([0-9]+)/(ch[0-9]+)")
+	// dat-processed:1257010784/p00001_000096/t1257010786_1257010815/ch114
+	re := regexp.MustCompile("dat-processed:([0-9]+)/p.+/t([0-9]+)_([0-9]+)/(ch[0-9]+)")
 	ss := re.FindStringSubmatch(sema)
 	ds := ss[1]
 	beg, _ := strconv.Atoi(ss[2])

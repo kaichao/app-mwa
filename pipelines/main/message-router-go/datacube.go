@@ -18,6 +18,8 @@ type dataCube struct {
 
 	TimeBegin    string
 	NumOfSeconds string
+	// 30
+	TimeUnit string
 	// 30的倍数
 	TimeStep string
 
@@ -29,6 +31,10 @@ type dataCube struct {
 }
 
 // DataCube ...
+//
+//	Time Dimension: TimeUnit, TimeRange
+//
+//	Pointing Demension: PointingRange, PointingBatch
 type DataCube struct {
 	DatasetID string
 
@@ -37,6 +43,8 @@ type DataCube struct {
 
 	TimeBegin    int
 	NumOfSeconds int
+	// 单个打包文件的时长（30秒）
+	TimeUnit int
 	// 单次beam-maker的时长，通常为30的倍数
 	TimeStep int
 
@@ -77,6 +85,7 @@ func getDataCube(datasetID string) *DataCube {
 
 	datacube.TimeBegin, _ = strconv.Atoi(dc.TimeBegin)
 	datacube.NumOfSeconds, _ = strconv.Atoi(dc.NumOfSeconds)
+	datacube.TimeUnit, _ = strconv.Atoi(dc.TimeUnit)
 	datacube.TimeStep, _ = strconv.Atoi(dc.TimeStep)
 
 	datacube.PointingBegin, _ = strconv.Atoi(dc.PointingBegin)
@@ -87,52 +96,97 @@ func getDataCube(datasetID string) *DataCube {
 	return &datacube
 }
 
-func (datacube *DataCube) getTimeIndex(t int) int {
-	t -= datacube.TimeBegin
-	if 0 > t || t >= datacube.NumOfSeconds {
+func (cube *DataCube) getTimeIndex(t int) int {
+	t -= cube.TimeBegin
+	if 0 > t || t >= cube.NumOfSeconds {
 		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
-			t, datacube.TimeBegin, datacube.TimeBegin+datacube.NumOfSeconds-1)
+			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
 		return -1
 	}
-	return t / datacube.TimeStep
+	return t / cube.TimeStep
 }
 
-func (datacube *DataCube) getTimeRange(t int) (int, int) {
-	t -= datacube.TimeBegin
-	if 0 > t || t >= datacube.NumOfSeconds {
-		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
-			t, datacube.TimeBegin, datacube.TimeBegin+datacube.NumOfSeconds-1)
+func (cube *DataCube) getTimeUnit(t int) (int, int) {
+	t -= cube.TimeBegin
+	if 0 > t || t >= cube.NumOfSeconds {
+		fmt.Fprintf(os.Stderr, "[WARN]getTimeUnit(), timestamp %d is out of range [%d..%d]\n",
+			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
 		return -1, -1
 	}
-	index := t / datacube.TimeStep
-	t0 := datacube.TimeBegin + index*datacube.TimeStep
-	t1 := t0 + datacube.TimeStep - 1
-	if t1 > datacube.TimeBegin+datacube.NumOfSeconds-1 {
-		t1 = datacube.TimeBegin + datacube.NumOfSeconds - 1
+	index := t / cube.TimeUnit
+	t0 := cube.TimeBegin + index*cube.TimeUnit
+	t1 := t0 + cube.TimeUnit - 1
+	if t1 > cube.TimeBegin+cube.NumOfSeconds-1 {
+		t1 = cube.TimeBegin + cube.NumOfSeconds - 1
 	}
 	return t0, t1
-
 }
 
-func (datacube *DataCube) getTimeRanges() []int {
+func (cube *DataCube) getTimeRange(t int) (int, int) {
+	t -= cube.TimeBegin
+	if 0 > t || t >= cube.NumOfSeconds {
+		fmt.Fprintf(os.Stderr, "[WARN]getTimeRange(),timestamp %d is out of range [%d..%d]\n",
+			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
+		return -1, -1
+	}
+	index := t / cube.TimeStep
+	t0 := cube.TimeBegin + index*cube.TimeStep
+	t1 := t0 + cube.TimeStep - 1
+	if t1 > cube.TimeBegin+cube.NumOfSeconds-1 {
+		t1 = cube.TimeBegin + cube.NumOfSeconds - 1
+	}
+	return t0, t1
+}
+
+func (cube *DataCube) getTimeRanges() []int {
 	var ret []int
-	for t := 0; t < datacube.NumOfSeconds; t += datacube.TimeStep {
-		t0 := datacube.TimeBegin + t
-		t1 := t0 + datacube.TimeStep - 1
-		if t1 > datacube.TimeBegin+datacube.NumOfSeconds-1 {
-			t1 = datacube.TimeBegin + datacube.NumOfSeconds - 1
+	for t := 0; t < cube.NumOfSeconds; t += cube.TimeStep {
+		t0 := cube.TimeBegin + t
+		t1 := t0 + cube.TimeStep - 1
+		if t1 > cube.TimeBegin+cube.NumOfSeconds-1 {
+			t1 = cube.TimeBegin + cube.NumOfSeconds - 1
 		}
 		ret = append(ret, t0, t1)
 	}
 	return ret
 }
 
-func (datacube *DataCube) getPointingRanges() []int {
+func (cube *DataCube) getTimeUnitsByInterval(lower, upper int) []int {
 	var ret []int
-	for p0 := datacube.PointingBegin; p0 <= datacube.PointingEnd; p0 += datacube.PointingStep {
-		p1 := p0 + datacube.PointingStep - 1
-		if p1 > datacube.PointingEnd {
-			p1 = datacube.PointingEnd
+	lower -= cube.TimeBegin
+	upper -= cube.TimeBegin
+	if lower < 0 {
+		lower = 0
+	}
+	for t := lower; t < upper; t += cube.TimeUnit {
+		t0 := t / cube.TimeUnit * cube.TimeUnit
+		t1 := t0 + cube.TimeUnit - 1
+		if t1 > cube.NumOfSeconds-1 {
+			t1 = cube.NumOfSeconds - 1
+		}
+		ret = append(ret, cube.TimeBegin+t0, cube.TimeBegin+t1)
+	}
+	return ret
+}
+
+func (cube *DataCube) getNumOfPointingBatch() int {
+	result := (cube.PointingEnd - cube.PointingBegin) /
+		(cube.NumPerBatch * cube.PointingStep)
+	remainder := (cube.PointingEnd - cube.PointingBegin) %
+		(cube.NumPerBatch * cube.PointingStep)
+	if remainder > 0 {
+		result++
+	}
+	return result
+}
+
+// 获得全部指向的指向区间
+func (cube *DataCube) getPointingRanges() []int {
+	var ret []int
+	for p0 := cube.PointingBegin; p0 <= cube.PointingEnd; p0 += cube.PointingStep {
+		p1 := p0 + cube.PointingStep - 1
+		if p1 > cube.PointingEnd {
+			p1 = cube.PointingEnd
 		}
 		ret = append(ret, p0, p1)
 	}
@@ -140,32 +194,51 @@ func (datacube *DataCube) getPointingRanges() []int {
 	return ret
 }
 
-func (datacube *DataCube) getPointingBatchIndex(p int) int {
-	if datacube.PointingBegin > p || p > datacube.PointingEnd {
-		return -1
-	}
-	return (p - datacube.PointingBegin) / (datacube.PointingStep * datacube.NumPerBatch)
+func (cube *DataCube) getPointingRangesByBatchIndex(batchIndex int) []int {
+	return cube.getPointingRangesByBatch(cube.getPointingBatchRange(batchIndex))
 }
 
-func (datacube *DataCube) getPointingBatchRange(p int) (int, int) {
-	index := datacube.getPointingBatchIndex(p)
+func (cube *DataCube) getPointingRangesByBatch(batchBegin, batchEnd int) []int {
+	var ret []int
+	for p0 := batchBegin; p0 <= batchEnd; p0 += cube.PointingStep {
+		p1 := p0 + cube.PointingStep - 1
+		if p1 > cube.PointingEnd {
+			p1 = cube.PointingEnd
+		}
+		ret = append(ret, p0, p1)
+	}
+
+	return ret
+}
+
+// 获取当前指向所在的批次索引
+func (cube *DataCube) getPointingBatchIndex(p int) int {
+	if cube.PointingBegin > p || p > cube.PointingEnd {
+		return -1
+	}
+	return (p - cube.PointingBegin) / (cube.PointingStep * cube.NumPerBatch)
+}
+
+// 获得当前指向所在的批次指向区间
+func (cube *DataCube) getPointingBatchRange(p int) (int, int) {
+	index := cube.getPointingBatchIndex(p)
 	if index == -1 {
 		return -1, -1
 	}
-	p0 := datacube.PointingBegin + index*datacube.PointingStep*datacube.NumPerBatch
-	p1 := p0 + datacube.PointingStep*datacube.NumPerBatch - 1
-	if p1 > datacube.PointingEnd {
-		p1 = datacube.PointingEnd
+	p0 := cube.PointingBegin + index*cube.PointingStep*cube.NumPerBatch
+	p1 := p0 + cube.PointingStep*cube.NumPerBatch - 1
+	if p1 > cube.PointingEnd {
+		p1 = cube.PointingEnd
 	}
 	return p0, p1
 }
 
-func (datacube *DataCube) getPointingBatchRanges() []int {
+func (cube *DataCube) getPointingBatchRanges() []int {
 	var ret []int
-	for p0 := datacube.PointingBegin; p0 <= datacube.PointingEnd; p0 += datacube.PointingStep * datacube.NumPerBatch {
-		p1 := p0 + datacube.PointingStep*datacube.NumPerBatch - 1
-		if p1 > datacube.PointingEnd {
-			p1 = datacube.PointingEnd
+	for p0 := cube.PointingBegin; p0 <= cube.PointingEnd; p0 += cube.PointingStep * cube.NumPerBatch {
+		p1 := p0 + cube.PointingStep*cube.NumPerBatch - 1
+		if p1 > cube.PointingEnd {
+			p1 = cube.PointingEnd
 		}
 		ret = append(ret, p0, p1)
 	}
@@ -173,15 +246,17 @@ func (datacube *DataCube) getPointingBatchRanges() []int {
 	return ret
 }
 
-// 三维datacube中，block的顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
-func (datacube *DataCube) getBlockOrder(t int, channel int) int {
-	ch := channel - datacube.ChannelBegin
-	tm := (t - datacube.TimeBegin) / datacube.TimeStep
-	fmt.Printf("datacube.channelBegin:%d\n", datacube.ChannelBegin)
-	fmt.Printf("datacube:%v\n", datacube)
+// 三维datacube中，给定顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
+func (cube *DataCube) getSortedTag(pointing int, time int, channel int) string {
+	p := cube.getPointingBatchIndex(pointing)
+	ch := channel - cube.ChannelBegin
+	tm := (time - cube.TimeBegin) / cube.TimeStep
+	fmt.Printf("datacube.channelBegin:%d\n", cube.ChannelBegin)
+	fmt.Printf("datacube:%v\n", cube)
 	fmt.Println("ch=", ch)
 	fmt.Println("tm=", tm)
 
-	// 2位时间编码 + 2位通道编码
-	return tm*100 + ch
+	// 2位指向码 + 2位时间编码 + 2位通道编码
+
+	return fmt.Sprintf("%02d%02d%02d", p, tm, ch)
 }
