@@ -1,9 +1,7 @@
 #!/bin/bash
-
-# 1257010784/1257010786_1257010815_ch109.dat.tar.zst~1257010786_1257010845
-m=$1
-
-arr=($(echo $m | tr "~" " ")) 
+# 第3部分为batch-index，仅用于避免重复key_message
+# 1257010784/1257010786_1257010815_ch109.dat.tar.zst~1257010786_1257010845~01
+arr=($(echo $1 | tr "~" " ")) 
 if [[ ${arr[0]} =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]+)\.dat\.tar\.zst$ ]]; then
     dataset="${BASH_REMATCH[1]}"
     begin="${BASH_REMATCH[2]}"
@@ -36,13 +34,13 @@ cd $target_dir && chmod 644 *.dat
 # 1257010784/1257010784_1257010801_ch132.dat
 for ((n=$begin; n<=$end; n++))
 do
-    echo "${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/messages.txt
+    echo "${dataset}_${n}_ch${ch}.dat~${arr[2]}" >> ${WORK_DIR}/messages.txt
     # echo "${DIR_DAT}/${dataset}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
     echo "${target_dir}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
     echo "output-file: ${target_dir}/${dataset}_${n}_ch${ch}.dat"
 done
 
-[ "$KEEP_SOURCE_FILE" = "no" ] && echo $source_file >> $WORK_DIR/removed-files.txt
+[ "$KEEP_SOURCE_FILE" = "no" ] && echo "$source_file be removed" && echo $source_file >> $WORK_DIR/removed-files.txt
 echo $source_file >> ${WORK_DIR}/input-files.txt
 
 exit $code

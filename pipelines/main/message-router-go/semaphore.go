@@ -9,55 +9,115 @@ import (
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
-func createDatReadySemaphores(datacube *DataCube) {
+func createDatReadySemaphores(cube *DataCube) {
 	// TARGET: beam-maker
 	// 1257010784/1257010786_1257010815/112/00001_00024
 	// 1257010784/1257010786_1257010815/112
-	arr := datacube.getTimeRanges()
-	for i := 0; i < len(arr); i += 2 {
+	ts := cube.getTimeRanges()
+	for i := 0; i < len(ts); i += 2 {
 		// all dat files in current range
-		initValue := arr[i+1] - arr[i] + 1
+		initValue := ts[i+1] - ts[i] + 1
 		for ch := 109; ch <= 132; ch++ {
 			sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-				datacube.DatasetID, arr[i], arr[i+1], ch)
+				cube.DatasetID, ts[i], ts[i+1], ch)
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
-			addSemaphore(sema, initValue)
+			createSemaphore(sema, initValue)
 		}
 	}
 }
 
-func createFits24chReadySemaphores(datacube *DataCube) {
+func createPointingBatchLeftSemaphores(cube *DataCube) {
+	// pointing-batch-left:1257010784/t1257010786_1257010845/ch119
+	initValue := cube.getNumOfPointingBatch()
+
+	ts := cube.getTimeUnitsByInterval(cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
+	for i := 0; i < len(ts); i += 2 {
+		// all dat files in current range
+		for ch := 109; ch <= 132; ch++ {
+			sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
+				cube.DatasetID, ts[i], ts[i+1], ch)
+			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
+			createSemaphore(sema, initValue)
+		}
+	}
+}
+func createFits24chReadySemaphores(cube *DataCube) {
 	// TARGET: fits-merger
 	// 1257010784/p00024/t1257010786_1257010815
 	// 24-channel
 	initValue := 24
 
-	arr := datacube.getTimeRanges()
+	ts := cube.getTimeRanges()
 
-	for p := datacube.PointingBegin; p <= datacube.PointingEnd; p++ {
-		for i := 0; i < len(arr); i += 2 {
-			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d", datacube.DatasetID, p, arr[i], arr[i+1])
+	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
+		for i := 0; i < len(ts); i += 2 {
+			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
+				cube.DatasetID, p, ts[i], ts[i+1])
 			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
-			addSemaphore(sema, initValue)
+			createSemaphore(sema, initValue)
 		}
 	}
 }
 
-func createDatProcessedSemaphores(datacube *DataCube) {
-	// all pointing
-	initValue := datacube.PointingEnd - datacube.PointingBegin + 1
+func createDatProcessedSemaphores(cube *DataCube) {
+	// dat-processed:1257010784/p00001_00096/t1257010846_1257010905/ch111
+	// first batch
+	ts := cube.getTimeRanges()
 
-	arr := datacube.getTimeRanges()
-	for i := 0; i < len(arr); i += 2 {
+	fmt.Printf("cube:%v\n", cube)
+
+	for i := 0; i < len(ts); i += 2 {
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("dat-processed:%s/t%d_%d/ch%d", datacube.DatasetID, arr[i], arr[i+1], ch)
-			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
-			addSemaphore(sema, initValue)
+			for pIndex := 0; pIndex < cube.getNumOfPointingBatch(); pIndex++ {
+				p0, p1 := cube.getPointingBatchRange(cube.PointingBegin + pIndex*cube.PointingStep*cube.NumPerBatch)
+
+				fmt.Printf("p-index:%d,p0=%d,p1=%d\n", pIndex, p0, p1)
+				sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
+					cube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
+				fmt.Printf("sema:%s,init-value:%d\n", sema, p1-p0+1)
+				createSemaphore(sema, p1-p0+1)
+			}
+			// sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
+			// 	datacube.DatasetID, ts[i], ts[i+1], ch)
+			// indexPointBatch := datacube.getNumOfPointingBatch() - countDown(sema) - 1
+			// p0, p1 := datacube.getPointingBatchRange(indexPointBatch)
+			// sema = fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
+			// 	datacube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
+			// fmt.Printf("sema:%s,init-value:%d\n", sema, p1-p0+1)
+			// createSemaphore(sema, p1-p0+1)
 		}
 	}
+
+	// all pointing
+	// initValue := datacube.PointingEnd - datacube.PointingBegin + 1
+
+	// arr := datacube.getTimeRanges()
+	// for i := 0; i < len(arr); i += 2 {
+	// 	for ch := 109; ch <= 132; ch++ {
+	// 		sema := fmt.Sprintf("dat-processed:%s/t%d_%d/ch%d", datacube.DatasetID, arr[i], arr[i+1], ch)
+	// 		fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
+	// 		addSemaphore(sema, initValue)
+	// 	}
+	// }
 }
 
-func addSemaphore(semaName string, defaultValue int) int {
+func getPointingBatchIndex(cube *DataCube, t int, ch int) int {
+	return doGetPointingBatchIndex(cube, t, ch, getSemaphore)
+}
+
+func countDownPointingBatchIndex(cube *DataCube, t int, ch int) int {
+	return doGetPointingBatchIndex(cube, t, ch, countDown)
+}
+
+func doGetPointingBatchIndex(cube *DataCube, t int, ch int, op func(string) int) int {
+	t0, t1 := cube.getTimeUnit(t)
+	sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
+		cube.DatasetID, t0, t1, ch)
+	fmt.Printf("sema:%s\n", sema)
+	return cube.getNumOfPointingBatch() - op(sema) - 1
+}
+
+func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
 	// scalebox.ExecShellCommand(cmdText)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
@@ -78,6 +138,24 @@ func countDown(semaName string) int {
 	code, err := strconv.Atoi(strings.TrimSpace(stdout))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore countdown:\n%v\n", err)
+		return -2
+	}
+
+	return code
+}
+
+func getSemaphore(semaName string) int {
+	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
+	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
+	fmt.Printf("exit-code for semaphore get:\n%d\n", code)
+	fmt.Printf("stdout for semaphore get:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for semaphore get:\n%s\n", stderr)
+	if code > 0 {
+		return -1
+	}
+	code, err := strconv.Atoi(strings.TrimSpace(stdout))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore get:\n%v\n", err)
 		return -2
 	}
 

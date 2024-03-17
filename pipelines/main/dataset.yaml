@@ -18,6 +18,7 @@ datasets:
       # time dimenstion
       timeBegin: 1257010786
       numOfSeconds: 120
+      timeUnit: 30
       timeStep: 60
 
       # pointing dimension

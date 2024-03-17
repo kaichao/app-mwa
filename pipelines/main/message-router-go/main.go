@@ -72,8 +72,12 @@ func defaultFunc(message string, headers map[string]string) int {
 		return 4
 	}
 
-	createDatProcessedSemaphores(datacube)
+	// first one
 	createDatReadySemaphores(datacube)
+
+	createPointingBatchLeftSemaphores(datacube)
+	createDatProcessedSemaphores(datacube)
+
 	createFits24chReadySemaphores(datacube)
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])

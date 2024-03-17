@@ -4,6 +4,7 @@ cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: message-router-main
+  default_sleep_count: 20
 
 jobs:
   dir-list:
@@ -36,11 +37,14 @@ jobs:
       key_group_index: 1,2,3
     variables:
       task_timeout_seconds: 1800
-      # dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~15
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~50
+      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~35
+      dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~15
+      # dir_free_gb: /tmp/scalebox/mydata/mwa/dat~50
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
+      # 可给message-router发送重复名的消息（覆盖）
+      - UPSERT=yes
     hosts:
       -  ${NODES}:1
 
