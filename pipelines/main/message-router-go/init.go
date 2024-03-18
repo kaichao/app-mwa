@@ -82,7 +82,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	fmt.Printf("cmd-text:%s\n", cmdTxt)
+	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)

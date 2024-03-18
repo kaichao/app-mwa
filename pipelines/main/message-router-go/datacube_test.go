@@ -172,6 +172,27 @@ func TestGetPointingBatchIndex(t *testing.T) {
 	}
 }
 
+func TestGetPointingRangesByBatchIndex(t *testing.T) {
+	// 1 ~ 12972 (24 * 20)
+	testCases := []struct {
+		idx, expected int
+	}{
+		{-1, 0},
+		{0, 40},
+		{1, 40},
+		{26, 40},
+		{27, 2},
+		{28, 0},
+	}
+	datacube := getMyDataCube()
+	for _, tc := range testCases {
+		result := datacube.getPointingRangesByBatchIndex(tc.idx)
+		fmt.Printf("idx:%d,val:%v\n", tc.idx, result)
+		if len(result) != tc.expected {
+			t.Errorf("datacube.getPointingRangesByBatchIndex(%d),len() = %d, expected %d", tc.idx, len(result), tc.expected)
+		}
+	}
+}
 func TestGetPointingBatchRange(t *testing.T) {
 	testCases := []struct {
 		p, e0, e1 int

@@ -20,37 +20,42 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	cube := getDataCube(ss[1])
 
 	p, _ := strconv.Atoi(ss[2])
-	ts, _ := strconv.Atoi(ss[3])
+	tb, _ := strconv.Atoi(ss[3])
 	te, _ := strconv.Atoi(ss[4])
 	ch, _ := strconv.Atoi(ss[6])
 
 	p0, p1 := cube.getPointingBatchRange(p)
 	sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%s_%s/%s", ss[1], p0, p1, ss[3], ss[4], ss[5])
 	n := countDown(sema)
-	fmt.Printf("sema: %s,value:%d\n", sema, n)
+	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
 		// 该batch中还未处理完
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
 	removeLocalDatFiles(sema)
-	index := cube.getPointingBatchIndex(p0)
-	if index > 0 && index < cube.getNumOfPointingBatch() {
-		// 数据已经全部处理完成
+
+	// 数据删除，修改信号量值
+	index := countDownPointingBatchIndex(cube, tb, ch)
+	fmt.Printf("In fromBeamMaker(),batch-index=%d\n", index)
+	// index := cube.getPointingBatchIndex(p0)
+	if index < 0 && index > cube.getNumOfPointingBatch() {
+		// 数据已经全部处理完成，没有新的Batch
+		fmt.Printf("In fromBeamMaker(),batch-index=%d,no-new data \n", index)
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
 	// reset semaphore dat-ready(以TimeRange为单位)
 	sema = fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-		cube.DatasetID, ts, te, ch)
-	fmt.Printf("sema:%s,init-value:%d\n", sema, te-ts+1)
-	createSemaphore(sema, te-ts+1)
+		cube.DatasetID, tb, te, ch)
+	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
+	createSemaphore(sema, te-tb+1)
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
-	batchIndex := getPointingBatchIndex(cube, ts, ch)
-	sortedTag := cube.getSortedTag(batchIndex, ts, ch)
+	// batchIndex := getPointingBatchIndex(cube, tb, ch)
+	sortedTag := cube.getSortedTag(index, tb, ch)
 
-	fmt.Printf("ts=%d,ch=%d,sortedTag:%s\n", ts, ch, sortedTag)
+	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 
 	sqlFmt := `
 		UPDATE t_task
@@ -60,7 +65,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 			((SELECT app FROM t_job WHERE id=t_task.job)=(SELECT app FROM t_job WHERE id=%s)) AND
 			key_message LIKE '%%~%s/%d_%d_ch%d.dat.tar.zst~%%'
 	`
-	tarr := cube.getTimeUnitsByInterval(ts, te)
+	tarr := cube.getTimeUnitsByInterval(tb, te)
 	for i := 0; i < len(tarr); i += 2 {
 		t0 := tarr[i]
 		t1 := tarr[i+1]

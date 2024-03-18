@@ -20,7 +20,7 @@ func createDatReadySemaphores(cube *DataCube) {
 		for ch := 109; ch <= 132; ch++ {
 			sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
 				cube.DatasetID, ts[i], ts[i+1], ch)
-			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
+			fmt.Printf("In createDatReadySemaphores(),sema:%s,init-value:%d\n", sema, initValue)
 			createSemaphore(sema, initValue)
 		}
 	}
@@ -36,7 +36,7 @@ func createPointingBatchLeftSemaphores(cube *DataCube) {
 		for ch := 109; ch <= 132; ch++ {
 			sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
 				cube.DatasetID, ts[i], ts[i+1], ch)
-			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
+			fmt.Printf("In createPointingBatchLeftSemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			createSemaphore(sema, initValue)
 		}
 	}
@@ -53,7 +53,7 @@ func createFits24chReadySemaphores(cube *DataCube) {
 		for i := 0; i < len(ts); i += 2 {
 			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
 				cube.DatasetID, p, ts[i], ts[i+1])
-			fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
+			fmt.Printf("In createFits24chReadySemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			createSemaphore(sema, initValue)
 		}
 	}
@@ -74,7 +74,7 @@ func createDatProcessedSemaphores(cube *DataCube) {
 				fmt.Printf("p-index:%d,p0=%d,p1=%d\n", pIndex, p0, p1)
 				sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
 					cube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
-				fmt.Printf("sema:%s,init-value:%d\n", sema, p1-p0+1)
+				fmt.Printf("In createDatProcessedSemaphores(), sema:%s,init-value:%d\n", sema, p1-p0+1)
 				createSemaphore(sema, p1-p0+1)
 			}
 			// sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
@@ -113,8 +113,11 @@ func doGetPointingBatchIndex(cube *DataCube, t int, ch int, op func(string) int)
 	t0, t1 := cube.getTimeUnit(t)
 	sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
 		cube.DatasetID, t0, t1, ch)
-	fmt.Printf("sema:%s\n", sema)
-	return cube.getNumOfPointingBatch() - op(sema) - 1
+	n := op(sema)
+	index := cube.getNumOfPointingBatch() - n
+	fmt.Printf("In doGetPointingBatchIndex(), sema:%s, num-of-batch=%d, op(sema)=%d,index=%d \n",
+		sema, cube.getNumOfPointingBatch(), n, index)
+	return index
 }
 
 func createSemaphore(semaName string, defaultValue int) int {
