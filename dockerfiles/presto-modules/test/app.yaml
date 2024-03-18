@@ -1,0 +1,100 @@
+name: presto-complete.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  rfi-find:
+    label: rfi-find-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --tmpfs /work 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/rfi-find/code
+      
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+    parameters:
+      # task_dist_mode: HOST-BOUND
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - n1:1
+    sink_jobs:
+      - dedisp
+  
+  dedisp:
+    label: dedisperse-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --group-add video 
+        --tmpfs /work 
+        --device /dev/kfd 
+        --device /dev/dri 
+        --security-opt seccomp=unconfined 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/dedisp/code
+      
+    environments:
+      - KEEP_SOURCE_FILE=yes
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - ROCR_VISIBLE_DEVICES=${DEVICE_TO_USE}
+      - LINENUM=${LINENUM}
+    parameters:
+      # task_dist_mode: HOST-BOUND
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+    hosts:
+      - n1:1
+    sink_jobs:
+      - search-fold
+
+  search-fold:
+    label: presto-search-fold-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --group-add video 
+        --tmpfs /work 
+        --device /dev/kfd 
+        --device /dev/dri 
+        --security-opt seccomp=unconfined 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/search-fold/code
+      
+    environments:
+      - KEEP_SOURCE_FILE=yes
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - ROCR_VISIBLE_DEVICES=0
+      - SEARCHARGS=${SEARCHARGS}
+    parameters:
+      # task_dist_mode: HOST-BOUND
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+    hosts:
+      - n1:1
+
+

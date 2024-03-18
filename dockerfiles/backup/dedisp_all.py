@@ -8,7 +8,8 @@ import sys, os
 
 def myexecute(cmd):
     print("'%s'"%cmd)
-    os.system(cmd)
+    status = os.system(cmd)
+    assert status == 0
 
 outsubs = False
 
@@ -16,7 +17,7 @@ if __name__ == '__main__':
     # read the file name to be processed
     filename = sys.argv[1]
     basename = filename.split("/")[-1]
-    basename = basename.split(".")[0]
+    # basename = basename.split(".")[0]
     f_settings_name = "/app/bin/MWA_DDplan.txt"
     # read arguments for accelsearch
     nsub = int(os.getenv("NSUB"))
@@ -68,26 +69,26 @@ if __name__ == '__main__':
                     datdownsamp = 2
                     if downsamp < 2: subdownsamp = datdownsamp = 1
                     # First create the subbands
-                    myexecute("prepsubband_gpu -cuda %d -sub -subdm %.2f -noclip -nsub %d -downsamp %d -o %s %s" %
+                    myexecute("prepsubband_gpu -cuda %d -sub -subdm %.2f -noclip -nsub %d -downsamp %d -o %s %s/*.fits" %
                             (0, subDM, nsub, subdownsamp, basename, filename))
                     # And now create the time series
                     subnames = basename+"_DM%.2f.sub[0-9]*"%subDM
-                    myexecute("prepsubband_gpu -cuda %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s" %
+                    myexecute("prepsubband_gpu -cuda %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s/*.fits" %
                             (0, loDM, dDM, dmspercall, datdownsamp, basename, subnames))
                 elif use_rfi:
-                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -mask %s -o %s %s" %
+                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -mask %s -o %s %s/*.fits" %
                             (0, nsub, loDM, dDM, dmspercall, downsamp, f_rfi_name, basename, filename))
                 
                 else:
-                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s" %
+                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s/*.fits" %
                             (0, nsub, loDM, dDM, dmspercall, downsamp, basename, filename))
 
                 
                 # call prepsubband_gpu to process the file
-        myexecute("date --iso-8601=ns >> /work/timestamps.txt")
+                myexecute("date --iso-8601=ns >> /work/timestamps.txt")
         myexecute("realfft *.dat | grep time")
         # myexecute("rm -f *.dat")
-        myexecute("ls *.fft | xargs -n 1 accelsearch_gpu_4 -cuda 0 " + searchargs + "| grep Total")
+        myexecute("ls *.fft | xargs -n 1 accelsearch_gpu_4 -cuda 0 " + searchargs + "| grep time")
         myexecute("du . -sh")
         myexecute("rm -f *.fft")
         myexecute("date --iso-8601=ns >> /work/timestamps.txt")
