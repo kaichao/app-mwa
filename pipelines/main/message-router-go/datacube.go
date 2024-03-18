@@ -52,7 +52,7 @@ type DataCube struct {
 	PointingEnd   int
 	// 单次beam-maker处理的指向数，通常取24的倍数
 	PointingStep int
-	// 单批次beam-maker的执行次数
+	// 单批次beam-maker的执行次数，batchIndex从0起
 	NumPerBatch int
 }
 
@@ -195,11 +195,22 @@ func (cube *DataCube) getPointingRanges() []int {
 }
 
 func (cube *DataCube) getPointingRangesByBatchIndex(batchIndex int) []int {
-	return cube.getPointingRangesByBatch(cube.getPointingBatchRange(batchIndex))
+	numBatch := (cube.PointingEnd - cube.PointingBegin + 1) / (cube.NumPerBatch * cube.PointingStep)
+	if batchIndex < 0 || batchIndex > numBatch {
+		fmt.Fprintf(os.Stderr, "batch-index:%d is out of range, it should be [0..%d]\n", batchIndex, numBatch)
+		return []int{}
+	}
+	pb := cube.PointingBegin + batchIndex*cube.NumPerBatch*cube.PointingStep
+	pe := pb + cube.NumPerBatch*cube.PointingStep - 1
+
+	return cube.getPointingRangesByBatch(pb, pe)
 }
 
 func (cube *DataCube) getPointingRangesByBatch(batchBegin, batchEnd int) []int {
 	var ret []int
+	if batchEnd > cube.PointingEnd {
+		batchEnd = cube.PointingEnd
+	}
 	for p0 := batchBegin; p0 <= batchEnd; p0 += cube.PointingStep {
 		p1 := p0 + cube.PointingStep - 1
 		if p1 > cube.PointingEnd {
@@ -247,8 +258,8 @@ func (cube *DataCube) getPointingBatchRanges() []int {
 }
 
 // 三维datacube中，给定顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
-func (cube *DataCube) getSortedTag(pointing int, time int, channel int) string {
-	p := cube.getPointingBatchIndex(pointing)
+func (cube *DataCube) getSortedTag(batchIndex int, time int, channel int) string {
+	// p := cube.getPointingBatchIndex(pointing)
 	ch := channel - cube.ChannelBegin
 	tm := (time - cube.TimeBegin) / cube.TimeStep
 	fmt.Printf("datacube.channelBegin:%d\n", cube.ChannelBegin)
@@ -258,5 +269,5 @@ func (cube *DataCube) getSortedTag(pointing int, time int, channel int) string {
 
 	// 2位指向码 + 2位时间编码 + 2位通道编码
 
-	return fmt.Sprintf("%02d%02d%02d", p, tm, ch)
+	return fmt.Sprintf("%02d%02d%02d", batchIndex, tm, ch)
 }

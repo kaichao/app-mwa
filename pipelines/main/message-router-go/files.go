@@ -66,13 +66,13 @@ func toLocalTarPull(message string, headers map[string]string) int {
 		return 21
 	}
 	cube := getDataCube(ss[1])
-	ts, _ := strconv.Atoi(ss[2])
+	t0, _ := strconv.Atoi(ss[2])
 	// b, e := datacube.getTimeRange(ts)
 	channel, _ := strconv.Atoi(ss[3])
 
-	batchIndex := countDownPointingBatchIndex(cube, ts, channel)
+	batchIndex := getPointingBatchIndex(cube, t0, channel)
 	// 通过headers中的sorted_tag，设定显式排序
-	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, ts, channel)}
+	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t0, channel)}
 	// h := make(map[string]string)
 	// h["sorted_tag"] = cube.getSortedTag(batchIndex, ts, channel)
 
@@ -133,12 +133,13 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 	t, _ := strconv.Atoi(matches[2])
 
 	batchIndex := getPointingBatchIndex(cube, t, ch)
-	// 通过headers中的sorted_tag，设定显式排序
-	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t, ch)}
+	// // 通过headers中的sorted_tag，设定显式排序
+	// h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t, ch)}
+	h := map[string]string{}
 
-	b, e := cube.getTimeRange(t)
-	m := fmt.Sprintf("%s~%d_%d~%02d", message, b, e, batchIndex)
-	fmt.Printf("message:%s, matches:%v,channel:%d\n", m, matches, ch)
+	tb, te := cube.getTimeRange(t)
+	m := fmt.Sprintf("%s~%d_%d~%02d", message, tb, te, batchIndex)
+	fmt.Printf("In fromLocalTarPull(),batchIndex=%d, ch=%d, message:%s\n", batchIndex, ch, m)
 
 	return sendNodeAwareMessage(m, h, "unpack", ch-109)
 }
@@ -160,26 +161,32 @@ func fromUnpack(message string, headers map[string]string) int {
 	}
 
 	t, _ := strconv.Atoi(ss[2])
-	t0, t1 := cube.getTimeRange(t)
-	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
+	channel, _ := strconv.Atoi(ss[3])
+	tb, te := cube.getTimeRange(t)
+
+	// 信号量dat-ready减1
+	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
 	if n := countDown(sema); n != 0 {
 		return 0
 	}
 
-	channel, _ := strconv.Atoi(ss[3])
-	sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], t0, t1, ss[3])
-	n := countDown(sema)
-	batchIndex := cube.getNumOfPointingBatch() - n
+	// 信号量dat-ready触发
+	// sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
+	// n := countDown(sema)
+	// batchIndex := cube.getNumOfPointingBatch() - n
+	batchIndex := getPointingBatchIndex(cube, t, channel)
 	arr := cube.getPointingRangesByBatchIndex(batchIndex)
-	fmt.Printf("In fromUnpack(), p-ranges:%v\n", arr)
+	// arr := cube.getPointingRangesByBatch(cube.getPointingBatchRange(p))
+
+	fmt.Printf("In fromUnpack(), batch-index=%d,p-ranges:%v\n", batchIndex, arr)
 	for i := 0; i < len(arr); i += 2 {
 		p0 := arr[i]
 		p1 := arr[i+1]
 
-		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], t0, t1, ss[3], p0, p1)
-		batchIndex := getPointingBatchIndex(cube, t0, channel)
+		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
+		// batchIndex := getPointingBatchIndex(cube, tb, channel)
 		// 通过headers中的sorted_tag，设定显式排序
-		h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t0, channel)}
+		h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, tb, channel)}
 		ret := sendNodeAwareMessage(m, h, "beam-maker", channel-109)
 		if ret != 0 {
 			return ret
@@ -214,7 +221,7 @@ func removeLocalDatFiles(sema string) int {
 	beg, _ := strconv.Atoi(ss[2])
 	end, _ := strconv.Atoi(ss[3])
 	ch := ss[4]
-	fmt.Println("sema:", sema)
+	fmt.Println("In removeLocalDatFiles(), sema:", sema)
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
 
 	var cmdTxt string
@@ -231,9 +238,6 @@ func removeLocalDatFiles(sema string) int {
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
 	fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
-	if code != 0 {
-		return code
-	}
 
-	return 0
+	return code
 }
