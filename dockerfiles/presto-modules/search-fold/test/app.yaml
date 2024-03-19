@@ -35,4 +35,4 @@ jobs:
       # key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
     hosts:
-      - n0:1
+      - n1:1

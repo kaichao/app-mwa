@@ -58,25 +58,25 @@ for i in {1..9}
 do
     LINENUM=$i
     echo "LINENUM:${LINENUM}"
-    mkdir -p $DIR_DEDISP/$bname/$LINENUM
+    mkdir -p ${DIR_DEDISP}/${bname}/dm${LINENUM}
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] In mkdir:$bname, ret-code:$code" >&2 && exit 11
 
 
-    cd $LINENUM
+    cd dm${LINENUM}
     /app/bin/dedisp_line.py $full_dir ../RFIfile_rfifind.mask
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] In dedispersion:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/${LINENUM} && exit 13
+    [[ $code -ne 0 ]] && echo "[ERROR] In dedispersion:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/dm${LINENUM} && exit 13
 
     cd ..
     du -sh
-    tar -cf ${LINENUM}.tar ./${LINENUM} && rm -rf ./${LINENUM}
-    zstd --rm -f ${LINENUM}.tar
-    echo $DIR_DEDISP/$bname/${LINENUM}.tar.zst >> ${WORK_DIR}/output-files.txt
+    tar -cf dm${LINENUM}.tar ./dm${LINENUM} && rm -rf ./dm${LINENUM}
+    zstd --rm -f dm${LINENUM}.tar
+    echo $DIR_DEDISP/$bname/dm${LINENUM}.tar.zst >> ${WORK_DIR}/output-files.txt
     date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
     echo "send message to sink job"
-    echo ${bname}/${LINENUM} > ${WORK_DIR}/messages.txt
+    echo ${bname}/dm${LINENUM} >> ${WORK_DIR}/messages.txt
 done
 
 echo $DIR_FITS/${m} >> ${WORK_DIR}/input-files.txt
