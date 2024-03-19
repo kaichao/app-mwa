@@ -36,7 +36,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	removeLocalDatFiles(sema)
 
 	// 数据删除，修改信号量值
-	index := countDownPointingBatchIndex(cube, tb, ch)
+	index := cube.countDownSemaPointingBatchIndex(tb, ch)
 	fmt.Printf("In fromBeamMaker(),batch-index=%d\n", index)
 	// index := cube.getPointingBatchIndex(p0)
 	if index < 0 && index > cube.getNumOfPointingBatch() {
