@@ -9,7 +9,7 @@ import (
 	scalebox "github.com/kaichao/scalebox/golang/misc"
 )
 
-func createDatReadySemaphores(cube *DataCube) {
+func (cube *DataCube) createDatReadySemaphores() {
 	// TARGET: beam-maker
 	// 1257010784/1257010786_1257010815/112/00001_00024
 	// 1257010784/1257010786_1257010815/112
@@ -26,7 +26,7 @@ func createDatReadySemaphores(cube *DataCube) {
 	}
 }
 
-func createPointingBatchLeftSemaphores(cube *DataCube) {
+func (cube *DataCube) createPointingBatchLeftSemaphores() {
 	// pointing-batch-left:1257010784/t1257010786_1257010845/ch119
 	initValue := cube.getNumOfPointingBatch()
 
@@ -41,7 +41,7 @@ func createPointingBatchLeftSemaphores(cube *DataCube) {
 		}
 	}
 }
-func createFits24chReadySemaphores(cube *DataCube) {
+func (cube *DataCube) createFits24chReadySemaphores() {
 	// TARGET: fits-merger
 	// 1257010784/p00024/t1257010786_1257010815
 	// 24-channel
@@ -59,7 +59,7 @@ func createFits24chReadySemaphores(cube *DataCube) {
 	}
 }
 
-func createDatProcessedSemaphores(cube *DataCube) {
+func (cube *DataCube) createDatProcessedSemaphores() {
 	// dat-processed:1257010784/p00001_00096/t1257010846_1257010905/ch111
 	// first batch
 	ts := cube.getTimeRanges()
@@ -77,35 +77,15 @@ func createDatProcessedSemaphores(cube *DataCube) {
 				fmt.Printf("In createDatProcessedSemaphores(), sema:%s,init-value:%d\n", sema, p1-p0+1)
 				createSemaphore(sema, p1-p0+1)
 			}
-			// sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
-			// 	datacube.DatasetID, ts[i], ts[i+1], ch)
-			// indexPointBatch := datacube.getNumOfPointingBatch() - countDown(sema) - 1
-			// p0, p1 := datacube.getPointingBatchRange(indexPointBatch)
-			// sema = fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
-			// 	datacube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
-			// fmt.Printf("sema:%s,init-value:%d\n", sema, p1-p0+1)
-			// createSemaphore(sema, p1-p0+1)
 		}
 	}
-
-	// all pointing
-	// initValue := datacube.PointingEnd - datacube.PointingBegin + 1
-
-	// arr := datacube.getTimeRanges()
-	// for i := 0; i < len(arr); i += 2 {
-	// 	for ch := 109; ch <= 132; ch++ {
-	// 		sema := fmt.Sprintf("dat-processed:%s/t%d_%d/ch%d", datacube.DatasetID, arr[i], arr[i+1], ch)
-	// 		fmt.Printf("sema:%s,init-value:%d\n", sema, initValue)
-	// 		addSemaphore(sema, initValue)
-	// 	}
-	// }
 }
 
-func getPointingBatchIndex(cube *DataCube, t int, ch int) int {
+func (cube *DataCube) getSemaPointingBatchIndex(t int, ch int) int {
 	return doGetPointingBatchIndex(cube, t, ch, getSemaphore)
 }
 
-func countDownPointingBatchIndex(cube *DataCube, t int, ch int) int {
+func (cube *DataCube) countDownSemaPointingBatchIndex(t int, ch int) int {
 	return doGetPointingBatchIndex(cube, t, ch, countDown)
 }
 

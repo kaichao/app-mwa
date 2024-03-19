@@ -70,7 +70,7 @@ func toLocalTarPull(message string, headers map[string]string) int {
 	// b, e := datacube.getTimeRange(ts)
 	channel, _ := strconv.Atoi(ss[3])
 
-	batchIndex := getPointingBatchIndex(cube, t0, channel)
+	batchIndex := cube.getSemaPointingBatchIndex(t0, channel)
 	// 通过headers中的sorted_tag，设定显式排序
 	h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t0, channel)}
 	// h := make(map[string]string)
@@ -132,7 +132,7 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 	cube := getDataCube(matches[1])
 	t, _ := strconv.Atoi(matches[2])
 
-	batchIndex := getPointingBatchIndex(cube, t, ch)
+	batchIndex := cube.getSemaPointingBatchIndex(t, ch)
 	// // 通过headers中的sorted_tag，设定显式排序
 	// h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t, ch)}
 	h := map[string]string{}
@@ -174,7 +174,7 @@ func fromUnpack(message string, headers map[string]string) int {
 	// sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
 	// n := countDown(sema)
 	// batchIndex := cube.getNumOfPointingBatch() - n
-	batchIndex := getPointingBatchIndex(cube, t, channel)
+	batchIndex := cube.getSemaPointingBatchIndex(t, channel)
 	arr := cube.getPointingRangesByBatchIndex(batchIndex)
 	// arr := cube.getPointingRangesByBatch(cube.getPointingBatchRange(p))
 
