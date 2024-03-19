@@ -1,5 +1,5 @@
 # FROM presto-rocm:1.3
-FROM presto-rocm-4.0.1-small:1.3
+FROM presto-rocm-4.0.1-small:1.4
 
 RUN apt-get update \
     && apt-get install -y zstd \
@@ -14,7 +14,7 @@ ENV NSUB=128 \
     LD_LIBRARY_PATH=/opt/dtk/lib:$LD_LIBRARY_PATH \
     ROCR_VISIBLE_DEVICES= 
 
-COPY ./code/* /app/bin/
+# COPY ./code/* /app/bin/
 
 COPY --from=hub.cstcloud.cn/scalebox/base /usr/local /usr/local
 RUN mkdir -p /work /app/bin && echo "PATH=/app/bin:/code/presto/bin:\${PATH}" >> /root/.bashrc
