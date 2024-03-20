@@ -128,3 +128,15 @@ mv -f ~/singularity/scalebox/agent.sif /raid0/root/singularity/scalebox/
 mv -f ~/singularity/scalebox/rsync-copy.sif /raid0/root/singularity/scalebox/
 
 ```
+
+- 模块运行平均时间：
+
+| 模块名        | task数量 | 平均时间 | 累计时间  | slot数量 | slot均时  |
+| -------------- | ------ | ------ | -------- | ------ | ------- |
+| local-tar-pull | 192    | 85.99  | 16510.94 | 3      | 5503.65 |
+| unpack         | 192    | 18.22  | 3498.93  | 3      | 1166.31 |
+| beam-maker     | 384    | 187.81 | 72120.58 | 12     | 6010.05 |
+| down-sampler   | 9216   | 1.21   | 11130.33 | 3      | 3710.11 |
+| fits-redist    | 6144   | 1.27   | 7819.48  | 3      | 2606.49 |
+| fits-merger    | 384    | 9.14   | 3510.67  | 3      | 1170.22 |
+| fits24ch-push  | 384    | 8.99   | 3453.67  | 3      | 1151.22 |

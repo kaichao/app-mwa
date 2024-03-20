@@ -44,7 +44,7 @@ func TestGetTimeRanges(t *testing.T) {
 	}
 }
 
-func TestGetTimeRangesByInterval(t *testing.T) {
+func TestGetTimeUnitsWithinInterval(t *testing.T) {
 	testCases := []struct {
 		t0, t1   int
 		expected []int
@@ -58,7 +58,29 @@ func TestGetTimeRangesByInterval(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		ts := datacube.getTimeUnitsByInterval(tc.t0, tc.t1)
+		ts := datacube.getTimeUnitsWithinInterval(tc.t0, tc.t1)
+		if !reflect.DeepEqual(ts, tc.expected) {
+			t.Errorf("datacube.getTimeRangesByInterval(%d,%d) = %v, expected %v",
+				tc.t0, tc.t1, ts, tc.expected)
+		}
+	}
+}
+
+func TestGetTimeRangesWithinInterval(t *testing.T) {
+	testCases := []struct {
+		t0, t1   int
+		expected []int
+	}{
+		{1257010785, 1257010935, []int{1257010786, 1257010935}},
+		{1257010786, 1257010935, []int{1257010786, 1257010935}},
+		{1257010786, 1257011085, []int{1257010786, 1257010935, 1257010936, 1257011085}},
+		{1257015286, 1257015583, []int{1257015286, 1257015435, 1257015436, 1257015583}},
+		{1257015436, 1257015583, []int{1257015436, 1257015583}},
+		{1257015436, 1257015584, []int{1257015436, 1257015583}},
+	}
+	datacube := getMyDataCube()
+	for _, tc := range testCases {
+		ts := datacube.getTimeRangesWithinInterval(tc.t0, tc.t1)
 		if !reflect.DeepEqual(ts, tc.expected) {
 			t.Errorf("datacube.getTimeRangesByInterval(%d,%d) = %v, expected %v",
 				tc.t0, tc.t1, ts, tc.expected)

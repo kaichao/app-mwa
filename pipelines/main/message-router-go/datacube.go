@@ -151,7 +151,25 @@ func (cube *DataCube) getTimeRanges() []int {
 	return ret
 }
 
-func (cube *DataCube) getTimeUnitsByInterval(lower, upper int) []int {
+func (cube *DataCube) getTimeRangesWithinInterval(lower, upper int) []int {
+	var ret []int
+	lower -= cube.TimeBegin
+	upper -= cube.TimeBegin
+	if lower < 0 {
+		lower = 0
+	}
+	for t := lower; t < upper; t += cube.TimeStep {
+		t0 := t / cube.TimeStep * cube.TimeStep
+		t1 := t0 + cube.TimeStep - 1
+		if t1 > cube.NumOfSeconds-1 {
+			t1 = cube.NumOfSeconds - 1
+		}
+		ret = append(ret, cube.TimeBegin+t0, cube.TimeBegin+t1)
+	}
+	return ret
+}
+
+func (cube *DataCube) getTimeUnitsWithinInterval(lower, upper int) []int {
 	var ret []int
 	lower -= cube.TimeBegin
 	upper -= cube.TimeBegin

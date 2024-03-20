@@ -36,12 +36,12 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	removeLocalDatFiles(sema)
 
 	// 数据删除，修改信号量值
-	index := cube.countDownSemaPointingBatchIndex(tb, ch)
-	fmt.Printf("In fromBeamMaker(),batch-index=%d\n", index)
+	batchIndex := cube.countDownSemaPointingBatchIndex(tb, ch)
+	fmt.Printf("In fromBeamMaker(),batch-index=%d\n", batchIndex)
 	// index := cube.getPointingBatchIndex(p0)
-	if index < 0 && index > cube.getNumOfPointingBatch() {
+	if batchIndex < 0 || batchIndex >= cube.getNumOfPointingBatch() {
 		// 数据已经全部处理完成，没有新的Batch
-		fmt.Printf("In fromBeamMaker(),batch-index=%d,no-new data \n", index)
+		fmt.Printf("In fromBeamMaker(),batch-index=%d,no-new data \n", batchIndex)
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
@@ -53,7 +53,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
 	// batchIndex := getPointingBatchIndex(cube, tb, ch)
-	sortedTag := cube.getSortedTag(index, tb, ch)
+	sortedTag := cube.getSortedTag(batchIndex, tb, ch)
 
 	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 
@@ -65,7 +65,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 			((SELECT app FROM t_job WHERE id=t_task.job)=(SELECT app FROM t_job WHERE id=%s)) AND
 			key_message LIKE '%%~%s/%d_%d_ch%d.dat.tar.zst~%%'
 	`
-	tarr := cube.getTimeUnitsByInterval(tb, te)
+	tarr := cube.getTimeUnitsWithinInterval(tb, te)
 	for i := 0; i < len(tarr); i += 2 {
 		t0 := tarr[i]
 		t1 := tarr[i+1]
@@ -86,7 +86,6 @@ func fromBeamMaker(message string, headers map[string]string) int {
 				err, rowsAffected)
 			return 2
 		}
-		// scalebox@159.226.237.136/raid0/tmp/mwa/new-tar1257010784~1257010784/1257010786_1257010815_ch111.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
 	}
 	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 }

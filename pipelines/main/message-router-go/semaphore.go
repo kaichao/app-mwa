@@ -30,7 +30,7 @@ func (cube *DataCube) createPointingBatchLeftSemaphores() {
 	// pointing-batch-left:1257010784/t1257010786_1257010845/ch119
 	initValue := cube.getNumOfPointingBatch()
 
-	ts := cube.getTimeUnitsByInterval(cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
+	ts := cube.getTimeRangesWithinInterval(cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
 	for i := 0; i < len(ts); i += 2 {
 		// all dat files in current range
 		for ch := 109; ch <= 132; ch++ {
@@ -82,15 +82,15 @@ func (cube *DataCube) createDatProcessedSemaphores() {
 }
 
 func (cube *DataCube) getSemaPointingBatchIndex(t int, ch int) int {
-	return doGetPointingBatchIndex(cube, t, ch, getSemaphore)
+	return doPointingBatchIndex(cube, t, ch, getSemaphore)
 }
 
 func (cube *DataCube) countDownSemaPointingBatchIndex(t int, ch int) int {
-	return doGetPointingBatchIndex(cube, t, ch, countDown)
+	return doPointingBatchIndex(cube, t, ch, countDown)
 }
 
-func doGetPointingBatchIndex(cube *DataCube, t int, ch int, op func(string) int) int {
-	t0, t1 := cube.getTimeUnit(t)
+func doPointingBatchIndex(cube *DataCube, t int, ch int, op func(string) int) int {
+	t0, t1 := cube.getTimeRange(t)
 	sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
 		cube.DatasetID, t0, t1, ch)
 	n := op(sema)
@@ -116,12 +116,12 @@ func countDown(semaName string) int {
 	fmt.Printf("stdout for semaphore countdown:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for semaphore countdown:\n%s\n", stderr)
 	if code > 0 {
-		return -1
+		return -10
 	}
 	code, err := strconv.Atoi(strings.TrimSpace(stdout))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore countdown:\n%v\n", err)
-		return -2
+		return -11
 	}
 
 	return code
@@ -134,12 +134,12 @@ func getSemaphore(semaName string) int {
 	fmt.Printf("stdout for semaphore get:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for semaphore get:\n%s\n", stderr)
 	if code > 0 {
-		return -1
+		return -10
 	}
 	code, err := strconv.Atoi(strings.TrimSpace(stdout))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore get:\n%v\n", err)
-		return -2
+		return -11
 	}
 
 	return code
