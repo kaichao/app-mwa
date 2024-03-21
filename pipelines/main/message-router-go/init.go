@@ -23,6 +23,8 @@ var (
 
 	localMode bool
 
+	batchInsert bool
+
 	workDir string
 )
 
@@ -43,6 +45,7 @@ func init() {
 	logger.SetReportCaller(true)
 
 	localMode = os.Getenv("LOCAL_MODE") == "yes"
+	batchInsert = os.Getenv("BATCH_INSERT") == "yes"
 
 	dbHost := os.Getenv("PGHOST")
 	if dbHost == "" {
