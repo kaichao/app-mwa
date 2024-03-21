@@ -9,7 +9,6 @@ parameters:
 jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-list
-    cluster: ${CLUSTER_LOCAL}
     parameters:
       slot_on_head: yes
     environments:
@@ -17,7 +16,6 @@ jobs:
 
   cluster-tar-pull:
     base_image: hub.cstcloud.cn/scalebox/rsync-copy
-    cluster: ${CLUSTER_LOCAL}
     variables:
       task_timeout_seconds: 1800
     parameters:
@@ -37,9 +35,9 @@ jobs:
       key_group_index: 1,2,3
     variables:
       task_timeout_seconds: 1800
-      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~35
-      dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~15
-      # dir_free_gb: /tmp/scalebox/mydata/mwa/dat~50
+      # 2 files allowed
+      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
+      dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~25
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
@@ -54,7 +52,7 @@ jobs:
     command: ${UNPACK_COMMAND}
     variables:
       task_timeout_seconds: ${UNPACK_TIMEOUT}
-      dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
+      dir_free_gb: /tmp/scalebox/mydata~15
       code_path: ${CODE_BASE}/dockerfiles/unpack/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -75,6 +73,7 @@ jobs:
     command: ${ROCM_COMMAND}
     variables:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
+      dir_free_gb: /dev/shm/scalebox/mydata~15
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
     parameters:
@@ -97,6 +96,7 @@ jobs:
     base_image: ${DOWN_SAMPLER}
     variables:
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
+      dir_free_gb: /dev/shm/scalebox/mydata~11
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -115,6 +115,7 @@ jobs:
     base_image: ${RSYNC_COPY}
     variables:
       task_timeout_seconds: 60
+      dir_free_gb: /dev/shm/scalebox/mydata~10
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -131,6 +132,7 @@ jobs:
     base_image: ${MWA_VCSTOOLS}
     variables:
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
+      dir_free_gb: /dev/shm/scalebox/mydata~13
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -181,7 +183,6 @@ jobs:
   message-router-main:
     label: 主消息路由
     base_image: app-mwa/message-router-go
-    cluster: ${CLUSTER_LOCAL}
     parameters:
       slot_on_head: yes
       key_group_regex:
@@ -193,6 +194,7 @@ jobs:
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
       - NUM_NODES_PER_GROUP=
+      - BATCH_INSERT=yes
       # 指向起始号
       # - POINTING_BEGIN=${POINTING_BEGIN}
       # 指向结束号

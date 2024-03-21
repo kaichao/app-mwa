@@ -17,13 +17,14 @@ datasets:
 
       # time dimenstion
       timeBegin: 1257010786
-      numOfSeconds: 120
+      numOfSeconds: 4798
       timeUnit: 30
-      timeStep: 60
+      timeStep: 120
 
       # pointing dimension
       pointingBegin: 1
-      # pointingEnd: 12972
-      pointingEnd: 192
+      # pointingEnd: 12985
+      pointingEnd: 96
       pointingStep: 24
       numPerBatch: 4
+      # numOfBatches: 1

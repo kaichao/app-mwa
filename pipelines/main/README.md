@@ -140,3 +140,15 @@ mv -f ~/singularity/scalebox/rsync-copy.sif /raid0/root/singularity/scalebox/
 | fits-redist    | 6144   | 1.27   | 7819.48  | 3      | 2606.49 |
 | fits-merger    | 384    | 9.14   | 3510.67  | 3      | 1170.22 |
 | fits24ch-push  | 384    | 8.99   | 3453.67  | 3      | 1151.22 |
+
+
+- 监控的目录容量
+  - /dev/shm/scalebox/mydata/mwa/1ch
+  - /dev/shm/scalebox/mydata/mwa/1chx
+  - /dev/shm/scalebox/mydata/mwa/24ch
+  - /dev/shm/scalebox/mydata/mwa/tar
+  - /tmp/scalebox/mydata/mwa/dat
+- 监控分区自由空间
+  - /tmp/scalebox/mydata
+  - /dev/shm/scalebox/mydata
+
