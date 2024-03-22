@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# DOWN_SAMPLER_ENABLED
+
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_1CHX="/local${LOCAL_INPUT_ROOT}/mwa/1chx"
 else
@@ -39,13 +41,6 @@ code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file " >&2 && exit $code
 
 echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
-
-# if [ "$KEEP_SOURCE_FILE" = "no" ]; then
-#     # PUSH
-#     full_path="${DIR_1CHX}/$1"
-#     echo [DEBUG]full_path:$full_path
-#     rm -rf $full_path; code=$?
-# fi
 
 full_path="${DIR_1CHX}/$1"
 echo [DEBUG]full_path:$full_path
