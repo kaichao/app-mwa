@@ -1,0 +1,68 @@
+name: perf-test.app-mwa
+label: perf-test
+cluster: ${CLUSTER}
+parameters:
+  initial_status: RUNNING
+  message_router: message-router
+  default_sleep_count: 20
+
+jobs:
+  beam-maker:
+    label: beam-maker
+    base_image: ${MWA_VCSTOOLS}
+    command: ${ROCM_COMMAND}
+    variables:
+      task_timeout_seconds:
+      code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
+      # output_text_size: 1048576
+    parameters:
+      slot_timeout_seconds: 60
+      # 1257010784/1257010786_1257010845/109/00001_00024
+      key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)/([0-9]{3})/([0-9]{5}_[0-9]{5})$
+      # 若节点少于24，每节点处理多于1个channel，需按channel处理，排序为 1,3,2
+      # 若节点等于24，每个节点处理1个channel，则顺序为：1,2,4
+      # 基于共享存储，则顺序为：1,2,4，尽快产生24ch的合并结果
+      key_group_index: 1,2,4
+    environments:
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_CAL_ROOT=
+      - LOCAL_OUTPUT_ROOT=
+    hosts:
+      - ${NODES}:2
+
+  fits-merger:
+    label: 24通道fits合并
+    base_image: ${MWA_VCSTOOLS}
+    variables:
+      task_timeout_seconds:
+      code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
+    parameters:
+      # 1257010784/p00097/t1257010786_1257010845
+      key_group_regex: ^([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)$
+      key_group_index: 1,2,3
+    environments:
+      - KEEP_1CH_FILE=${KEEP_1CH_FILE}
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=
+      # without down_sampler
+      - DOWN_SAMPLER_ENABLED=no
+    hosts:
+      - ${NODES}:1
+
+  message-router:
+    label: 主消息路由
+    base_image: hub.cstcloud.cn/scalebox/agent
+    parameters:
+      slot_on_head: yes
+      start_message: ANY
+    variables:
+      code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
+    environments:
+      - LOG_LEVEL=warn
+      - WITH_HEADERS=yes
+      - LOCAL_MODE=
+      - TRACE=yes
+      - KEEP_24CH_FILE=${KEEP_24CH_FILE}
+    sink_jobs:
+      - beam-maker
+      - fits-merger
