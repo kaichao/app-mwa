@@ -19,8 +19,8 @@ else
 fi
 
 case $from_job in
-    "beam-maker")
-        ${code_dir}/from-beam-maker.sh "$1"
+    "down-sampler")
+        ${code_dir}/from-down-sampler.sh "$1"
         ;;
     "fits-merger")
         ${code_dir}/from-fits-merger.sh "$1"

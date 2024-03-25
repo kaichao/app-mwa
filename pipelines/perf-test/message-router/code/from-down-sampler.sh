@@ -19,4 +19,6 @@ if [ "$n" -eq 0 ]; then
     echo "fits-merger,$s" > $WORK_DIR/messages.txt
 fi
 
+echo "finished from-down-sampler." > $WORK_DIR/custom-out.txt
+
 exit 0

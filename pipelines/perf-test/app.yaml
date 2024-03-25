@@ -29,6 +29,20 @@ jobs:
       - LOCAL_OUTPUT_ROOT=
     hosts:
       - ${NODES}:2
+    sink_jobs:
+      - down-sampler
+
+  down-sampler:
+    base_image: ${DOWN_SAMPLER}
+    parameters:
+      key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
+      key_group_index: 1,2,3
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=
+    hosts:
+      - ${NODES}:1
 
   fits-merger:
     label: 24通道fits合并
@@ -61,7 +75,7 @@ jobs:
       - LOG_LEVEL=warn
       - WITH_HEADERS=yes
       - LOCAL_MODE=
-      - TRACE=yes
+      - TRACE=
       - KEEP_24CH_FILE=${KEEP_24CH_FILE}
     sink_jobs:
       - beam-maker
