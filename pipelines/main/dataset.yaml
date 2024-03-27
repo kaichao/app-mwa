@@ -16,15 +16,16 @@ datasets:
       numOfChannels: 24
 
       # time dimenstion
+      # timeBegin: 1257010786
+      # numOfSeconds: 4798
       timeBegin: 1257010786
-      numOfSeconds: 4798
+      numOfSeconds: 30
       timeUnit: 30
-      timeStep: 120
+      timeStep: 30
 
       # pointing dimension
       pointingBegin: 1
       # pointingEnd: 12985
-      pointingEnd: 96
+      pointingEnd: 480
       pointingStep: 24
-      numPerBatch: 4
-      # numOfBatches: 1
+      numPerBatch: 20

@@ -34,10 +34,13 @@ jobs:
       key_group_regex: ^.+~([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
       key_group_index: 1,2,3
     variables:
+      code_path: ${CODE_BASE}/dockerfiles/local-tar-pull/code
       task_timeout_seconds: 1800
-      # 2 files allowed
-      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10
-      dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~25
+      # 2 tar.zst files allowed in tmpfs
+      # 下采样基本完成后，再重新传远端的打包文件（tar.zst）
+      # SSD最多存放2组数据，beam-maker单次处理120秒，则最多存放240秒数据（240秒 * 313MB/秒 = 85GB ）
+      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10,/dev/shm/scalebox/mydata/mwa/1ch~5,/tmp/scalebox/mydata/mwa/dat~105
+      dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~20
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
@@ -52,7 +55,8 @@ jobs:
     command: ${UNPACK_COMMAND}
     variables:
       task_timeout_seconds: ${UNPACK_TIMEOUT}
-      dir_free_gb: /tmp/scalebox/mydata~15
+      dir_free_gb: /tmp/scalebox/mydata~25
+      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~105
       code_path: ${CODE_BASE}/dockerfiles/unpack/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PB=1
-PE=48
+PE=480
 
 for ((p = PB; p <= PE; p += 1)); do
     sema=$(printf "fits-24ch-ready:1257010784/p%05d/t1257010786_1257010815" "$p")

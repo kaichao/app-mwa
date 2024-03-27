@@ -28,7 +28,7 @@ jobs:
       - LOCAL_CAL_ROOT=
       - LOCAL_OUTPUT_ROOT=
     hosts:
-      - ${NODES}:2
+      - ${NODES}:4
     sink_jobs:
       - down-sampler
 
