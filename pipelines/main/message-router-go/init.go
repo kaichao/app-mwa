@@ -17,7 +17,7 @@ var (
 
 	logger *logrus.Logger
 
-	hosts = []string{"10.11.16.79", "10.11.16.76", "10.11.16.75"}
+	hosts = []string{"10.11.16.76", "10.11.16.75"}
 	// hosts            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
 	// numNodesPerGroup int
 

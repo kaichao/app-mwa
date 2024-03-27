@@ -69,9 +69,14 @@ for ii in $(seq $PTHEAD $PTTAIL); do
 
     mkdir -p $(dirname ${dest_file}) && mv $orig_file $dest_file
     code=$?
-    [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" && exit $code
+    [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
+
     # 输出消息 
-    echo $dest_file_r >> ${WORK_DIR}/messages.txt
+    # echo $dest_file_r >> ${WORK_DIR}/messages.txt
+    # Add the header "sorted_tag" to give it higher priority in the message-router's scheduling.
+    scalebox task add --headers '{"sorted_tag":"1111"}' $dest_file_r; code=$?
+    [[ $code -ne 0 ]] && echo "[ERROR] send-message, msg-body:$dest_file_r, error_code:$code" >&2 && exit $code
+
     # 统计输出文件的字节数
     echo $dest_file >> ${WORK_DIR}/output-files.txt
 
