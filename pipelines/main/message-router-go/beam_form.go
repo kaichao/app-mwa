@@ -110,9 +110,12 @@ func fromDownSampler(message string, headers map[string]string) int {
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
-		format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
-		m := fmt.Sprintf(format, message, toIP)
-		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
+		// format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
+		// m := fmt.Sprintf(format, message, toIP)
+		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
+		format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
+		m := fmt.Sprintf(format, fromIP, message)
+		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
 		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 20)
 		fmt.Printf("stdout for task-add:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
