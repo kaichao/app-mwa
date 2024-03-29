@@ -3,7 +3,7 @@ label: mwa-comput-${NUM_POINTINGS_PER_CALC}
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-main
+  message_router: message-router-main-0
   default_sleep_count: 20
 
 jobs:
@@ -184,7 +184,7 @@ jobs:
     hosts:
       - ${NODES}:2
 
-  message-router-main:
+  message-router-main-[01]:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     parameters:

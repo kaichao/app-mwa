@@ -175,9 +175,9 @@ func doInsert(values []Sema) {
 
 	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
 	sqlText := `
-		INSERT INTO t_semaphore(name,value,value0,job)
-		VALUES($1,$2,$2,$3)
-		ON CONFLICT (name,job) DO UPDATE SET (value,value0) = ($2,$2)
+		INSERT INTO t_semaphore(name,value,value0,app)
+		SELECT $1,$2,$2,app FROM t_job WHERE id=$3
+		ON CONFLICT (name,app) DO UPDATE SET (value,value0) = ($2,$2)
 	`
 
 	batchSize := 100
