@@ -3,7 +3,7 @@ label: perf-test
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router
+  message_router: message-router-0
   default_sleep_count: 20
 
 jobs:
@@ -62,8 +62,10 @@ jobs:
       - DOWN_SAMPLER_ENABLED=no
     hosts:
       - ${NODES}:1
+    sink_jobs:
+      - message-router-1
 
-  message-router:
+  message-router-[01]:
     label: 主消息路由
     base_image: hub.cstcloud.cn/scalebox/agent
     parameters:
