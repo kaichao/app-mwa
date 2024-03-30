@@ -45,7 +45,6 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
       # 可给message-router发送重复名的消息（覆盖）
-      - UPSERT=yes
     hosts:
       -  ${NODES}:1
 
