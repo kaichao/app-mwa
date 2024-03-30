@@ -20,8 +20,9 @@ func (cube *DataCube) createDatReadySemaphores() {
 		// all dat files in current range
 		initValue := ts[i+1] - ts[i] + 1
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-				cube.DatasetID, ts[i], ts[i+1], ch)
+			// sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
+			// 	cube.DatasetID, ts[i], ts[i+1], ch)
+			sema := cube.getSemaDatReadyName(ts[i], ch)
 			fmt.Printf("In createDatReadySemaphores(),sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
 		}
@@ -37,8 +38,9 @@ func (cube *DataCube) createPointingBatchLeftSemaphores() {
 	for i := 0; i < len(ts); i += 2 {
 		// all dat files in current range
 		for ch := 109; ch <= 132; ch++ {
-			sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
-				cube.DatasetID, ts[i], ts[i+1], ch)
+			// sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
+			// 	cube.DatasetID, ts[i], ts[i+1], ch)
+			sema := cube.getSemaPointingBatchLeftName(ts[i], ch)
 			fmt.Printf("In createPointingBatchLeftSemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
 		}
@@ -56,8 +58,9 @@ func (cube *DataCube) createFits24chReadySemaphores() {
 
 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
 		for i := 0; i < len(ts); i += 2 {
-			sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
-				cube.DatasetID, p, ts[i], ts[i+1])
+			// sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
+			// 	cube.DatasetID, p, ts[i], ts[i+1])
+			sema := cube.getSemaFits24chReadyName(p, ts[i])
 			fmt.Printf("In createFits24chReadySemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
 		}
@@ -76,11 +79,12 @@ func (cube *DataCube) createDatProcessedSemaphores() {
 	for i := 0; i < len(ts); i += 2 {
 		for ch := 109; ch <= 132; ch++ {
 			for pIndex := 0; pIndex < cube.getNumOfPointingBatch(); pIndex++ {
-				p0, p1 := cube.getPointingBatchRange(cube.PointingBegin + pIndex*cube.PointingStep*cube.NumPerBatch)
-
-				fmt.Printf("p-index:%d,p0=%d,p1=%d\n", pIndex, p0, p1)
-				sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
-					cube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
+				p := cube.PointingBegin + pIndex*cube.PointingStep*cube.NumPerBatch
+				p0, p1 := cube.getPointingBatchRange(p)
+				// fmt.Printf("p-index:%d,p0=%d,p1=%d\n", pIndex, p0, p1)
+				// sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
+				// 	cube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
+				sema := cube.getSemaDatProcessedName(p, ts[i], ch)
 				fmt.Printf("In createDatProcessedSemaphores(), sema:%s,init-value:%d\n", sema, p1-p0+1)
 				semaArr = append(semaArr, Sema{name: sema, value: p1 - p0 + 1})
 			}
@@ -209,4 +213,31 @@ func doInsert(values []Sema) {
 			logrus.Errorf("err:%v\n", err)
 		}
 	}
+}
+
+func (cube *DataCube) getSemaDatReadyName(t, ch int) string {
+	tb, te := cube.getTimeRange(t)
+	sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d", cube.DatasetID, tb, te, ch)
+	return sema
+}
+
+func (cube *DataCube) getSemaPointingBatchLeftName(t, ch int) string {
+	tb, te := cube.getTimeRange(t)
+	sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d", cube.DatasetID, tb, te, ch)
+	return sema
+}
+func (cube *DataCube) getSemaDatProcessedName(p, t, ch int) string {
+	p0, p1 := cube.getPointingBatchRange(p)
+	tb, te := cube.getTimeRange(t)
+
+	sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
+		cube.DatasetID, p0, p1, tb, te, ch)
+
+	return sema
+}
+func (cube *DataCube) getSemaFits24chReadyName(p, t int) string {
+	tb, te := cube.getTimeRange(t)
+	sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
+		cube.DatasetID, p, tb, te)
+	return sema
 }

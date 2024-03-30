@@ -24,8 +24,9 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	te, _ := strconv.Atoi(ss[4])
 	ch, _ := strconv.Atoi(ss[6])
 
-	p0, p1 := cube.getPointingBatchRange(p)
-	sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%s_%s/%s", ss[1], p0, p1, ss[3], ss[4], ss[5])
+	// p0, p1 := cube.getPointingBatchRange(p)
+	// sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%s_%s/%s", ss[1], p0, p1, ss[3], ss[4], ss[5])
+	sema := cube.getSemaDatProcessedName(p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
@@ -46,14 +47,15 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	}
 
 	// reset semaphore dat-ready(以TimeRange为单位)
-	sema = fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-		cube.DatasetID, tb, te, ch)
+	// sema = fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
+	// 	cube.DatasetID, tb, te, ch)
+	sema = cube.getSemaDatReadyName(tb, ch)
 	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
 	createSemaphore(sema, te-tb+1)
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
 	// batchIndex := getPointingBatchIndex(cube, tb, ch)
-	sortedTag := cube.getSortedTag(batchIndex, tb, ch)
+	sortedTag := cube.getSortedTag(tb, ch)
 
 	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 
