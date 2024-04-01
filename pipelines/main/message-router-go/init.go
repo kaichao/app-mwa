@@ -17,10 +17,9 @@ var (
 
 	logger *logrus.Logger
 
-	hosts = []string{"10.11.16.76", "10.11.16.75"}
-	// hosts            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
-	// numNodesPerGroup int
-
+	ips = []string{"10.11.16.76", "10.11.16.75"}
+	// ips            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
+	hosts     = []string{"n2.dcu", "n3.dcu"}
 	localMode bool
 
 	batchInsert bool
@@ -72,7 +71,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		return 0
 	}
 
-	toHost := hosts[num%len(hosts)]
+	toHost := ips[num%len(ips)]
 	// cmdTxt := fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	if len(headers) > 0 {

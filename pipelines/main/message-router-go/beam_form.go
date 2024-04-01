@@ -24,9 +24,13 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	te, _ := strconv.Atoi(ss[4])
 	ch, _ := strconv.Atoi(ss[6])
 
+	index := (ch - 109) % len(hosts)
+	sema := "beam-maker-progress-count:" + hosts[index]
+	countDown(sema)
+
 	// p0, p1 := cube.getPointingBatchRange(p)
 	// sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%s_%s/%s", ss[1], p0, p1, ss[3], ss[4], ss[5])
-	sema := cube.getSemaDatProcessedName(p, tb, ch)
+	sema = cube.getSemaDatProcessedName(p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
@@ -81,9 +85,9 @@ func fromDownSampler(message string, headers map[string]string) int {
 	}
 	nPointing, _ := strconv.Atoi(ss[1])
 	fromIP := headers["from_ip"]
-	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(hosts))
-	fmt.Printf("num of hosts=%d,index=%d\n", len(hosts), (nPointing-1)%len(hosts))
-	toIP := hosts[(nPointing-1)%len(hosts)]
+	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(ips))
+	fmt.Printf("num of hosts=%d,index=%d\n", len(ips), (nPointing-1)%len(ips))
+	toIP := ips[(nPointing-1)%len(ips)]
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
