@@ -141,6 +141,10 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(matches[4])
 	batch := matches[5]
 
+	index := (ch - 109) % len(hosts)
+	sema := "local-tar-pull-progress-count:" + hosts[index]
+	countDown(sema)
+
 	tb, te := cube.getTimeRange(t)
 	// add batch-index to message body.
 	m := fmt.Sprintf("%s~%d_%d~%s", matches[1], tb, te, batch)
@@ -230,8 +234,8 @@ func removeLocalDatFiles(sema string) int {
 	if localMode {
 		dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 		num, _ := strconv.Atoi(ch[2:])
-		i := (num - 109) % len(hosts)
-		cmdTxt = fmt.Sprintf("ssh %s rm -rf %s", hosts[i], dir)
+		i := (num - 109) % len(ips)
+		cmdTxt = fmt.Sprintf("ssh %s rm -rf %s", ips[i], dir)
 	} else {
 		dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 		cmdTxt = fmt.Sprintf("rm -rf %s", dir)

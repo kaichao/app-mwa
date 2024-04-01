@@ -1,4 +1,5 @@
-dirs:=mwa-vcstools down-sampler presto-search
+#dirs:=mwa-vcstools down-sampler presto-search
+dirs:=mwa-vcstools down-sampler
 
 build:
 	@for dir in $(dirs); do \

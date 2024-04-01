@@ -3,7 +3,7 @@ label: mwa-comput-${NUM_POINTINGS_PER_CALC}
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-main-0
+  message_router: message-router-main
   default_sleep_count: 20
 
 jobs:
@@ -33,6 +33,7 @@ jobs:
       # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
       key_group_regex: ^.+~([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
       key_group_index: 1,2,3
+      message_router_index: 1
     variables:
       code_path: ${CODE_BASE}/dockerfiles/local-tar-pull/code
       task_timeout_seconds: 1800
@@ -87,6 +88,7 @@ jobs:
       # 若节点少，每个节点处理多于一个channel，则为 1,3,2
       # 若节点多，每个节点处理1个channel，则顺序为：1,2,4
       key_group_index: 1,3,2
+      message_router_index: 1
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
@@ -183,15 +185,16 @@ jobs:
     hosts:
       - ${NODES}:2
 
-  message-router-main-[01]:
+  message-router-main:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     parameters:
-      slot_on_head: yes
+      # slot_on_head: yes
       key_group_regex:
       key_group_index:
       start_message: ${DATASET_URI}
       visiable: no
+      task_dist_mode: SLOT-BOUND
     environments:
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
@@ -201,6 +204,8 @@ jobs:
       - JUMP_SERVERS=${JUMP_SERVERS}
       - DATASET_URI=${DATASET_URI}
       # - TRACE=yes
+    hosts:
+      - h0:2
     sink_jobs:
       - dir-list
       - cluster-tar-pull

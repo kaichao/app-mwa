@@ -80,6 +80,9 @@ func defaultFunc(message string, headers map[string]string) int {
 
 	cube.createFits24chReadySemaphores()
 
+	cube.createLocalTarPullProgressCountSemaphores()
+	cube.createBeamMakerProgressCountSemaphores()
+
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
 	scalebox.AppendToFile("/work/messages.txt", m)
 	return 0
