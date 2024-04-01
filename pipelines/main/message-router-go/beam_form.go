@@ -47,47 +47,22 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	}
 
 	// reset semaphore dat-ready(以TimeRange为单位)
-	// sema = fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-	// 	cube.DatasetID, tb, te, ch)
 	sema = cube.getSemaDatReadyName(tb, ch)
 	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
 	createSemaphore(sema, te-tb+1)
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
-	// batchIndex := getPointingBatchIndex(cube, tb, ch)
 	sortedTag := cube.getSortedTag(tb, ch)
 
 	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 
-	sqlFmt := `
-		UPDATE t_task
-		SET status_code=-1, headers = jsonb_set(headers, '{sorted_tag}', '"%s"'::jsonb)
-		WHERE status_code=0 AND
-			-- in the same app
-			((SELECT app FROM t_job WHERE id=t_task.job)=(SELECT app FROM t_job WHERE id=%s)) AND
-			key_message LIKE '%%~%s/%d_%d_ch%d.dat.tar.zst~%%'
-	`
 	tarr := cube.getTimeUnitsWithinInterval(tb, te)
 	for i := 0; i < len(tarr); i += 2 {
 		t0 := tarr[i]
 		t1 := tarr[i+1]
-
-		// 重新发送消息到local-tar-pull（循环为单个30秒文件）
-		sqlText := fmt.Sprintf(sqlFmt, sortedTag, os.Getenv("JOB_ID"), ss[1], t0, t1, ch)
-		fmt.Printf("ss[1]=%s,t0=%d,t1=%d,ch=%d\n", ss[1], t0, t1, ch)
-		fmt.Println("sql-text:", sqlText)
-
-		result, err := db.Exec(sqlText)
-		if err != nil {
-			logger.Errorf("database error, err-info:%v\n", err)
-			return 1
-		}
-		rowsAffected, err := result.RowsAffected()
-		if err != nil || rowsAffected != 1 {
-			logger.Errorf("database error or no match record, err-info:%v, rowsAffected=%d\n",
-				err, rowsAffected)
-			return 2
-		}
+		fmtMessage := "%s/%d_%d_ch%d.dat.tar.zst"
+		m := fmt.Sprintf(fmtMessage, ss[1], t0, t1, ch)
+		toLocalTarPull(m, headers)
 	}
 	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 }

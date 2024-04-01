@@ -11,7 +11,6 @@ import (
 )
 
 func fromDirList(message string, headers map[string]string) int {
-	fmt.Println("message:", message)
 	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.tar.zst
 	// /data/mwa/tar~1257010784/1257010786_1257010815_ch129.dat.tar.zst
 	m := message
@@ -44,24 +43,22 @@ func fromClusterTarPull(message string, headers map[string]string) int {
 }
 
 func toLocalTarPull(message string, headers map[string]string) int {
-	// FROM: remote cluster(with jump-servers)
+	// CASE 1: FROM: remote cluster(with jump-servers)
 	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784~1257010784/1257015316_1257015345_ch122.dat.tar.zst
 
-	// FROM: beam-maker
+	// CASE 2: FROM: beam-maker
 	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 
-	// FROM: dir-list && local
+	// CASE 3: FROM: dir-list && local
 	// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
 
-	// FROM: cluster-tar-pull
+	// CASE 4: FROM: cluster-tar-pull
 	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 
 	ss := strings.Split(message, "~")
 	// only packed file
 	m := ss[len(ss)-1]
-
-	fmt.Printf("to-local-pull,message:%s\n m:%s\n", message, m)
 
 	// input-message:
 	// 		1257010784/1257010786_1257010815_ch109.dat.tar.zst
@@ -72,38 +69,42 @@ func toLocalTarPull(message string, headers map[string]string) int {
 	}
 	cube := getDataCube(ss[1])
 	t0, _ := strconv.Atoi(ss[2])
-	// b, e := datacube.getTimeRange(ts)
 	ch, _ := strconv.Atoi(ss[3])
-
-	batchIndex := cube.getSemaPointingBatchIndex(t0, ch)
-	// 通过headers中的sorted_tag，设定显式排序
-	h := map[string]string{"sorted_tag": cube.getSortedTag(t0, ch)}
-	// h := make(map[string]string)
-	// h["sorted_tag"] = cube.getSortedTag(batchIndex, ts, channel)
 
 	suffix := "~/dev/shm/scalebox/mydata/mwa/tar"
 	prefix := ""
-	if os.Getenv("JUMP_SERVERS") != "" {
-		// remote && jump-servers
+
+	if headers["from_job"] == "beam-maker" {
+		// CASE 2: FROM: beam-maker
+		// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
+		prefix = strings.Split(os.Getenv("DATASET_URI"), "~")[0]
+		m = prefix + "~" + m + suffix
+	} else if os.Getenv("JUMP_SERVERS") != "" {
+		// CASE 1: remote && jump-servers
 		// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 		m = message + suffix
 	} else {
+		// from local cluster
 		prefix = getLocalRsyncPrefix()
 		if strings.HasPrefix(message, "/") {
-			// local
+			// CASE 3: FROM: dir-list && local
 			// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
 			ss := strings.Split(message, "~")
 			m = ss[len(ss)-1]
 			m = prefix + m + suffix
 		} else {
-			// from cluster-tar-pull
+			// CASE 4: FROM: cluster-tar-pull
 			// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 			m = prefix + message + suffix
 		}
 	}
 
+	// 通过headers中的sorted_tag，设定显式排序
+	h := map[string]string{"sorted_tag": cube.getSortedTag(t0, ch)}
+
 	// add batch-index to message body.
-	m = fmt.Sprintf("%s~%02d", m, batchIndex)
+	batchIndex := cube.getSemaPointingBatchIndex(t0, ch)
+	m = fmt.Sprintf("%s~b%02d", m, batchIndex)
 	return sendNodeAwareMessage(m, h, "local-tar-pull", ch-109)
 }
 
@@ -126,8 +127,8 @@ func getLocalRsyncPrefix() string {
 }
 
 func fromLocalTarPull(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815_ch109.dat.tar.zst
-	re := regexp.MustCompile(`^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)`)
+	// 1257010784/1257010786_1257010815_ch109.dat.tar.zst~b01
+	re := regexp.MustCompile(`^(([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+).+)~(b.+)$`)
 	matches := re.FindStringSubmatch(message)
 	fmt.Printf("message:%s, matches:%v\n", message, matches)
 
@@ -135,26 +136,20 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "Invalid message format, message:%s\n", message)
 		return 1
 	}
-	ch, _ := strconv.Atoi(matches[3])
-	cube := getDataCube(matches[1])
-	t, _ := strconv.Atoi(matches[2])
-
-	batchIndex := cube.getSemaPointingBatchIndex(t, ch)
-	// // 通过headers中的sorted_tag，设定显式排序
-	// h := map[string]string{"sorted_tag": cube.getSortedTag(batchIndex, t, ch)}
-	h := map[string]string{}
+	cube := getDataCube(matches[2])
+	t, _ := strconv.Atoi(matches[3])
+	ch, _ := strconv.Atoi(matches[4])
+	batch := matches[5]
 
 	tb, te := cube.getTimeRange(t)
-	m := fmt.Sprintf("%s~%d_%d~%02d", message, tb, te, batchIndex)
-	fmt.Printf("In fromLocalTarPull(),batchIndex=%d, ch=%d, message:%s\n", batchIndex, ch, m)
-
 	// add batch-index to message body.
-	m = fmt.Sprintf("%s~%02d", m, batchIndex)
-	return sendNodeAwareMessage(m, h, "unpack", ch-109)
+	m := fmt.Sprintf("%s~%d_%d~%s", matches[1], tb, te, batch)
+
+	return sendNodeAwareMessage(m, map[string]string{}, "unpack", ch-109)
 }
 
 func fromUnpack(message string, headers map[string]string) int {
-	// 	1257010784/1257010784_1257010790_ch120.dat~01
+	// 	1257010784/1257010784_1257010790_ch120.dat~b01
 	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat~(.+)$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
@@ -173,8 +168,6 @@ func fromUnpack(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(ss[3])
 	tb, te := cube.getTimeRange(t)
 
-	// sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
-
 	sema := cube.getSemaDatReadyName(t, ch)
 	// 信号量dat-ready减1
 	if n := countDown(sema); n != 0 {
@@ -187,7 +180,6 @@ func fromUnpack(message string, headers map[string]string) int {
 	// batchIndex := cube.getNumOfPointingBatch() - n
 	batchIndex := cube.getSemaPointingBatchIndex(t, ch)
 	arr := cube.getPointingRangesByBatchIndex(batchIndex)
-	// arr := cube.getPointingRangesByBatch(cube.getPointingBatchRange(p))
 
 	fmt.Printf("In fromUnpack(), batch-index=%d,p-ranges:%v\n", batchIndex, arr)
 	for i := 0; i < len(arr); i += 2 {
@@ -195,7 +187,6 @@ func fromUnpack(message string, headers map[string]string) int {
 		p1 := arr[i+1]
 
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
-		// batchIndex := getPointingBatchIndex(cube, tb, channel)
 		// 通过headers中的sorted_tag，设定显式排序
 		h := map[string]string{"sorted_tag": cube.getSortedTag(tb, ch)}
 		ret := sendNodeAwareMessage(m, h, "beam-maker", ch-109)
