@@ -28,12 +28,6 @@ jobs:
   local-tar-pull:
     # keep source file controlled by message-router
     base_image: ${RSYNC_COPY}
-    parameters:
-      task_dist_mode: ${TASK_DIST_MODE}
-      # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
-      key_group_regex: ^.+~([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
-      key_group_index: 1,2,3
-      message_router_index: 1
     variables:
       code_path: ${CODE_BASE}/dockerfiles/local-tar-pull/code
       task_timeout_seconds: 1800
@@ -42,6 +36,12 @@ jobs:
       # SSD最多存放2组数据，beam-maker单次处理120秒，则最多存放240秒数据（240秒 * 313MB/秒 = 85GB ）
       dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10,/dev/shm/scalebox/mydata/mwa/1ch~5,/tmp/scalebox/mydata/mwa/dat~105
       dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~20
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
+      key_group_regex: ^.+~([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
+      key_group_index: 1,2,3
+      message_router_index: 1
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
@@ -64,6 +64,7 @@ jobs:
       key_group_regex: ${REGEX_TAR}
       key_group_index: 1,3,2
 #      key_group_index: 1,2,3
+      message_router_index: 1
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
@@ -154,13 +155,13 @@ jobs:
 
   fits-24ch-push:
     base_image: ${RSYNC_COPY}
+    variables:
+      task_timeout_seconds: 1800
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /dev/shm/scalebox/mydata/mwa/24ch~1257010784/p00016/t1257010786_1257010845.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch
       key_group_regex: ^.+~([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)~.+$
       key_group_index: 1,3,2
-    variables:
-      task_timeout_seconds: 1800
     environments:
       - KEEP_SOURCE_FILE=no
       - JUMP_SERVERS=${JUMP_SERVERS}

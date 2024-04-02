@@ -73,9 +73,9 @@ func fromBeamMaker(message string, headers map[string]string) int {
 
 func fromDownSampler(message string, headers map[string]string) int {
 	// 1257010784/p00001/t1257010786_1257010795/ch123.fits.zst
-	if !localMode {
-		return toFitsMerger(message, headers)
-	}
+	// if !localMode {
+	// 	return toFitsMerger(message, headers)
+	// }
 
 	re := regexp.MustCompile("^[0-9]+/p([0-9]+)/t[0-9]+_[0-9]+/ch[0-9]+.fits.zst$")
 	ss := re.FindStringSubmatch(message)

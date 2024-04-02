@@ -3,7 +3,6 @@ app-create: clean
 	make -C message-router-go
 	# scalebox app create -e dcu-singularity.env
 	scalebox app create -e dcu.env
-	# scalebox app create -e dcu-non-local.env
 
 clean:
 	@ # local-mode
