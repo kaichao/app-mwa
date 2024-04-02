@@ -12,8 +12,6 @@ func (cube *DataCube) createDatReadySemaphores() {
 		// all dat files in current range
 		initValue := ts[i+1] - ts[i] + 1
 		for ch := 109; ch <= 132; ch++ {
-			// sema := fmt.Sprintf("dat-ready:%s/t%d_%d/ch%d",
-			// 	cube.DatasetID, ts[i], ts[i+1], ch)
 			sema := cube.getSemaDatReadyName(ts[i], ch)
 			fmt.Printf("In createDatReadySemaphores(),sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
@@ -30,8 +28,6 @@ func (cube *DataCube) createPointingBatchLeftSemaphores() {
 	for i := 0; i < len(ts); i += 2 {
 		// all dat files in current range
 		for ch := 109; ch <= 132; ch++ {
-			// sema := fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%d",
-			// 	cube.DatasetID, ts[i], ts[i+1], ch)
 			sema := cube.getSemaPointingBatchLeftName(ts[i], ch)
 			fmt.Printf("In createPointingBatchLeftSemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
@@ -50,8 +46,6 @@ func (cube *DataCube) createFits24chReadySemaphores() {
 
 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
 		for i := 0; i < len(ts); i += 2 {
-			// sema := fmt.Sprintf("fits-24ch-ready:%s/p%05d/t%d_%d",
-			// 	cube.DatasetID, p, ts[i], ts[i+1])
 			sema := cube.getSemaFits24chReadyName(p, ts[i])
 			fmt.Printf("In createFits24chReadySemaphores(), sema:%s,init-value:%d\n", sema, initValue)
 			semaArr = append(semaArr, Sema{name: sema, value: initValue})
@@ -73,9 +67,6 @@ func (cube *DataCube) createDatProcessedSemaphores() {
 			for pIndex := 0; pIndex < cube.getNumOfPointingBatch(); pIndex++ {
 				p := cube.PointingBegin + pIndex*cube.PointingStep*cube.NumPerBatch
 				p0, p1 := cube.getPointingBatchRange(p)
-				// fmt.Printf("p-index:%d,p0=%d,p1=%d\n", pIndex, p0, p1)
-				// sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%d_%d/ch%d",
-				// 	cube.DatasetID, p0, p1, ts[i], ts[i+1], ch)
 				sema := cube.getSemaDatProcessedName(p, ts[i], ch)
 				fmt.Printf("In createDatProcessedSemaphores(), sema:%s,init-value:%d\n", sema, p1-p0+1)
 				semaArr = append(semaArr, Sema{name: sema, value: p1 - p0 + 1})
@@ -89,6 +80,8 @@ func (cube *DataCube) createLocalTarPullProgressCountSemaphores() {
 	arr := cube.getTimeUnits()
 	lenTimeUnits := len(arr) / 2
 	initValue := lenTimeUnits * cube.getNumOfPointingBatch() * 24 / len(ips)
+	fmt.Printf("LocalTarPullProgressCount, initValue=%d,lenTimeUnits=%d,numBatches=%d\n",
+		initValue, lenTimeUnits, cube.getNumOfPointingBatch())
 	semaArr := []Sema{}
 	for _, h := range hosts {
 		sema := "local-tar-pull-progress-count:" + h
@@ -101,6 +94,8 @@ func (cube *DataCube) createBeamMakerProgressCountSemaphores() {
 	lenTimeRanges := len(arr) / 2
 	lenPointings := cube.PointingEnd - cube.PointingBegin + 1
 	initValue := lenTimeRanges * lenPointings * 24 / len(ips)
+	fmt.Printf("BeamMakerProgressCount, initValue=%d, lenTimeRanges=%d,lenPointings=%d\n",
+		initValue, lenTimeRanges, lenPointings)
 	semaArr := []Sema{}
 	for _, h := range hosts {
 		sema := "beam-maker-progress-count:" + h

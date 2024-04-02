@@ -28,8 +28,6 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	sema := "beam-maker-progress-count:" + hosts[index]
 	countDown(sema)
 
-	// p0, p1 := cube.getPointingBatchRange(p)
-	// sema := fmt.Sprintf("dat-processed:%s/p%05d_%05d/t%s_%s/%s", ss[1], p0, p1, ss[3], ss[4], ss[5])
 	sema = cube.getSemaDatProcessedName(p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
@@ -73,10 +71,6 @@ func fromBeamMaker(message string, headers map[string]string) int {
 
 func fromDownSampler(message string, headers map[string]string) int {
 	// 1257010784/p00001/t1257010786_1257010795/ch123.fits.zst
-	// if !localMode {
-	// 	return toFitsMerger(message, headers)
-	// }
-
 	re := regexp.MustCompile("^[0-9]+/p([0-9]+)/t[0-9]+_[0-9]+/ch[0-9]+.fits.zst$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
@@ -91,9 +85,6 @@ func fromDownSampler(message string, headers map[string]string) int {
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
-		// format := "/dev/shm/scalebox/mydata/mwa/1chx~%s~root@%s/dev/shm/scalebox/mydata/mwa/1chx"
-		// m := fmt.Sprintf(format, message, toIP)
-		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, fromIP, m)
 		format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
 		m := fmt.Sprintf(format, fromIP, message)
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
