@@ -1,10 +1,8 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -13,16 +11,11 @@ import (
 )
 
 var (
-	db *sql.DB
-
 	logger *logrus.Logger
 
 	ips = []string{"10.11.16.76", "10.11.16.75"}
 	// ips            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
-	hosts     = []string{"n2.dcu", "n3.dcu"}
-	localMode bool
-
-	batchInsert bool
+	hosts = []string{"n2.dcu", "n3.dcu"}
 
 	workDir string
 )
@@ -42,35 +35,13 @@ func init() {
 	}
 	logger.SetLevel(level)
 	logger.SetReportCaller(true)
-
-	localMode = os.Getenv("LOCAL_MODE") == "yes"
-	batchInsert = os.Getenv("BATCH_INSERT") == "yes"
-
-	dbHost := os.Getenv("PGHOST")
-	if dbHost == "" {
-		dbHost = scalebox.GetLocalIP()
-	}
-	dbPort := os.Getenv("PGPORT")
-	if dbPort == "" {
-		dbPort = "5432"
-	}
-	databaseURL := fmt.Sprintf("postgres://scalebox:changeme@%s:%s/scalebox", dbHost, dbPort)
-	// set database connection
-	if db, err = sql.Open("pgx", databaseURL); err != nil {
-		log.Fatal("Unable to connect to database:", err)
-	}
-	db.SetConnMaxLifetime(500)
-	db.SetMaxIdleConns(50)
-	db.SetMaxOpenConns(20)
-	db.Stats()
 }
 
 func sendNodeAwareMessage(message string, headers map[string]string, sinkJob string, num int) int {
-	if !localMode {
-		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
-		return 0
-	}
-
+	// if !localMode {
+	// 	scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
+	// 	return 0
+	// }
 	toHost := ips[num%len(ips)]
 	// cmdTxt := fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)

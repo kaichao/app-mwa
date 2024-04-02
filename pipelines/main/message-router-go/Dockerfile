@@ -37,8 +37,8 @@ ENV \
     ACTION_RUN=/app/bin/message-router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
-    BATCH_INSERT= \
-    LOCAL_MODE=
+    BATCH_INSERT= 
+    # LOCAL_MODE=
     # 2/3/4/6/8/12/24
     # NUM_NODES_PER_GROUP=24 \
     # 单次计算的指向数，可为节点的倍数
