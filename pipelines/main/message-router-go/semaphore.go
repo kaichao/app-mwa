@@ -14,7 +14,6 @@ import (
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	// scalebox.ExecShellCommand(cmdText)
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)

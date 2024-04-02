@@ -13,9 +13,10 @@ import (
 var (
 	logger *logrus.Logger
 
-	ips = []string{"10.11.16.76", "10.11.16.75"}
+	ips = []string{"10.11.16.79", "10.11.16.76", "10.11.16.75"}
 	// ips            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
-	hosts = []string{"n2.dcu", "n3.dcu"}
+	hosts = []string{"n0.dcu", "n2.dcu", "n3.dcu"}
+	// hosts = []string{"n2.dcu", "n3.dcu"}
 
 	workDir string
 )
@@ -38,19 +39,13 @@ func init() {
 }
 
 func sendNodeAwareMessage(message string, headers map[string]string, sinkJob string, num int) int {
-	// if !localMode {
-	// 	scalebox.AppendToFile("/work/messages.txt", sinkJob+","+message)
-	// 	return 0
-	// }
 	toHost := ips[num%len(ips)]
-	// cmdTxt := fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	if len(headers) > 0 {
 		h, err := json.Marshal(headers)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "headers:%v,JSON marshaling failed:%v\n", headers, err)
 		} else {
-			// cmdTxt = fmt.Sprintf("scalebox task add --upsert --sink-job %s --to-ip %s --headers '%s' %s", sinkJob, toHost, h, message)
 			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s --headers '%s' %s", sinkJob, toHost, h, message)
 		}
 	}
