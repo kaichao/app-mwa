@@ -36,6 +36,7 @@ jobs:
       # SSD最多存放2组数据，beam-maker单次处理120秒，则最多存放240秒数据（240秒 * 313MB/秒 = 85GB ）
       dir_limit_gb: /dev/shm/scalebox/mydata/mwa/tar~10,/dev/shm/scalebox/mydata/mwa/1ch~5,/tmp/scalebox/mydata/mwa/dat~105
       dir_free_gb: /dev/shm/scalebox/mydata/mwa/tar~18
+      progress_counter_diff: 3
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
@@ -78,9 +79,10 @@ jobs:
     command: ${ROCM_COMMAND}
     variables:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~15
+      dir_free_gb: /dev/shm/scalebox/mydata~{~n*5+15~}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
+      progress_counter_diff: 96
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -102,7 +104,7 @@ jobs:
     base_image: ${DOWN_SAMPLER}
     variables:
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~11
+      dir_free_gb: /dev/shm/scalebox/mydata~8
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60

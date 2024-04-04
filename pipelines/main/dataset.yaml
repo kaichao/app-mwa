@@ -19,11 +19,11 @@ datasets:
       timeBegin: 1257010786
       numOfSeconds: 4798
       timeUnit: 30
-      timeStep: 120
+      timeStep: 150
 
       # pointing dimension
-      pointingBegin: 97
+      pointingBegin: 1
       # pointingEnd: 12985
-      pointingEnd: 384
+      pointingEnd: 288
       pointingStep: 24
       numPerBatch: 6

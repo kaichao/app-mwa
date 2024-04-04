@@ -25,7 +25,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(ss[6])
 
 	index := (ch - 109) % len(hosts)
-	sema := "beam-maker-progress-count:" + hosts[index]
+	sema := "progress-counter_beam-maker:" + ips[index]
 	countDown(sema)
 
 	sema = cube.getSemaDatProcessedName(p, tb, ch)

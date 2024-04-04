@@ -142,7 +142,7 @@ func fromLocalTarPull(message string, headers map[string]string) int {
 	batch := matches[5]
 
 	index := (ch - 109) % len(hosts)
-	sema := "local-tar-pull-progress-count:" + hosts[index]
+	sema := "progress-counter_local-tar-pull:" + ips[index]
 	countDown(sema)
 
 	tb, te := cube.getTimeRange(t)
