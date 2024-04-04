@@ -83,8 +83,8 @@ func (cube *DataCube) createLocalTarPullProgressCountSemaphores() {
 	fmt.Printf("LocalTarPullProgressCount, initValue=%d,lenTimeUnits=%d,numBatches=%d\n",
 		initValue, lenTimeUnits, cube.getNumOfPointingBatch())
 	semaArr := []Sema{}
-	for _, h := range hosts {
-		sema := "local-tar-pull-progress-count:" + h
+	for _, h := range ips {
+		sema := "progress-counter_local-tar-pull:" + h
 		semaArr = append(semaArr, Sema{name: sema, value: initValue})
 	}
 	doInsert(semaArr)
@@ -97,8 +97,8 @@ func (cube *DataCube) createBeamMakerProgressCountSemaphores() {
 	fmt.Printf("BeamMakerProgressCount, initValue=%d, lenTimeRanges=%d,lenPointings=%d\n",
 		initValue, lenTimeRanges, lenPointings)
 	semaArr := []Sema{}
-	for _, h := range hosts {
-		sema := "beam-maker-progress-count:" + h
+	for _, h := range ips {
+		sema := "progress-counter_beam-maker:" + h
 		semaArr = append(semaArr, Sema{name: sema, value: initValue})
 	}
 	doInsert(semaArr)
