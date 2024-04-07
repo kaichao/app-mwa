@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"gopkg.in/yaml.v2"
 )
 
 type dataCube struct {
@@ -38,22 +41,22 @@ type dataCube struct {
 type DataCube struct {
 	DatasetID string
 
-	ChannelBegin  int
-	NumOfChannels int
+	ChannelBegin  int `yaml:"channelBegin"`
+	NumOfChannels int `yaml:"numOfChannels"`
 
-	TimeBegin    int
-	NumOfSeconds int
+	TimeBegin    int `yaml:"timeBegin"`
+	NumOfSeconds int `yaml:"numOfSeconds"`
 	// 单个打包文件的时长（30秒）
-	TimeUnit int
+	TimeUnit int `yaml:"timeUnit"`
 	// 单次beam-maker的时长，通常为30的倍数
-	TimeStep int
+	TimeStep int `yaml:"timeStep"`
 
-	PointingBegin int
-	PointingEnd   int
+	PointingBegin int `yaml:"pointingBegin"`
+	PointingEnd   int `yaml:"pointingEnd"`
 	// 单次beam-maker处理的指向数，通常取24的倍数
-	PointingStep int
+	PointingStep int `yaml:"pointingStep"`
 	// 单批次beam-maker的执行次数，batchIndex从0起
-	NumPerBatch int
+	NumPerBatch int `yaml:"numPerBatch"`
 }
 
 func getDataCube(datasetID string) *DataCube {
@@ -110,4 +113,26 @@ func (cube *DataCube) getSortedTag(time int, ch int) string {
 
 	// 2位指向批次码(pointing-batch) + 2位时间编码（time-range） + 2位通道编码（00~23）
 	return fmt.Sprintf("%02d%02d%02d", batchIndex, tm, ch)
+}
+
+var (
+	datacubeFile = "../dataset-base.yaml"
+)
+
+func getDataCubeFromFile(datasetID string) *DataCube {
+	config := map[string]map[string]map[string]DataCube{}
+
+	yamlFile, err := ioutil.ReadFile(datacubeFile)
+	if err != nil {
+		log.Fatalf("读取YAML文件出错：%v", err)
+	}
+
+	err = yaml.Unmarshal(yamlFile, &config)
+	if err != nil {
+		log.Fatalf("解析YAML文件出错：%v", err)
+	}
+
+	cube := config["datasets"][datasetID]["metadata"]
+	fmt.Println(cube)
+	return &cube
 }
