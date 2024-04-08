@@ -36,8 +36,12 @@ mkdir -p $dir; code=$?
 # remove existing intermediate files in output dir
 rm -f ${DIR_1CHX}/${m}*
 
-# 3. run the programs to downsample the files
+if [ -f "${DIR_1CH}/${m}.zst" ]; then
+    # 解压文件并删除原始文件
+    zstd -d --rm "${DIR_1CH}/${m}.zst"
+fi
 
+# 3. run the programs to downsample the files
 psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_1CHX}/${m} ${DIR_1CH}/${m}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband " >&2 && exit $code
