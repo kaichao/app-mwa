@@ -96,6 +96,7 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - ZSTD_TARGET_FILE=yes
       # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
     hosts:
       - ${NODES}:4

@@ -71,6 +71,11 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
 
+    if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
+        zstd -T8 --rm $dest_file
+        dest_file="${dest_file}.zst"
+    fi
+
     # 输出消息 
     # echo $dest_file_r >> ${WORK_DIR}/messages.txt
     # Add the header "sorted_tag" to give it higher priority in the message-router's scheduling.
