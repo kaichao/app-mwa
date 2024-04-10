@@ -5,6 +5,6 @@ from astropy.time import Time
 import sys
 
 gps = sys.argv[1]
-t = Time(gps, format="gps")
+t = Time(gps, format="gps", scale='utc')
 
 print(t.fits)
