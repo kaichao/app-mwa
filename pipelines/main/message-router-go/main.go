@@ -15,12 +15,13 @@ var (
 		"dir-list": fromDirList,
 		// "dir-list":           fromDirListTest,
 		"cluster-tar-pull": fromClusterTarPull,
-		"local-tar-pull":   fromLocalTarPull,
-		"unpack":           fromUnpack,
-		"beam-maker":       fromBeamMaker,
-		"down-sampler":     fromDownSampler,
-		"fits-redist":      fromFitsRedist,
-		"fits-merger":      fromFitsMerger,
+		// "local-tar-pull":   fromLocalTarPull,
+		// "unpack":           fromUnpack,
+		"pull-unpack":  fromPullUnpack,
+		"beam-maker":   fromBeamMaker,
+		"down-sampler": fromDownSampler,
+		"fits-redist":  fromFitsRedist,
+		"fits-merger":  fromFitsMerger,
 	}
 )
 
@@ -80,7 +81,8 @@ func defaultFunc(message string, headers map[string]string) int {
 
 	cube.createFits24chReadySemaphores()
 
-	cube.createLocalTarPullProgressCountSemaphores()
+	// cube.createLocalTarPullProgressCountSemaphores()
+	cube.createPullUnpackProgressCountSemaphores()
 	cube.createBeamMakerProgressCountSemaphores()
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])

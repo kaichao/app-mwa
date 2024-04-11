@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 
 	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
@@ -116,7 +116,7 @@ func (cube *DataCube) getSortedTag(time int, ch int) string {
 }
 
 var (
-	datacubeFile = "../dataset-base.yaml"
+	datacubeFile = "/dataset-base.yaml"
 )
 
 func getDataCubeFromFile(datasetID string) *DataCube {
@@ -124,12 +124,11 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 
 	yamlFile, err := ioutil.ReadFile(datacubeFile)
 	if err != nil {
-		log.Fatalf("读取YAML文件出错：%v", err)
+		logrus.Fatalf("Read yaml file %s, err:%v", datacubeFile, err)
 	}
 
-	err = yaml.Unmarshal(yamlFile, &config)
-	if err != nil {
-		log.Fatalf("解析YAML文件出错：%v", err)
+	if err = yaml.Unmarshal(yamlFile, &config); err != nil {
+		logrus.Errorf("Error parsing yaml file %s, err:%v", datacubeFile, err)
 	}
 
 	cube := config["datasets"][datasetID]["metadata"]

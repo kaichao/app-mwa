@@ -64,7 +64,8 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		t1 := tarr[i+1]
 		fmtMessage := "%s/%d_%d_ch%d.dat.tar.zst"
 		m := fmt.Sprintf(fmtMessage, ss[1], t0, t1, ch)
-		toLocalTarPull(m, headers)
+		// toLocalTarPull(m, headers)
+		toPullUnpack(m, headers)
 	}
 	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 }

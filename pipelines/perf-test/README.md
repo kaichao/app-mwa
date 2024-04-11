@@ -28,6 +28,7 @@ for ch in {109..132}; do echo $ch; mkdir -p ch${ch}/1257010786_1257010815/; cd c
 ## 二、实验设计
 ### 算法模块
 - beam-maker
+
 - fits-merger
 
 - message-router
