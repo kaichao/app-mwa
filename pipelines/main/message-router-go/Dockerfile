@@ -31,6 +31,8 @@ COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
 COPY --from=0 /go/src/mwa.message-router /app/bin/message-router 
 
+COPY ../dataset*.yaml /
+
 ENV \
     WITH_HEADERS=yes \
     WORK_DIR= \
