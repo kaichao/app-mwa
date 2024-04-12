@@ -168,7 +168,7 @@ jobs:
     base_image: ${MWA_VCSTOOLS}
     variables:
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~13
+      dir_free_gb: /dev/shm/scalebox/mydata~8
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -229,7 +229,6 @@ jobs:
     environments:
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
-      - NUM_NODES_PER_GROUP=
       - BATCH_INSERT=yes
       # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
       - JUMP_SERVERS=${JUMP_SERVERS}
