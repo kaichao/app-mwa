@@ -53,6 +53,8 @@ mkdir -p ${target_dir} \
     && eval $cmd
 code=$?
 
+[[ $code -ne 0 ]] && echo "exit after pull-unpack, error_code:$code" >&2 && exit $code
+
 # 消息加上批次号，以免在多批次处理过程中，在message-router中有同名冲突
 for ((n=$begin; n<=$end; n++))
 do

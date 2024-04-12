@@ -39,7 +39,7 @@ type dataCube struct {
 //
 //	Pointing Demension: PointingRange, PointingBatch
 type DataCube struct {
-	DatasetID string
+	DatasetID string `yaml:"datasetID"`
 
 	ChannelBegin  int `yaml:"channelBegin"`
 	NumOfChannels int `yaml:"numOfChannels"`
@@ -59,7 +59,7 @@ type DataCube struct {
 	NumPerBatch int `yaml:"numPerBatch"`
 }
 
-func getDataCube(datasetID string) *DataCube {
+func getDataCubeFromDB(datasetID string) *DataCube {
 	cmdText := "scalebox dataset get-metadata " + datasetID
 	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
 	fmt.Fprintf(os.Stderr, "stderr for dataset-get-metadata:\n%s\n", stderr)
@@ -116,7 +116,8 @@ func (cube *DataCube) getSortedTag(time int, ch int) string {
 }
 
 var (
-	datacubeFile = "/dataset-base.yaml"
+	datacubeFile = "/dataset.yaml"
+	getDataCube  = getDataCubeFromFile
 )
 
 func getDataCubeFromFile(datasetID string) *DataCube {
