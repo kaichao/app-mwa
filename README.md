@@ -200,19 +200,11 @@ zstd是一种高效的压缩方法；合理利用，则可以在增加CPU的同�
 ```mermaid
 
 flowchart TD
-  remote-dir-list --> mwa-down
-  remote-dir-list --> ftp-tar-pull
-  mwa-down --> untar
-  untar --> repack
-  repack --> ftp-tar-push
-
   subgraph prep-cluster
-    remote-dir-list
-    ftp-tar-pull
-    mwa-down
-    untar
-    repack
-    ftp-tar-push
+    remote-dir-list --> mwa-down
+    mwa-down --> untar
+    untar --> repack
+    repack --> ftp-tar-push
   end
 
 ```
@@ -222,32 +214,22 @@ flowchart TD
 ```mermaid
 
 flowchart TD
-  dir-list --> cluster-tar-pull
-  dir-list --> local-tar-pull
-  cluster-tar-pull --> local-tar-pull
-  local-tar-pull --> unpack
-  unpack --> beam-maker
-  beam-maker --> down-sampler
-  down-sampler --> fits-redist
-  down-sampler --> fits-merger
-  fits-redist --> fits-merger
-  fits-merger --> fits-24ch-push
   subgraph HPC
-    dir-list
-    cluster-tar-pull
-    local-tar-pull
-    unpack
-    beam-maker
-    down-sampler
-    fits-redist
-    fits-merger
-    fits-24ch-push
+    dir-list --> cluster-tar-pull
+    dir-list --> pull-unpack
+    cluster-tar-pull --> pull-unpack
+    pull-unpack --> beam-maker
+    beam-maker --> down-sampler
+    down-sampler --> fits-redist
+    down-sampler --> fits-merger
+    fits-redist --> fits-merger
+    fits-merger --> fits-24ch-push
   end
 
 ```
 
 上述模块中。
-- local-tar-pull、unpack、down-sampler、fits-redist、fits-merger都需指定为HOST-BOUND
+- pull-unpack、down-sampler、fits-redist、fits-merger都需指定为HOST-BOUND
 - beam-maker设定为HOST-BOUND或GROUP-BOUND
 
 - 以scalebox支持本地内存缓存、本地SSD的文件加载，实现模块间存储共享，极大提升I/O能力
@@ -257,18 +239,12 @@ flowchart TD
 ```mermaid
 
 flowchart TD
-  dir-list -->  fits-24ch-pull
-  fits-24ch-pull --> rfi-find
-  rfi-find --> dedisp
-  dedisp --> search-fold
-  search-fold --> result-push
   subgraph HPC
-    dir-list
-    fits-24ch-pull
-    rfi-find
-    dedisp
-    search-fold
-    result-push
+    dir-list -->  fits-24ch-pull
+    fits-24ch-pull --> rfi-find
+    rfi-find --> dedisp
+    dedisp --> search-fold
+    search-fold --> result-push
   end
 
 ```

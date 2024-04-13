@@ -36,7 +36,7 @@ jobs:
     base_image: ${DOWN_SAMPLER}
     parameters:
       key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
-      key_group_index: 1,2,3
+      key_group_index: 1,3,2
     environments:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=

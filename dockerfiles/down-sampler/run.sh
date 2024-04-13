@@ -50,7 +50,7 @@ code=$?
 [ "$KEEP_SOURCE_FILE" == "no" ] && echo "${DIR_1CH}/${m}" > ${WORK_DIR}/removed-files.txt
 
 # rename file to normalized
-mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --long -T4 --rm ${DIR_1CHX}/${m}
+mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --long -T8 --rm ${DIR_1CHX}/${m}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
 

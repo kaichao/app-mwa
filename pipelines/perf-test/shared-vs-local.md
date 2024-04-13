@@ -33,9 +33,8 @@ flowchart TD
 
 flowchart TD
   subgraph HPC
-    dir-list --> local-tar-pull
-    local-tar-pull --> unpack
-    unpack --> beam-maker
+    dir-list --> pull-unpack
+    pull-unpack --> beam-maker
     beam-maker --> down-sampler
     down-sampler --> fits-redist
     down-sampler --> fits-merger
@@ -48,7 +47,7 @@ flowchart TD
 原始数据、最终结果数据都在另一个存储集群。
 
 以下模块中，需设置支持本地计算
-- local-tar-pull、unpack、down-sampler、fits-redist、fits-merger都需指定为HOST-BOUND
+- pull-unpack、down-sampler、fits-redist、fits-merger都需指定为HOST-BOUND
 - beam-maker设定为HOST-BOUND或GROUP-BOUND
 
 ## 3. 实验结果
