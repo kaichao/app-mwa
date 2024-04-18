@@ -13,10 +13,10 @@ import (
 var (
 	logger *logrus.Logger
 
-	ips = []string{"10.11.16.79", "10.11.16.76", "10.11.16.75"}
+	ips = []string{"10.11.16.76", "10.11.16.75"}
 	// ips            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
-	hosts = []string{"n0.dcu", "n2.dcu", "n3.dcu"}
-	// hosts = []string{"n2.dcu", "n3.dcu"}
+	// hosts = []string{"n0.dcu", "n1.dcu", "n2.dcu", "n3.dcu"}
+	hosts = []string{"n2.dcu", "n3.dcu"}
 
 	workDir string
 )
