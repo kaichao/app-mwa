@@ -237,6 +237,11 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		return 0
 	}
 
+	// 单批次完成
+	index := (ch - 109) % len(hosts)
+	sema = "progress-counter_pull-unpack:" + ips[index]
+	countDown(sema)
+
 	// 信号量dat-ready触发
 	// sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
 	// n := countDown(sema)
