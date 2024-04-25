@@ -12,8 +12,10 @@ singularity:
 	singularity build ~/singularity/app-mwa/down-sampler.sif docker-daemon://$(IMAGE_NAME)
 	date
 
-	mkdir -p $(SINGULARITY_DIR)/app-mwa/
-	mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
+	# mkdir -p $(SINGULARITY_DIR)/app-mwa/
+	# mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
+	ssh login1 mkdir -p app-mwa/
+	scp  ~/singularity/app-mwa/down-sampler.sif login1:app-mwa/
 
 dist: build
 	@# docker save $(IMAGE_NAME) | zstdmt | pv | ssh c0 'zstd -d | docker load'

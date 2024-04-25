@@ -41,6 +41,10 @@ if [ -f "${DIR_1CH}/${m}.zst" ]; then
     zstd -d --rm "${DIR_1CH}/${m}.zst"
 fi
 
+echo [DEBUG]input file:
+ls -l ${DIR_1CH}/${m}
+echo [DEBUG]
+
 # 3. run the programs to downsample the files
 psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_1CHX}/${m} ${DIR_1CH}/${m}
 code=$?

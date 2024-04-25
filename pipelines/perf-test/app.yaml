@@ -4,7 +4,7 @@ cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: message-router
-  default_sleep_count: 20
+  default_sleep_count: ${APP_SLEEP_COUNT}
 
 jobs:
   beam-maker:
@@ -34,6 +34,8 @@ jobs:
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
+    variables:
+      code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
     parameters:
       key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
       key_group_index: 1,3,2
@@ -55,11 +57,12 @@ jobs:
       key_group_regex: ^([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)$
       key_group_index: 1,2,3
     environments:
-      - KEEP_1CH_FILE=${KEEP_1CH_FILE}
+      - KEEP_SOURCE_FILE=${KEEP_1CH_FILE}
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
       # without down_sampler
       - DOWN_SAMPLER_ENABLED=no
+      - KEEP_TARGET_FILE=${KEEP_24CH_FILE}
     hosts:
       - ${NODES}:1
 
@@ -70,7 +73,8 @@ jobs:
       slot_on_head: yes
       start_message: ANY
     variables:
-      code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
+      # code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
+      code_path: ${HOME}/app-mwa/pipelines/perf-test/message-router/code
     environments:
       - LOG_LEVEL=warn
       - WITH_HEADERS=yes

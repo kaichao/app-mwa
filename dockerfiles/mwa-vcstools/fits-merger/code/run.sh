@@ -41,6 +41,7 @@ code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file " >&2 && exit $code
 
 echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
+[ "$KEEP_TARGET_FILE" = "no" ] && echo "${output_file}.zst" >> ${WORK_DIR}/removed-files.txt
 
 full_path="${DIR_1CHX}/$1"
 echo [DEBUG]full_path:$full_path
