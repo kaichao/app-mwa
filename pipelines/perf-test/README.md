@@ -6,16 +6,16 @@
 
 - 到p419
 ```sh
-rsync -av -e "ssh -p 10022" /raid0/tmp/mwa/new-tar1257010784/1257010784/1257010786_1257010815_ch1* kaichao@60.245.128.60:/data/sata/1257010784
+rsync -av -e "ssh -p 10022" /raid0/tmp/mwa/tar1257010784/1257010784/1257010786_1257010815_ch1* kaichao@60.245.128.60:/data/sata/mwa/tar/1257010784
 
-for ch in {111..132};do echo $ch; cd ch${ch}/1257010786_1257010815/; zstd -dc ../../1257010786_1257010815_ch${ch}.dat.tar.zst|tar xf -;cd -;done
+for ch in {109..132};do echo $ch; mkdir -p ch${ch}/1257010786_1257010815/; cd ch${ch}/1257010786_1257010815/; zstd -dc ../../1257010786_1257010815_ch${ch}.dat.tar.zst|tar xf -;cd -;done
 
 ```
 
 - 到dcu
 
 ```sh
-rsync -av /raid0/tmp/mwa/new-tar1257010784/1257010784/1257010786_1257010815_ch1* root@223.193.33.31:/raid0/scalebox/mydata/mwa/dat
+rsync -av /raid0/tmp/mwa/tar1257010784/1257010784/1257010786_1257010815_ch1* root@223.193.33.31:/raid0/scalebox/mydata/mwa/dat
 
 for ch in {109..132}; do echo $ch; mkdir -p ch${ch}/1257010786_1257010815/; cd ch${ch}/1257010786_1257010815/; zstd -dc ../../1257010786_1257010815_ch${ch}.dat.tar.zst|tar xf -;cd -; done
 
