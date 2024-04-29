@@ -1,5 +1,7 @@
 #!/bin/bash
 
+env | sort > ${WORK_DIR}/custom-out.txt
+
 # OBSID/BEG_END/ch/PTHEAD_PTTAIL
 m=$1
 # m="1257010784/1257010986_1257011185/132/00001_00003"

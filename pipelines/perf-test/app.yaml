@@ -44,7 +44,7 @@ jobs:
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
     hosts:
-      - ${NODES}:1
+      - ${NODES}:2
 
   fits-merger:
     label: 24通道fits合并
@@ -75,10 +75,10 @@ jobs:
     variables:
       # code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
       code_path: ${HOME}/app-mwa/pipelines/perf-test/message-router/code
+      slot_options: reserved_on_exit
     environments:
       - LOG_LEVEL=warn
       - WITH_HEADERS=yes
-      - LOCAL_MODE=
       - TRACE=
       - KEEP_24CH_FILE=${KEEP_24CH_FILE}
     sink_jobs:
