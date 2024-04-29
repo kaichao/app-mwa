@@ -5,7 +5,7 @@ app-create:
 
 clean:
 	# rm -rf /raid0/scalebox/mydata/mwa/{1ch,1chx,24ch}/
-	ssh login rm -rf /public/home/cstu0036/mydata/mwa/{1ch,1chx,24ch}/
+	ssh login1 rm -rf /work1/cstu0036/mydata/mwa/{1ch,1chx,24ch}/
 
 dataset-import:
 	CLUSTER=dcu scalebox app create dataset.yaml
