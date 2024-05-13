@@ -1,4 +1,4 @@
-name: presto-search.test
+name: presto-search-line-dat.test
 label: 单元测试
 cluster: dcu
 parameters:
@@ -6,7 +6,7 @@ parameters:
 
 jobs:
   presto-search:
-    label: presto-search-test
+    label: presto-search-line-test
     base_image: app-mwa/presto-search
     command: docker run -d
         --group-add video 
@@ -16,16 +16,15 @@ jobs:
         --network=host
         {{ENVS}} {{VOLUMES}} {{IMAGE}}
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_INPUT_ROOT=${LOCAL_FITS_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - ROCR_VISIBLE_DEVICES=${DEVICE_TO_USE}
-      - KEEP_SOURCE_FILE=yes
       - SEARCHARGS=${SEARCHARGS}
     variables:
     # 1 hour
       max_sleep_count: 720
       slot_options: reserved_on_exit
-      code_path: /raid0/root/app-mwa/dockerfiles/presto-search/code
+      code_path: /raid0/zhzhang/app-mwa/dockerfiles/presto-modules/presto-search-line/code
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}

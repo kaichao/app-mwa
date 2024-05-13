@@ -5,7 +5,6 @@
 
 # environment variables:
 # $NSUB                 nsub for prepsubband_gpu
-# $RFIARGS              arguments for rfifind
 # $SEARCHARGS           arguments for accelsearch_gpu_4
 
 # 1. set the input / output / medium file directory
@@ -34,22 +33,6 @@ full_dir="$DIR_FITS/${m}"
 bname=$m
 
 # the file have already been uncompressed.
-# for zst_file in $( ls ${full_dir}/*.zst )
-# do
-#     # full_name="$DIR_FITS/${f_dir}"
-#     full_name=${zst_file%.zst}
-#     echo "full_name:${full_name}" >> ${WORK_DIR}/custom-out.txt
-#     [ -f "${zst_file}" ] && zstd -d --rm -f ${zst_file}
-
-#     # cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
-#     # 2. check if the file exists
-
-#     # readfile $DIR_FITS/$f_dir
-#     # code=$?
-#     # [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
-#     [[ ! -f $full_name ]] && echo "[ERROR] In checking file exits:$full_name, ret-code:$code" >&2 && exit 10
-# done
-
 # 3. run the programs to dedisperse and search
 echo "DIR_DEDISP:$DIR_DEDISP/$bname"
 cd $DIR_DEDISP/$bname
@@ -60,20 +43,24 @@ mkdir -p ${DIR_DEDISP}/${bname}/group${GRPNUM}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] In mkdir:$bname, ret-code:$code" >&2 && exit 11
 
-
 cd group${GRPNUM}
 /app/bin/dedisp_line_new.py $full_dir ../RFIfile_rfifind.mask
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] In dedispersion:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/group${GRPNUM} && exit 13
 LINENUM=$( cat ./linenum.txt ) && echo "LINENUM = ${LINENUM}"
 rm ./linenum.txt
-
-cd ..
-du -sh
-# tar -cf group${GRPNUM}.tar ./group${GRPNUM} && rm -rf ./group${GRPNUM}
-# zstd --rm -f group${GRPNUM}.tar
+# next, run accelsearch on these data.
+realfft *.dat && accelsearch_gpu_multifile -cuda 0 $SEARCHARGS *.fft | grep Total
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] In accelsearch:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/group${GRPNUM} && exit 14
+rm *.fft
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
+# move all the files into ../$linenum
+cd ..
+# du -sh
+# tar -cf group${GRPNUM}.tar ./group${GRPNUM} && rm -rf ./group${GRPNUM}
+# zstd --rm -f group${GRPNUM}.tar
 [[ ! -d dm${LINENUM} ]] && mkdir -p dm${LINENUM}
 mv ./group${GRPNUM} ./dm${LINENUM}
 

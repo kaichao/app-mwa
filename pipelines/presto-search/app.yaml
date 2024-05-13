@@ -1,0 +1,240 @@
+name: presto-complete.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+  message_router: message-router-presto
+
+jobs:
+  # dir-list-1:
+  #   base_image: hub.cstcloud.cn/scalebox/dir-list
+  #   parameters:
+  #     slot_on_head: yes
+  #   hosts:
+  #     - h0:1
+
+  dir-list:
+    base_image: hub.cstcloud.cn/scalebox/dir-list
+    parameters:
+      slot_on_head: yes
+      # scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch-240408~1257010784
+      # key_group_regex: ^([^~])~([0-9]+)/p([0-9]+)
+      # key_group_index: 2,3
+    hosts:
+      - h0:1
+
+  local-copy-unpack:
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+    command: ${UNPACK_COMMAND}
+    variables:
+      task_timeout_seconds: 1800
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
+      dir_limit_gb: /tmp/data/mwa/24ch~71 #/tmp/data/mwa/24ch
+      dir_free_gb: /tmp/data/mwa/24ch~2
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch-240408~1257010784/p00001/t1257010786_1257010935.fits.zst
+      key_group_regex: ^([^~]+)~([0-9]+)/p([0-9]+)/(.+)$
+      key_group_index: 2,3
+      message_router_index: 1
+    environments:
+      - JUMP_SERVERS=${JUMP_SERVERS}
+    hosts:
+      - n[023]:1
+
+  rfi-find:
+    label: rfi-find-test
+    base_image: app-mwa/presto-search
+    command: docker run -d --rm
+        --tmpfs /work 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/rfi-find/code
+      
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=${LOCAL_FITS_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - MAX_LINENUM=${MAX_LINENUM}
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # task_dist_mode: HOST-BOUND
+      # 1257010784/p00001
+      key_group_regex: ^([0-9]+)/p([0-9]+)$
+      key_group_index: 1,2
+      # start_message: ${START_MESSAGE}
+    hosts:
+      - n[023]:1
+    # sink_jobs:
+    #   - dedisp-search
+  
+  dedisp-search:
+    label: dedisp-search-test
+    base_image: app-mwa/presto-search
+    command: ${ROCM_COMMAND}
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/dedisp-search/code
+      # 最大占用4.8G*4组，外加4.8G*4临时空间，外加4.8G*4已完成处理数据，共57.6G;至少9.6G保证单个slot正确运行
+      dir_limit_gb: /dev/shm/scalebox/mydata/mwa/dedisp~58
+      dir_free_gb: /dev/shm/scalebox/mydata/mwa/dedisp~{~n*5+5~}
+      
+    environments:
+      - KEEP_SOURCE_FILE=yes
+      - LOCAL_INPUT_ROOT=${LOCAL_FITS_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      # - ROCR_VISIBLE_DEVICES=${DEVICE_TO_USE}
+
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # 1257010784/p00001/01
+      key_group_regex: ^([0-9]+)/p([0-9]+)/([0-9]+)$
+      key_group_index: 1,2,3
+      message_router_index: 1
+    hosts:
+      - n[023]:4
+    # sink_jobs:
+    #   - local-copy
+
+  # local-copy:
+  #   label: presto-local-copy
+  #   base_image: ${RSYNC_COPY}
+  #   variables:
+  #     # code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy/code
+  #     # 最大占用4.8G*7+4.8G*4(运行需求)+9.6G（传输预留）= 62.4G
+  #     dir_limit_gb: /dev/shm/zhzhang/data/mwa/dedisp~58,/dev/shm/zhzhang/data/mwa/dedisp/tar~8
+  #     dir_free_gb: /dev/shm/zhzhang/data/mwa/dedisp/tar~5
+
+  #   environments:
+  #     - KEEP_SOURCE_FILE=no
+  #     # - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+  #     # - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+    
+  #   parameters:
+  #     key_group_regex: ^([0-9]+)/p([0-9]+)/dm([0-9]+)/group([0-9]+)$
+  #     key_group_index: 1,2,3
+
+  #   hosts:
+  #     - n2:1
+  #   sink_jobs:
+  #     - search
+
+  # search:
+  #   label: presto-search-fold-test
+  #   base_image: app-mwa/presto-search
+  #   command: ${ROCM_COMMAND}
+    
+  #   variables:
+  #     max_sleep_count: 10
+  #     task_timeout_seconds: 43200
+  #     output_text_size: 1048576
+  #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/search/code
+  #     dir_limit_gb: /dev/shm/zhzhang/data/mwa/dedisp~63
+  #     dir_free_gb: /dev/shm/zhzhang/data/mwa/dedisp~10
+      
+  #   environments:
+  #     - KEEP_SOURCE_FILE=no
+  #     - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+  #     - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+  #     # - ROCR_VISIBLE_DEVICES=0
+  #     - SEARCHARGS=${SEARCHARGS}
+  #   parameters:
+  #     # task_dist_mode: HOST-BOUND
+  #     key_group_regex: ^([0-9]+)/p([0-9]+)/dm([0-9]+)/group([0-9]+)$
+  #     key_group_index: 1,2,3
+  #   hosts:
+  #     - n[023]:3
+
+  fold:
+    label: presto-search-fold-test
+    base_image: app-mwa/presto-search
+    # command: ${ROCM_COMMAND}
+    
+    variables:
+      max_sleep_count: 10
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/fold/code
+      dir_limit_gb: /dev/shm/zhzhang/data/mwa/dedisp~63
+      dir_free_gb: /dev/shm/zhzhang/data/mwa/dedisp~1
+      
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      # - LOCAL_OUTPUT_ROOT=/raid0/zhzhang/data
+      # - ROCR_VISIBLE_DEVICES=0
+      - SEARCHARGS=${SEARCHARGS}
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+    hosts:
+      - n[023]:1
+
+  clean-up:
+    base_image: hub.cstcloud.cn/scalebox/agent
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+    environments:
+      - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
+      - LOCAL_DEDISP_ROOT=${LOCAL_SHM_ROOT}
+    variables:
+      code_path: ${CODE_BASE}/dockerfiles/presto-modules/clean-up/code
+    hosts:
+      - n[023]:1
+
+  result-push:
+    base_image: ${RSYNC_COPY}
+    variables:
+      task_timeout_seconds: 1800
+    parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      # /dev/shm/scalebox/mydata/mwa/png~1257010784/p00016/dm1.tar.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/png
+      key_group_regex: ^.+~([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)~.+$
+      key_group_index: 1,3,2
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - JUMP_SERVERS=${JUMP_SERVERS}
+    hosts:
+      -  n[023]:1
+
+  message-router-presto:
+    label: 主消息路由
+    base_image: hub.cstcloud.cn/scalebox/agent
+    parameters:
+      slot_on_head: yes
+      start_message: ${TARGET_POINTING}
+    variables:
+      code_path: ${CODE_BASE}/pipelines/presto-search/message-router/code
+    environments:
+      - LOG_LEVEL=warn
+      - WITH_HEADERS=yes
+      - LOCAL_MODE=
+      - TRACE=
+      - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
+      - LOCAL_SHM_ROOT=${LOCAL_SHM_ROOT}
+      - DATASET_URI=${TARGET_POINTING}
+      - MAX_LINENUM=${MAX_LINENUM}
+      - RESULT_DIR=${RESULT_DIR}
+    hosts:
+      - h0:2
+    sink_jobs:
+      # - dir-list-1
+      - dir-list
+      # - rsync-pull
+      - local-copy-unpack
+      - rfi-find
+      # - dedisp
+      # - search
+      - dedisp-search
+      - fold
+      - clean-up
+      - result-push
