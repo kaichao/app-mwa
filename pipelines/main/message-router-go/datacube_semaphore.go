@@ -76,20 +76,6 @@ func (cube *DataCube) createDatProcessedSemaphores() {
 	doInsert(semaArr)
 }
 
-//	func (cube *DataCube) createLocalTarPullProgressCountSemaphores() {
-//		arr := cube.getTimeUnits()
-//		lenTimeUnits := len(arr) / 2
-//		initValue := lenTimeUnits * cube.getNumOfPointingBatch() * 24 / len(ips)
-//		fmt.Printf("LocalTarPullProgressCount, initValue=%d,lenTimeUnits=%d,numBatches=%d\n",
-//			initValue, lenTimeUnits, cube.getNumOfPointingBatch())
-//		semaArr := []Sema{}
-//		for _, h := range ips {
-//			sema := "progress-counter_local-tar-pull:" + h
-//			semaArr = append(semaArr, Sema{name: sema, value: initValue})
-//		}
-//		doInsert(semaArr)
-//	}
-
 func (cube *DataCube) createPullUnpackProgressCountSemaphores() {
 	arr := cube.getTimeUnits()
 	lenTimeUnits := len(arr) / 2
