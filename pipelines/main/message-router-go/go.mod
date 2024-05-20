@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/jackc/pgx/v5 v5.4.3
-	github.com/kaichao/scalebox v0.0.0-20240313053757-58250436e71b
+	github.com/kaichao/scalebox v0.0.0-20240425124823-8fd2ac74d0d9
 	github.com/sirupsen/logrus v1.9.3
 )
 

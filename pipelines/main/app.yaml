@@ -110,6 +110,7 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
       progress_counter_diff: 96
+      slot_options: reserved_on_exit
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
