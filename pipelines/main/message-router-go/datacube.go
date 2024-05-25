@@ -116,7 +116,8 @@ func (cube *DataCube) getSortedTag(time int, ch int) string {
 }
 
 var (
-	datacubeFile = "/dataset-perf-test.yaml"
+	datacubeFile = "/dataset.yaml"
+	// datacubeFile = "/dataset-perf-test.yaml"
 	// datacubeFile = "/dataset-base.yaml"
 	getDataCube = getDataCubeFromFile
 )
@@ -133,6 +134,7 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 		logrus.Errorf("Error parsing yaml file %s, err:%v", datacubeFile, err)
 	}
 
+	fmt.Println("config:", config)
 	cube := config["datasets"][datasetID]["metadata"]
 	fmt.Println(cube)
 	return &cube

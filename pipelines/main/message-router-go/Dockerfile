@@ -39,6 +39,7 @@ ENV \
     ACTION_RUN=/app/bin/message-router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
+    NUM_OF_NODES=24 \
     BATCH_INSERT= 
 
 COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local

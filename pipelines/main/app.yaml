@@ -122,7 +122,7 @@ jobs:
       # message_router_index: 1
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
-      - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
+      # - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - ZSTD_TARGET_FILE=yes
       # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
@@ -234,6 +234,8 @@ jobs:
       # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
       - JUMP_SERVERS=${JUMP_SERVERS}
       - DATASET_URI=${DATASET_URI}
+      - NUM_OF_NODES=${NUM_OF_NODES}
+      - LOCAL_IP_INDEX=${MESSAGE_ROUTER_LOCAL_IP_INDEX}
       # - TRACE=yes
     hosts:
       - h0:2

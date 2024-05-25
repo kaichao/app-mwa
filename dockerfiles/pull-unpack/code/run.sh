@@ -24,33 +24,40 @@ if [ $jump_servers ]; then
     jump_servers_option="-J '${jump_servers}' "
 fi
 ssh_args="-T -c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
+#ssh_args="-c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
 
 echo "jump_servers:$jump_servers"
 
 source_url=$(get_parameter "$2" "source_url")
 target_url=$(get_parameter "$2" "target_url")
-# ssh_port=$(get_parameter "$2" "ssh_port")
-ssh_port=22
 
-IFS=':' read -r ssh_host source_dir <<< ${source_url}
+# user@10.1.1.1:10022:/raid0/1301240224
+# 冒号数量
+colon_count=$(echo "$source_url" | awk -F':' '{print NF-1}')
+echo "colon_count:$colon_count" >> ${WORK_DIR}/custom-out.txt
+if [ "$colon_count" -ge 2 ]; then
+    IFS=':' read -r ssh_host ssh_port source_dir <<< ${source_url}
+else
+    IFS=':' read -r ssh_host source_dir <<< ${source_url}
+    ssh_port=22
+fi
+
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
-echo "source_url:$source_url" >> /work/custom-out.txt
-echo "source_dir:$source_dir" >> /work/custom-out.txt
-echo "target_url:$target_url" >> /work/custom-out.txt
-echo "ssh_host:$ssh_host" >> /work/custom-out.txt
-echo "ssh_port:$ssh_port" >> /work/custom-out.txt
-echo "ssh_args:$ssh_args" >> /work/custom-out.txt
-echo "message:$m" >> /work/custom-out.txt
+echo "source_url:$source_url" >> ${WORK_DIR}/custom-out.txt
+echo "source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
+echo "target_url:$target_url" >> ${WORK_DIR}/custom-out.txt
+echo "ssh_host:$ssh_host" >> ${WORK_DIR}/custom-out.txt
+echo "ssh_port:$ssh_port" >> ${WORK_DIR}/custom-out.txt
+echo "ssh_args:$ssh_args" >> ${WORK_DIR}/custom-out.txt
+echo "message:$m" >> ${WORK_DIR}/custom-out.txt
 target_dir="/local${target_url}"
 
 cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
-echo "cmd:$cmd"
-
 mkdir -p ${target_dir} \
-    && cd ${target_dir} \
-    && eval $cmd
+    && cd ${target_dir}
+eval $cmd
 code=$?
 
 [[ $code -ne 0 ]] && echo "exit after pull-unpack, error_code:$code" >&2 && exit $code
