@@ -23,3 +23,24 @@ datasets:
       pointingEnd: 384
       pointingStep: 24
       numPerBatch: 8
+
+  1301240224:
+    metadata:
+      datasetID: 1301240224
+      # 1301240225 ~ 1301245022, 4798
+
+      # channel dimension
+      channelBegin: 109
+      numOfChannels: 24
+
+      # time dimenstion
+      timeBegin: 1301240225
+      numOfSeconds: 4798
+      timeUnit: 30
+      timeStep: 150
+
+      # pointing dimension
+      pointingBegin: 1
+      pointingEnd: 279
+      pointingStep: 24
+      numPerBatch: 12

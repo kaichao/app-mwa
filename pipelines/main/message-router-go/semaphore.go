@@ -1,9 +1,7 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -70,7 +68,7 @@ func doInsert(values []Sema) {
 		return
 	}
 	// start transaction
-	tx, err := db.Begin()
+	tx, err := getDB().Begin()
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 	}
@@ -108,7 +106,7 @@ func doInsert(values []Sema) {
 		fmt.Printf("[%d..%d], %d row(s) inserted.\n", i, end, end-i)
 
 		// start next batch
-		if tx, err = db.Begin(); err != nil {
+		if tx, err = getDB().Begin(); err != nil {
 			logrus.Errorf("err:%v\n", err)
 		}
 	}
@@ -116,30 +114,10 @@ func doInsert(values []Sema) {
 
 var (
 	// used for semaphore batch-insert
-	db          *sql.DB
 	batchInsert bool
 )
 
 func init() {
 	// localMode = os.Getenv("LOCAL_MODE") == "yes"
 	batchInsert = os.Getenv("BATCH_INSERT") == "yes"
-
-	dbHost := os.Getenv("PGHOST")
-	if dbHost == "" {
-		dbHost = scalebox.GetLocalIP()
-	}
-	dbPort := os.Getenv("PGPORT")
-	if dbPort == "" {
-		dbPort = "5432"
-	}
-	databaseURL := fmt.Sprintf("postgres://scalebox:changeme@%s:%s/scalebox", dbHost, dbPort)
-	// set database connection
-	var err error
-	if db, err = sql.Open("pgx", databaseURL); err != nil {
-		log.Fatal("Unable to connect to database:", err)
-	}
-	db.SetConnMaxLifetime(500)
-	db.SetMaxIdleConns(50)
-	db.SetMaxOpenConns(20)
-	db.Stats()
 }
