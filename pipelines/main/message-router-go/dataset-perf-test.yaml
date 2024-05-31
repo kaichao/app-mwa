@@ -12,9 +12,6 @@ datasets:
       numOfChannels: 24
 
       # time dimenstion
-      # timeBegin: 1257010786
-      # numOfSeconds: 4798
-#      timeBegin: 1257010786
       timeBegin: 1257010816
       numOfSeconds: 30
       timeUnit: 30

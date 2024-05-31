@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
 )
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -20,7 +20,7 @@ func createSemaphore(semaName string, defaultValue int) int {
 
 func countDown(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore countdown %s", semaName)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
 	fmt.Printf("exit-code for semaphore countdown:\n%d\n", code)
 	fmt.Printf("stdout for semaphore countdown:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for semaphore countdown:\n%s\n", stderr)
@@ -38,7 +38,7 @@ func countDown(semaName string) int {
 
 func getSemaphore(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 15)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
 	fmt.Printf("exit-code for semaphore get:\n%d\n", code)
 	fmt.Printf("stdout for semaphore get:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for semaphore get:\n%s\n", stderr)
@@ -68,7 +68,7 @@ func doInsert(values []Sema) {
 		return
 	}
 	// start transaction
-	tx, err := getDB().Begin()
+	tx, err := misc.GetDB().Begin()
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 	}
@@ -106,7 +106,7 @@ func doInsert(values []Sema) {
 		fmt.Printf("[%d..%d], %d row(s) inserted.\n", i, end, end-i)
 
 		// start next batch
-		if tx, err = getDB().Begin(); err != nil {
+		if tx, err = misc.GetDB().Begin(); err != nil {
 			logrus.Errorf("err:%v\n", err)
 		}
 	}

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -61,7 +61,7 @@ type DataCube struct {
 
 func getDataCubeFromDB(datasetID string) *DataCube {
 	cmdText := "scalebox dataset get-metadata " + datasetID
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdText, 10)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 10)
 	fmt.Fprintf(os.Stderr, "stderr for dataset-get-metadata:\n%s\n", stderr)
 	if code != 0 {
 		fmt.Fprintf(os.Stderr, "[WARN] error for dataset-get-metadata dataset=%s in getDataCube()\n", datasetID)
