@@ -1,15 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+
+	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
 )
 
@@ -24,7 +23,7 @@ var (
 
 	workDir string
 
-	db *sql.DB
+	// db *sql.DB
 )
 
 func init() {
@@ -59,7 +58,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 	}
 
 	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 10)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 10)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -77,7 +76,7 @@ func initHosts() {
 	clustName := os.Getenv("CLUSTER")
 	numOfNodes, _ := strconv.Atoi(os.Getenv("NUM_OF_NODES"))
 	fmt.Printf("num-of-nodes:%d in cluster %s\n", numOfNodes, clustName)
-	rows, err := getDB().Query(sqlText, clustName, numOfNodes)
+	rows, err := misc.GetDB().Query(sqlText, clustName, numOfNodes)
 	defer rows.Close()
 	if err != nil {
 		logrus.Errorf("query t_host error: %v\n", err)
@@ -93,28 +92,4 @@ func initHosts() {
 			logrus.Errorln(err)
 		}
 	}
-}
-
-func getDB() *sql.DB {
-	if db == nil {
-		dbHost := os.Getenv("PGHOST")
-		if dbHost == "" {
-			dbHost = scalebox.GetLocalIP()
-		}
-		dbPort := os.Getenv("PGPORT")
-		if dbPort == "" {
-			dbPort = "5432"
-		}
-		databaseURL := fmt.Sprintf("postgres://scalebox:changeme@%s:%s/scalebox", dbHost, dbPort)
-		// set database connection
-		var err error
-		if db, err = sql.Open("pgx", databaseURL); err != nil {
-			log.Fatal("Unable to connect to database:", err)
-		}
-		db.SetConnMaxLifetime(500)
-		db.SetMaxIdleConns(50)
-		db.SetMaxOpenConns(20)
-		// db.Stats()
-	}
-	return db
 }

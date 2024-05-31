@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 func fromDirList(message string, headers map[string]string) int {
@@ -26,7 +26,7 @@ func fromDirList(message string, headers map[string]string) int {
 		// no jump servers && remote file, copy to global storage
 		sinkJob := "cluster-tar-pull"
 		m = message + "~/data/mwa/tar"
-		scalebox.AppendToFile("/work/messages.txt", sinkJob+","+m)
+		misc.AppendToFile("/work/messages.txt", sinkJob+","+m)
 		return 0
 	}
 
@@ -168,7 +168,7 @@ func toPullUnpack(message string, headers map[string]string) int {
 */
 func getLocalRsyncPrefix() string {
 	cmdTxt := `scalebox cluster get-parameter rsync_info`
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
 	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
 	if code != 0 {
@@ -305,7 +305,7 @@ func removeLocalDatFiles(sema string) int {
 	// 	cmdTxt = fmt.Sprintf("rm -rf %s", dir)
 	// }
 	fmt.Println("cmd-text:", cmdTxt)
-	code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 600)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
 	fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
 

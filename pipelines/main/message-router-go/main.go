@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 var (
@@ -86,6 +86,6 @@ func defaultFunc(message string, headers map[string]string) int {
 	cube.createBeamMakerProgressCountSemaphores()
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
-	scalebox.AppendToFile("/work/messages.txt", m)
+	misc.AppendToFile("/work/messages.txt", m)
 	return 0
 }

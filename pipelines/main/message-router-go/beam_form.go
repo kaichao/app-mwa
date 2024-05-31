@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
-	scalebox "github.com/kaichao/scalebox/golang/misc"
+	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 func fromBeamMaker(message string, headers map[string]string) int {
@@ -89,7 +89,7 @@ func fromDownSampler(message string, headers map[string]string) int {
 		format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
 		m := fmt.Sprintf(format, fromIP, message)
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
-		code, stdout, stderr := scalebox.ExecShellCommandWithExitCode(cmdTxt, 20)
+		code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
 		fmt.Printf("stdout for task-add:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 		return code
