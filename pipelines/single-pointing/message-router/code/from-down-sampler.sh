@@ -6,6 +6,8 @@
 s=$(echo "$1" | cut -d '/' -f 1-3)
 
 sema="fits-24ch-ready:$s"
+echo "message:$1,sema:$sema"
+
 # Running the `scalebox` command to get a numeric string
 n=$(scalebox semaphore countdown "$sema")
 code=$?
