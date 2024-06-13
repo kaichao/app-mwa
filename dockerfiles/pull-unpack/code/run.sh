@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source functions.sh
+source $(dirname $0)/functions.sh
 
 # 1257010784/1257010786_1257010815_ch109.dat.tar.zst~b01
 m0=$1
@@ -61,6 +62,11 @@ eval $cmd
 code=$?
 
 [[ $code -ne 0 ]] && echo "exit after pull-unpack, error_code:$code" >&2 && exit $code
+
+# 检查输出文件是否完整
+post_check $begin $end $target_dir $dataset $ch
+code=$?
+[[ $code -ne 0 ]] && echo "exit after post-check output files, exit_code:$code" >&2 && exit $code
 
 # 消息加上批次号，以免在多批次处理过程中，在message-router中有同名冲突
 for ((n=$begin; n<=$end; n++))
