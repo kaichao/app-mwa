@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source $(dirname $0)/functions.sh
+
 # usage: downsample all .fits file in the input directory,
 # and save the result to the output directory.
 
@@ -57,6 +59,11 @@ code=$?
 mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --long -T8 --rm ${DIR_1CHX}/${m}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
+
+# 检查输入、输出文件的大小比例是否合理？
+post_check "${DIR_1CH}/${m}" "${DIR_1CHX}/${m}.zst"
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/custom-out.txt && exit $code
 
 echo "${DIR_1CH}/${m}" > ${WORK_DIR}/input-files.txt
 echo "${DIR_1CHX}/${m}.zst" > ${WORK_DIR}/output-files.txt

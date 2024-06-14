@@ -2,34 +2,37 @@
 
 # 检查输出文件是否有效？
 function post_check() {
-    begin=$1
-    end=$2
-    target_dir=$3
-    dataset=$4
-    ch=$5
+    dataset=$1
+    ch=$2
+    begin=$3
+    end=$4
+    target_dir=$5
 
+    echo "[post_check]:" >> ${WORK_DIR}/custom-out.txt
+    
     # 初始化字节数数组
     sizes=()
-    for ((n=$begin; n<=$end; n++))
-    do
-        filename="${target_dir}/${dataset}_${n}_ch${ch}.dat"
+    for ((n=$begin; n<=$end; n++)); do
+        filename_r="${dataset}_${n}_ch${ch}.dat"
+        filename="${target_dir}/$filename_r"
         if [[ -f "$filename" ]]; then
             sizes+=( $(stat -c%s "$filename") )
+            echo "file: $filename_r,\t bytes: $(stat -c%s "$filename")" >> ${WORK_DIR}/custom-out.txt
         else
-            echo "file $filename not exists!"
+            echo "[ERROR] post_check file $filename_r not exists!" >> ${WORK_DIR}/custom-out.txt
             exit 101
         fi
     done
 
     # 获取文件数量
     num_files=${#sizes[@]}
-
     # 计算均值
     mean=0
     for size in "${sizes[@]}"; do
         mean=$((mean + size))
     done
     mean=$((mean / num_files))
+    echo " $num_files files, average bytes: $mean" >> ${WORK_DIR}/custom-out.txt
 
     # 检查除了最后一个文件外其他文件字节数是否一致
     all_equal=true
@@ -41,13 +44,10 @@ function post_check() {
     done
 
     if $all_equal; then
-        echo "所有文件（除了最后一个）字节数一致"
+        echo "所有文件字节数一致" >> ${WORK_DIR}/custom-out.txt
     else
-        echo "文件字节数不一致" >&2
-
+        echo [ERROR] "文件字节数不一致" >> ${WORK_DIR}/custom-out.txt
         return 102
     fi
 
-    # 输出均方差
-    echo "文件大小的均方差: $std_dev"
 }

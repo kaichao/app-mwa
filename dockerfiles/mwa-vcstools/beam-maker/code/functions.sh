@@ -2,36 +2,48 @@
 
 # 检查输出文件是否有效？
 function post_check() {
-    begin=$1
-    end=$2
-    target_dir=$3
-    dataset=$4
-    ch=$5
+    dataset=$1
+    ch=$2
+    p0=$3
+    p1=$4
+    t0=$5
+    t1=$6
+    target_dir=$7
+
+
+    echo "[post_check]:" >> ${WORK_DIR}/custom-out.txt
+    echo "ch=$ch"  >> ${WORK_DIR}/custom-out.txt
+    echo "p0=$p0, p1=$p1"  >> ${WORK_DIR}/custom-out.txt
+    echo "t0=$t0, t1=$t1"  >> ${WORK_DIR}/custom-out.txt
+    echo "target_dir=$target_dir"  >> ${WORK_DIR}/custom-out.txt
 
     # 初始化字节数数组
     sizes=()
-    for ((n=$begin; n<=$end; n++))
-    do
-        filename="${target_dir}/${dataset}_${n}_ch${ch}.dat"
-        if [[ -f "$filename" ]]; then
-            sizes+=( $(stat -c%s "$filename") )
+    for ii in $(seq $p0 $p1); do
+        pi=$(printf "%05d" $ii)
+        dest_file_r="${dataset}/p${pi}/t${t0}_${t1}/ch${ch}.fits"
+        dest_file=${target_dir}/${dest_file_r}
+
+        if [[ -f "$dest_file" ]]; then
+            sizes+=( $(stat -c%s "$dest_file") )
+            echo "file: $dest_file_r, bytes: $(stat -c%s "$dest_file")" >> ${WORK_DIR}/custom-out.txt
         else
-            echo "file $filename not exists!"
+            echo "[ERROR] post_check file $dest_file not exists!" >> ${WORK_DIR}/custom-out.txt
             exit 101
         fi
     done
 
     # 获取文件数量
     num_files=${#sizes[@]}
-
     # 计算均值
     mean=0
     for size in "${sizes[@]}"; do
         mean=$((mean + size))
     done
     mean=$((mean / num_files))
+    echo " $num_files files, average bytes: $mean" >> ${WORK_DIR}/custom-out.txt
 
-    # 检查除了最后一个文件外其他文件字节数是否一致
+    # 检查文件字节数是否一致？
     all_equal=true
     for (( i=0; i<num_files-1; i++ )); do
         if [[ "${sizes[i]}" -ne "${sizes[0]}" ]]; then
@@ -41,13 +53,9 @@ function post_check() {
     done
 
     if $all_equal; then
-        echo "所有文件（除了最后一个）字节数一致"
+        echo "所有文件字节数一致" >> ${WORK_DIR}/custom-out.txt
     else
-        echo "文件字节数不一致" >&2
-
+        echo [ERROR] "文件字节数不一致" >> ${WORK_DIR}/custom-out.txt
         return 102
     fi
-
-    # 输出均方差
-    echo "文件大小的均方差: $std_dev"
 }

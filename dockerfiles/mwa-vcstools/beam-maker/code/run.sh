@@ -75,6 +75,21 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
 
+    i=$((i + 1))
+done
+
+# 检查输出文件是否完整
+post_check $OBSID $ch $PTHEAD $PTTAIL $BEG $END $DIR_1CH
+code=$?
+[[ $code -ne 0 ]] && echo "exit after post-check output files, exit_code:$code" >&2 && exit $code
+
+
+for ii in $(seq $PTHEAD $PTTAIL); do
+    pi=$(printf "%05d" $ii)
+    dest_file_r=${OBSID}/p${pi}/t${BEG}_${END}/ch${ch}.fits
+    dest_file=${DIR_1CH}/${dest_file_r}
+
+    # 文件压缩
     if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
         zstd -T8 --rm $dest_file
         dest_file="${dest_file}.zst"
@@ -87,8 +102,6 @@ for ii in $(seq $PTHEAD $PTTAIL); do
 
     # 统计输出文件的字节数
     echo $dest_file >> ${WORK_DIR}/output-files.txt
-
-    i=$((i + 1))
 done
 
 # 统计输入文件的总字节数

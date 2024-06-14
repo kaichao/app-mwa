@@ -28,7 +28,7 @@ jobs:
   pull-unpack:
     base_image: ${RSYNC_COPY}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
-    command: ${UNPACK_COMMAND}
+    command: ${PRIVILEGED_COMMAND}
     variables:
       code_path: ${CODE_BASE}/dockerfiles/pull-unpack/code
       task_timeout_seconds: 1800
@@ -53,7 +53,6 @@ jobs:
       - HARD_OUTPUT_MB=
     hosts:
       -  ${NODES}:1
-
 
   beam-maker:
     label: beam-maker
@@ -88,9 +87,11 @@ jobs:
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
+    command: ${PRIVILEGED_COMMAND}
     variables:
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
       dir_free_gb: /dev/shm/scalebox/mydata~8
+      code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -161,24 +162,6 @@ jobs:
       - JUMP_SERVERS=${JUMP_SERVERS}
     hosts:
       -  ${NODES}:1
-
-  presto-search:
-    label: presto-search
-    base_image: ${PRESTO_SEARCH}
-    command: ${ROCM_COMMAND}
-    variables:
-      task_timeout_seconds: ${PRESTO_SEARCH_TIMEOUT}
-      output_text_size: 1048576
-      code_path: ${CODE_BASE}/dockerfiles/presto-search/code
-    parameters:
-      task_dist_mode: ${TASK_DIST_MODE}
-      # 1257010784/p00001
-    environments:
-      - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
-      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
-    hosts:
-      - ${NODES}:2
 
   message-router-main:
     label: 主消息路由
