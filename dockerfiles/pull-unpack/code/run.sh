@@ -64,7 +64,7 @@ code=$?
 [[ $code -ne 0 ]] && echo "exit after pull-unpack, error_code:$code" >&2 && exit $code
 
 # 检查输出文件是否完整
-post_check $begin $end $target_dir $dataset $ch
+post_check $dataset $ch $begin $end $target_dir
 code=$?
 [[ $code -ne 0 ]] && echo "exit after post-check output files, exit_code:$code" >&2 && exit $code
 
