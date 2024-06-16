@@ -26,7 +26,7 @@ jobs:
       - h0:2
 
   pull-unpack:
-    base_image: ${RSYNC_COPY}
+    base_image: ${FILE_COPY}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${PRIVILEGED_COMMAND}
     variables:
@@ -109,7 +109,7 @@ jobs:
 
   # push 
   fits-redist:
-    base_image: ${RSYNC_COPY}
+    base_image: ${FILE_COPY}
     variables:
       task_timeout_seconds: 60
       dir_free_gb: /dev/shm/scalebox/mydata~10
@@ -120,6 +120,8 @@ jobs:
       key_group_regex: ^.+~([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits.zst~.+$
       key_group_index: 1,2,3
     environments:
+      - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
+      - WITH_HEADERS=yes
       - KEEP_SOURCE_FILE=no
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
@@ -149,7 +151,7 @@ jobs:
       - ${NODES}:1
 
   fits-24ch-push:
-    base_image: ${RSYNC_COPY}
+    base_image: ${FILE_COPY}
     variables:
       task_timeout_seconds: 1800
     parameters:
@@ -159,7 +161,10 @@ jobs:
       key_group_index: 1,3,2
     environments:
       - KEEP_SOURCE_FILE=no
-      - JUMP_SERVERS=${JUMP_SERVERS}
+      - SOURCE_URL=/dev/shm/scalebox/mydata/mwa/24ch
+      - TARGET_URL=scalebox@159.226.237.136:10022/raid0/scalebox/mydata/mwa/24ch
+      - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
+      - WITH_HEADERS=yes
     hosts:
       -  ${NODES}:1
 
@@ -188,9 +193,9 @@ jobs:
     sink_jobs:
       - dir-list
       - cluster-tar-pull
-      - local-tar-pull
-      - unpack
+      - pull-unpack
       - beam-maker
       - down-sampler
       - fits-redist
       - fits-merger
+      - fits-24ch-push
