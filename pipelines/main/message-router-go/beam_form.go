@@ -86,9 +86,12 @@ func fromDownSampler(message string, headers map[string]string) int {
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
-		format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
-		m := fmt.Sprintf(format, fromIP, message)
-		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
+		// format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
+		// m := fmt.Sprintf(format, fromIP, message)
+		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
+		fromURL := fmt.Sprintf("root@%s/dev/shm/scalebox/mydata/mwa/1chx", fromIP)
+		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
+			sinkJob, fromURL, toIP, message)
 		code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
 		fmt.Printf("stdout for task-add:\n%s\n", stdout)
 		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
@@ -133,6 +136,7 @@ func fromFitsMerger(message string, headers map[string]string) int {
 	}
 	pointing, _ := strconv.Atoi(ss[1])
 	fmt.Printf("pointing:%d\n", pointing)
-	m := fmt.Sprintf(`/dev/shm/scalebox/mydata/mwa/24ch~%s.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch`, message)
+	// m := fmt.Sprintf(`/dev/shm/scalebox/mydata/mwa/24ch~%s.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch`, message)
+	m := fmt.Sprintf(`%s.fits.zst`, message)
 	return sendNodeAwareMessage(m, make(map[string]string), "fits-24ch-push", pointing-1)
 }
