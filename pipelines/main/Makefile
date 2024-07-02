@@ -1,5 +1,5 @@
 du:
-	for i in 1 3 4;do \
+	@ for i in 1 3 4;do \
 		echo NODE$$i; \
 		ssh node$$i du -ms /dev/shm/scalebox/mydata/mwa/{1ch,1chx,24ch} /tmp/scalebox/mydata/mwa/dat/1301240224/*; \
 	done

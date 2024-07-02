@@ -21,14 +21,15 @@ func fromDirList(message string, headers map[string]string) int {
 		// filtered
 		return 0
 	}
-
-	if os.Getenv("JUMP_SERVERS") == "" && !strings.HasPrefix(message, "/") {
-		// no jump servers && remote file, copy to global storage
-		sinkJob := "cluster-tar-pull"
-		m = message + "~/data/mwa/tar"
-		misc.AppendToFile("/work/messages.txt", sinkJob+","+m)
-		return 0
-	}
+	/*
+		if os.Getenv("JUMP_SERVERS") == "" && !strings.HasPrefix(message, "/") {
+			// no jump servers && remote file, copy to global storage
+			sinkJob := "cluster-tar-pull"
+			m = message + "~/data/mwa/tar"
+			misc.AppendToFile("/work/messages.txt", sinkJob+","+m)
+			return 0
+		}
+	*/
 
 	// remote cluster(with jump-servers)
 	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
