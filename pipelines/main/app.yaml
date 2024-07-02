@@ -9,13 +9,13 @@ parameters:
 jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-list
-    parameters:
-      slot_on_head: yes
+    variables:
+      slot_options: slot_on_head
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
 
   cluster-tar-pull:
-    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+    base_image: hub.cstcloud.cn/scalebox/file-copy
     variables:
       task_timeout_seconds: 1800
     parameters:
@@ -121,6 +121,7 @@ jobs:
       key_group_index: 1,2,3
     environments:
       - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
+      - SOURCE_MODE=RSYNC_OVER_SSH
       - WITH_HEADERS=yes
       - KEEP_SOURCE_FILE=no
       - SOFT_OUTPUT_MB=
@@ -137,7 +138,6 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
-      # 1257010784/1257010786_1257010795/00001
       # 1257010784/p00097/t1257010786_1257010845
       key_group_regex: ^([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)$
       key_group_index: 1,2,3
@@ -162,7 +162,7 @@ jobs:
     environments:
       - KEEP_SOURCE_FILE=no
       - SOURCE_URL=/dev/shm/scalebox/mydata/mwa/24ch
-      - TARGET_URL=scalebox@159.226.237.136:10022/raid0/scalebox/mydata/mwa/24ch
+      - TARGET_URL=${RESULT_24CH_URL}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
       - WITH_HEADERS=yes
     hosts:
@@ -172,7 +172,6 @@ jobs:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     parameters:
-      # slot_on_head: yes
       key_group_regex:
       key_group_index:
       start_message: ${DATASET_URI}
@@ -182,6 +181,7 @@ jobs:
       - LOG_LEVEL=warn
       - LOCAL_MODE=${LOCAL_MODE}
       - BATCH_INSERT=yes
+      - DEFAULT_USER=${DEFAULT_USER}
       # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
       - JUMP_SERVERS=${JUMP_SERVERS}
       - DATASET_URI=${DATASET_URI}

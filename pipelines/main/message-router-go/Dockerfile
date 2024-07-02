@@ -40,6 +40,7 @@ ENV \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
     NUM_OF_NODES=24 \
+    DEFAULT_USER=root \
     BATCH_INSERT= 
 
 COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local

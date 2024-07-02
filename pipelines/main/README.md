@@ -124,22 +124,19 @@ make
 ```sh
 
 mkdir -p ~/singularity/scalebox/
-rm -f ~/singularity/scalebox/{agent,node-agent}.sif 
+rm -f ~/singularity/scalebox/{node-agent,file-copy}.sif 
 
 date
-singularity build ~/singularity/scalebox/agent.sif docker-daemon://hub.cstcloud.cn/scalebox/agent:latest
-singularity build ~/singularity/scalebox/rsync-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/rsync-copy:latest
+singularity build ~/singularity/scalebox/file-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
 singularity build ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
 date
 
 ssh login1 mkdir -p singularity/scalebox/
-scp  ~/singularity/scalebox/agent.sif login1:singularity/scalebox/
-scp  ~/singularity/scalebox/rsync-copy.sif login1:singularity/scalebox/
+scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
 scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 
 # mkdir -p /raid0/root/singularity/scalebox/
 # mv -f ~/singularity/scalebox/agent.sif /raid0/root/singularity/scalebox/
-
 
 ```
 
@@ -165,4 +162,3 @@ scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 - 监控分区自由空间
   - /tmp/scalebox/mydata
   - /dev/shm/scalebox/mydata
-
