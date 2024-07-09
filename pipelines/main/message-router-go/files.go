@@ -300,7 +300,8 @@ func removeLocalDatFiles(sema string) int {
 	dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 	num, _ := strconv.Atoi(ch[2:])
 	i := (num - 109) % len(ips)
-	cmdTxt = fmt.Sprintf("ssh %s rm -rf %s", ips[i], dir)
+	defaultUser := os.Getenv("DEFAULT_USER")
+	cmdTxt = fmt.Sprintf("ssh %s@%s rm -rf %s", defaultUser, ips[i], dir)
 	// } else {
 	// 	dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 	// 	cmdTxt = fmt.Sprintf("rm -rf %s", dir)
