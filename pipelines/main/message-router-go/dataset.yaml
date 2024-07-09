@@ -36,11 +36,12 @@ datasets:
       # time dimenstion
       timeBegin: 1301240225
       numOfSeconds: 4798
+      # packSize:
       timeUnit: 30
       timeStep: 150
 
       # pointing dimension
-      pointingBegin: 1
-      pointingEnd: 279
+      pointingBegin: 520
+      pointingEnd: 741
       pointingStep: 24
-      numPerBatch: 12
+      numPerBatch: 10
