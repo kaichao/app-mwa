@@ -43,17 +43,16 @@ if [ -f "${DIR_1CH}/${m}.zst" ]; then
     zstd -d --rm "${DIR_1CH}/${m}.zst"
 fi
 
-echo [DEBUG]input file:
-ls -l ${DIR_1CH}/${m}
-echo [DEBUG]
+# 检查输入文件是否存在
+if [ ! -f "${DIR_1CH}/${m}" ]; then
+    echo "input file ${DIR_1CH}/${m} not exists"
+    exit 107
+fi
 
 # 3. run the programs to downsample the files
 psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${DIR_1CHX}/${m} ${DIR_1CH}/${m}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband " >&2 && exit $code
-
-# [ "$KEEP_SOURCE_FILE" == "no" ] && rm -f ${DIR_1CH}/${m}
-[ "$KEEP_SOURCE_FILE" == "no" ] && echo "${DIR_1CH}/${m}" > ${WORK_DIR}/removed-files.txt
 
 # rename file to normalized
 mv ${DIR_1CHX}/${m}_0001.fits ${DIR_1CHX}/${m} && zstd --long -T8 --rm ${DIR_1CHX}/${m}
@@ -64,6 +63,9 @@ code=$?
 post_check "${DIR_1CH}/${m}" "${DIR_1CHX}/${m}.zst"
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/custom-out.txt && exit $code
+
+# [ "$KEEP_SOURCE_FILE" == "no" ] && rm -f ${DIR_1CH}/${m}
+[ "$KEEP_SOURCE_FILE" == "no" ] && echo "${DIR_1CH}/${m}" > ${WORK_DIR}/removed-files.txt
 
 echo "${DIR_1CH}/${m}" > ${WORK_DIR}/input-files.txt
 echo "${DIR_1CHX}/${m}.zst" > ${WORK_DIR}/output-files.txt

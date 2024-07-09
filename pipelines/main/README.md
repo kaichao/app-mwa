@@ -1,4 +1,4 @@
-# 主流水线
+# 波束合成流水线
 
 ## 流水线功能
 
@@ -119,24 +119,21 @@ scp -r cal node3:/dev/shm/scalebox/mydata/mwa/
 make
 ```
 
-## agent/rsync-copy的镜像转为singularity
+## node-agent/file-copy的镜像转为singularity
 
 ```sh
 
 mkdir -p ~/singularity/scalebox/
-rm -f ~/singularity/scalebox/{node-agent,file-copy}.sif 
 
 date
-singularity build ~/singularity/scalebox/file-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
-singularity build ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
+singularity build -F ~/singularity/scalebox/file-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
+singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
 date
 
 ssh login1 mkdir -p singularity/scalebox/
 scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
 scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 
-# mkdir -p /raid0/root/singularity/scalebox/
-# mv -f ~/singularity/scalebox/agent.sif /raid0/root/singularity/scalebox/
 
 ```
 

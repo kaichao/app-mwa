@@ -86,11 +86,14 @@ func fromDownSampler(message string, headers map[string]string) int {
 
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
-		defaultUser := os.Getenv("DEFAULT_USER")
 		// format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
 		// m := fmt.Sprintf(format, fromIP, message)
 		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toIP, m)
-		sourceURL := fmt.Sprintf("%s@%s/dev/shm/scalebox/mydata/mwa/1chx", defaultUser, fromIP)
+		prefix := os.Getenv("DEFAULT_USER") + "@" + fromIP
+		if os.Getenv("FITS_REDIST_MODE") == "RSYNC" {
+			prefix = fmt.Sprintf("rsync://root@%s:50873", fromIP)
+		}
+		sourceURL := prefix + "/dev/shm/scalebox/mydata/mwa/1chx"
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
 			sinkJob, sourceURL, toIP, message)
 		code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
@@ -102,12 +105,12 @@ func fromDownSampler(message string, headers map[string]string) int {
 }
 
 func fromFitsRedist(message string, headers map[string]string) int {
-	// 1257010784/1257010786_1257010815/00005/ch124.fits.zst
+	// message: 1257010784/1257010786_1257010815/00005/ch124.fits.zst
 	return toFitsMerger(message, headers)
 }
 
 func toFitsMerger(message string, headers map[string]string) int {
-	// input-message:
+	// message:
 	// 		1257010784/p00001/t1257010786_1257010815/ch129.fits.zst
 	re := regexp.MustCompile("^([0-9]+/p([0-9]{5})/t[0-9]+_[0-9]+)/ch[0-9]{3}.fits.zst$")
 	ss := re.FindStringSubmatch(message)
@@ -128,7 +131,7 @@ func toFitsMerger(message string, headers map[string]string) int {
 }
 
 func fromFitsMerger(message string, headers map[string]string) int {
-	// 1257010784/p00022/t1257010786_1257010815
+	// message: 1257010784/p00022/t1257010786_1257010815
 	re := regexp.MustCompile(`p([0-9]+)/`)
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
