@@ -35,11 +35,11 @@ jobs:
       # 2 tar.zst files allowed in tmpfs
       # 下采样基本完成后，再重新传远端的打包文件（tar.zst）
       # SSD最多存放2组数据，beam-maker单次处理150秒，则最多存放300秒数据（300秒 * 313MB/秒 = 92GB ）
-      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~95
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~15
+      # dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
+      dir_free_gb: ${UNPACK_DIR_FREE_GB}
       progress_counter_diff: 3
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch114.dat.tar.zst~/dev/shm/scalebox/mydata/mwa/tar
@@ -68,7 +68,7 @@ jobs:
       progress_counter_diff: 96
       slot_options: reserved_on_exit
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -97,7 +97,7 @@ jobs:
       dir_free_gb: /dev/shm/scalebox/mydata~8
       code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -121,14 +121,14 @@ jobs:
       task_timeout_seconds: 60
       dir_free_gb: /dev/shm/scalebox/mydata~10
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
       # /scalebox/mydata/mwa/1chx~1257010784/p00088/t1257010786_1257010845/ch119.fits.zst~root@10.11.16.79/dev/shm/scalebox/mydata/mwa/1chx
       key_group_regex: ^.+~([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits.zst~.+$
       key_group_index: 1,2,3
-      bulk_message_size: 10
+      bulk_message_size: 3
     environments:
       - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
       - SOURCE_MODE=${FITS_REDIST_MODE}
@@ -147,7 +147,7 @@ jobs:
       dir_free_gb: /dev/shm/scalebox/mydata~8
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/p00097/t1257010786_1257010845
@@ -168,7 +168,7 @@ jobs:
     variables:
       task_timeout_seconds: 1800
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
-      max_sleep_count: ${MAX_SLEEP_COUNT}
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /dev/shm/scalebox/mydata/mwa/24ch~1257010784/p00016/t1257010786_1257010845.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch
@@ -196,7 +196,6 @@ jobs:
       bulk_message_size: 20
     environments:
       - LOG_LEVEL=warn
-      - LOCAL_MODE=${LOCAL_MODE}
       - BATCH_INSERT=yes
       - DEFAULT_USER=${DEFAULT_USER}
       # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
@@ -92,4 +93,24 @@ func initHosts() {
 			logrus.Errorln(err)
 		}
 	}
+}
+
+// ExecWithRetries ...
+func ExecWithRetries(cmd string, numRetries int) (int, string, string) {
+	delay := 30 * time.Second
+	var (
+		code           int
+		stdout, stderr string
+	)
+
+	for i := 0; i < numRetries; i++ {
+		code, stdout, stderr = misc.ExecShellCommandWithExitCode(cmd, -1)
+		if code == 0 {
+			return code, stdout, stderr
+		}
+		fmt.Printf("num-of-retries:%d,cmd=%s\n", i+1, cmd)
+		time.Sleep(delay)
+		delay *= 2
+	}
+	return code, stdout, stderr
 }
