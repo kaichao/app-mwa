@@ -296,18 +296,15 @@ func removeLocalDatFiles(sema string) int {
 	fmt.Printf("In removeDatFiles(),ds=%s,beg=%d,end=%d,ch=%s\n", ds, beg, end, ch)
 
 	var cmdTxt string
-	// if localMode {
 	dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 	num, _ := strconv.Atoi(ch[2:])
 	i := (num - 109) % len(ips)
 	defaultUser := os.Getenv("DEFAULT_USER")
-	cmdTxt = fmt.Sprintf("ssh %s@%s rm -rf %s", defaultUser, ips[i], dir)
-	// } else {
-	// 	dir := fmt.Sprintf("/data/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
-	// 	cmdTxt = fmt.Sprintf("rm -rf %s", dir)
-	// }
+	sshPort := 50022
+	cmdTxt = fmt.Sprintf("ssh -p %d %s@%s rm -rf %s", sshPort, defaultUser, ips[i], dir)
 	fmt.Println("cmd-text:", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
+	code, stdout, stderr := ExecWithRetries(cmdTxt, 5)
+	// code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
 	fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
 

@@ -116,10 +116,10 @@ func (cube *DataCube) getSortedTag(time int, ch int) string {
 }
 
 var (
-	// datacubeFile = "/dataset.yaml"
+	datacubeFile = "/dataset.yaml"
 	// datacubeFile = "/dataset-perf-test.yaml"
-	datacubeFile = "/dataset-base.yaml"
-	getDataCube  = getDataCubeFromFile
+	// datacubeFile = "/dataset-base.yaml"
+	getDataCube = getDataCubeFromFile
 )
 
 func getDataCubeFromFile(datasetID string) *DataCube {
