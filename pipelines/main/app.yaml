@@ -4,7 +4,7 @@ cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: message-router-main
-  default_sleep_count: 20
+  default_sleep_count: 200
 
 jobs:
   dir-list:
@@ -62,11 +62,11 @@ jobs:
     command: ${ROCM_COMMAND}
     variables:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~{~n*5+15~}
+      dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
       progress_counter_diff: 96
-      slot_options: reserved_on_exit
+      slot_options: tmpfs_workdir
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
@@ -82,7 +82,7 @@ jobs:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
       # - LOCAL_CAL_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
-      - ZSTD_TARGET_FILE=yes
+      - ZSTD_TARGET_FILE=no
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
       # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
@@ -94,7 +94,7 @@ jobs:
     command: ${PRIVILEGED_COMMAND}
     variables:
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~8
+      dir_free_gb: ${DOWN_SAMPLER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
@@ -119,7 +119,7 @@ jobs:
     base_image: ${FILE_COPY}
     variables:
       task_timeout_seconds: 60
-      dir_free_gb: /dev/shm/scalebox/mydata~10
+      dir_free_gb: ${FITS_REDIST_DIR_FREE_GB}
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
@@ -144,7 +144,7 @@ jobs:
     base_image: ${MWA_VCSTOOLS}
     variables:
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
-      dir_free_gb: /dev/shm/scalebox/mydata~8
+      dir_free_gb: ${FITS_MERGER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
