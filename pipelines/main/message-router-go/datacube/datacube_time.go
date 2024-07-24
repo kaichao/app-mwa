@@ -1,4 +1,4 @@
-package main
+package datacube
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ func (cube *DataCube) getTimeUnit(t int) (int, int) {
 	return t0, t1
 }
 
-func (cube *DataCube) getTimeRange(t int) (int, int) {
+func (cube *DataCube) GetTimeRange(t int) (int, int) {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
 		fmt.Fprintf(os.Stderr, "[WARN]getTimeRange(),timestamp %d is out of range [%d..%d]\n",
@@ -47,7 +47,7 @@ func (cube *DataCube) getTimeRange(t int) (int, int) {
 	return t0, t1
 }
 
-func (cube *DataCube) getTimeRanges() []int {
+func (cube *DataCube) GetTimeRanges() []int {
 	var ret []int
 	for t := 0; t < cube.NumOfSeconds; t += cube.TimeStep {
 		t0 := cube.TimeBegin + t
@@ -59,7 +59,7 @@ func (cube *DataCube) getTimeRanges() []int {
 	}
 	return ret
 }
-func (cube *DataCube) getTimeUnits() []int {
+func (cube *DataCube) GetTimeUnits() []int {
 	var ret []int
 	for t := 0; t < cube.NumOfSeconds; t += cube.TimeUnit {
 		t0 := cube.TimeBegin + t
@@ -72,7 +72,7 @@ func (cube *DataCube) getTimeUnits() []int {
 	return ret
 }
 
-func (cube *DataCube) getTimeRangesWithinInterval(lower, upper int) []int {
+func (cube *DataCube) GetTimeRangesWithinInterval(lower, upper int) []int {
 	var ret []int
 	lower -= cube.TimeBegin
 	upper -= cube.TimeBegin
@@ -90,7 +90,7 @@ func (cube *DataCube) getTimeRangesWithinInterval(lower, upper int) []int {
 	return ret
 }
 
-func (cube *DataCube) getTimeUnitsWithinInterval(lower, upper int) []int {
+func (cube *DataCube) GetTimeUnitsWithinInterval(lower, upper int) []int {
 	var ret []int
 	lower -= cube.TimeBegin
 	upper -= cube.TimeBegin

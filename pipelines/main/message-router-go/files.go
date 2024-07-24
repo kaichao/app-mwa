@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"mr/datacube"
+
 	"github.com/kaichao/scalebox/pkg/misc"
 )
 
@@ -69,12 +71,12 @@ func toPullUnpack(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
 		return 21
 	}
-	cube := getDataCube(ss[1])
+	cube := datacube.GetDataCube(ss[1])
 	t0, _ := strconv.Atoi(ss[2])
 	ch, _ := strconv.Atoi(ss[3])
 
 	h := map[string]string{}
-	tb, te := cube.getTimeRange(t0)
+	tb, te := cube.GetTimeRange(t0)
 
 	targetDir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/ch%d/%d_%d",
 		ss[1], ch, tb, te)
@@ -92,10 +94,10 @@ func toPullUnpack(message string, headers map[string]string) int {
 	// }
 
 	// 通过headers中的sorted_tag，设定显式排序
-	h["sorted_tag"] = cube.getSortedTag(t0, ch)
+	h["sorted_tag"] = getSortedTag(cube, t0, ch)
 	// add batch-index to message body.
 
-	batchIndex := cube.getSemaPointingBatchIndex(t0, ch)
+	batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
 	m = fmt.Sprintf("%s~b%02d", m, batchIndex)
 	return sendNodeAwareMessage(m, h, "pull-unpack", ch-109)
 }
@@ -222,7 +224,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	}
 
 	// 1257010784_1257010790_ch112.dat
-	cube := getDataCube(ss[1])
+	cube := datacube.GetDataCube(ss[1])
 	if cube == nil {
 		fmt.Fprintf(os.Stderr, "[WARN] unknown datacube:%s in fromCopyUnpack()\n", ss[1])
 		return 12
@@ -230,9 +232,9 @@ func fromPullUnpack(message string, headers map[string]string) int {
 
 	t, _ := strconv.Atoi(ss[2])
 	ch, _ := strconv.Atoi(ss[3])
-	tb, te := cube.getTimeRange(t)
+	tb, te := cube.GetTimeRange(t)
 
-	sema := cube.getSemaDatReadyName(t, ch)
+	sema := getSemaDatReadyName(cube, t, ch)
 	// 信号量dat-ready减1
 	if n := countDown(sema); n != 0 {
 		return 0
@@ -247,8 +249,8 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	// sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
 	// n := countDown(sema)
 	// batchIndex := cube.getNumOfPointingBatch() - n
-	batchIndex := cube.getSemaPointingBatchIndex(t, ch)
-	arr := cube.getPointingRangesByBatchIndex(batchIndex)
+	batchIndex := getSemaPointingBatchIndex(cube, t, ch)
+	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
 
 	fmt.Printf("In fromUnpack(), batch-index=%d,p-ranges:%v\n", batchIndex, arr)
 	for i := 0; i < len(arr); i += 2 {
@@ -257,7 +259,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
 		// 通过headers中的sorted_tag，设定显式排序
-		h := map[string]string{"sorted_tag": cube.getSortedTag(tb, ch)}
+		h := map[string]string{"sorted_tag": getSortedTag(cube, tb, ch)}
 		ret := sendNodeAwareMessage(m, h, "beam-maker", ch-109)
 		if ret != 0 {
 			return ret
@@ -275,7 +277,7 @@ func filterDataCube(message string) bool {
 	begin1, _ := strconv.Atoi(ss[2])
 	end1, _ := strconv.Atoi(ss[3])
 
-	datacube := getDataCube(datasetID)
+	datacube := datacube.GetDataCube(datasetID)
 	begin2 := datacube.TimeBegin
 	end2 := datacube.TimeBegin + datacube.NumOfSeconds - 1
 	// interleaved

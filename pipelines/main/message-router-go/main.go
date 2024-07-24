@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"mr/datacube"
+
 	"github.com/kaichao/scalebox/pkg/misc"
 )
 
@@ -67,23 +69,22 @@ func defaultFunc(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "Invalid message format, msg-body:%s\n", message)
 		return 3
 	}
-	cube := getDataCube(ss[1])
+	cube := datacube.GetDataCube(ss[1])
 	if cube == nil {
 		fmt.Fprintf(os.Stderr, "Invalid datacube format, metadata:%s\n", ss[2])
 		return 4
 	}
 
 	// first one
-	cube.createDatReadySemaphores()
+	createDatReadySemaphores(cube)
 
-	cube.createPointingBatchLeftSemaphores()
-	cube.createDatProcessedSemaphores()
+	createPointingBatchLeftSemaphores(cube)
+	createDatProcessedSemaphores(cube)
 
-	cube.createFits24chReadySemaphores()
+	createFits24chReadySemaphores(cube)
 
-	// cube.createLocalTarPullProgressCountSemaphores()
-	cube.createPullUnpackProgressCountSemaphores()
-	cube.createBeamMakerProgressCountSemaphores()
+	createPullUnpackProgressCountSemaphores(cube)
+	createBeamMakerProgressCountSemaphores(cube)
 
 	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
 	misc.AppendToFile("/work/messages.txt", m)

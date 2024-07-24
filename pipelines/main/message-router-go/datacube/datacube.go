@@ -1,4 +1,4 @@
-package main
+package datacube
 
 import (
 	"encoding/json"
@@ -100,27 +100,13 @@ func getDataCubeFromDB(datasetID string) *DataCube {
 	return &datacube
 }
 
-// 三维datacube中，给定顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
-
-func (cube *DataCube) getSortedTag(time int, ch int) string {
-	batchIndex := cube.getSemaPointingBatchIndex(time, ch)
-	// p := cube.getPointingBatchIndex(pointing)
-	ch -= cube.ChannelBegin
-	tm := (time - cube.TimeBegin) / cube.TimeStep
-	fmt.Printf("datacube.channelBegin:%d\n", cube.ChannelBegin)
-	fmt.Printf("datacube:%v\n", cube)
-	fmt.Println("ch=", ch)
-	fmt.Println("tm=", tm)
-
-	// 2位指向批次码(pointing-batch) + 2位时间编码（time-range） + 2位通道编码（00~23）
-	return fmt.Sprintf("%02d%02d%02d", batchIndex, tm, ch)
-}
-
 var (
 	datacubeFile = "/dataset.yaml"
 	// datacubeFile = "/dataset-perf-test.yaml"
 	// datacubeFile = "/dataset-base.yaml"
-	getDataCube = getDataCubeFromFile
+
+	// GetDataCube ...
+	GetDataCube = getDataCubeFromFile
 )
 
 func getDataCubeFromFile(datasetID string) *DataCube {

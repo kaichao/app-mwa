@@ -1,4 +1,4 @@
-package main
+package datacube
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func TestGetPointingRanges(t *testing.T) {
 
 func TestGetNumOfPointingBatch(t *testing.T) {
 	datacube := getMyDataCube()
-	n := datacube.getNumOfPointingBatch()
+	n := datacube.GetNumOfPointingBatch()
 	// num of pointing batch
 	if n != 28 {
 		t.Errorf("len(datacube.getNumOfPointingBatch()) = %d, expected %d", n, 28)
@@ -44,7 +44,7 @@ func TestGetPoingtingRangesByBatch(t *testing.T) {
 
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		p0, p1 := datacube.getPointingBatchRange(tc.p)
+		p0, p1 := datacube.GetPointingBatchRange(tc.p)
 		arr := datacube.getPointingRangesByBatch(p0, p1)
 		last := 0
 		if len(arr) > 0 {
@@ -78,7 +78,7 @@ func TestGetPointingBatchIndex(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		result := datacube.getPointingBatchIndex(tc.t)
+		result := datacube.GetPointingBatchIndex(tc.t)
 		if result != tc.expected {
 			t.Errorf("datacube.getPointingBatchIndex(%d) = %d, expected %d", tc.t, result, tc.expected)
 		}
@@ -99,7 +99,7 @@ func TestGetPointingRangesByBatchIndex(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		result := datacube.getPointingRangesByBatchIndex(tc.idx)
+		result := datacube.GetPointingRangesByBatchIndex(tc.idx)
 		fmt.Printf("idx:%d,val:%v\n", tc.idx, result)
 		if len(result) != tc.expected {
 			t.Errorf("datacube.getPointingRangesByBatchIndex(%d),len() = %d, expected %d", tc.idx, len(result), tc.expected)
@@ -124,7 +124,7 @@ func TestGetPointingBatchRange(t *testing.T) {
 
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		p0, p1 := datacube.getPointingBatchRange(tc.p)
+		p0, p1 := datacube.GetPointingBatchRange(tc.p)
 		if p0 != tc.e0 || p1 != tc.e1 {
 			t.Errorf("datacube.getPointingBatchRange(%d) = [%d %d], expected [%d,%d]",
 				tc.p, p0, p1, tc.e0, tc.e1)

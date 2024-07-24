@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strconv"
 
+	"mr/datacube"
+
 	"github.com/kaichao/scalebox/pkg/misc"
 )
 
@@ -17,7 +19,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in fromBeamMaker()\n", message)
 		return 3
 	}
-	cube := getDataCube(ss[1])
+	cube := datacube.GetDataCube(ss[1])
 
 	p, _ := strconv.Atoi(ss[2])
 	tb, _ := strconv.Atoi(ss[3])
@@ -28,7 +30,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	sema := "progress-counter_beam-maker:" + ips[index]
 	countDown(sema)
 
-	sema = cube.getSemaDatProcessedName(p, tb, ch)
+	sema = getSemaDatProcessedName(cube, p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
@@ -39,26 +41,26 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	removeLocalDatFiles(sema)
 
 	// 数据删除，修改信号量值
-	batchIndex := cube.countDownSemaPointingBatchIndex(tb, ch)
+	batchIndex := countDownSemaPointingBatchIndex(cube, tb, ch)
 	fmt.Printf("In fromBeamMaker(),batch-index=%d\n", batchIndex)
 	// index := cube.getPointingBatchIndex(p0)
-	if batchIndex < 0 || batchIndex >= cube.getNumOfPointingBatch() {
+	if batchIndex < 0 || batchIndex >= cube.GetNumOfPointingBatch() {
 		// 数据已经全部处理完成，没有新的Batch
 		fmt.Printf("In fromBeamMaker(),batch-index=%d,no-new data \n", batchIndex)
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
 	// reset semaphore dat-ready(以TimeRange为单位)
-	sema = cube.getSemaDatReadyName(tb, ch)
+	sema = getSemaDatReadyName(cube, tb, ch)
 	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
 	createSemaphore(sema, te-tb+1)
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
-	sortedTag := cube.getSortedTag(tb, ch)
+	sortedTag := getSortedTag(cube, tb, ch)
 
 	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 
-	tarr := cube.getTimeUnitsWithinInterval(tb, te)
+	tarr := cube.GetTimeUnitsWithinInterval(tb, te)
 	for i := 0; i < len(tarr); i += 2 {
 		t0 := tarr[i]
 		t1 := tarr[i+1]

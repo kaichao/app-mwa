@@ -1,11 +1,12 @@
-package main
+package datacube
 
 import (
 	"fmt"
 	"os"
 )
 
-func (cube *DataCube) getNumOfPointingBatch() int {
+// GetNumOfPointingBatch ...
+func (cube *DataCube) GetNumOfPointingBatch() int {
 	result := (cube.PointingEnd - cube.PointingBegin) /
 		(cube.NumPerBatch * cube.PointingStep)
 	remainder := (cube.PointingEnd - cube.PointingBegin) %
@@ -30,7 +31,7 @@ func (cube *DataCube) getPointingRanges() []int {
 	return ret
 }
 
-func (cube *DataCube) getPointingRangesByBatchIndex(batchIndex int) []int {
+func (cube *DataCube) GetPointingRangesByBatchIndex(batchIndex int) []int {
 	numBatch := (cube.PointingEnd - cube.PointingBegin + 1) / (cube.NumPerBatch * cube.PointingStep)
 	if batchIndex < 0 || batchIndex > numBatch {
 		fmt.Fprintf(os.Stderr, "batch-index:%d is out of range, it should be [0..%d]\n", batchIndex, numBatch)
@@ -59,7 +60,7 @@ func (cube *DataCube) getPointingRangesByBatch(batchBegin, batchEnd int) []int {
 }
 
 // 获取当前指向所在的批次索引
-func (cube *DataCube) getPointingBatchIndex(p int) int {
+func (cube *DataCube) GetPointingBatchIndex(p int) int {
 	if cube.PointingBegin > p || p > cube.PointingEnd {
 		return -1
 	}
@@ -67,8 +68,8 @@ func (cube *DataCube) getPointingBatchIndex(p int) int {
 }
 
 // 获得当前指向所在的批次指向区间
-func (cube *DataCube) getPointingBatchRange(p int) (int, int) {
-	index := cube.getPointingBatchIndex(p)
+func (cube *DataCube) GetPointingBatchRange(p int) (int, int) {
+	index := cube.GetPointingBatchIndex(p)
 	if index == -1 {
 		return -1, -1
 	}
