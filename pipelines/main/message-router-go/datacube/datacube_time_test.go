@@ -1,4 +1,4 @@
-package main
+package datacube
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ func TestGetTimeIndex(t *testing.T) {
 
 func TestGetTimeRanges(t *testing.T) {
 	datacube := getMyDataCube()
-	ts := datacube.getTimeRanges()
+	ts := datacube.GetTimeRanges()
 	fmt.Println(ts)
 	// num of ranges: 32
 	if len(ts) != 64 {
@@ -58,7 +58,7 @@ func TestGetTimeUnitsWithinInterval(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		ts := datacube.getTimeUnitsWithinInterval(tc.t0, tc.t1)
+		ts := datacube.GetTimeUnitsWithinInterval(tc.t0, tc.t1)
 		if !reflect.DeepEqual(ts, tc.expected) {
 			t.Errorf("datacube.getTimeRangesByInterval(%d,%d) = %v, expected %v",
 				tc.t0, tc.t1, ts, tc.expected)
@@ -80,7 +80,7 @@ func TestGetTimeRangesWithinInterval(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		ts := datacube.getTimeRangesWithinInterval(tc.t0, tc.t1)
+		ts := datacube.GetTimeRangesWithinInterval(tc.t0, tc.t1)
 		if !reflect.DeepEqual(ts, tc.expected) {
 			t.Errorf("datacube.getTimeRangesByInterval(%d,%d) = %v, expected %v",
 				tc.t0, tc.t1, ts, tc.expected)
@@ -106,7 +106,7 @@ func TestGetTimeRange(t *testing.T) {
 
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		t0, t1 := datacube.getTimeRange(tc.t)
+		t0, t1 := datacube.GetTimeRange(tc.t)
 		if t0 != tc.e0 || t1 != tc.e1 {
 			t.Errorf("datacube.getTimeRange(%d) = [%d %d], expected [%d,%d]",
 				tc.t, t0, t1, tc.e0, tc.e1)
