@@ -13,7 +13,8 @@ datasets:
 
       # time dimenstion
       timeBegin: 1257010786
-      numOfSeconds: 4798
+      timeEnd: 1257015583
+      # numOfSeconds: 4798
       timeUnit: 30
       timeStep: 150
 
@@ -22,7 +23,7 @@ datasets:
       # pointingEnd: 12985
       pointingEnd: 384
       pointingStep: 24
-      numPerBatch: 8
+      numPerBatch: 16
 
   1301240224:
     metadata:
@@ -37,7 +38,8 @@ datasets:
       # timeBegin: 1301240225
       # numOfSeconds: 4798
       timeBegin: 1301242325
-      numOfSeconds: 2698
+      # numOfSeconds: 2698
+      timeEnd: 1301245022
 
       # packSize:
       timeUnit: 30
