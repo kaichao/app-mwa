@@ -28,7 +28,7 @@ type dataCube struct {
 
 	PointingBegin string
 	PointingEnd   string
-	// 通常为24
+	// 通常取24
 	PointingStep string
 	NumPerBatch  string
 }
@@ -46,6 +46,7 @@ type DataCube struct {
 
 	TimeBegin    int `yaml:"timeBegin"`
 	NumOfSeconds int `yaml:"numOfSeconds"`
+	TimeEnd      int `yaml:"timeEnd"`
 	// 单个打包文件的时长（30秒）
 	TimeUnit int `yaml:"timeUnit"`
 	// 单次beam-maker的时长，通常为30的倍数
@@ -136,6 +137,9 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 
 	fmt.Println("config:", config)
 	cube := config["datasets"][datasetID]["metadata"]
+	if cube.NumOfSeconds == 0 {
+		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
+	}
 	fmt.Println(cube)
 	return &cube
 }

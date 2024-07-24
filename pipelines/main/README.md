@@ -159,3 +159,18 @@ scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 - 监控分区自由空间
   - /tmp/scalebox/mydata
   - /dev/shm/scalebox/mydata
+
+
+## 流水线优化的参数选择
+### 主要流控参数
+- pull-unpack模块
+  - dir_free_gb：UNPACK_DIR_FREE_GB，该值
+  - progress_counter_diff：同步各节点上打包文件数，以免因后续处理速度差别，而耗完本地SSD容量。每个文件解包后约12.5GB，该值固定为3，即不超过3个文件；
+- beam-maker模块
+  - dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}，为主要流控参数。
+    - 针对单次150秒数据，可取值为{~n*5+8~}，其中单次24指向150秒数据产生的中间结果约4450MB，取值为5；考虑到其他模块中间存储、保留存储的需求，首个容器的取值为8
+  - progress_counter_diff: 96，缺省值为4组24指向，若内存空间富裕，可以设得稍大一点
+
+### 节点数少于24节点，单批次处理指向数
+- 单批次中间存储，需存储n-1个通道的待合并数据
+- 单批次处理指向数取决于本机/dev/shm中的容量
