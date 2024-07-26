@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY *.go /go/src/
-# COPY misc /go/src/misc/
+COPY datacube /go/src/datacube/
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -29,7 +29,7 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/mwa.message-router /app/bin/message-router 
+COPY --from=0 /go/src/mr /app/bin/message-router 
 
 COPY dataset*.yaml /
 
