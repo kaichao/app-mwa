@@ -23,6 +23,8 @@ if __name__ == '__main__':
     nsub = int(os.getenv("NSUB"))
     searchargs = os.getenv("SEARCHARGS")
     grpnum = int(os.getenv("GRPNUM"))
+    ncpus = int(os.getenv("NCPUS"))
+    workdir = os.getenv("WORK_DIR")
     print(searchargs)
     # read rfi file name from command line
     if len(sys.argv) > 2:
@@ -76,19 +78,19 @@ if __name__ == '__main__':
                     datdownsamp = 2
                     if downsamp < 2: subdownsamp = datdownsamp = 1
                     # First create the subbands
-                    myexecute("prepsubband_gpu -cuda %d -sub -subdm %.2f -noclip -nsub %d -downsamp %d -o %s %s/*.fits" %
-                            (0, subDM, nsub, subdownsamp, basename, filename))
+                    myexecute("prepsubband_gpu -cuda %d -ncpus %d -sub -subdm %.2f -noclip -nsub %d -downsamp %d -o %s %s/*.fits" %
+                            (0, ncpus, subDM, nsub, subdownsamp, basename, filename))
                     # And now create the time series
                     subnames = basename+"_DM%.2f.sub[0-9]*"%subDM
-                    myexecute("prepsubband_gpu -cuda %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s/*.fits" %
-                            (0, loDM, dDM, dmspercall, datdownsamp, basename, subnames))
+                    myexecute("prepsubband_gpu -cuda %d -ncpus %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s/*.fits" %
+                            (0, ncpus, loDM, dDM, dmspercall, datdownsamp, basename, subnames))
                 elif use_rfi:
-                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -mask %s -o %s %s/*.fits" %
-                            (0, nsub, loDM, dDM, dmspercall, downsamp, f_rfi_name, basename, filename))
+                    myexecute("prepsubband_gpu -cuda %d -ncpus %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -zerodm -numdms %d -downsamp %d -mask %s -o %s %s/*.fits" %
+                            (0, ncpus, nsub, loDM, dDM, dmspercall, downsamp, f_rfi_name, basename, filename))
                 
                 else:
-                    myexecute("prepsubband_gpu -cuda %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -numdms %d -downsamp %d -o %s %s/*.fits" %
-                            (0, nsub, loDM, dDM, dmspercall, downsamp, basename, filename))
+                    myexecute("prepsubband_gpu -cuda %d -ncpus %d -nsub %d -lodm %.2f -dmstep %.2f -noclip -zerodm -numdms %d -downsamp %d -o %s %s/*.fits" %
+                            (0, ncpus, nsub, loDM, dDM, dmspercall, downsamp, basename, filename))
                 myexecute("echo %d > linenum.txt" %(linenum))
 
                 
@@ -98,7 +100,7 @@ if __name__ == '__main__':
         # myexecute("rm -f *.dat")
         # myexecute("ls *.fft | xargs -n 1 accelsearch_gpu_4 -cuda 0 " + searchargs)
         # myexecute("rm -f *.fft")
-        myexecute("date --iso-8601=ns >> /work/timestamps.txt")
+        # myexecute("date --iso-8601=ns >> %s/timestamps.txt", workdir)
     except:
         exit(1)
 
