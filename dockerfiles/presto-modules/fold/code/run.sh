@@ -54,7 +54,7 @@ date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 /app/bin/fold_dat.py $full_dir candidates.txt
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in folding:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/$dm_group && exit 15
-
+cat candidates.txt
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
 echo "DIR_DEDISP:$DIR_DEDISP/$bname/$dm_group"

@@ -10,7 +10,7 @@
 
 # 1. set the input / output / medium file directory
 
-# m="/1257010784/1257010786_1257011025/00024.fits"
+# m="/1257010784/p00001"
 source /root/.bashrc
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
@@ -32,26 +32,26 @@ fi
 
 # decompress zst file
 m=$1
-f_dir=${m}.fits
+f_dir=${m}
 
 full_name="$DIR_FITS/${f_dir}"
-zst_file="${full_name}.zst"
-echo "full_name:${full_name}" >> ${WORK_DIR}/custom-out.txt
-echo '"before decompress, ls $zst_file*' >> ${WORK_DIR}/custom-out.txt
-ls -l $(dirname ${zst_file}) >> ${WORK_DIR}/custom-out.txt
+# zst_file="${full_name}.zst"
+# echo "full_name:${full_name}" >> ${WORK_DIR}/custom-out.txt
+# echo '"before decompress, ls $zst_file*' >> ${WORK_DIR}/custom-out.txt
+# ls -l $(dirname ${zst_file}) >> ${WORK_DIR}/custom-out.txt
 
-[ -f "${zst_file}" ] && cd $(dirname ${zst_file}) && zstd -d --rm -f $(basename ${zst_file})
+# [ -f "${zst_file}" ] && cd $(dirname ${zst_file}) && zstd -d --rm -f $(basename ${zst_file})
 
 # cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
-echo '"after decompress, ls $zst_file*' >> ${WORK_DIR}/custom-out.txt
-ls -l $(dirname ${zst_file}) >> ${WORK_DIR}/custom-out.txt
+echo '"after decompress, ls all files*' >> ${WORK_DIR}/custom-out.txt
+ls -l $full_name >> ${WORK_DIR}/custom-out.txt
 
 # 2. check if the file exists
 
 # readfile $DIR_FITS/$f_dir
 # code=$?
 # [[ $code -ne 0 ]] && echo "[ERROR]Error in checking file exits:$fdir, ret-code:$code" >&2 && exit 10
-[[ ! -f $DIR_FITS/$f_dir ]] && echo "[ERROR] In checking file exits:$f_dir, ret-code:$code" >&2 && exit 10
+[[ ! -d $DIR_FITS/$f_dir ]] && echo "[ERROR] In checking file exits:$f_dir, ret-code:$code" >&2 && exit 10
 
 # get the filename without extension
 # arr=($(echo $f_dir | tr "/" "\n"))
@@ -70,13 +70,13 @@ code=$?
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
 cd $DIR_DEDISP/$bname
-rfifind $RFIARGS -o RFIfile $DIR_FITS/$f_dir
+rfifind $RFIARGS -o RFIfile $DIR_FITS/$f_dir/*.fits
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]Error in dedispersion:$f_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname && exit 12
 
 echo 2222222
 
-for i in {1..9}
+for i in {1..7}
 do
     export LINENUM=$i
     /app/bin/dedisp_all.py $DIR_FITS/$f_dir RFIfile_rfifind.mask

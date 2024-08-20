@@ -29,5 +29,15 @@ if __name__ == '__main__':
                 dm = params[1]
                 p = float(params[7])/1000.0
                 cnt += 1
-                myexecute("prepfold_gpu -noxwin -p %.6f -o %s %s_DM%s.dat "%(p, basename, basename, dm))
+                if p > 0.0015:
+                    nbins=100
+                    ntimechunk=120
+                    dmstep=1
+                else:
+                    nbins=50
+                    ntimechunk=40
+                    dmstep=3
+                myexecute("prepfold -noxwin -p %.6f -pstep 1 -pdstep 2 -npfact 2 -ndmfact 3 \
+                            -n %d -npart %d -dmstep %d -o %s_DM%s %s_DM%s.dat "%(p, 
+                             nbins, ntimechunk, dmstep, basename, dm, basename, dm))
     print(cnt)

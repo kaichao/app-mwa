@@ -59,6 +59,13 @@ code=$?
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
+cd ${full_dir}
+for file in $(ls)
+do
+    channel=$(readfile $file | grep "Number of channels" | cut -d "=" -f2 | xargs)
+    [[ $channel -ne 3072 ]] && echo "[ERROR] In rfi-find:$f_dir, $file has wrong Num of channel: $channel" >&2 && rm $file
+done
+
 cd $DIR_DEDISP/$bname
 rfifind $RFIARGS -o RFIfile ${full_dir}/*.fits
 code=$?
