@@ -9,8 +9,11 @@ if [ `echo $m | grep -c "~"` -ne 1 ]; then
     exit 1
 fi
 
-PB=1
-PE=24
+PB=551
+PE=730
+
+echo "ips: " >> ${WORK_DIR}/custom-out.txt
+cat /app/bin/ip_list.txt >> ${WORK_DIR}/custom-out.txt
 
 dataset=`echo $m | awk -F "~" '{print $2}'`
 echo "total lines: ${MAX_LINENUM}"
@@ -23,7 +26,7 @@ if [ -f $file_path ]; then
         pi=$(printf "%05d" "$p")
         sema="fits-24ch-presto-ready:$dataset/p$pi"
         echo "$sema"
-        scalebox semaphore create $sema 1
+        scalebox semaphore create $sema 32
 
     # the first line is the header, skip it
         for ((i=2; i<=$total_lines; i++)); do

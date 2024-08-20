@@ -51,6 +51,9 @@ case $from_job in
         ${code_dir}/from-fold.sh "$1" "$from_ip"
         exit 0
         ;;
+    "result-push")
+        exit 0
+        ;;
     *)  # default
         ${code_dir}/default.sh "$1"
         ;;
