@@ -10,6 +10,7 @@ echo $from_ip
 # m="root@${from_ip}${LOCAL_SHM_ROOT}/mwa/dedisp~${m0}~${LOCAL_SHM_ROOT}/mwa/dedisp/tar"
 # echo "local-copy,$m" >> $WORK_DIR/messages.txt
 
-m="${LOCAL_SHM_ROOT}/mwa~png/${m0}~${RESULT_DIR}"
+# m="${LOCAL_SHM_ROOT}/mwa/png~${m0}~${RESULT_DIR}"
+m=$m0
 
 scalebox task add --sink-job result-push --to-ip $from_ip ${m}
