@@ -25,7 +25,7 @@ jobs:
     # 1 hour
       max_sleep_count: 720
       slot_options: reserved_on_exit
-      code_path: /raid0/root/app-mwa/dockerfiles/presto-search/code
+      code_path: /raid0/root/app-mwa/dockerfiles/presto-modules/presto-search-raw/code
     parameters:
       key_group_regex: ^(.+)$
       start_message: ${START_MESSAGE}
