@@ -66,10 +66,11 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 }
 
 func initHosts() {
+	// 计算节点以c-开始
 	sqlText := `
 		SELECT hostname,ip_addr
 		FROM t_host
-		WHERE cluster=$1 AND hostname LIKE 'n-%'
+		WHERE cluster=$1 AND hostname LIKE 'c-%'
 		ORDER BY 1
 		LIMIT $2
 	`
