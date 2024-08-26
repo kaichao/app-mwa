@@ -37,7 +37,7 @@ datasets:
       # time dimenstion
       # timeBegin: 1301240225
       # numOfSeconds: 4798
-      timeBegin: 1301242325
+      timeBegin: 1301240225
       # numOfSeconds: 2698
       timeEnd: 1301245022
 
@@ -47,8 +47,7 @@ datasets:
 
       # pointing dimension
       # pointingBegin: 520
-      # pointingEnd: 741
-      pointingBegin: 551
-      pointingEnd: 730
+      pointingBegin: 1
+      pointingEnd: 765
       pointingStep: 24
-      numPerBatch: 10
+      numPerBatch: 32
