@@ -27,7 +27,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(ss[6])
 
 	index := (ch - 109) % len(hosts)
-	sema := "progress-counter_beam-maker:" + ips[index]
+	sema := "progress-counter_beam-maker:" + hosts[index]
 	countDown(sema)
 
 	sema = getSemaDatProcessedName(cube, p, tb, ch)
@@ -94,6 +94,8 @@ func fromDownSampler(message string, headers map[string]string) int {
 		prefix := os.Getenv("DEFAULT_USER") + "@" + fromIP
 		if os.Getenv("FITS_REDIST_MODE") == "RSYNC" {
 			prefix = fmt.Sprintf("rsync://root@%s:50873", fromIP)
+		} else {
+			prefix = fmt.Sprintf("cstu0036@%s:50022", fromIP)
 		}
 		sourceURL := prefix + "/dev/shm/scalebox/mydata/mwa/1chx"
 		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",

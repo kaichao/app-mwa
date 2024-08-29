@@ -46,8 +46,9 @@ datasets:
       timeStep: 150
 
       # pointing dimension
-      # pointingBegin: 520
       pointingBegin: 1
-      pointingEnd: 765
+      # pointingEnd: 10060
+      pointingEnd: 720
       pointingStep: 24
-      numPerBatch: 32
+      # numPerBatch: 1
+      numPerBatch: 30

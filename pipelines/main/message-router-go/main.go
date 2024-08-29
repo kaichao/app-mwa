@@ -86,7 +86,16 @@ func defaultFunc(message string, headers map[string]string) int {
 	createPullUnpackProgressCountSemaphores(cube)
 	createBeamMakerProgressCountSemaphores(cube)
 
-	m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
-	misc.AppendToFile("/work/messages.txt", m)
+	cmd := fmt.Sprintf("scalebox task add --header prefix_url=%s %s", ss[0], ss[1])
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmd, -1)
+	fmt.Printf("exit-code for semaphore get:\n%d\n", code)
+	fmt.Printf("stdout for semaphore get:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for semaphore get:\n%s\n", stderr)
+	if code > 0 {
+		return code
+	}
+
+	// m := fmt.Sprintf("dir-list,%s~%s", ss[0], ss[1])
+	// misc.AppendToFile("/work/messages.txt", m)
 	return 0
 }
