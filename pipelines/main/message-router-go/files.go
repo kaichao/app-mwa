@@ -187,33 +187,6 @@ func getLocalRsyncPrefix() string {
 	return fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
 }
 
-/*
-	func fromLocalTarPull(message string, headers map[string]string) int {
-		// 1257010784/1257010786_1257010815_ch109.dat.tar.zst~b01
-		re := regexp.MustCompile(`^(([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+).+)~(b.+)$`)
-		matches := re.FindStringSubmatch(message)
-		fmt.Printf("message:%s, matches:%v\n", message, matches)
-
-		if len(matches) < 4 {
-			fmt.Fprintf(os.Stderr, "Invalid message format, message:%s\n", message)
-			return 1
-		}
-		cube := getDataCube(matches[2])
-		t, _ := strconv.Atoi(matches[3])
-		ch, _ := strconv.Atoi(matches[4])
-		batch := matches[5]
-
-		index := (ch - 109) % len(hosts)
-		sema := "progress-counter_local-tar-pull:" + ips[index]
-		countDown(sema)
-
-		tb, te := cube.getTimeRange(t)
-		// add batch-index to message body.
-		m := fmt.Sprintf("%s~%d_%d~%s", matches[1], tb, te, batch)
-
-		return sendNodeAwareMessage(m, map[string]string{}, "unpack", ch-109)
-	}
-*/
 func fromPullUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat~b01
 	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat~(.+)$")
@@ -234,21 +207,21 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(ss[3])
 	tb, te := cube.GetTimeRange(t)
 
-	sema := getSemaDatReadyName(cube, t, ch)
-	// 信号量dat-ready减1
-	if n := countDown(sema); n != 0 {
-		return 0
-	}
-
-	// 单批次完成
 	index := (ch - 109) % len(hosts)
-	sema = "progress-counter_pull-unpack:" + ips[index]
+	sema := "progress-counter_pull-unpack:" + hosts[index]
 	countDown(sema)
 
-	// 信号量dat-ready触发
-	// sema = fmt.Sprintf("pointing-batch-left:%s/t%d_%d/ch%s", ss[1], tb, te, ss[3])
-	// n := countDown(sema)
-	// batchIndex := cube.getNumOfPointingBatch() - n
+	sema = getSemaDatReadyName(cube, t, ch)
+	// 信号量dat-ready减1
+	if n := countDown(sema); n > 0 {
+		// 该group未全部就绪
+		return 0
+	} else if n < 0 {
+		// 出错
+		return 1
+	}
+
+	// 单批次完成，信号量dat-ready触发
 	batchIndex := getSemaPointingBatchIndex(cube, t, ch)
 	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
 
@@ -286,7 +259,6 @@ func filterDataCube(message string) bool {
 
 func removeLocalDatFiles(sema string) int {
 	// 1257010784/1257010786_1257010795/109
-	// dat-processed:1257010784/t1257010786_1257010815/ch114
 	// dat-processed:1257010784/p00001_000096/t1257010786_1257010815/ch114
 	re := regexp.MustCompile("dat-processed:([0-9]+)/p.+/t([0-9]+)_([0-9]+)/(ch[0-9]+)")
 	ss := re.FindStringSubmatch(sema)
