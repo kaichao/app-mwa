@@ -41,6 +41,7 @@ jobs:
       pod_id: 1
       bulk_message_size: 2
       retry_rules: "['2:2']"
+      repeatable: yes
     environments:
       - JUMP_SERVERS=${JUMP_SERVERS}
     hosts:
@@ -70,6 +71,8 @@ jobs:
       key_group_index: 1,2
       # start_message: ${START_MESSAGE}
       pod_id: 1
+      retry_rules: "['2:2']"
+      repeatable: yes
     hosts:
       - ${NODES}:1
     # sink_jobs:
@@ -103,7 +106,8 @@ jobs:
       key_group_regex: ^([^/]+)/p([0-9]+)/([0-9]+)$
       key_group_index: 1,2,3
       message_router_index: 1
-      retry_rules: "['13:3','14:3']"
+      retry_rules: "['2:2','13:3','14:3']"
+      repeatable: yes
       pod_id: 1
     hosts:
       - ${NODES}:4
@@ -133,21 +137,23 @@ jobs:
       # 1257010784/1257010786_1257010795/00001
       # key_group_regex: ^(.+)$
       pod_id: 1
+      retry_rules: "['2:2']"
+      repeatable: yes
     hosts:
       - ${NODES}:1
 
-  clean-up:
-    base_image: ${PRESTO_SEARCH}
-    parameters:
-      task_dist_mode: ${TASK_DIST_MODE}
-    environments:
-      - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
-      - LOCAL_DEDISP_ROOT=${LOCAL_SHM_ROOT}
-    variables:
-      code_path: ${CODE_BASE}/dockerfiles/presto-modules/clean-up/code
-      max_sleep_count: 4800
-    hosts:
-      - ${NODES}:1
+  # clean-up:
+  #   base_image: ${PRESTO_SEARCH}
+  #   parameters:
+  #     task_dist_mode: ${TASK_DIST_MODE}
+  #   environments:
+  #     - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
+  #     - LOCAL_DEDISP_ROOT=${LOCAL_SHM_ROOT}
+  #   variables:
+  #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/clean-up/code
+  #     max_sleep_count: 4800
+  #   hosts:
+  #     - ${NODES}:1
 
   result-push:
     base_image: ${FILE_COPY}
@@ -171,11 +177,11 @@ jobs:
 
   message-router-presto:
     label: 主消息路由
-    base_image: hub.cstcloud.cn/scalebox/agent
+    base_image: app-mwa/agent-with-ssh
     parameters:
       slot_on_head: yes
       start_message: ${TARGET_POINTING}
-      bulk_message_size: 20
+      bulk_message_size: 40
     variables:
       code_path: ${CODE_BASE_HEAD}/pipelines/presto-search/message-router/code
     environments:
@@ -192,6 +198,10 @@ jobs:
       - LOCAL_IP_INDEX=${MESSAGE_ROUTER_LOCAL_IP_INDEX}
       - DEFAULT_USER=${DEFAULT_USER}
       - SSH_PORT=${SSH_PORT}
+      - NUM_OF_NODES=${NUM_OF_NODES}
+      - POINTING_BEGIN=${POINTING_BEGIN}
+      - POINTING_END=${POINTING_END}
+      - NODES_GROUP=${NODES_GROUP}
     hosts:
       - h0:2
     sink_jobs:
