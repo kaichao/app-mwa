@@ -9,11 +9,11 @@ if [ `echo $m | grep -c "~"` -ne 1 ]; then
     exit 1
 fi
 
-PB=551
-PE=730
+PB=${POINTING_BEGIN}
+PE=${POINTING_END}
 
-echo "ips: " >> ${WORK_DIR}/custom-out.txt
-cat /app/bin/ip_list.txt >> ${WORK_DIR}/custom-out.txt
+# echo "ips: " >> ${WORK_DIR}/custom-out.txt
+# cat /app/bin/ip_list.txt >> ${WORK_DIR}/custom-out.txt
 
 dataset=`echo $m | awk -F "~" '{print $2}'`
 echo "total lines: ${MAX_LINENUM}"
