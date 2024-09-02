@@ -56,7 +56,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	createSemaphore(sema, te-tb+1)
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
-	sortedTag := getSortedTag(cube, tb, ch)
+	sortedTag := getSortedTagForDataPull(cube, tb, ch)
 
 	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
 

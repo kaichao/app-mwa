@@ -49,5 +49,4 @@ function post_check() {
         echo [ERROR] "文件字节数不一致" >> ${WORK_DIR}/custom-out.txt
         return 102
     fi
-
 }

@@ -14,7 +14,7 @@ jobs:
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
 
-  cluster-tar-pull:
+  cluster-dist:
     base_image: hub.cstcloud.cn/scalebox/file-copy
     variables:
       task_timeout_seconds: 1800
@@ -209,12 +209,14 @@ jobs:
       - NUM_OF_NODES=${NUM_OF_NODES}
       - LOCAL_IP_INDEX=${MESSAGE_ROUTER_LOCAL_IP_INDEX}
       - FITS_REDIST_MODE=${FITS_REDIST_MODE}
+      # 依据计算节点列表，计算其名称前缀
+      - NODES="${NODES}"
       # - TRACE=yes
     hosts:
       - h0:2
     sink_jobs:
       - dir-list
-      - cluster-tar-pull
+      - cluster-dist
       - pull-unpack
       - beam-maker
       - down-sampler

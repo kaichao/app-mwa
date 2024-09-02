@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -67,14 +68,16 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 
 func initHosts() {
 	// 计算节点以c-开始
-	sqlText := `
+	sqlFmt := `
 		SELECT hostname,ip_addr
 		FROM t_host
-		WHERE cluster=$1 AND hostname LIKE 'c-%'
+		WHERE cluster=$1 AND hostname LIKE '%v-%%'
 		ORDER BY 1
 		LIMIT $2
 	`
-
+	prefix := strings.Split(os.Getenv("NODES"), "-")[0]
+	sqlText := fmt.Sprintf(sqlFmt, prefix)
+	fmt.Fprintln(os.Stderr, "sqlText:\n", sqlText)
 	clustName := os.Getenv("CLUSTER")
 	numOfNodes, _ := strconv.Atoi(os.Getenv("NUM_OF_NODES"))
 	fmt.Printf("num-of-nodes:%d in cluster %s\n", numOfNodes, clustName)

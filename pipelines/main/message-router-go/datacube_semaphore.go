@@ -155,8 +155,8 @@ func getSemaFits24chReadyName(cube *datacube.DataCube, p, t int) string {
 	return sema
 }
 
-// 三维datacube中，给定顺序号，用于local-tar-pull/cluster-tar-pull运行过程中的的排序
-func getSortedTag(cube *datacube.DataCube, time int, ch int) string {
+// 三维datacube中，给定顺序号，用于pull-unpack/cluster-dist运行过程中的的排序
+func getSortedTagForDataPull(cube *datacube.DataCube, time int, ch int) string {
 	batchIndex := getSemaPointingBatchIndex(cube, time, ch)
 	// p := cube.getPointingBatchIndex(pointing)
 	ch -= cube.ChannelBegin
@@ -166,6 +166,21 @@ func getSortedTag(cube *datacube.DataCube, time int, ch int) string {
 	fmt.Println("ch=", ch)
 	fmt.Println("tm=", tm)
 
-	// 2位指向批次码(pointing-batch) + 2位时间编码（time-range） + 2位通道编码（00~23）
-	return fmt.Sprintf("%02d%02d%02d", batchIndex, tm, ch)
+	// 2位指向批次码(pointing-batch) + 2位通道编码（00~23）+ 2位时间编码（time-range）
+	return fmt.Sprintf("b%02d-t%02d-ch%02d", batchIndex, tm, ch)
+}
+
+// 三维datacube中，给定顺序号，用于beam-form运行过程中的的排序
+func getSortedTagForBeamForm(cube *datacube.DataCube, time int, p int, ch int) string {
+	batchIndex := getSemaPointingBatchIndex(cube, time, ch)
+	// p := cube.getPointingBatchIndex(pointing)
+	ch -= cube.ChannelBegin
+	tm := (time - cube.TimeBegin) / cube.TimeUnit
+	fmt.Printf("datacube.channelBegin:%d\n", cube.ChannelBegin)
+	fmt.Printf("datacube:%v\n", cube)
+	fmt.Println("ch=", ch)
+	fmt.Println("tm=", tm)
+
+	// 2位指向批次码(pointing-batch) + 3位时间编码（time-range） 5位指向码 + 2位通道编码（00~23）
+	return fmt.Sprintf("b%02d-t%03d-p%05d-ch%02d", batchIndex, tm, p, ch)
 }
