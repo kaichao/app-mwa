@@ -21,7 +21,9 @@ code=$?
 # Checking if the semaphore is 0
 if [ "$n1" -eq 0 ]; then
     # echo "clean-up,$p" >> $WORK_DIR/messages.txt
-    scalebox task add --sink-job clean-up --to-ip $from_ip ${p}
+    # scalebox task add --sink-job clean-up --to-ip $from_ip ${p}
+    ssh -p ${SSH_PORT} ${DEFAULT_USER}@${from_ip} rm -rf ${LOCAL_FITS_ROOT}/mwa/24ch/${p} ${LOCAL_SHM_ROOT}/mwa/dedisp/${p}/RFIfile*
+
 fi
 
 sema="dm-group-ready:$m"
