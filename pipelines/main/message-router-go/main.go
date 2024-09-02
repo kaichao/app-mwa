@@ -13,12 +13,9 @@ import (
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":         defaultFunc,
-		"dir-list": fromDirList,
-		// "dir-list":           fromDirListTest,
-		"cluster-tar-pull": fromClusterTarPull,
-		// "local-tar-pull":   fromLocalTarPull,
-		// "unpack":           fromUnpack,
+		"":             defaultFunc,
+		"dir-list":     fromDirList,
+		"cluster-dist": fromClusterDist,
 		"pull-unpack":  fromPullUnpack,
 		"beam-maker":   fromBeamMaker,
 		"down-sampler": fromDownSampler,
