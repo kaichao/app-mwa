@@ -62,7 +62,7 @@ echo "DIR_PNG:$DIR_PNG/$bname/$dm_group"
 
 # copy the result to target dir
 mkdir -p $DIR_PNG/$bname/$dm_group
-mv *.pfd* $DIR_PNG/$bname/$dm_group && mv candidates.txt $DIR_PNG/$bname/$dm_group 
+mv *.pfd* $DIR_PNG/$bname/$dm_group && mv candidates.txt $DIR_PNG/$bname/$dm_group && mv *.cand $DIR_PNG/$bname/$dm_group
 cd $DIR_PNG/$bname && tar -cf ${dm_group}.tar ./${dm_group} && rm -rf ./${dm_group}
 zstd --rm -f ${dm_group}.tar
 code=$?
