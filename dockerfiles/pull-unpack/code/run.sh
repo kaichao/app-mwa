@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source functions.sh
+source /app/share/bin/functions.sh
 source $(dirname $0)/functions.sh
 
 # 1257010784/1257010786_1257010815_ch109.dat.tar.zst~b01
@@ -19,43 +20,52 @@ else
     echo "[ERROR] Input does not match :$1" >&2 && exit 5
 fi
 
-jump_servers=$(get_parameter "$2" "jump_servers")
-jump_servers_option=""
-if [ $jump_servers ]; then
-    jump_servers_option="-J '${jump_servers}' "
-fi
-ssh_args="-T -c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
-#ssh_args="-c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
+# jump_servers=$(get_parameter "$2" "jump_servers")
+# jump_servers_option=""
+# if [ $jump_servers ]; then
+#     jump_servers_option="-J '${jump_servers}' "
+# fi
+# ssh_args="-T -c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
 
-echo "jump_servers:$jump_servers"
+# target_url is local-dir
+target_url=$(get_parameter "$2" "target_url")
+target_dir="/local${target_url}"
 
 source_url=$(get_parameter "$2" "source_url")
-target_url=$(get_parameter "$2" "target_url")
+source_mode=$(get_mode "$source_url")
+source_dir=$(get_data_root "$source_url")
+if [ "$source_mode" = "LOCAL" ]; then
+    cmd="cat ${source_dir}/$m | zstd -d | tar -xvf -"
+else
+    ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump_servers")
+    cmd="$ssh_cmd \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
+fi
 
 # user@10.1.1.1:10022:/raid0/1301240224
 # 冒号数量
-colon_count=$(echo "$source_url" | awk -F':' '{print NF-1}')
-echo "colon_count:$colon_count" >> ${WORK_DIR}/custom-out.txt
-if [ "$colon_count" -ge 2 ]; then
-    IFS=':' read -r ssh_host ssh_port source_dir <<< ${source_url}
-else
-    IFS=':' read -r ssh_host source_dir <<< ${source_url}
-    ssh_port=22
-fi
-
+# colon_count=$(echo "$source_url" | awk -F':' '{print NF-1}')
+# echo "colon_count:$colon_count" >> ${WORK_DIR}/custom-out.txt
+# if [ "$colon_count" -ge 2 ]; then
+#     IFS=':' read -r ssh_host ssh_port source_dir <<< ${source_url}
+# else
+#     IFS=':' read -r ssh_host source_dir <<< ${source_url}
+#     ssh_port=22
+# fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
+
 
 echo "source_url:$source_url" >> ${WORK_DIR}/custom-out.txt
 echo "source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
 echo "target_url:$target_url" >> ${WORK_DIR}/custom-out.txt
-echo "ssh_host:$ssh_host" >> ${WORK_DIR}/custom-out.txt
-echo "ssh_port:$ssh_port" >> ${WORK_DIR}/custom-out.txt
-echo "ssh_args:$ssh_args" >> ${WORK_DIR}/custom-out.txt
-echo "message:$m" >> ${WORK_DIR}/custom-out.txt
-target_dir="/local${target_url}"
+echo "cmd:$cmd" >> ${WORK_DIR}/custom-out.txt
 
-cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
+# echo "ssh_host:$ssh_host" >> ${WORK_DIR}/custom-out.txt
+# echo "ssh_port:$ssh_port" >> ${WORK_DIR}/custom-out.txt
+# echo "ssh_args:$ssh_args" >> ${WORK_DIR}/custom-out.txt
+echo "message:$m" >> ${WORK_DIR}/custom-out.txt
+
+# cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
 mkdir -p ${target_dir} \
     && cd ${target_dir}
 eval $cmd
@@ -76,5 +86,10 @@ do
     echo "${target_dir}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
     echo "output-file: ${target_dir}/${dataset}_${n}_ch${ch}.dat"
 done
+
+if [ "$source_mode" = "LOCAL" ]; then
+    echo "${source_dir}/$m" > ${WORK_DIR}/output-files.txt
+    echo "${source_dir}/$m" > ${WORK_DIR}/removed-files.txt
+fi
 
 exit $code
