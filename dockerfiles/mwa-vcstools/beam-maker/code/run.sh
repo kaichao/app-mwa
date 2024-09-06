@@ -70,7 +70,6 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     dest_file_r=${OBSID}/p${pi}/t${BEG}_${END}/ch${ch}.fits
     dest_file=${DIR_1CH}/${dest_file_r}
     orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
-
     mkdir -p $(dirname ${dest_file}) && mv $orig_file $dest_file
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
@@ -82,7 +81,6 @@ done
 post_check $OBSID $ch $PTHEAD $PTTAIL $BEG $END $DIR_1CH
 code=$?
 [[ $code -ne 0 ]] && echo "exit after post-check output files, exit_code:$code" >&2 && exit $code
-
 
 for ii in $(seq $PTHEAD $PTTAIL); do
     pi=$(printf "%05d" $ii)

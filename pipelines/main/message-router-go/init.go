@@ -66,6 +66,24 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 	return code
 }
 
+func sendJobRefMessage(message string, headers map[string]string, sinkJob string) int {
+	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s  %s", sinkJob, message)
+	if len(headers) > 0 {
+		h, err := json.Marshal(headers)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "headers:%v,JSON marshaling failed:%v\n", headers, err)
+		} else {
+			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --headers '%s' %s", sinkJob, h, message)
+		}
+	}
+
+	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 10)
+	fmt.Printf("stdout for task-add:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	return code
+}
+
 func initHosts() {
 	// 计算节点以c-开始
 	sqlFmt := `

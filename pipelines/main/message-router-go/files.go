@@ -13,60 +13,62 @@ import (
 )
 
 func fromDirList(message string, headers map[string]string) int {
-	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.tar.zst
-	// /data/mwa/tar~1257010784/1257010786_1257010815_ch129.dat.tar.zst
-	m := message
-	if !strings.Contains(message, "~") {
-		m = "/data/mwa/tar~" + message
-	}
-	if !filterDataCube(m) {
+	// 	1257010784/1257010786_1257010815_ch120.dat.tar.zst
+	if !filterDataCube(message) {
 		// filtered
 		return 0
 	}
-	/*
-		if os.Getenv("JUMP_SERVERS") == "" && !strings.HasPrefix(message, "/") {
-			// no jump servers && remote file, copy to global storage
-			sinkJob := "cluster-tar-pull"
-			m = message + "~/data/mwa/tar"
-			misc.AppendToFile("/work/messages.txt", sinkJob+","+m)
-			return 0
-		}
-	*/
 
+	m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
+	if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
+		hs := map[string]string{
+			"source_url": headers["source_url"],
+			"target_url": os.Getenv("SHARED_ROOT") + "/tar",
+		}
+		return sendJobRefMessage(m, hs, "cluster-dist")
+	}
 	// remote cluster(with jump-servers)
 	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	// local cluster
-	// 	message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
-	return toPullUnpack(message, headers)
-	// return toLocalTarPull(message, headers)
+	// 	message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
+
+	hs := map[string]string{
+		"source_url": headers["source_url"],
+	}
+	return toPullUnpack(m, hs)
 }
 
 func fromClusterDist(message string, headers map[string]string) int {
+	hs := map[string]string{
+		"source_url": os.Getenv("SHARED_ROOT") + "/tar",
+	}
 	// message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
-	return 0
+	return toPullUnpack(message, hs)
 }
 
 func toPullUnpack(message string, headers map[string]string) int {
 	// CASE 1: FROM: remote cluster(with jump-servers)
-	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
-	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784~1257010784/1257015316_1257015345_ch122.dat.tar.zst
+	// 	message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
+	// 	message: 1257010784/1257015316_1257015345_ch122.dat.tar.zst
 
 	// CASE 2: FROM: beam-maker
 	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 
 	// CASE 3: FROM: dir-list && local
-	// message: /raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch111.dat.tar.zst
+	// source_url: astro@10.100.1.30:10022:/data1/mydata/mwa/tar
+	// message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 
 	// CASE 4: FROM: cluster-dist
+	// source_url: /work1/cstu0036/mydata/mwa/tar
 	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 
-	ss := strings.Split(message, "~")
 	// only packed file
-	m := ss[len(ss)-1]
+	// m := strings.Split(message, "~")[0]
 
 	// input-message:
-	// 		1257010784/1257010786_1257010815_ch109.dat.tar.zst
-	ss = regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(m)
+	// 		1257010784/1257010786_1257010815_ch109.dat.tar.zst~b00
+	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").
+		FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Invalid message format, message=%s", message)
 		return 21
@@ -75,31 +77,43 @@ func toPullUnpack(message string, headers map[string]string) int {
 	t0, _ := strconv.Atoi(ss[2])
 	ch, _ := strconv.Atoi(ss[3])
 
-	h := map[string]string{}
 	tb, te := cube.GetTimeRange(t0)
-
 	targetDir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/ch%d/%d_%d",
 		ss[1], ch, tb, te)
-	h["target_url"] = targetDir
+
+	// hs := map[string]string{}
+	headers["target_url"] = targetDir
 	if os.Getenv("JUMP_SERVERS") != "" {
-		h["jump_servers"] = os.Getenv("JUMP_SERVERS")
+		headers["jump_servers"] = os.Getenv("JUMP_SERVERS")
 	}
 	// if headers["from_job"] == "beam-maker" {
 	// CASE 2: FROM: beam-maker
 	// message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
-	prefix := strings.Split(os.Getenv("DATASET_URI"), "~")[0]
-	// Replace the first occurrence of '/' with ':/'
-	modified := strings.Replace(prefix, "/", ":/", 1)
-	h["source_url"] = modified
-	// }
+
+	// prefix := strings.Split(os.Getenv("DATASET_URI"), "~")[0]
+	// // Replace the first occurrence of '/' with ':/'
+	// modified := strings.Replace(prefix, "/", ":/", 1)
+	// h["source_url"] = modified
 
 	// 通过headers中的sorted_tag，设定显式排序
-	h["sorted_tag"] = getSortedTagForDataPull(cube, t0, ch)
-	// add batch-index to message body.
+	headers["sorted_tag"] = getSortedTagForDataPull(cube, t0, ch)
 
-	batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
-	m = fmt.Sprintf("%s~b%02d", m, batchIndex)
-	return sendNodeAwareMessage(m, h, "pull-unpack", ch-109)
+	// add batch-index to message body.
+	// batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
+	// m = fmt.Sprintf("%s~b%02d", m, batchIndex)
+	return sendNodeAwareMessage(message, headers, "pull-unpack", ch-109)
+}
+
+// 1257010784/1257010786_1257010815_ch109.dat.tar.zst
+func getBatchIndex(packFile string) int {
+	ss := regexp.MustCompile("([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]{3})").FindStringSubmatch(packFile)
+	if ss == nil {
+		return -1
+	}
+	cube := datacube.GetDataCube(ss[1])
+	t0, _ := strconv.Atoi(ss[2])
+	ch, _ := strconv.Atoi(ss[3])
+	return getSemaPointingBatchIndex(cube, t0, ch)
 }
 
 func getLocalRsyncPrefix() string {
@@ -176,8 +190,8 @@ func fromPullUnpack(message string, headers map[string]string) int {
 }
 
 func filterDataCube(message string) bool {
-	// 	/raid0/scalebox/mydata/mwa/tar~1257010784/1257010786_1257010815_ch120.dat.tar.zst
-	re := regexp.MustCompile(".+~([0-9]+)/([0-9]+)_([0-9]+)_ch.+")
+	// 	1257010784/1257010786_1257010815_ch120.dat.tar.zst
+	re := regexp.MustCompile("([0-9]+)/([0-9]+)_([0-9]+)_ch.+")
 	ss := re.FindStringSubmatch(message)
 	datasetID := ss[1]
 	begin1, _ := strconv.Atoi(ss[2])
