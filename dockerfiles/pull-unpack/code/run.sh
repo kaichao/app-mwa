@@ -34,11 +34,20 @@ target_dir="/local${target_url}"
 source_url=$(get_parameter "$2" "source_url")
 source_mode=$(get_mode "$source_url")
 source_dir=$(get_data_root "$source_url")
+
+# BW_LIMIT  "500k"/"1m"
+if [ -n "$BW_LIMIT" ]; then
+    # 已设置
+    cmd_part="pv -L ${BW_LIMIT}|zstd -d | tar -xvf -"
+else
+    cmd_part="zstd -d | tar -xvf -"
+fi
+# pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
-    cmd="cat ${source_dir}/$m | zstd -d | tar -xvf -"
+    cmd="cat ${source_dir}/$m | ${cmd_part}"
 else
     ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump_servers")
-    cmd="$ssh_cmd \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
+    cmd="$ssh_cmd \"cat ${source_dir}/$m\" - | ${cmd_part}"
 fi
 
 # user@10.1.1.1:10022:/raid0/1301240224
@@ -54,7 +63,6 @@ fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
-
 echo "source_url:$source_url" >> ${WORK_DIR}/custom-out.txt
 echo "source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
 echo "target_url:$target_url" >> ${WORK_DIR}/custom-out.txt
@@ -66,11 +74,8 @@ echo "cmd:$cmd" >> ${WORK_DIR}/custom-out.txt
 echo "message:$m" >> ${WORK_DIR}/custom-out.txt
 
 # cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
-mkdir -p ${target_dir} \
-    && cd ${target_dir}
-eval $cmd
+mkdir -p ${target_dir} && cd ${target_dir} && eval $cmd
 code=$?
-
 [[ $code -ne 0 ]] && echo "exit after pull-unpack, error_code:$code" >&2 && exit $code
 
 # 检查输出文件是否完整
