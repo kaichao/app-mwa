@@ -29,14 +29,17 @@ IFS='/' read -r dataset pointing time_range <<< $(echo "$1")
 new_id="${dataset}/${pointing}/${time_range}"
 
 output_file=${DIR_24CH}/$new_id.fits
+output_dir=$(dirname ${output_file})
+filename=$(basename ${output_file})
 
-mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
+echo "new feature for local-copy" >> ${WORK_DIR}/custom-out.txt
+
+cd ${WORK_DIR} && mv -f all*.fits ${filename} 
+# mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
 code=$?
-[[ $code -ne 0 ]] && echo "mv fits file to target dir" >&2 && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] rename fits file " >&2 && exit $code
 
-dir=$(dirname ${output_file})
-file=$(basename ${output_file})
-cd ${dir} && rm -f ${file}.zst && zstd --rm ${file}
+mkdir -p ${output_dir} && cd ${output_dir} && zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file " >&2 && exit $code
 
