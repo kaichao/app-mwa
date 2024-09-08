@@ -40,13 +40,13 @@ datasets:
       timeEnd: 1301245022
 
       # packSize:
-      timeUnit: 30
-      timeStep: 150
+      timeUnit: 40
+      timeStep: 200
 
       # pointing dimension
-      pointingBegin: 961
+      pointingBegin: 1921
       # pointingEnd: 10060
-      pointingEnd: 1920
+      pointingEnd: 2880
       pointingStep: 24
       # numPerBatch: 1
       numPerBatch: 40
