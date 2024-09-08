@@ -6,12 +6,12 @@ SELECT string_agg(ip_addr, ' ') AS ip_addresses
 FROM (
     SELECT ip_addr
     FROM t_host
-    WHERE hostname LIKE 'c-%.p419' AND status='ON'
+    WHERE hostname LIKE 'n-%.p419' AND status='ON'
     ORDER BY hostname
 ) subquery;
 ```
 
-## pull-unpack任务的横表
+## cluster-dist/pull-unpack任务的横表
 - 消息格式：1301240224/1301240405_1301240434_ch114.dat.tar.zst~b00	
 
 ```sql
@@ -130,3 +130,4 @@ ORDER BY 1,2
 
 ```
 
+## 
