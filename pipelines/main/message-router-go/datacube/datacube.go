@@ -21,9 +21,9 @@ type dataCube struct {
 
 	TimeBegin    string
 	NumOfSeconds string
-	// 30
+	// 40
 	TimeUnit string
-	// 30的倍数
+	// 40的倍数
 	TimeStep string
 
 	PointingBegin string
@@ -47,9 +47,9 @@ type DataCube struct {
 	TimeBegin    int `yaml:"timeBegin"`
 	NumOfSeconds int `yaml:"numOfSeconds"`
 	TimeEnd      int `yaml:"timeEnd"`
-	// 单个打包文件的时长（30秒）
+	// 单个打包文件的时长（40秒）
 	TimeUnit int `yaml:"timeUnit"`
-	// 单次beam-maker的时长，通常为30的倍数
+	// 单次beam-maker的时长，通常为40的倍数
 	TimeStep int `yaml:"timeStep"`
 
 	PointingBegin int `yaml:"pointingBegin"`
