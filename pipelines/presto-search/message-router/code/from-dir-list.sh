@@ -17,8 +17,7 @@ else
     exit 1
 fi
 
-echo "LOCAL_FITS_ROOT:$LOCAL_FITS_ROOT"
-m=$m~$LOCAL_FITS_ROOT/mwa/24ch
+m=${m#*~}
 echo $m
 
 # echo "rsync-pull,$m" >> ${WORK_DIR}/messages.txt
@@ -26,8 +25,7 @@ pi=$(( 10#$p ))
 if [ $pi -lt $POINTING_BEGIN ] || [ $pi -gt $POINTING_END ] ; then
     echo "$pi out of range: $POINTING_BEGIN to $POINTING_END. omitting." >${WORK_DIR}/custom-out.txt && exit 10
 fi
-order=$(( ($pi - 1) % $NUM_OF_NODES ))
-node=$(printf "%04d.p419" "$order")
-echo $node
-echo $NODES_GROUP
-scalebox task add --sink-job local-copy-unpack --to-host ${NODES_GROUP}-${node} ${m}
+date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
+# scalebox task add --sink-job local-copy-unpack --to-host ${NODES_GROUP}-${node} ${m}
+scalebox task add --sink-job local-copy ${m}
+date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
