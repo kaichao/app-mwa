@@ -37,6 +37,9 @@ case $from_job in
     "local-copy-unpack")
         ${code_dir}/from-local-copy-unpack.sh "$1" "$from_ip"
         ;;
+    "local-copy")
+        ${code_dir}/from-local-copy.sh "$1"
+        ;;
     "rfi-find")
         ${code_dir}/from-rfi-find.sh "$1" "$from_ip"
         ;;

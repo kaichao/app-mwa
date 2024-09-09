@@ -23,44 +23,74 @@ jobs:
     hosts:
       - h0:1
 
-  local-copy-unpack:
+  local-copy:
     base_image: ${FILE_COPY}
     command: ${PRIVILEGED_COMMAND}
     variables:
       task_timeout_seconds: 1800
-      code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
-      dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
-      dir_free_gb: ${UNPACK_FREE_GB}
+      # code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
+      # dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
+      # dir_free_gb: ${UNPACK_FREE_GB}
+      dir_limit_gb: ${SHARED_ROOT}/24ch~12800
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
-      # scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch-240408~1257010784/p00001/t1257010786_1257010935.fits.zst
-      key_group_regex: ^([^~]+)~([^/]+)/p([0-9]+)/(.+)$
-      key_group_index: 2,3
+      # 1257010784/p00001/t1257010786_1257010935.fits.zst
+      key_group_regex: ^([^/]+)/p([0-9]+)/(.+)$
+      key_group_index: 1,2
       message_router_index: 1
       pod_id: 1
       bulk_message_size: 2
       retry_rules: "['2:2']"
       repeatable: yes
     environments:
-      - JUMP_SERVERS=${JUMP_SERVERS}
+      # - JUMP_SERVERS=${JUMP_SERVERS}
+      - SOURCE_URL=${SOURCE_DIR}
+      - TARGET_URL=${SHARED_ROOT}/mwa/24ch
     hosts:
-      - ${NODES}:1
+      - n0:2
+
+  # local-copy-unpack:
+  #   base_image: ${FILE_COPY}
+  #   command: ${PRIVILEGED_COMMAND}
+  #   variables:
+  #     task_timeout_seconds: 1800
+  #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
+  #     dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
+  #     dir_free_gb: ${UNPACK_FREE_GB}
+  #     max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+  #   parameters:
+  #     task_dist_mode: ${TASK_DIST_MODE}
+  #     # scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch-240408~1257010784/p00001/t1257010786_1257010935.fits.zst
+  #     key_group_regex: ^([^~]+)~([^/]+)/p([0-9]+)/(.+)$
+  #     key_group_index: 2,3
+  #     message_router_index: 1
+  #     pod_id: 1
+  #     bulk_message_size: 2
+  #     retry_rules: "['2:2']"
+  #     repeatable: yes
+  #   environments:
+  #     - JUMP_SERVERS=${JUMP_SERVERS}
+  #   hosts:
+  #     - ${NODES}:1
 
   rfi-find:
     label: rfi-find-test
     base_image: ${PRESTO_SEARCH}
-    
+    command: ${PRIVILEGED_COMMAND}
     variables:
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       task_timeout_seconds: 43200
       output_text_size: 1048576
       code_path: ${CODE_BASE}/dockerfiles/presto-modules/rfi-find/code
+      dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
+      dir_free_gb: ${UNPACK_FREE_GB}
       
     environments:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=${LOCAL_FITS_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - SHARED_ROOT=${SHARED_ROOT}
       - MAX_LINENUM=${MAX_LINENUM}
       - RFIARGS=${RFIARGS}
     parameters:
@@ -129,6 +159,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - SHARED_ROOT=${SHARED_ROOT}
       # - LOCAL_OUTPUT_ROOT=/raid0/zhzhang/data
       # - ROCR_VISIBLE_DEVICES=0
       - SEARCHARGS=${SEARCHARGS}
@@ -165,10 +196,11 @@ jobs:
       # /dev/shm/scalebox/mydata/mwa/png~1257010784/p00016/dm1.tar.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/png
       key_group_regex: ^.+~([0-9]+)/p([0-9]{5})/t([0-9]+_[0-9]+)~.+$
       key_group_index: 1,3,2
+      retry_rules: "['255:2']"
     environments:
       - KEEP_SOURCE_FILE=no
       - JUMP_SERVERS=${JUMP_SERVERS}
-      - SOURCE_URL=/dev/shm/scalebox/mydata/mwa/png
+      - SOURCE_URL=${SHARED_ROOT}/mwa/png
       - TARGET_URL=${RESULT_DIR}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
       - WITH_HEADERS=yes
@@ -179,9 +211,10 @@ jobs:
     label: 主消息路由
     base_image: app-mwa/agent-with-ssh
     parameters:
-      slot_on_head: yes
+      # slot_on_head: yes
       start_message: ${TARGET_POINTING}
       bulk_message_size: 40
+      task_dist_mode: SLOT-BOUND
     variables:
       code_path: ${CODE_BASE_HEAD}/pipelines/presto-search/message-router/code
     environments:
@@ -208,7 +241,8 @@ jobs:
       # - dir-list-1
       - dir-list
       # - rsync-pull
-      - local-copy-unpack
+      # - local-copy-unpack
+      - local-copy
       - rfi-find
       # - dedisp
       # - search
