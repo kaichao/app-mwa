@@ -21,11 +21,9 @@ if [ $LOCAL_OUTPUT_ROOT ]; then
 else
     DIR_PNG=/data/mwa/png
 fi
-# if [ $LOCAL_INPUT_ROOT ]; then
-#     DIR_TAR="/local${LOCAL_INPUT_ROOT}/mwa/dedisp/tar"
-# else
-#     DIR_TAR=/data/mwa/dedisp/tar
-# fi
+if [ $SHARED_ROOT ]; then
+    DIR_SHARED="/local${SHARED_ROOT}/mwa/png"
+fi
 
 m=$1
 # m=${bname}/${dm_group}
@@ -67,8 +65,13 @@ cd $DIR_PNG/$bname && tar -cf ${dm_group}.tar ./${dm_group} && rm -rf ./${dm_gro
 zstd --rm -f ${dm_group}.tar
 code=$?
 
-# record input and output files
-echo $DIR_PNG/$bname/$dm_group.tar.zst >> ${WORK_DIR}/output-files.txt
+if [ $SHARED_ROOT ]; then
+    mkdir -p $DIR_SHARED/$bname && mv ${dm_group}.tar.zst $DIR_SHARED/$bname
+    echo $DIR_SHARED/$bname/$dm_group.tar.zst >> ${WORK_DIR}/output-files.txt
+else
+    # record input and output files
+    echo $DIR_PNG/$bname/$dm_group.tar.zst >> ${WORK_DIR}/output-files.txt
+fi
 echo $DIR_DEDISP/$bname/$dm_group >> ${WORK_DIR}/input-files.txt
 
 # send messages to sink job
