@@ -21,7 +21,7 @@ file_path=/app/bin/MWA_DDplan.txt
 if [ -f $file_path ]; then
     total_lines=$(wc -l < $file_path)
     echo $total_lines
-
+    date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
     for ((p = PB; p <= PE; p += 1)); do
         pi=$(printf "%05d" "$p")
         sema="fits-24ch-presto-ready:$dataset/p$pi"
@@ -38,15 +38,16 @@ if [ -f $file_path ]; then
             echo "$sema"
             scalebox semaphore create $sema $calls
         done
-    
+        
         sema2="fits-24ch-dedisp-completed:$dataset/p$pi"
         echo "$sema2"
         scalebox semaphore create $sema2 ${MAX_LINENUM}
+        date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
     done
 else
     echo "DDplan file not found: $file_path"
     exit 2
 fi
-
+date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 # send message to sink job
 echo "dir-list,$m" >> ${WORK_DIR}/messages.txt
