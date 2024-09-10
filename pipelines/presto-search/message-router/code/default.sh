@@ -50,4 +50,9 @@ else
 fi
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 # send message to sink job
-echo "dir-list,$m" >> ${WORK_DIR}/messages.txt
+# echo "dir-list,$m" >> ${WORK_DIR}/messages.txt
+
+m1=${m%~*}
+m2=${m#*~}
+
+scalebox task add --header prefix_url=$m1 $m2

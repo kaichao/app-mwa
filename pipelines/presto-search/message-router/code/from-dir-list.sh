@@ -8,16 +8,17 @@ headers=""
 # [ $code -ne 0 ] && echo "[ERROR] while creating semaphores! " >&2 && exit $code 
 
 # ip_list=()
-pattern="^([^~]+)~([^/]+)/p([0-9]+)"
+# pattern="^([^~]+)~([^/]+)/p([0-9]+)"
+pattern="^([^/]+)/p([0-9]+)/t([0-9]+)_([0-9]+).fits.zst"
 if [[ $m =~ $pattern ]]; then
-    p=${BASH_REMATCH[3]}
+    p=${BASH_REMATCH[2]}
     echo "p: $p"
 else
     echo "[ERROR]: Invalid message $m"
     exit 1
 fi
 
-m=${m#*~}
+# m=${m#*~}
 echo $m
 
 # echo "rsync-pull,$m" >> ${WORK_DIR}/messages.txt
