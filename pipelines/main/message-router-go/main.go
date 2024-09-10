@@ -49,11 +49,13 @@ func main() {
 		os.Exit(4)
 	}
 
+	AddTimeStamp()
 	logger.Infoln("03, message-router not null")
 	exitCode := doMessageRoute(os.Args[1], headers)
 	if exitCode != 0 {
 		logger.Errorf("error found, error-code=%d\n", exitCode)
 	}
+	AddTimeStamp()
 	os.Exit(exitCode)
 }
 

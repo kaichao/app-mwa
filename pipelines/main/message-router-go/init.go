@@ -136,3 +136,11 @@ func ExecWithRetries(cmd string, numRetries int) (int, string, string) {
 	}
 	return code, stdout, stderr
 }
+
+// AddTimeStamp ...
+func AddTimeStamp() {
+	fileName := os.Getenv("WORK_DIR") + "/timestamps.txt"
+	timeStamp := time.Now().Format("2006-01-02T15:04:05.000000Z07:00")
+	// fmt.Printf("timestamp:%s\n", timeStamp)
+	misc.AppendToFile(fileName, timeStamp)
+}

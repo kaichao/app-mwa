@@ -126,6 +126,6 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	if cube.NumOfSeconds == 0 {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
-	fmt.Println(cube)
+	// fmt.Println(cube)
 	return &cube
 }
