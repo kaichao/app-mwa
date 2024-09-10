@@ -14,7 +14,7 @@ jobs:
   #     - h0:1
 
   dir-list:
-    base_image: hub.cstcloud.cn/scalebox/dir-list
+    base_image: hub.cstcloud.cn/scalebox/dir-listx
     parameters:
       slot_on_head: yes
       # scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch-240408~1257010784
