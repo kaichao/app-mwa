@@ -19,6 +19,7 @@ func fromDirList(message string, headers map[string]string) int {
 		return 0
 	}
 
+	AddTimeStamp()
 	m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
 	if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
 		hs := map[string]string{
@@ -28,7 +29,7 @@ func fromDirList(message string, headers map[string]string) int {
 		return sendJobRefMessage(m, hs, "cluster-dist")
 	}
 	// remote cluster(with jump-servers)
-	// 	message: <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784/1257010786_1257010815_ch109.dat.tar.zst
+	// 	message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
 	// local cluster
 	// 	message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 
@@ -98,6 +99,7 @@ func toPullUnpack(message string, headers map[string]string) int {
 	// 通过headers中的sorted_tag，设定显式排序
 	headers["sorted_tag"] = getSortedTagForDataPull(cube, t0, ch)
 
+	AddTimeStamp()
 	// add batch-index to message body.
 	// batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
 	// m = fmt.Sprintf("%s~b%02d", m, batchIndex)
@@ -159,6 +161,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	countDown(sema)
 
 	sema = getSemaDatReadyName(cube, t, ch)
+	AddTimeStamp()
 	// 信号量dat-ready减1
 	if n := countDown(sema); n > 0 {
 		// 该group未全部就绪
@@ -168,6 +171,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		return 1
 	}
 
+	AddTimeStamp()
 	// 单批次完成，信号量dat-ready触发
 	batchIndex := getSemaPointingBatchIndex(cube, t, ch)
 	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
@@ -185,6 +189,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 			return ret
 		}
 	}
+	AddTimeStamp()
 
 	return 0
 }

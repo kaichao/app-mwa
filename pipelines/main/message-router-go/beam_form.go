@@ -26,10 +26,12 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	te, _ := strconv.Atoi(ss[4])
 	ch, _ := strconv.Atoi(ss[6])
 
+	AddTimeStamp()
 	index := (ch - 109) % len(hosts)
 	sema := "progress-counter_beam-maker:" + hosts[index]
 	countDown(sema)
 
+	AddTimeStamp()
 	sema = getSemaDatProcessedName(cube, p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
@@ -38,7 +40,9 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
+	AddTimeStamp()
 	removeLocalDatFiles(sema)
+	AddTimeStamp()
 
 	// 数据删除，修改信号量值
 	batchIndex := countDownSemaPointingBatchIndex(cube, tb, ch)
@@ -50,10 +54,12 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 	}
 
+	AddTimeStamp()
 	// reset semaphore dat-ready(以TimeRange为单位)
 	sema = getSemaDatReadyName(cube, tb, ch)
 	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
 	createSemaphore(sema, te-tb+1)
+	AddTimeStamp()
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
 	sortedTag := getSortedTagForDataPull(cube, tb, ch)
@@ -69,6 +75,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		// toLocalTarPull(m, headers)
 		toPullUnpack(m, headers)
 	}
+	AddTimeStamp()
 	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
 }
 
@@ -86,6 +93,7 @@ func fromDownSampler(message string, headers map[string]string) int {
 	fmt.Printf("num of hosts=%d,index=%d\n", len(ips), (nPointing-1)%len(ips))
 	toIP := ips[(nPointing-1)%len(ips)]
 
+	AddTimeStamp()
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
 		// format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
@@ -124,12 +132,14 @@ func toFitsMerger(message string, headers map[string]string) int {
 	}
 	// semaphore:
 	// 		fits-24ch-ready:1257010784/p00029/t1257010786_1257010815
+	AddTimeStamp()
 	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
 	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		pointing, _ := strconv.Atoi(ss[2])
 		return sendNodeAwareMessage(ss[1], make(map[string]string), "fits-merger", pointing-1)
 	}
+	AddTimeStamp()
 
 	return 0
 }

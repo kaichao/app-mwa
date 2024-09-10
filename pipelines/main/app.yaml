@@ -58,7 +58,7 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
       - WITH_HEADERS=yes
-      - BW_LIMIT=100m
+      - BW_LIMIT=25m
       # 可给message-router发送重复名的消息（覆盖）
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
@@ -115,6 +115,7 @@ jobs:
       key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
       key_group_index: 1,2,3
       bulk_message_size: 10
+      message_router_index: 2
     environments:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
@@ -141,6 +142,7 @@ jobs:
       bulk_message_size: 3
       # 255 12
       retry_rules: "['5:3','23:3']"
+      message_router_index: 3
     environments:
       - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
       - SOURCE_MODE=${FITS_REDIST_MODE}
@@ -210,7 +212,7 @@ jobs:
       key_group_index:
       start_message: ${DATASET_URI}
       task_dist_mode: SLOT-BOUND
-      bulk_message_size: 50
+      bulk_message_size: 100
     environments:
       - LOG_LEVEL=warn
       - BATCH_INSERT=yes
@@ -227,7 +229,7 @@ jobs:
       - SHARED_ROOT=${SHARED_ROOT}
       # - TRACE=yes
     hosts:
-      - h0:2
+      - h0:4
     sink_jobs:
       - dir-list
       - cluster-dist
