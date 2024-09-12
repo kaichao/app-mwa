@@ -10,7 +10,7 @@
 # 1. set the input / output / medium file directory
 
 # m="/1257010784/00017/1"
-source /root/.bashrc
+# source /root/.bashrc
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"

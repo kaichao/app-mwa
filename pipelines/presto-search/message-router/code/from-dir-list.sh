@@ -24,7 +24,7 @@ echo $m
 # echo "rsync-pull,$m" >> ${WORK_DIR}/messages.txt
 pi=$(( 10#$p ))
 if [ $pi -lt $POINTING_BEGIN ] || [ $pi -gt $POINTING_END ] ; then
-    echo "$pi out of range: $POINTING_BEGIN to $POINTING_END. omitting." >${WORK_DIR}/custom-out.txt && exit 10
+    echo "$pi out of range: $POINTING_BEGIN to $POINTING_END. omitting." >${WORK_DIR}/custom-out.txt && exit 0
 fi
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 # scalebox task add --sink-job local-copy-unpack --to-host ${NODES_GROUP}-${node} ${m}

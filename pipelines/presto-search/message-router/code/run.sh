@@ -58,7 +58,11 @@ case $from_job in
         exit 0
         ;;
     *)  # default
-        ${code_dir}/default.sh "$1"
+        if [ $POINTING_MODE -eq 1 ]; then
+            ${code_dir}/fix_missing.sh "$1"
+        else
+            ${code_dir}/default.sh "$1"
+        fi
         ;;
 esac
 
