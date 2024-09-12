@@ -39,7 +39,7 @@ if [ $SHARED_ROOT ]; then
         file_name=$(basename $zst_file)
         fits_name=${file_name%.zst}
         echo "full_name:${fits_name}" >> ${WORK_DIR}/custom-out.txt
-        [ -f "${zst_file}" ] && zstd -d --rm -f -o ${fits_name} ${zst_file}
+        [ -f "${zst_file}" ] && zstd -d -f -o ${fits_name} ${zst_file}
 
     #     # cd $DIR_FITS/$(dirname $1) && [ -f "$(basename $1).fits.zst" ] && zstd -d --rm -f $(basename $1).fits.zst
     #     # 2. check if the file exists

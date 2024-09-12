@@ -235,6 +235,7 @@ jobs:
       - POINTING_BEGIN=${POINTING_BEGIN}
       - POINTING_END=${POINTING_END}
       - NODES_GROUP=${NODES_GROUP}
+      - POINTING_MODE=1
     hosts:
       - h0:2
     sink_jobs:
