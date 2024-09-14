@@ -15,7 +15,7 @@ flowchart TD
   end
 ```
 
-- mwa-down：通过广域网从澳大利亚下载mwa科学数据；
+- mwa-down：通过广域网从澳洲下载mwa科学数据；
 - unpack：mwa科学数据是按时间戳打包的tar文件，需解包为按channel、秒为单位的dat文件；
 - beam-maker：按通道、指向，生成指定时段的单指向、单通道的？？数据（fits格式）；
 - fits-merger：将同一指向的24个单通道数据，合并为1个24通道数据；
