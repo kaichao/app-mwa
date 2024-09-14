@@ -162,14 +162,37 @@ scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 
 
 ## 流水线优化的参数选择
+### 数据量分析
+- 40s的数据量
+  - 波束合成后fits：48.92MB/波束
+  - 采样后（1:4）fits：12.23MB/波束
+  - 采样后再压缩（压缩因子0.9）fits：11.10MB/波束
+- 数据量估算(以40s计)
+  - 单节点4个DCU
+  - 每轮暂存数据： 4 DCU * 24 波束/DCU * 11.1 MB/波束 =  1066 MiB
+  - 计算存储
+    - 波束合成：48.92 MB/波束 * 24 波束/DCU * 4 DCU = 4696 MiB
+    - 下采样：单实例，对单波束文件（大小不大于50MB倍数）的处理，所需内存缓存在1GB以内，设置阈值为2GB/1GB
+    - 再分发：考虑不同节点的不均匀，设置流控3GB/2GB(波束合成、合并所需计算存储 + 1)
+    - 合并：单实例，12.23 MB / 波束 * 24波束 = 293.5 MiB
+
 ### 主要流控参数
+- cluster-dist模块
+  - dir_limit_gb：读缓存大小，可设定为2048~5120（流式，2TB~5TB）
 - pull-unpack模块
-  - dir_free_gb：UNPACK_DIR_FREE_GB，该值
-  - progress_counter_diff：同步各节点上打包文件数，以免因后续处理速度差别，而耗完本地SSD容量。每个文件解包后约12.5GB，该值固定为3，即不超过3个文件；
+  - dir_free_gb：UNPACK_DIR_FREE_GB。针对40s数据包，解压后约13GB，考虑到临时空间需求，可设定为15~20
+  - progress_counter_diff：同步各节点上打包文件数，以免因后续处理速度差别，而耗完本地SSD容量。每个文件解包后约12.5GB，该值固定为120，即不超过3个文件；
+  - BW_LIMIT: 最大带宽，缺省为25m
 - beam-maker模块
-  - dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}，为主要流控参数。
+  - dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}，为主要流控参数。用流控表达式表示。
     - 针对单次150秒数据，可取值为{~n*5+8~}，其中单次24指向150秒数据产生的中间结果约4450MB，取值为5；考虑到其他模块中间存储、保留存储的需求，首个容器的取值为8
-  - progress_counter_diff: 96，缺省值为4组24指向，若内存空间富裕，可以设得稍大一点
+  - progress_counter_diff: 取值范围96~288（1~3组），缺省值可取为144.
+- down-sampler模块
+  - ？
+- fits-redist
+  - ?
+- fits-merger
+  - ?
 
 ### 节点数少于24节点，单批次处理指向数
 - 单批次中间存储，需存储n-1个通道的待合并数据
