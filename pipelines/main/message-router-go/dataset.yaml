@@ -1,52 +1,48 @@
 datasets:
   1257010784:
-    # base_uri: mwa/1257010784
-    # <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784
-    # <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784/1257010784
-    metadata:
-      datasetID: 1257010784
-      # 1257010786 ~ 1257015583, 4798
+    datasetID: 1257010784
+    # 1257010786 ~ 1257015583, 4798
 
-      # channel dimension
-      channelBegin: 109
-      numOfChannels: 24
+    # channel dimension
+    channelBegin: 109
+    numOfChannels: 24
 
-      # time dimenstion
-      timeBegin: 1257010786
-      timeEnd: 1257015583
-      # numOfSeconds: 4798
-      timeUnit: 30
-      timeStep: 150
+    # time dimenstion
+    timeBegin: 1257010786
+    timeEnd: 1257015583
+    # numOfSeconds: 4798
+    timeUnit: 30
+    timeStep: 150
 
-      # pointing dimension
-      pointingBegin: 1
-      # pointingEnd: 12985
-      pointingEnd: 384
-      pointingStep: 24
-      numPerBatch: 16
+    # pointing dimension
+    pointingBegin: 1
+    # pointingEnd: 12985
+    pointingEnd: 384
+    pointingStep: 24
+    numPerBatch: 16
 
   1301240224:
-    metadata:
-      datasetID: 1301240224
-      # 1301240225 ~ 1301245022, 4798
+    datasetID: 1301240224
+    # 1301240225 ~ 1301245022, 4798
 
-      # channel dimension
-      channelBegin: 109
-      numOfChannels: 24
+    # channel dimension
+    channelBegin: 109
+    numOfChannels: 24
 
-      # time dimenstion
-      timeBegin: 1301240225
-      # numOfSeconds: 4798
-      timeEnd: 1301245022
+    # time dimenstion
+    # timeBegin: 1301240225
+    timeBegin: 1301242825
+    # numOfSeconds: 4798
+    timeEnd: 1301245022
 
-      # packSize:
-      timeUnit: 40
-      timeStep: 200
+    # packSize:
+    timeUnit: 40
+    timeStep: 200
 
-      # pointing dimension
-      pointingBegin: 1921
-      # pointingEnd: 10060
-      pointingEnd: 2880
-      pointingStep: 24
-      # numPerBatch: 1
-      numPerBatch: 40
+    # pointing dimension
+    pointingBegin: 2881
+    # pointingEnd: 10060
+    pointingEnd: 3840
+    pointingStep: 24
+    # numPerBatch: 1
+    numPerBatch: 40

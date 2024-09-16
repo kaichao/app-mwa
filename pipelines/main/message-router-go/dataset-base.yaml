@@ -1,27 +1,23 @@
 datasets:
   1257010784:
-    # base_uri: mwa/1257010784
-    # <user>@<ip-addr>/raid0/tmp/mwa/tar1257010784~1257010784
-    # <user>@<ip-addr>/raid0/tmp/mwa/new-tar1257010784/1257010784
-    metadata:
-      datasetID: 1257010784
-      # 1257010786 ~ 1257015583, 4798
+    datasetID: 1257010784
+    # 1257010786 ~ 1257015583, 4798
 
-      # channel dimension
-      channelBegin: 109
-      numOfChannels: 24
+    # channel dimension
+    channelBegin: 109
+    numOfChannels: 24
 
-      # time dimenstion
-      # timeBegin: 1257010786
-      # numOfSeconds: 4798
-      timeBegin: 1257010786
-      numOfSeconds: 120
-      timeUnit: 30
-      timeStep: 60
+    # time dimenstion
+    # timeBegin: 1257010786
+    # numOfSeconds: 4798
+    timeBegin: 1257010786
+    numOfSeconds: 120
+    timeUnit: 30
+    timeStep: 60
 
-      # pointing dimension
-      pointingBegin: 1
-      # pointingEnd: 12985
-      pointingEnd: 96
-      pointingStep: 24
-      numPerBatch: 2
+    # pointing dimension
+    pointingBegin: 1
+    # pointingEnd: 12985
+    pointingEnd: 96
+    pointingStep: 24
+    numPerBatch: 2
