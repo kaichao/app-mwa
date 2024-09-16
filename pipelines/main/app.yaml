@@ -9,14 +9,14 @@ parameters:
 jobs:
   dir-list:
     base_image: hub.cstcloud.cn/scalebox/dir-listx
-    variables:
+    arguments:
       slot_options: slot_on_head
     environments:
       - REGEX_FILTER=${REGEX_FILTER}
 
   cluster-dist:
     base_image: ${FILE_COPY}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/cluster-dist/code
       task_timeout_seconds: 1800
       # 5TB读缓存的临时空间
@@ -35,8 +35,10 @@ jobs:
     base_image: ${FILE_COPY}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${PRIVILEGED_COMMAND}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/pull-unpack/code
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
       task_timeout_seconds: 1800
       # 2 tar.zst files allowed in tmpfs
       # 下采样基本完成后，再重新传远端的打包文件（tar.zst）
@@ -58,7 +60,6 @@ jobs:
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
-      - WITH_HEADERS=yes
       - BW_LIMIT=100m
       # 可给message-router发送重复名的消息（覆盖）
       - SOFT_OUTPUT_MB=
@@ -70,7 +71,7 @@ jobs:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
-    variables:
+    arguments:
       task_timeout_seconds: ${BEAM_MAKER_TIMEOUT}
       dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
@@ -103,12 +104,13 @@ jobs:
   down-sampler:
     base_image: ${DOWN_SAMPLER}
     command: ${PRIVILEGED_COMMAND}
-    variables:
+    arguments:
       task_timeout_seconds: ${DOWN_SAMPLER_TIMEOUT}
       dir_free_gb: ${DOWN_SAMPLER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      slot_options: tmpfs_workdir
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
@@ -129,7 +131,7 @@ jobs:
   # push 
   fits-redist:
     base_image: ${FILE_COPY}
-    variables:
+    arguments:
       task_timeout_seconds: 60
       dir_free_gb: ${FITS_REDIST_DIR_FREE_GB}
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
@@ -144,10 +146,10 @@ jobs:
       # 255 12
       retry_rules: "['5:3','23:3']"
       message_router_index: 3
+      slot_options: tmpfs_workdir
     environments:
       - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
       - SOURCE_MODE=${FITS_REDIST_MODE}
-      - WITH_HEADERS=yes
       - KEEP_SOURCE_FILE=no
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
@@ -157,7 +159,7 @@ jobs:
   fits-merger:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
-    variables:
+    arguments:
       task_timeout_seconds: ${FITS_MERGER_TIMEOUT}
       dir_free_gb: ${FITS_MERGER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
@@ -184,10 +186,11 @@ jobs:
 
   fits-24ch-push:
     base_image: ${FILE_COPY}
-    variables:
+    arguments:
       task_timeout_seconds: 1800
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      slot_options: tmpfs_workdir
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/p00016/t1257010786_1257010845.fits.zst
@@ -197,11 +200,9 @@ jobs:
       retry_rules: "['255:3']"
     environments:
       - KEEP_SOURCE_FILE=no
-      # - SOURCE_URL=/dev/shm/scalebox/mydata/mwa/24ch
       - SOURCE_URL=${SHARED_ROOT}/24ch
       - TARGET_URL=${RESULT_24CH_URL}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
-      - WITH_HEADERS=yes
     hosts:
       -  ${NODES}:1
 
@@ -218,7 +219,7 @@ jobs:
       - LOG_LEVEL=warn
       - BATCH_INSERT=yes
       - DEFAULT_USER=${DEFAULT_USER}
-      # 设置JUMP_SERVERS，则远端tar也通过local-tar-pull直接获取
+      # 设置JUMP_SERVERS，则远端tar也通过cluste-dist直接获取
       - JUMP_SERVERS=${JUMP_SERVERS}
       - DATASET_URI=${DATASET_URI}
       - NUM_OF_NODES=${NUM_OF_NODES}
