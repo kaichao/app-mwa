@@ -299,3 +299,7 @@ ORDER BY 1
 
 - 配置文件：/usr/lib/tmpfiles.d/tmp.conf
 
+- 检查清理文件的运行时间
+```sh
+systemctl list-timers | grep systemd-tmpfiles-clean
+```
