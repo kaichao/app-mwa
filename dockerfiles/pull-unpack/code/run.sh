@@ -36,11 +36,12 @@ source_mode=$(get_mode "$source_url")
 source_dir=$(get_data_root "$source_url")
 
 # BW_LIMIT  "500k"/"1m"
+# 设置--touch，将文件更新时间更新为当前时间，以免在/tmp中被删除
 if [ -n "$BW_LIMIT" ]; then
     # 已设置
-    cmd_part="pv -L ${BW_LIMIT}|zstd -d | tar -xvf -"
+    cmd_part="pv -L ${BW_LIMIT}|zstd -d | tar --touch -xvf -"
 else
-    cmd_part="zstd -d | tar -xvf -"
+    cmd_part="zstd -d | tar --touch -xvf -"
 fi
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
@@ -50,17 +51,6 @@ else
     cmd="$ssh_cmd \"cat ${source_dir}/$m\" - | ${cmd_part}"
 fi
 
-# user@10.1.1.1:10022:/raid0/1301240224
-# 冒号数量
-# colon_count=$(echo "$source_url" | awk -F':' '{print NF-1}')
-# echo "colon_count:$colon_count" >> ${WORK_DIR}/custom-out.txt
-# if [ "$colon_count" -ge 2 ]; then
-#     IFS=':' read -r ssh_host ssh_port source_dir <<< ${source_url}
-# else
-#     IFS=':' read -r ssh_host source_dir <<< ${source_url}
-#     ssh_port=22
-# fi
-
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
 echo "source_url:$source_url" >> ${WORK_DIR}/custom-out.txt
@@ -68,9 +58,6 @@ echo "source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
 echo "target_url:$target_url" >> ${WORK_DIR}/custom-out.txt
 echo "cmd:$cmd" >> ${WORK_DIR}/custom-out.txt
 
-# echo "ssh_host:$ssh_host" >> ${WORK_DIR}/custom-out.txt
-# echo "ssh_port:$ssh_port" >> ${WORK_DIR}/custom-out.txt
-# echo "ssh_args:$ssh_args" >> ${WORK_DIR}/custom-out.txt
 echo "message:$m" >> ${WORK_DIR}/custom-out.txt
 
 # cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
