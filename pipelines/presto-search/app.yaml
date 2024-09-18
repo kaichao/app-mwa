@@ -224,6 +224,7 @@ jobs:
       - TRACE=
       - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
       - LOCAL_SHM_ROOT=${LOCAL_SHM_ROOT}
+      - SHARED_ROOT=${SHARED_ROOT}
       - DATASET_URI=${TARGET_POINTING}
       - MAX_LINENUM=${MAX_LINENUM}
       - RESULT_DIR=${RESULT_DIR}
@@ -235,7 +236,7 @@ jobs:
       - POINTING_BEGIN=${POINTING_BEGIN}
       - POINTING_END=${POINTING_END}
       - NODES_GROUP=${NODES_GROUP}
-      - POINTING_MODE=1
+      - POINTING_MODE=${FIX_MISSING}
     hosts:
       - h0:2
     sink_jobs:

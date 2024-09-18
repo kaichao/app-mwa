@@ -27,7 +27,7 @@ if [ -f $file_path ]; then
         # pi=$(printf "%05d" "$p")
         sema="fits-24ch-presto-ready:$dataset/$pointing"
         echo "$sema"
-        scalebox semaphore create $sema 32
+        scalebox semaphore create $sema 24
 
     # the first line is the header, skip it
         for ((i=2; i<=$total_lines; i++)); do
