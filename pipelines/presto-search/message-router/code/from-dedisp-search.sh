@@ -24,7 +24,7 @@ if [ "$n1" -eq 0 ]; then
     # scalebox task add --sink-job clean-up --to-ip $from_ip ${p}
     echo ${SHARED_ROOT}/mwa/24ch/${p} >&2
     echo ${LOCAL_FITS_ROOT}/mwa/24ch/${p} >&2
-    ssh -p ${SSH_PORT} ${DEFAULT_USER}@${from_ip} rm -rf ${LOCAL_FITS_ROOT}/mwa/24ch/${p} ${LOCAL_SHM_ROOT}/mwa/dedisp/${p}/RFIfile* ${SHARED_ROOT}/mwa/24ch/${p}
+    ssh -p ${SSH_PORT} ${DEFAULT_USER}@${from_ip} rm -rf ${LOCAL_FITS_ROOT}/mwa/24ch/${p} ${SHARED_ROOT}/mwa/24ch/${p} ${LOCAL_SHM_ROOT}/mwa/dedisp/${p}/RFIfile*
 
 fi
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
