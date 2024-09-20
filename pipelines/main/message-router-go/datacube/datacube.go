@@ -36,9 +36,9 @@ type DataCube struct {
 }
 
 var (
-	datacubeFile = "/dataset.yaml"
+	// datacubeFile = "/dataset.yaml"
 	// datacubeFile = "/dataset-perf-test.yaml"
-	// datacubeFile = "/dataset-base.yaml"
+	datacubeFile = "/dataset-base.yaml"
 
 	// GetDataCube ...
 	GetDataCube = getDataCubeFromFile
