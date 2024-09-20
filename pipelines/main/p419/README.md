@@ -303,3 +303,18 @@ ORDER BY 1
 ```sh
 systemctl list-timers | grep systemd-tmpfiles-clean
 ```
+
+## 优化服务器参数
+
+- 修改最大文件描述符数量
+```sh
+echo "* soft nofile 262144" >> /etc/security/limits.conf
+```
+重新登录或重启后生效。
+
+- 查看50051端口上的grpc连接数
+```sh
+netstat -an | grep :50051 | grep ESTABLISHED | wc -l
+
+ss -ant | grep :50051 | grep ESTABLISHED | wc -l
+```

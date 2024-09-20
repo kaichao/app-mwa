@@ -30,8 +30,7 @@ datasets:
     numOfChannels: 24
 
     # time dimenstion
-    # timeBegin: 1301240225
-    timeBegin: 1301242825
+    timeBegin: 1301240225
     # numOfSeconds: 4798
     timeEnd: 1301245022
 
@@ -40,9 +39,9 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 2881
+    pointingBegin: 3841
     # pointingEnd: 10060
-    pointingEnd: 3840
+    pointingEnd: 4800
     pointingStep: 24
     # numPerBatch: 1
     numPerBatch: 40
