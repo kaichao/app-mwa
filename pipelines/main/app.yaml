@@ -130,11 +130,11 @@ jobs:
     hosts:
       - ${NODES}:1
 
-  # push 
+  # pull
   fits-redist:
     base_image: ${FILE_COPY}
     arguments:
-      task_timeout_seconds: 120
+      task_timeout_seconds: 60
       dir_free_gb: ${FITS_REDIST_DIR_FREE_GB}
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}

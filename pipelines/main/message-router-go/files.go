@@ -5,11 +5,8 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"mr/datacube"
-
-	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 func fromDirList(message string, headers map[string]string) int {
@@ -118,23 +115,23 @@ func getBatchIndex(packFile string) int {
 	return getSemaPointingBatchIndex(cube, t0, ch)
 }
 
-func getLocalRsyncPrefix() string {
-	cmdTxt := `scalebox cluster get-parameter rsync_info`
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
-	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
-	if code != 0 {
-		return ""
-	}
-	ss := strings.Split(strings.TrimSpace(stdout), "#")
-	sss := strings.Split(ss[0], ":")
-	if len(ss) != 4 || len(sss) != 2 {
-		fmt.Fprintf(os.Stderr, "Invalid return text from get-cluster-parameter rsync_info:\n%s\n", stdout)
-		return ""
-	}
+// func getLocalRsyncPrefix() string {
+// 	cmdTxt := `scalebox cluster get-parameter rsync_info`
+// 	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
+// 	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
+// 	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
+// 	if code != 0 {
+// 		return ""
+// 	}
+// 	ss := strings.Split(strings.TrimSpace(stdout), "#")
+// 	sss := strings.Split(ss[0], ":")
+// 	if len(ss) != 4 || len(sss) != 2 {
+// 		fmt.Fprintf(os.Stderr, "Invalid return text from get-cluster-parameter rsync_info:\n%s\n", stdout)
+// 		return ""
+// 	}
 
-	return fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
-}
+// 	return fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
+// }
 
 func fromPullUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat~b01
@@ -184,7 +181,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
 		// 通过headers中的sorted_tag，设定显式排序
 		h := map[string]string{"sorted_tag": getSortedTagForBeamForm(cube, tb, p0, ch)}
-		ret := sendNodeAwareMessage(m, h, "beam-maker", ch-109)
+		ret := sendJobRefMessage(m, h, "beam-maker")
 		if ret != 0 {
 			return ret
 		}
