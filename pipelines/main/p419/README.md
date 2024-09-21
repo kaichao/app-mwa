@@ -305,6 +305,10 @@ systemctl list-timers | grep systemd-tmpfiles-clean
 ```
 
 ## 优化服务器参数
+- 查看用户的最大文件描述符数量
+```sh
+ulimit -n
+```
 
 - 修改最大文件描述符数量
 ```sh

@@ -37,7 +37,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
 		// 该batch中还未处理完
-		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
+		return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 	}
 
 	AddTimeStamp()
@@ -51,7 +51,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	if batchIndex < 0 || batchIndex >= cube.GetNumOfPointingBatch() {
 		// 数据已经全部处理完成，没有新的Batch
 		fmt.Printf("In fromBeamMaker(),batch-index=%d,no-new data \n", batchIndex)
-		return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
+		return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 	}
 
 	AddTimeStamp()
@@ -76,7 +76,8 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		toPullUnpack(m, headers)
 	}
 	AddTimeStamp()
-	return sendNodeAwareMessage(message, make(map[string]string), "down-sampler", ch-109)
+
+	return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 }
 
 func fromDownSampler(message string, headers map[string]string) int {
@@ -156,5 +157,6 @@ func fromFitsMerger(message string, headers map[string]string) int {
 	fmt.Printf("pointing:%d\n", pointing)
 	// m := fmt.Sprintf(`/dev/shm/scalebox/mydata/mwa/24ch~%s.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch`, message)
 	m := fmt.Sprintf(`%s.fits.zst`, message)
-	return sendNodeAwareMessage(m, make(map[string]string), "fits-24ch-push", pointing-1)
+
+	return sendJobRefMessage(m, make(map[string]string), "fits-24ch-push")
 }
