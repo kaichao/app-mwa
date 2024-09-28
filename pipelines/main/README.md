@@ -126,7 +126,7 @@ make
 mkdir -p ~/singularity/scalebox/
 
 date
-singularity build -F ~/singularity/scalebox/file-copy.sif docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
+singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
 singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
 date
 

@@ -155,7 +155,6 @@ func fromFitsMerger(message string, headers map[string]string) int {
 	}
 	pointing, _ := strconv.Atoi(ss[1])
 	fmt.Printf("pointing:%d\n", pointing)
-	// m := fmt.Sprintf(`/dev/shm/scalebox/mydata/mwa/24ch~%s.fits.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/24ch`, message)
 	m := fmt.Sprintf(`%s.fits.zst`, message)
 
 	return sendJobRefMessage(m, make(map[string]string), "fits-24ch-push")

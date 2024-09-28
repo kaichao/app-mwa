@@ -53,8 +53,8 @@ jobs:
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1301240224/1301244745_1301244784_ch120.dat.tar.zst~b00
-      key_group_regex: ^[0-9]+/([0-9]+)_[0-9]+_ch([0-9]+).+$
-      key_group_index: 1,2
+      key_group_regex: ^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+).+$
+      key_group_index: 1,2,3
       retry_rules: "['2:3']"
       pod_id: pod_0
     environments:
@@ -87,7 +87,7 @@ jobs:
       key_group_regex: ^([0-9]+)/([0-9]+)_[0-9]+/([0-9]{3})/([0-9]{5})_[0-9]{5}$
       # 若节点少，每个节点处理多于一个channel，则为 1,3,2
       # 若节点多，每个节点处理1个channel，则顺序为：1,2,4
-      key_group_index: 2,3,4
+      key_group_index: 1,2,3
       # beam-maker的message-router耗时长，独立处理
       message_router_index: 1
       pod_id: pod_0
@@ -116,8 +116,8 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
       # 1257010784/p00166/t1257010786_1257010845/ch117.fits
-      key_group_regex: ^[0-9]+/p([0-9]+)/t([0-9]+)_[0-9]+/ch([0-9]{3}).fits$
-      key_group_index: 2,1,3
+      key_group_regex: (^[0-9]+)/p([0-9]+)/t([0-9]+)_[0-9]+/ch([0-9]{3}).fits$
+      key_group_index: 1,3,2
       bulk_message_size: 10
       message_router_index: 2
       pod_id: pod_0
@@ -142,8 +142,8 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       slot_timeout_seconds: 60
       # 1257010784/p00088/t1257010786_1257010845/ch119.fits.zst
-      key_group_regex: ^[0-9]+/p([0-9]+)/t([0-9]+)_[0-9]+/ch([0-9]{3}).fits.zst$
-      key_group_index: 2,1,3
+      key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+)_[0-9]+/ch([0-9]{3}).fits.zst$
+      key_group_index: 1,3,2
       bulk_message_size: 3
       # 255 12
       retry_rules: "['5:3','23:3']"
@@ -207,7 +207,6 @@ jobs:
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
     hosts:
       - ${IO_NODES}
-
 
   message-router-main:
     label: 主消息路由

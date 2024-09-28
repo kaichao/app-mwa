@@ -19,5 +19,9 @@ clean:
 	@ # non-local-mode
 	# rm -rf /raid0/scalebox/mydata/mwa/{1ch,1chx,24ch}/
 
-dataset-import:
-	CLUSTER=dcu scalebox app create dataset.yaml
+dist-mwa-images:
+	make -C ../../dockerfiles/mwa-vcstools dist-p419
+	ssh p419-scalebox 'make -C ~/app-mwa/dockerfiles/mwa-vcstools dist-singularity'
+	make -C ../../dockerfiles/down-sampler dist-p419
+	ssh p419-scalebox 'make -C ~/app-mwa/dockerfiles/down-sampler dist-singularity'
+

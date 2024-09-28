@@ -27,9 +27,9 @@ WITH vtable AS (
     SELECT t
     FROM (
         SELECT t,
-            SUM(CASE WHEN count = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t) AS group_num
+            SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t) AS group_num
         FROM (
-            SELECT t,sum(status_code) count
+            SELECT t,sum(status_code) sum_code
             FROM vtable
             GROUP BY 1
         ) tt1
@@ -89,9 +89,9 @@ WITH vtable AS (
     SELECT t,p
     FROM (
         SELECT t,p,
-            SUM(CASE WHEN count = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
+            SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
         FROM (
-            SELECT t,p,sum(status_code) count
+            SELECT t,p,sum(status_code) sum_code
             FROM vtable
             GROUP BY 1,2
         ) tt1
@@ -147,12 +147,15 @@ WITH vtable AS (
     SELECT t,p
     FROM (
         SELECT t,p,
-            SUM(CASE WHEN count = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
+            SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
         FROM (
-            SELECT t,p,sum(status_code) count
+            SELECT t,p,
+                sum(status_code) sum_code,
+                COUNT(status_code) not_null_count
             FROM vtable
             GROUP BY 1,2
         ) tt1
+        WHERE not_null_count=24
     ) tt2 
     WHERE group_num = 0
 )

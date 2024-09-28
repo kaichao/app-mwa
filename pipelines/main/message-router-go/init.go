@@ -17,24 +17,21 @@ import (
 var (
 	logger *logrus.Logger
 
+	// 计算节点的IP列表
 	ips = []string{}
-	// ips = []string{"10.11.16.79", "10.11.16.76", "10.11.16.75"}
-	// ips            = []string{"10.11.16.79", "10.11.16.80", "10.11.16.76", "10.11.16.75"}
-	// hosts = []string{"n0.dcu", "n1.dcu", "n2.dcu", "n3.dcu"}
+	// 计算节点的集群hostname
 	hosts = []string{}
 
-	workDir string
-
-	// db *sql.DB
+	// workDir string
 )
 
 func init() {
 	var err error
 
-	workDir = os.Getenv("WORD_DIR")
-	if workDir == "" {
-		workDir = "/work"
-	}
+	// workDir = os.Getenv("WORD_DIR")
+	// if workDir == "" {
+	// 	workDir = "/work"
+	// }
 
 	logger = logrus.New()
 	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
