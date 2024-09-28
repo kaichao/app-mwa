@@ -118,6 +118,5 @@ var (
 )
 
 func init() {
-	// localMode = os.Getenv("LOCAL_MODE") == "yes"
 	batchInsert = os.Getenv("BATCH_INSERT") == "yes"
 }

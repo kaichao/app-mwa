@@ -115,24 +115,6 @@ func getBatchIndex(packFile string) int {
 	return getSemaPointingBatchIndex(cube, t0, ch)
 }
 
-// func getLocalRsyncPrefix() string {
-// 	cmdTxt := `scalebox cluster get-parameter rsync_info`
-// 	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
-// 	fmt.Printf("stdout for get-cluster-parameter rsync_info:\n%s\n", stdout)
-// 	fmt.Fprintf(os.Stderr, "stderr for get-cluster-parameter rsync_info:\n%s\n", stderr)
-// 	if code != 0 {
-// 		return ""
-// 	}
-// 	ss := strings.Split(strings.TrimSpace(stdout), "#")
-// 	sss := strings.Split(ss[0], ":")
-// 	if len(ss) != 4 || len(sss) != 2 {
-// 		fmt.Fprintf(os.Stderr, "Invalid return text from get-cluster-parameter rsync_info:\n%s\n", stdout)
-// 		return ""
-// 	}
-
-// 	return fmt.Sprintf("%s%s/mwa/tar~", ss[3], sss[1])
-// }
-
 func fromPullUnpack(message string, headers map[string]string) int {
 	// 	1257010784/1257010784_1257010790_ch120.dat~b01
 	re := regexp.MustCompile("^([0-9]+)_([0-9]+)_ch([0-9]{3}).dat~(.+)$")

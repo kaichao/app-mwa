@@ -24,7 +24,7 @@ type DataCube struct {
 	TimeEnd      int `yaml:"timeEnd"`
 	// 单个打包文件的时长（40秒）
 	TimeUnit int `yaml:"timeUnit"`
-	// 单次beam-maker的时长，通常为40的倍数
+	// 单次beam-maker的时长，通常为40的倍数；120/160/200/240/320/400
 	TimeStep int `yaml:"timeStep"`
 
 	PointingBegin int `yaml:"pointingBegin"`
