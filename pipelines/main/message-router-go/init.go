@@ -21,17 +21,10 @@ var (
 	ips = []string{}
 	// 计算节点的集群hostname
 	hosts = []string{}
-
-	// workDir string
 )
 
 func init() {
 	var err error
-
-	// workDir = os.Getenv("WORD_DIR")
-	// if workDir == "" {
-	// 	workDir = "/work"
-	// }
 
 	logger = logrus.New()
 	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
