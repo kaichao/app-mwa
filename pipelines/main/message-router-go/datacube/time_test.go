@@ -26,7 +26,7 @@ func TestGetTimeIndex(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		result := datacube.getTimeIndex(tc.t)
+		result := datacube.getTimeRangeIndex(tc.t)
 		if result != tc.expected {
 			t.Errorf("datacube.getTimeIndex(%d) = %d, expected %d",
 				tc.t, result, tc.expected)

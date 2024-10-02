@@ -325,3 +325,14 @@ netstat -an | grep :50051 | grep ESTABLISHED | wc -l
 
 ss -ant | grep :50051 | grep ESTABLISHED | wc -l
 ```
+
+## 进程操作
+
+- 查看进程
+```sh
+ps -uxef
+
+```
+
+- 杀死进程
+

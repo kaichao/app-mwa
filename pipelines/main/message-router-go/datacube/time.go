@@ -5,7 +5,8 @@ import (
 	"os"
 )
 
-func (cube *DataCube) getTimeIndex(t int) int {
+// not used
+func (cube *DataCube) getTimeRangeIndex(t int) int {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
 		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
@@ -15,6 +16,7 @@ func (cube *DataCube) getTimeIndex(t int) int {
 	return t / cube.TimeStep
 }
 
+// not used
 func (cube *DataCube) getTimeUnit(t int) (int, int) {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
@@ -31,6 +33,7 @@ func (cube *DataCube) getTimeUnit(t int) (int, int) {
 	return t0, t1
 }
 
+// GetTimeRange ...
 func (cube *DataCube) GetTimeRange(t int) (int, int) {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
@@ -47,6 +50,7 @@ func (cube *DataCube) GetTimeRange(t int) (int, int) {
 	return t0, t1
 }
 
+// GetTimeRanges ...
 func (cube *DataCube) GetTimeRanges() []int {
 	var ret []int
 	for t := 0; t < cube.NumOfSeconds; t += cube.TimeStep {
@@ -59,19 +63,8 @@ func (cube *DataCube) GetTimeRanges() []int {
 	}
 	return ret
 }
-func (cube *DataCube) GetTimeUnits() []int {
-	var ret []int
-	for t := 0; t < cube.NumOfSeconds; t += cube.TimeUnit {
-		t0 := cube.TimeBegin + t
-		t1 := t0 + cube.TimeUnit - 1
-		if t1 > cube.TimeBegin+cube.NumOfSeconds-1 {
-			t1 = cube.TimeBegin + cube.NumOfSeconds - 1
-		}
-		ret = append(ret, t0, t1)
-	}
-	return ret
-}
 
+// GetTimeRangesWithinInterval ...
 func (cube *DataCube) GetTimeRangesWithinInterval(lower, upper int) []int {
 	var ret []int
 	lower -= cube.TimeBegin
@@ -90,6 +83,21 @@ func (cube *DataCube) GetTimeRangesWithinInterval(lower, upper int) []int {
 	return ret
 }
 
+// GetTimeUnits ...
+func (cube *DataCube) GetTimeUnits() []int {
+	var ret []int
+	for t := 0; t < cube.NumOfSeconds; t += cube.TimeUnit {
+		t0 := cube.TimeBegin + t
+		t1 := t0 + cube.TimeUnit - 1
+		if t1 > cube.TimeBegin+cube.NumOfSeconds-1 {
+			t1 = cube.TimeBegin + cube.NumOfSeconds - 1
+		}
+		ret = append(ret, t0, t1)
+	}
+	return ret
+}
+
+// GetTimeUnitsWithinInterval ...
 func (cube *DataCube) GetTimeUnitsWithinInterval(lower, upper int) []int {
 	var ret []int
 	lower -= cube.TimeBegin

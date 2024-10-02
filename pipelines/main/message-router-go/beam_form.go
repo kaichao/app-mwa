@@ -7,8 +7,6 @@ import (
 	"strconv"
 
 	"mr/datacube"
-
-	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 func fromBeamMaker(message string, headers map[string]string) int {
@@ -92,7 +90,8 @@ func fromDownSampler(message string, headers map[string]string) int {
 	fromIP := headers["from_ip"]
 	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(ips))
 	fmt.Printf("num of hosts=%d,index=%d\n", len(ips), (nPointing-1)%len(ips))
-	toIP := ips[(nPointing-1)%len(ips)]
+	num := (nPointing - 1) % len(ips)
+	toIP := ips[num]
 
 	AddTimeStamp()
 	if fromIP != toIP {
@@ -107,12 +106,16 @@ func fromDownSampler(message string, headers map[string]string) int {
 			prefix = fmt.Sprintf("cstu0036@%s:50022", fromIP)
 		}
 		sourceURL := prefix + "/dev/shm/scalebox/mydata/mwa/1chx"
-		cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
-			sinkJob, sourceURL, toIP, message)
-		code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
-		fmt.Printf("stdout for task-add:\n%s\n", stdout)
-		fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-		return code
+
+		hs := map[string]string{"source_url": sourceURL}
+		return sendNodeAwareMessage(message, hs, sinkJob, num)
+
+		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
+		// 	sinkJob, sourceURL, toIP, message)
+		// code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
+		// fmt.Printf("stdout for task-add:\n%s\n", stdout)
+		// fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+		// return code
 	}
 	return toFitsMerger(message, headers)
 }
