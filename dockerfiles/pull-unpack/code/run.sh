@@ -81,7 +81,9 @@ done
 
 if [ "$source_mode" = "LOCAL" ]; then
     echo "${source_dir}/$m" > ${WORK_DIR}/output-files.txt
-    echo "${source_dir}/$m" > ${WORK_DIR}/removed-files.txt
+    if [ "$KEEP_SOURCE_FILE" != "yes" ]; then
+        echo "${source_dir}/$m" > ${WORK_DIR}/removed-files.txt
+    fi
 fi
 
 exit $code

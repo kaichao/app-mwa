@@ -20,7 +20,7 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/cluster-dist/code
       task_timeout_seconds: 1800
       # 5TB读缓存的临时空间
-      dir_limit_gb: ${SHARED_ROOT}/tar~5120
+      dir_limit_gb: ${SHARED_ROOT}/tar~8192
     parameters:
       # 1257010784/1257010786_1257010815_ch109.dat.tar.zst
       # 以时间排序的打包文件
@@ -43,10 +43,10 @@ jobs:
       # 2 tar.zst files allowed in tmpfs
       # 下采样基本完成后，再重新传远端的打包文件（tar.zst）
       # SSD最多存放2组数据，beam-maker单次处理150秒，则最多存放300秒数据（300秒 * 313MB/秒 = 92GB ）
-      # dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
       dir_free_gb: ${UNPACK_DIR_FREE_GB}
-      # dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
+      dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
       # 3 * 40s = 120s
+      # Multi-seg 冲突，取消该限制
       progress_counter_diff: 120
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
@@ -64,6 +64,11 @@ jobs:
       # 可给message-router发送重复名的消息（覆盖）
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
+      # agent中使用以下两个环境变量
+      - SEG_SIZE=24
+      - NUM_SEG=2
+      # - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=no
     hosts:
       -  ${NODES}:1
 
@@ -99,6 +104,9 @@ jobs:
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
       # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
+      # agent中使用以下两个环境变量
+      - SEG_SIZE=24
+      - NUM_SEG=2
     hosts:
       - ${NODES}:4
 
@@ -212,6 +220,15 @@ jobs:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     parameters:
+      # message format
+      # from_job:dir-list, 1301240224/1301241065_1301241104_ch110.dat.tar.zst
+      # from_job:cluster-dist, 1301240224/1301240345_1301240384_ch119.dat.tar.zst
+      # from_job:pull-unpack, 1301240224_1301240226_ch113.dat~1301240224/1301240225_1301240264_ch113.dat.tar.zst
+      # from_job:beam-maker, 1301240224/p05817/t1301240225_1301240424/ch117.fits
+      # from_job:down-sampler, 1301240224/p05841/t1301240225_1301240424/ch117.fits.zst
+      # from_job:fits-redist,  1301240224/p05843/t1301240225_1301240424/ch117.fits.zst
+      # from_job:fits-merger, 1301240224/p05763/t1301240225_1301240424
+      # from_job:fits-24ch-push, 1301240224/p05847/t1301240425_1301240624.fits.zst
       key_group_regex:
       key_group_index:
       start_message: ${DATASET_URI}

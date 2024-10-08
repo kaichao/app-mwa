@@ -100,12 +100,6 @@ message-router消息多，容易被堵塞。若没有有效排序，会导致流
 
 ## 操作步骤
 
-- 导入dataset
-
-```sh
-CLUSTER=dcu scalebox app create dataset.yaml
-```
-
 - 将cal目录拷贝到本机缓存中
 
 ```sh

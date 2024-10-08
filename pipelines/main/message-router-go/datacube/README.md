@@ -10,7 +10,7 @@
 
 - range: seconds in beam-form op.
 
-- block: for 24-node group. (n * ranges)
+- seg: for 24-node group. (n * ranges)
 
 ## Pointing
 

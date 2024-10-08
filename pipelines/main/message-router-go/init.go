@@ -38,7 +38,8 @@ func init() {
 }
 
 func sendNodeAwareMessage(message string, headers map[string]string, sinkJob string, num int) int {
-	toHost := ips[num%len(ips)]
+	fmt.Printf("host-num=%d\n", num)
+	toHost := ips[num]
 	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --to-ip %s %s", sinkJob, toHost, message)
 	if len(headers) > 0 {
 		h, err := json.Marshal(headers)
@@ -50,7 +51,8 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 	}
 
 	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 10)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 60)
+	// code, stdout, stderr := ExecWithRetries(cmdTxt, 5, 15)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -68,7 +70,7 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 	}
 
 	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 10)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -108,29 +110,30 @@ func initHosts() {
 }
 
 // ExecWithRetries ...
-func ExecWithRetries(cmd string, numRetries int) (int, string, string) {
-	delay := 30 * time.Second
+func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, string) {
+	delay := 10 * time.Second
 	var (
 		code           int
 		stdout, stderr string
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr = misc.ExecShellCommandWithExitCode(cmd, -1)
+		code, stdout, stderr = misc.ExecShellCommandWithExitCode(cmd, timeout)
 		if code == 0 {
 			return code, stdout, stderr
 		}
 		fmt.Printf("num-of-retries:%d,cmd=%s\n", i+1, cmd)
 		time.Sleep(delay)
 		delay *= 2
+		timeout *= 2
 	}
 	return code, stdout, stderr
 }
 
 // AddTimeStamp ...
-func AddTimeStamp() {
+func AddTimeStamp(label string) {
 	fileName := os.Getenv("WORK_DIR") + "/timestamps.txt"
 	timeStamp := time.Now().Format("2006-01-02T15:04:05.000000Z07:00")
 	// fmt.Printf("timestamp:%s\n", timeStamp)
-	misc.AppendToFile(fileName, timeStamp)
+	misc.AppendToFile(fileName, timeStamp+","+label)
 }

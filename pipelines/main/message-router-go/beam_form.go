@@ -10,6 +10,9 @@ import (
 )
 
 func fromBeamMaker(message string, headers map[string]string) int {
+	defer func() {
+		AddTimeStamp("before-leave-fromBeamMaker()")
+	}()
 	// 1257010784/p00009/t1257010786_1257010845/ch111.fits
 	re := regexp.MustCompile("^([0-9]+)/p([0-9]+)/t([0-9]+)_([0-9]+)/(ch([0-9]{3})).fits$")
 	ss := re.FindStringSubmatch(message)
@@ -24,23 +27,25 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	te, _ := strconv.Atoi(ss[4])
 	ch, _ := strconv.Atoi(ss[6])
 
-	AddTimeStamp()
+	AddTimeStamp("before-sema-progress-counter")
 	index := (ch - 109) % len(hosts)
-	sema := "progress-counter_beam-maker:" + hosts[index]
+	sema := fmt.Sprintf("progress-counter_beam-maker_s%02d:%s", index/24, hosts[index])
+
 	countDown(sema)
 
-	AddTimeStamp()
+	AddTimeStamp("after-sema-progress-counter")
 	sema = getSemaDatProcessedName(cube, p, tb, ch)
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
+		AddTimeStamp("before-sendJobRefMessage()")
 		// 该batch中还未处理完
 		return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 	}
 
-	AddTimeStamp()
+	AddTimeStamp("before-removeLocalDatFiles()")
 	removeLocalDatFiles(sema)
-	AddTimeStamp()
+	AddTimeStamp("after-removeLocalDatFiles()")
 
 	// 数据删除，修改信号量值
 	batchIndex := countDownSemaPointingBatchIndex(cube, tb, ch)
@@ -52,12 +57,12 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 	}
 
-	AddTimeStamp()
+	AddTimeStamp("before-reset-sema-dat-ready")
 	// reset semaphore dat-ready(以TimeRange为单位)
 	sema = getSemaDatReadyName(cube, tb, ch)
 	fmt.Printf("In fromBeamMaker(), sema:%s,init-value:%d\n", sema, te-tb+1)
 	createSemaphore(sema, te-tb+1)
-	AddTimeStamp()
+	AddTimeStamp("after-reset-sema-dat-ready")
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
 	sortedTag := getSortedTagForDataPull(cube, tb, ch)
@@ -73,27 +78,39 @@ func fromBeamMaker(message string, headers map[string]string) int {
 		// toLocalTarPull(m, headers)
 		toPullUnpack(m, headers)
 	}
-	AddTimeStamp()
+	AddTimeStamp("before-sendJobRefMessage()")
 
 	return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 }
 
 func fromDownSampler(message string, headers map[string]string) int {
+	defer func() {
+		AddTimeStamp("before-leave-fromDownSampler()")
+	}()
 	// 1257010784/p00001/t1257010786_1257010795/ch123.fits.zst
-	re := regexp.MustCompile("^[0-9]+/p([0-9]+)/t[0-9]+_[0-9]+/ch[0-9]+.fits.zst$")
+	re := regexp.MustCompile("^([0-9]+)/p([0-9]+)/t([0-9]+)_[0-9]+/ch[0-9]+.fits.zst$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "invalid message format, message=%s \n", message)
 		return 3
 	}
-	nPointing, _ := strconv.Atoi(ss[1])
+	nPointing, _ := strconv.Atoi(ss[2])
+	t, _ := strconv.Atoi(ss[3])
 	fromIP := headers["from_ip"]
 	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(ips))
 	fmt.Printf("num of hosts=%d,index=%d\n", len(ips), (nPointing-1)%len(ips))
+
 	num := (nPointing - 1) % len(ips)
+	if len(ips) > 24 {
+		// 24的倍数，multi-block
+		cube := datacube.GetDataCube(ss[1])
+		num = cube.GetNumWithBlockID(t, (nPointing-1)%24)
+	}
 	toIP := ips[num]
 
-	AddTimeStamp()
+	fmt.Printf("In fromDownSampler(), nPointing=%d, num=%d, t=%d\n", nPointing, num, t)
+
+	AddTimeStamp("before-fits-redist")
 	if fromIP != toIP {
 		sinkJob := "fits-redist"
 		// format := "root@%s/dev/shm/scalebox/mydata/mwa/1chx~%s~/dev/shm/scalebox/mydata/mwa/1chx"
@@ -106,8 +123,9 @@ func fromDownSampler(message string, headers map[string]string) int {
 			prefix = fmt.Sprintf("cstu0036@%s:50022", fromIP)
 		}
 		sourceURL := prefix + "/dev/shm/scalebox/mydata/mwa/1chx"
-
 		hs := map[string]string{"source_url": sourceURL}
+
+		AddTimeStamp("before-sendNodeAwareMessage()")
 		return sendNodeAwareMessage(message, hs, sinkJob, num)
 
 		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
@@ -117,6 +135,8 @@ func fromDownSampler(message string, headers map[string]string) int {
 		// fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 		// return code
 	}
+
+	AddTimeStamp("before-toFitsMerger()")
 	return toFitsMerger(message, headers)
 }
 
@@ -128,27 +148,40 @@ func fromFitsRedist(message string, headers map[string]string) int {
 func toFitsMerger(message string, headers map[string]string) int {
 	// message:
 	// 		1257010784/p00001/t1257010786_1257010815/ch129.fits.zst
-	re := regexp.MustCompile("^([0-9]+/p([0-9]{5})/t[0-9]+_[0-9]+)/ch[0-9]{3}.fits.zst$")
+	re := regexp.MustCompile("^(([0-9]+)/p([0-9]{5})/t([0-9]+)_[0-9]+)/ch[0-9]{3}.fits.zst$")
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		fmt.Fprintf(os.Stderr, "[WARN]message:%s not valid format in toFitsMerger()\n", message)
 		return 1
 	}
+
 	// semaphore:
 	// 		fits-24ch-ready:1257010784/p00029/t1257010786_1257010815
-	AddTimeStamp()
 	sema := fmt.Sprintf("fits-24ch-ready:%s", ss[1])
 	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
-		pointing, _ := strconv.Atoi(ss[2])
-		return sendNodeAwareMessage(ss[1], make(map[string]string), "fits-merger", pointing-1)
+		nPointing, _ := strconv.Atoi(ss[3])
+		num := (nPointing - 1) % len(ips)
+		if len(ips) > 24 {
+			// 24倍数，multi-block
+			cube := datacube.GetDataCube(ss[2])
+			t, _ := strconv.Atoi(ss[4])
+			num = cube.GetNumWithBlockID(t, (nPointing-1)%24)
+
+			fmt.Printf("In toFitsMerger(), nPointing=%d, num=%d, t=%d\n", nPointing, num, t)
+		}
+
+		AddTimeStamp("before-sendNodeAwareMessage()")
+		return sendNodeAwareMessage(ss[1], make(map[string]string), "fits-merger", num)
 	}
-	AddTimeStamp()
 
 	return 0
 }
 
 func fromFitsMerger(message string, headers map[string]string) int {
+	defer func() {
+		AddTimeStamp("before-leave-fromFitsMerger()")
+	}()
 	// message: 1257010784/p00022/t1257010786_1257010815
 	re := regexp.MustCompile(`p([0-9]+)/`)
 	ss := re.FindStringSubmatch(message)
@@ -160,5 +193,6 @@ func fromFitsMerger(message string, headers map[string]string) int {
 	fmt.Printf("pointing:%d\n", pointing)
 	m := fmt.Sprintf(`%s.fits.zst`, message)
 
+	AddTimeStamp("before-sendJobRefMessage()")
 	return sendJobRefMessage(m, make(map[string]string), "fits-24ch-push")
 }
