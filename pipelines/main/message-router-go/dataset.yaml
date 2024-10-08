@@ -30,14 +30,15 @@ datasets:
     numOfChannels: 24
 
     # time dimenstion
-    timeBegin: 1301241225
+    timeBegin: 1301242625
     # timeBegin: 1301240225
     # numOfSeconds: 4798
     timeEnd: 1301245022
-
     # packSize:
     timeUnit: 40
     timeStep: 200
+    # 24节点的分组数量
+    numPerSeg: 2
 
     # pointing dimension
     pointingBegin: 5761
@@ -45,6 +46,7 @@ datasets:
     pointingEnd: 7680
     pointingStep: 24
     # numPerBatch: 1
+    # numPerBatch: 8
     numPerBatch: 80
 
   1266932744:

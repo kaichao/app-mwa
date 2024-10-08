@@ -16,7 +16,7 @@ func fromDirList(message string, headers map[string]string) int {
 		return 0
 	}
 
-	AddTimeStamp()
+	AddTimeStamp("")
 	m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
 	if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
 		hs := map[string]string{
@@ -96,11 +96,15 @@ func toPullUnpack(message string, headers map[string]string) int {
 	// 通过headers中的sorted_tag，设定显式排序
 	headers["sorted_tag"] = getSortedTagForDataPull(cube, t0, ch)
 
-	AddTimeStamp()
 	// add batch-index to message body.
 	// batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
 	// m = fmt.Sprintf("%s~b%02d", m, batchIndex)
-	return sendNodeAwareMessage(message, headers, "pull-unpack", ch-109)
+	num := (ch - 109) % len(ips)
+	if len(ips) > 24 {
+		num = cube.GetNumWithBlockID(t0, ch-109)
+	}
+	fmt.Printf("In toPullUnpack(), ch=%d, num=%d, t0=%d\n", ch, num, t0)
+	return sendNodeAwareMessage(message, headers, "pull-unpack", num)
 }
 
 // 1257010784/1257010786_1257010815_ch109.dat.tar.zst
@@ -136,11 +140,11 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	tb, te := cube.GetTimeRange(t)
 
 	index := (ch - 109) % len(hosts)
-	sema := "progress-counter_pull-unpack:" + hosts[index]
+	sema := fmt.Sprintf("progress-counter_pull-unpack_s%02d:%s", index/24, hosts[index])
 	countDown(sema)
 
 	sema = getSemaDatReadyName(cube, t, ch)
-	AddTimeStamp()
+	AddTimeStamp("")
 	// 信号量dat-ready减1
 	if n := countDown(sema); n > 0 {
 		// 该group未全部就绪
@@ -150,7 +154,6 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		return 1
 	}
 
-	AddTimeStamp()
 	// 单批次完成，信号量dat-ready触发
 	batchIndex := getSemaPointingBatchIndex(cube, t, ch)
 	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
@@ -168,7 +171,6 @@ func fromPullUnpack(message string, headers map[string]string) int {
 			return ret
 		}
 	}
-	AddTimeStamp()
 
 	return 0
 }
@@ -203,13 +205,18 @@ func removeLocalDatFiles(sema string) int {
 	var cmdTxt string
 	dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 	num, _ := strconv.Atoi(ch[2:])
-	i := (num - 109) % len(ips)
+	cube := datacube.GetDataCube(ss[1])
+	if len(ips) > 24 {
+		num = cube.GetNumWithBlockID(beg, num-109)
+	}
+	fmt.Printf("In removeLocalDatFiles(), ch=%s, num=%d, t0=%d\n", ch, num, beg)
+
+	// i := (num - 109) % len(ips)
 	defaultUser := os.Getenv("DEFAULT_USER")
 	sshPort := 50022
-	cmdTxt = fmt.Sprintf("ssh -p %d %s@%s rm -rf %s", sshPort, defaultUser, ips[i], dir)
+	cmdTxt = fmt.Sprintf("ssh -p %d %s@%s rm -rf %s", sshPort, defaultUser, ips[num], dir)
 	fmt.Println("cmd-text:", cmdTxt)
-	code, stdout, stderr := ExecWithRetries(cmdTxt, 5)
-	// code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 600)
+	code, stdout, stderr := ExecWithRetries(cmdTxt, 5, 30)
 	fmt.Printf("stdout for rm-dat-files:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for rm-dat-files:\n%s\n", stderr)
 

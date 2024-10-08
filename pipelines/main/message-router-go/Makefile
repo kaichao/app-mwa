@@ -5,6 +5,7 @@ build:
 
 dist: build
 	docker save $(IMAGE_NAME) | zstdmt | pv | ssh p419 'zstd -d | docker load'
+	date
 
 push:
 	docker push $(IMAGE_NAME)

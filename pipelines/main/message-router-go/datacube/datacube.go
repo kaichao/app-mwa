@@ -26,6 +26,8 @@ type DataCube struct {
 	TimeUnit int `yaml:"timeUnit"`
 	// 单次beam-maker的时长，通常为40的倍数；120/160/200/240/320/400
 	TimeStep int `yaml:"timeStep"`
+	// 24节点为单元的分区数量
+	NumPerSeg int `yaml:"numPerSeg"`
 
 	PointingBegin int `yaml:"pointingBegin"`
 	PointingEnd   int `yaml:"pointingEnd"`
@@ -36,9 +38,9 @@ type DataCube struct {
 }
 
 var (
-	// datacubeFile = "/dataset.yaml"
+	datacubeFile = "/dataset.yaml"
 	// datacubeFile = "/dataset-perf-test.yaml"
-	datacubeFile = "/dataset-base.yaml"
+	// datacubeFile = "/dataset-base.yaml"
 
 	// GetDataCube ...
 	GetDataCube = getDataCubeFromFile
@@ -61,6 +63,19 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	if cube.NumOfSeconds == 0 {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
+	if cube.NumPerSeg == 0 {
+		cube.NumPerSeg = 1
+	}
 
 	return &cube
+}
+
+// GetNumWithBlockID ...
+func (cube *DataCube) GetNumWithBlockID(t int, num int) int {
+	if cube.NumPerSeg == 1 {
+		return num
+	}
+
+	index := cube.getTimeRangeIndex(t)
+	return (index%cube.NumPerSeg)*24 + num
 }
