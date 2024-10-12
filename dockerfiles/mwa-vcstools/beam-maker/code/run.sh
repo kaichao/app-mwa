@@ -39,7 +39,7 @@ printf -v i "%02d" $ii
 dat_dir="${DIR_DAT}/${OBSID}/ch${ch}/${BEG}_${END}"
 
 # 加载UTT等元数据信息
-source ${DIR_CAL}/${OBSID}/mb_meta.env
+# source ${DIR_CAL}/${OBSID}/mb_meta.env
 
 UTT=$( /app/bin/gps2utc.py ${BEG} )
 echo UTT=${UTT}
@@ -94,13 +94,17 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     fi
 
     # 输出消息 
-    # Add the header "sorted_tag" to give it higher priority in the message-router's scheduling.
-    scalebox task add --headers '{"sorted_tag":"1111"}' $dest_file_r; code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] send-message, msg-body:$dest_file_r, error_code:$code" >&2 && exit $code
+    echo $dest_file_r >> ${WORK_DIR}/task-body.txt
+    
+    # scalebox task add --headers '{"sorted_tag":"1111"}' $dest_file_r; code=$?
+    # [[ $code -ne 0 ]] && echo "[ERROR] send-message, msg-body:$dest_file_r, error_code:$code" >&2 && exit $code
 
     # 统计输出文件的字节数
     echo $dest_file >> ${WORK_DIR}/output-files.txt
 done
+# group-task-add 
+scalebox task add; code=$?
+[[ $code -ne 0 ]] && echo "[ERROR] task-add, msg-file:task-body.txt, error_code:$code" >&2 && exit $code
 
 # 统计输入文件的总字节数
 num_points=${#point_arr[@]}

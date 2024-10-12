@@ -19,9 +19,24 @@ clean:
 	@ # non-local-mode
 	# rm -rf /raid0/scalebox/mydata/mwa/{1ch,1chx,24ch}/
 
-dist-mwa-images:
+dist-singularity-images:
+	singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
+	singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
+	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
+	scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
+	make -C ~/app-mwa/dockerfiles/mwa-vcstools dist-singularity
+	make -C ~/app-mwa/dockerfiles/down-sampler dist-singularity
+
+build-all-images:
+	make -C ~/WORK/workspace/scalebox/dockerfiles/files/dir-list
+	docker-dist p419 hub.cstcloud.cn/scalebox/dir-listx
+	make -C ~/WORK/workspace/scalebox/dockerfiles/files/file-copy
+	docker-dist p419 hub.cstcloud.cn/scalebox/file-copy
+	make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/cluster-head dist
+	make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/node-agent dist
 	make -C ../../dockerfiles/mwa-vcstools dist-p419
-	ssh p419-scalebox 'make -C ~/app-mwa/dockerfiles/mwa-vcstools dist-singularity'
 	make -C ../../dockerfiles/down-sampler dist-p419
-	ssh p419-scalebox 'make -C ~/app-mwa/dockerfiles/down-sampler dist-singularity'
+
+mwa-images: build-all-images
+	ssh p419-scalebox 'make -C ~/app-mwa/pipelines/main dist-singularity-images'
 
