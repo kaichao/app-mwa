@@ -1,5 +1,10 @@
 #!/bin/bash
 # input message: 1257010784/p00001/t1257010786_1257010935.fits.zst
+
+pwd
+ips=$(cat /app/bin/ip_list.txt)
+ip_list=($ips)
+
 m=$1
 
 echo $m
@@ -20,10 +25,14 @@ if [ "$n" -eq 0 ]; then
     # echo "rfi-find,$p" > $WORK_DIR/messages.txt
     pa=${p##*p}
     pi=$(( 10#$pa ))
-    order=$(( ($pi - 1) % $NUM_OF_NODES ))
-    node=$(printf "%04d.p419" "$order")
+    # order=$(( ($pi - 1) % $NUM_OF_NODES ))
+    # node=$(printf "%04d.p419" "$order")
+
+    order=$(( ($pi - 1) % ${#ip_list[@]} ))
+    node=${ip_list[$order]}
     echo $node
     echo $NODES_GROUP
 
-    scalebox task add --sink-job rfi-find --to-host ${NODES_GROUP}-${node} ${p}
+    # scalebox task add --sink-job rfi-find --to-host ${NODES_GROUP}-${node} ${p}
+    scalebox task add --sink-job rfi-find --to-host ${node} ${p}
 fi

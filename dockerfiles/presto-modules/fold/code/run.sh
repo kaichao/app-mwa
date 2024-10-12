@@ -44,7 +44,8 @@ do
 done
 # 5. run ACCEL_sift.py
 python3 /code/presto/examplescripts/ACCEL_sift.py > candidates.txt
-[[ $code -ne 0 ]] && echo "[ERROR]Error in ACCEL_sift:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/$dm_group && exit 14
+code=$?
+[[ $code -ne 0 ]] && echo "[ERROR]Error in ACCEL_sift:$full_dir, ret-code:$code" >&2 && ls >> ${WORK_DIR}/output-files.txt && rm -rf $DIR_DEDISP/$bname/$dm_group && exit 14
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
