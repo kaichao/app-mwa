@@ -26,7 +26,7 @@ jobs:
   local-copy:
     base_image: ${FILE_COPY}
     command: ${PRIVILEGED_COMMAND}
-    variables:
+    arguments:
       task_timeout_seconds: 1800
       # code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
       # dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
@@ -48,12 +48,12 @@ jobs:
       - SOURCE_URL=${SOURCE_DIR}
       - TARGET_URL=${SHARED_ROOT}/mwa/24ch
     hosts:
-      - n0:2
+      - n0:4
 
   # local-copy-unpack:
   #   base_image: ${FILE_COPY}
   #   command: ${PRIVILEGED_COMMAND}
-  #   variables:
+  #   arguments:
   #     task_timeout_seconds: 1800
   #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
   #     dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
@@ -78,13 +78,14 @@ jobs:
     label: rfi-find-test
     base_image: ${PRESTO_SEARCH}
     command: ${PRIVILEGED_COMMAND}
-    variables:
+    arguments:
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       task_timeout_seconds: 43200
       output_text_size: 1048576
       code_path: ${CODE_BASE}/dockerfiles/presto-modules/rfi-find/code
       dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
       dir_free_gb: ${UNPACK_FREE_GB}
+      slot_options: tmpfs_workdir
       
     environments:
       - KEEP_SOURCE_FILE=no
@@ -99,9 +100,10 @@ jobs:
       # 1257010784/p00001
       key_group_regex: ^([^/]+)/p([0-9]+)$
       key_group_index: 1,2
+      message_router_index: 2
       # start_message: ${START_MESSAGE}
       pod_id: 1
-      retry_rules: "['2:2']"
+      retry_rules: "['2:2', '13:2']"
       repeatable: yes
     hosts:
       - ${NODES}:1
@@ -112,7 +114,7 @@ jobs:
     label: dedisp-search-test
     base_image: ${PRESTO_SEARCH}
     command: ${ROCM_COMMAND}
-    variables:
+    arguments:
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       task_timeout_seconds: 43200
       output_text_size: 1048576
@@ -120,6 +122,7 @@ jobs:
       # 最大占用4.8G*4组，外加4.8G*4临时空间，外加4.8G*4已完成处理数据，共57.6G;至少9.6G保证单个slot正确运行
       dir_limit_gb: ${DEDISP_DIR_LIMIT_GB}
       dir_free_gb: ${DEDISP_DIR_FREE_GB}
+      slot_options: tmpfs_workdir
       
     environments:
       - KEEP_SOURCE_FILE=yes
@@ -136,7 +139,7 @@ jobs:
       key_group_regex: ^([^/]+)/p([0-9]+)/([0-9]+)$
       key_group_index: 1,2,3
       message_router_index: 1
-      retry_rules: "['2:2','13:3','14:3']"
+      retry_rules: "['2:2','13:3','14:3','-100:3']"
       repeatable: yes
       pod_id: 1
     hosts:
@@ -147,19 +150,20 @@ jobs:
     base_image: ${PRESTO_SEARCH}
     # command: ${ROCM_COMMAND}
     
-    variables:
+    arguments:
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       task_timeout_seconds: 43200
       output_text_size: 1048576
       code_path: ${CODE_BASE}/dockerfiles/presto-modules/fold/code
       dir_limit_gb: ${FOLD_LIMIT_GB}
       dir_free_gb: ${FOLD_FREE_GB}
+      slot_options: tmpfs_workdir
       
     environments:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
-      - SHARED_ROOT=${SHARED_ROOT}
+      # - SHARED_ROOT=${SHARED_ROOT}
       # - LOCAL_OUTPUT_ROOT=/raid0/zhzhang/data
       # - ROCR_VISIBLE_DEVICES=0
       - SEARCHARGS=${SEARCHARGS}
@@ -167,6 +171,7 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001
       # key_group_regex: ^(.+)$
+      message_router_index: 2
       pod_id: 1
       retry_rules: "['2:2']"
       repeatable: yes
@@ -180,7 +185,7 @@ jobs:
   #   environments:
   #     - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
   #     - LOCAL_DEDISP_ROOT=${LOCAL_SHM_ROOT}
-  #   variables:
+  #   arguments:
   #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/clean-up/code
   #     max_sleep_count: 4800
   #   hosts:
@@ -188,9 +193,10 @@ jobs:
 
   result-push:
     base_image: ${FILE_COPY}
-    variables:
+    arguments:
       task_timeout_seconds: 1800
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      slot_options: tmpfs_workdir
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       # /dev/shm/scalebox/mydata/mwa/png~1257010784/p00016/dm1.tar.zst~scalebox@159.226.237.136/raid0/scalebox/mydata/mwa/png
@@ -200,7 +206,8 @@ jobs:
     environments:
       - KEEP_SOURCE_FILE=no
       - JUMP_SERVERS=${JUMP_SERVERS}
-      - SOURCE_URL=${SHARED_ROOT}/mwa/png
+      # - SOURCE_URL=${SHARED_ROOT}/mwa/png
+      - SOURCE_URL=${LOCAL_SHM_ROOT}/mwa/png
       - TARGET_URL=${RESULT_DIR}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
       - WITH_HEADERS=yes
@@ -215,8 +222,9 @@ jobs:
       start_message: ${TARGET_POINTING}
       bulk_message_size: 40
       task_dist_mode: SLOT-BOUND
-    variables:
+    arguments:
       code_path: ${CODE_BASE_HEAD}/pipelines/presto-search/message-router/code
+      slot_options: tmpfs_workdir
     environments:
       - LOG_LEVEL=warn
       - WITH_HEADERS=yes
@@ -238,7 +246,7 @@ jobs:
       - NODES_GROUP=${NODES_GROUP}
       - POINTING_MODE=${FIX_MISSING}
     hosts:
-      - h0:2
+      - h0:3
     sink_jobs:
       # - dir-list-1
       - dir-list

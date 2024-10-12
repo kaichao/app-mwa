@@ -53,7 +53,8 @@ date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 # next, run accelsearch on these data.
 realfft *.dat
 accelsearch_gpu_multifile -cuda 0 -ncpus $NCPUS $SEARCHARGS *.fft | grep Total
-code=$?
+status=(${PIPESTATUS[@]})
+code=${status[0]}
 [[ $code -ne 0 ]] && echo "[ERROR] In accelsearch:$full_dir, ret-code:$code" >&2 && rm -rf $DIR_DEDISP/$bname/group${GRPNUM} && exit 14
 rm *.fft
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
