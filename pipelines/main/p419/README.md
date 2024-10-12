@@ -29,6 +29,8 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 TARGET_URL
 
 - 预拷贝文件到共享存储
 
+在scalebox/dockerfiles/files/app-dir-copy目录下
+
 ```sh
 TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data1/mydata/mwa/tar DIR_NAME=1301240224 REGEX_FILTER="/1301240[2-5]" scalebox app create
 
@@ -107,10 +109,28 @@ ps -uxef
 ```
 
 - 杀死进程
+```sh
+
+```
 
 ## 易出错节点列表
 
 ```
 h01r2n19
 
+```
+
+## 时间戳相关
+
+```
+24-10-08T22:58:36.963924
+```
+
+```sh
+date +"%y-%m-%dT%H:%M:%S.%6N"
+```
+
+- 将字符串转为postgresql的timestamp类型
+```sql
+SELECT TO_TIMESTAMP('24-10-08T22:58:36.963924', 'YY-MM-DD"T"HH24:MI:SS.US');
 ```
