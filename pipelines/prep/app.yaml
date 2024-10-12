@@ -1,76 +1,149 @@
-name: prep.app-mwa
+name: file-copy.scalebox
 cluster: ${CLUSTER}
-label: mwa数据分组
 parameters:
   initial_status: RUNNING
   message_router: message-router-mwa
+
 jobs:
-  list-dir:
+  dir-list:
     label: 打包文件列表
-    base_image: hub.cstcloud.cn/scalebox/list-dir:latest
-    schedule_mode: HEAD
+    base_image: hub.cstcloud.cn/scalebox/dir-listx
     command: docker run -d --rm --privileged --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     parameters:
-      key_group_regex: ^(.+)$
-      start_message: ${DIR_NAME}
+      slot_on_head: yes
+      start_message:
     environments:
-      - SOURCE_URL=
-      - REGEX_FILTER=${REGEX_FILTER}
-      - REGEX_2D_DATASET=${REGEX_2D_DATASET}
-      - INDEX_2D_DATASET=${INDEX_2D_DATASET}
+      - PREFIX_URL=${PREFIX_URL}
+      - REGEX_FILTER=^.+zst$
+     # - REGEX_FILTER=^.+_[0-9]{5}3274[6-9].+
+      - REGEX_2D_DATASET=
+      - INDEX_2D_DATASET=
   message-router-mwa:
     label: 主消息路由
-    base_image:  app-mwa/message-router:2309
-    schedule_mode: HEAD
-    variables:
-      max_sleep_count: 240
-    environments:
-      - NUM_PER_GROUP=${NUM_PER_GROUP}
-    sink_jobs:
-      - untar
-      - data-grouping-fits
-  untar:
-    base_image: app-mwa/untar
-    schedule_mode: HEAD
+    base_image: app-fast/message-router:2309
+   # schedule_mode: HEAD
     parameters:
+      slot_on_head: yes
       tasks_per_queue: 500
-      key_group_regex: ${FITS_REGEX}
-      key_group_index: ${FITS_INDEX}
+      #key_group_regex: ^(.+)$
+      start_message: any
+    variables:
+      max_sleep_count: 6000
     environments:
-      - SOURCE_URL=${SOURCE_URL}
-      - OUTPUT_URL=${OUTPUT_URL}
+      - message=tar1266932744
+      - dataset_id=${DATASET_ID}
+      - star_s=${STAR_S}
+      - end_st=${END_ST}
+      - size=${SIZE}
     sink_jobs:
-      - data-grouping-fits
-
-  data-grouping-fits:
-    base_image: hub.cstcloud.cn/scalebox/data-grouping-2d
-    schedule_mode: HEAD
-    environments:
-      - COORD_TYPE=string
-      - DATASET_PREFIX=mwa
-    parameters:
-      key_group_regex: ${GROUP_REGEX}
-      key_group_index: ${GROUP_INDEX}
-    sink_jobs:
+      - unpack
+      - dir-list
       - repack
+      - rclone-copy
+  unpack:
+    base_image: hub.cstcloud.cn/scalebox/untar
+    parameters:
+      pod_id: pod_0
+      tasks_per_queue: 500
+      key_group_regex: ${UNPACK_FITS_REGEX}
+      key_group_index: 1,3,2
+    variables:
+      max_sleep_count: 6000
+    environments:
+      - SOURCE_URL=${UNPACK_SOURCE_URL}
+      - OUTPUT_URL=${UNPACK_OUTPUT_URL}
+    hosts:
+      - r01:1
+      - r02:1
+      - r03:1
+      - r04:1
+      - r05:1
+      - r06:1
+      - r07:1
+      - r08:1
+      - r09:1
+      - r10:1
+      - r11:1
+      - r12:1
+
+  fits-redist:
+    base_image: hub.cstcloud.cn/scalebox/file-copy
+    variables:
+      max_sleep_count: 120
+    parameters:
+      task_dist_mode: HOST-BOUND
+      pod_id: pod_0
+      key_group_regex: ([0-9]+)+_([0-9]+)_ch([0-9]+).dat$
+      key_group_index: 1,3,2
+ 
+    environments:
+      - SOURCE_URL=
+      - TARGET_URL=/data/mwa
+     # - SOURCE_MODE=${FITS_REDIST_MODE}
+      - KEEP_SOURCE_FILE=no
+    hosts:
+      - r01:1
+      - r02:1  
+      - r03:1
+      - r04:1
+      - r05:1
+      - r06:1
+      - r07:1
+      - r08:1
+      - r09:1
+      - r10:1
+      - r11:1
+      - r12:1
+
   repack:
-      base_image: app-mwa/repack
-      schedule_mode: HEAD
+      #base_image: hub.cstcloud.cn/scalebox/agent
+      base_image: hub.cstcloud.cn/scalebox/repack
       parameters:
+        task_dist_mode: HOST-BOUND
+        pod_id: pod_0
         tasks_per_queue: 500
+        key_group_regex: ([0-9]+)/([0-9]+)_([0-9]+)
+        key_group_index: 1,2,3
       environments:
-        - OUT_URL=${OUT_URL}
-      sink_jobs:
-        - storge-copy
-  storge-copy:
-      base_image: hub.cstcloud.cn/scalebox/ftp-copy
-      schedule_mode: HEAD
+        - SOURCE_URL=${REPACK_SOURCE_URL}
+        - OUT_URL=${REPACK_OUT_URL}
+      hosts:
+        - r01:1
+        - r02:1
+        - r03:1
+        - r04:1
+        - r05:1
+        - r06:1
+        - r07:1
+        - r08:1
+        - r09:1
+        - r10:1
+        - r11:1
+        - r12:1
+  rclone-copy:
+      base_image: hub.cstcloud.cn/scalebox/rclone-copy
       parameters:
-        retry_rules: "['14:${N_RETRIES}','15:${N_RETRIES}']"
-        key_group_regex: ${KEY_GROUP_REGEX}
-        key_group_submatch: ${KEY_GROUP_SUBMATCH}
+        #slot_on_head: yes
+        tasks_per_queue: 500
+      variables:
+        max_sleep_count: 6000
       environments:
-        - SOURCE_URL=${OUT_URL}
-        - TARGET_URL=${REMOTE_URL}
+        - SOURCE_URL=${SOURCE_URL_RCLONE}
+        - TARGET_URL=${TARGET_URL_RCLONE}
         - ACTION=${REMOTE_ACTION}
-        - ENABLE_LOCAL_RELAY=${ENABLE_LOCAL_RELAY}
+        - RM_FILE=${RM_FILE}
+      hosts:
+        - r01:1
+        - r02:1
+        - r03:1
+        - r04:1
+        - r05:1
+        - r06:1
+        - r07:1
+        - r08:1
+        - r09:1
+        - r10:1
+        - r11:1
+        - r12:1
+
+ 
