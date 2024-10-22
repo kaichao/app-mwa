@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"mr/datacube"
+
+	"github.com/kaichao/scalebox/pkg/misc"
 )
 
 func fromDirList(message string, headers map[string]string) int {
@@ -19,16 +21,13 @@ func fromDirList(message string, headers map[string]string) int {
 	AddTimeStamp("")
 	m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
 	if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
+		// 以共享存储中转
 		hs := map[string]string{
 			"source_url": headers["source_url"],
 			"target_url": os.Getenv("SHARED_ROOT") + "/tar",
 		}
 		return sendJobRefMessage(m, hs, "cluster-dist")
 	}
-	// remote cluster(with jump-servers)
-	// 	message: 1257010784/1257010786_1257010815_ch109.dat.tar.zst
-	// local cluster
-	// 	message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 
 	hs := map[string]string{
 		"source_url": headers["source_url"],
@@ -159,20 +158,26 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
 
 	fmt.Printf("In fromUnpack(), batch-index=%d,p-ranges:%v\n", batchIndex, arr)
+	fileName := os.Getenv("WORK_DIR") + "/task-body.txt"
 	for i := 0; i < len(arr); i += 2 {
 		p0 := arr[i]
 		p1 := arr[i+1]
 
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
 		// 通过headers中的sorted_tag，设定显式排序
-		h := map[string]string{"sorted_tag": getSortedTagForBeamForm(cube, tb, p0, ch)}
-		ret := sendJobRefMessage(m, h, "beam-maker")
-		if ret != 0 {
-			return ret
-		}
+		line := fmt.Sprintf(`%s,{"sorted_tag":"%s"}`, m, getSortedTagForBeamForm(cube, tb, p0, ch))
+		misc.AppendToFile(fileName, line)
+		// h := map[string]string{"sorted_tag": getSortedTagForBeamForm(cube, tb, p0, ch)}
+		// ret := sendJobRefMessage(m, h, "beam-maker")
+		// if ret != 0 {
+		// 	return ret
+		// }
 	}
-
-	return 0
+	cmdTxt := "scalebox task add --sink-job beam-maker"
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
+	fmt.Printf("stdout for task-add:\n%s\n", stdout)
+	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	return code
 }
 
 func filterDataCube(message string) bool {
@@ -208,6 +213,8 @@ func removeLocalDatFiles(sema string) int {
 	cube := datacube.GetDataCube(ss[1])
 	if len(ips) > 24 {
 		num = cube.GetNumWithBlockID(beg, num-109)
+	} else {
+		num = (num - 109) % len(ips)
 	}
 	fmt.Printf("In removeLocalDatFiles(), ch=%s, num=%d, t0=%d\n", ch, num, beg)
 

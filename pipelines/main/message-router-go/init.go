@@ -59,7 +59,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 }
 
 func sendJobRefMessage(message string, headers map[string]string, sinkJob string) int {
-	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s  %s", sinkJob, message)
+	cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s %s", sinkJob, message)
 	if len(headers) > 0 {
 		h, err := json.Marshal(headers)
 		if err != nil {
@@ -87,7 +87,7 @@ func initHosts() {
 	`
 	prefix := strings.Split(os.Getenv("NODES"), "-")[0]
 	sqlText := fmt.Sprintf(sqlFmt, prefix)
-	fmt.Fprintln(os.Stderr, "sqlText:\n", sqlText)
+	// fmt.Fprintln(os.Stderr, "sqlText:\n", sqlText)
 	clustName := os.Getenv("CLUSTER")
 	numOfNodes, _ := strconv.Atoi(os.Getenv("NUM_OF_NODES"))
 	fmt.Printf("num-of-nodes:%d in cluster %s\n", numOfNodes, clustName)
@@ -107,6 +107,7 @@ func initHosts() {
 			logrus.Errorln(err)
 		}
 	}
+	fmt.Println("ips:", ips)
 }
 
 // ExecWithRetries ...
