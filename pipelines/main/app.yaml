@@ -20,7 +20,7 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/cluster-dist/code
       task_timeout_seconds: 1800
       # 5TB读缓存的临时空间
-      dir_limit_gb: ${SHARED_ROOT}/tar~8192
+      dir_limit_gb: ${SHARED_ROOT}/tar~5120
     parameters:
       # 1257010784/1257010786_1257010815_ch109.dat.tar.zst
       # 以时间排序的打包文件
@@ -142,7 +142,7 @@ jobs:
   fits-redist:
     base_image: ${FILE_COPY}
     arguments:
-      task_timeout_seconds: 60
+      task_timeout_seconds: ${FITS_REDIST_TIMEOUT}
       dir_free_gb: ${FITS_REDIST_DIR_FREE_GB}
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
@@ -197,7 +197,7 @@ jobs:
   fits-24ch-push:
     base_image: ${FILE_COPY}
     arguments:
-      task_timeout_seconds: 1800
+      task_timeout_seconds: 600
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       slot_options: tmpfs_workdir

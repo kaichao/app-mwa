@@ -41,13 +41,12 @@ datasets:
     numPerSeg: 2
 
     # pointing dimension
-    pointingBegin: 7681
-    # pointingEnd: 10060
-    pointingEnd: 8640
+    pointingBegin: 8641
+    pointingEnd: 10060
     pointingStep: 24
     # numPerBatch: 1
     # numPerBatch: 8
-    numPerBatch: 40
+    numPerBatch: 60
 
   1266932744:
     datasetID: 1266932744

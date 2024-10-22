@@ -83,6 +83,7 @@ func createDatProcessedSemaphores(cube *datacube.DataCube) {
 func createPullUnpackProgressCountSemaphores(cube *datacube.DataCube) {
 	arr := cube.GetTimeUnits()
 	lenTimeUnits := len(arr) / 2
+
 	initValue := lenTimeUnits * cube.GetNumOfPointingBatch() * 24 / len(ips) * cube.TimeUnit
 	fmt.Printf("PullUnpackProgressCount, initValue=%d,lenTimeUnits=%d,numBatches=%d\n",
 		initValue, lenTimeUnits, cube.GetNumOfPointingBatch())
@@ -175,7 +176,6 @@ func getSortedTagForDataPull(cube *datacube.DataCube, time int, ch int) string {
 // 三维datacube中，给定顺序号，用于beam-form运行过程中的的排序
 func getSortedTagForBeamForm(cube *datacube.DataCube, time int, p int, ch int) string {
 	batchIndex := getSemaPointingBatchIndex(cube, time, ch)
-	// p := cube.getPointingBatchIndex(pointing)
 	ch -= cube.ChannelBegin
 	tm := (time - cube.TimeBegin) / cube.TimeUnit
 	fmt.Printf("datacube.channelBegin:%d\n", cube.ChannelBegin)
