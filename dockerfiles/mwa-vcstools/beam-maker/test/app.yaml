@@ -15,7 +15,7 @@ jobs:
         --device /dev/dri/renderD129 
         --security-opt seccomp=unconfined 
         --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
-    variables:
+    arguments:
       max_sleep_count: 720
       slot_options: reserved_on_exit
       code_path: /raid0/root/app-mwa/dockerfiles/mwa-vcstools/beam-maker/code

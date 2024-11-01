@@ -13,17 +13,17 @@ KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
 if [ $LOCAL_CAL_ROOT ]; then
     DIR_CAL="/local${LOCAL_CAL_ROOT}/mwa/cal"
 else
-    DIR_CAL=/data/mwa/cal
+    DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_DAT="/local${LOCAL_INPUT_ROOT}/mwa/dat"
 else
-    DIR_DAT=/data/mwa/dat
+    DIR_DAT=/cluster_data_root/mwa/dat
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_1CH="/local${LOCAL_OUTPUT_ROOT}/mwa/1ch"
 else
-    DIR_1CH=/data/mwa/1ch
+    DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
 my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
@@ -50,15 +50,27 @@ POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTA
 
 cd ${WORK_DIR}
 
-make_beam -o ${OBSID} -b ${BEG} -e ${END} \
+if [ "$RUNNING_MODE" = "1" ]; then
+    make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
         -z ${UTT} \
         -d ${dat_dir} -f ${ch} \
         -m ${DIR_CAL}/${OBSID}/metafits_ppds.fits \
         -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
+        -t 6000 -W 10000 -s \
+        -0 ${DIR_CAL}/${OBSID}/calibration_solution.bin -c 23
+else
+    make_beam -o ${OBSID} -b ${BEG} -e ${END} \
+        -P ${POINTS} \
+        -z ${UTT} \
+        -d ${dat_dir} -f ${ch} \
+        -m ${DIR_CAL}/${OBSID}/metafits_ppds.fits \
+        -F ${DIR_CAL}/${OBSID}/flagged_tiles.txt \
+        -t 6000 -W 10000 -s \
         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
-        -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat \
-        -t 6000 -W 10000 -s 
+        -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat
+fi
+
 code=$?
 [[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 

@@ -41,8 +41,9 @@ datasets:
     numPerSeg: 2
 
     # pointing dimension
-    pointingBegin: 8641
-    pointingEnd: 10060
+    pointingBegin: 7681
+    pointingEnd: 8640
+    # pointingEnd: 10060
     pointingStep: 24
     # numPerBatch: 1
     # numPerBatch: 8
@@ -50,7 +51,7 @@ datasets:
 
   1266932744:
     datasetID: 1266932744
-    # 1266932746 ~ 1266937543, 4798
+    # 1266932746/1266932778/1266932786 ~ 1266937543, 4798/4766/4758
 
     # channel dimension
     channelBegin: 109
@@ -58,9 +59,36 @@ datasets:
 
     # time dimenstion
     # timeBegin: 1266932746
-    timeBegin: 1266932746
+    timeBegin: 1266932786
     # numOfSeconds: 4798
     timeEnd: 1266937543
+    # 24节点的分组数量
+    numPerBlock: 1
+
+    # packSize:
+    timeUnit: 40
+    timeStep: 200
+
+    # pointing dimension
+    pointingBegin: 1
+    # pointingEnd: 10157
+    pointingEnd: 960
+    pointingStep: 24
+    # numPerBatch: 1
+    numPerBatch: 40
+
+  1206977296:
+    datasetID: 1206977296
+    # 1206977303 ~ 1206981016, 3714
+
+    # channel dimension
+    channelBegin: 133
+    numOfChannels: 24
+
+    # time dimenstion
+    timeBegin: 1206977303
+    # numOfSeconds: 3714
+    timeEnd: 1206981016
     # 24节点的分组数量
     numPerBlock: 2
 
@@ -70,7 +98,6 @@ datasets:
 
     # pointing dimension
     pointingBegin: 1
-    # pointingEnd: 10157
     pointingEnd: 960
     pointingStep: 24
     # numPerBatch: 1

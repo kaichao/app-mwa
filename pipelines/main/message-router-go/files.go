@@ -24,7 +24,7 @@ func fromDirList(message string, headers map[string]string) int {
 		// 以共享存储中转
 		hs := map[string]string{
 			"source_url": headers["source_url"],
-			"target_url": os.Getenv("SHARED_ROOT") + "/tar",
+			"target_url": os.Getenv("CLUSTER_DATA_ROOT") + "/mwa/tar",
 		}
 		return sendJobRefMessage(m, hs, "cluster-dist")
 	}
@@ -37,7 +37,7 @@ func fromDirList(message string, headers map[string]string) int {
 
 func fromClusterDist(message string, headers map[string]string) int {
 	hs := map[string]string{
-		"source_url": os.Getenv("SHARED_ROOT") + "/tar",
+		"source_url": "/cluster_data_root/mwa/tar",
 	}
 	// message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 	return toPullUnpack(message, hs)

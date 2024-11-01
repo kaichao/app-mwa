@@ -20,12 +20,12 @@ source $(dirname $0)/functions.sh
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_1CH="/local${LOCAL_INPUT_ROOT}/mwa/1ch"
 else
-    DIR_1CH=/data/mwa/1ch
+    DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_1CHX="/local${LOCAL_OUTPUT_ROOT}/mwa/1chx"
 else
-    DIR_1CHX=/data/mwa/1chx
+    DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 echo "DIR_1CH:${DIR_1CH}, DIR_1CHX:${DIR_1CHX}"
 
