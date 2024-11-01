@@ -243,11 +243,15 @@ ORDER BY 1,2
 
 - 消息格式：1301240224/p02955/t1301240825_1301241024
 
-### 数据集 1301240224
+| 数据集 | 起始时间 |
+| ------ | ------- |
+| 1301240224 | 225 |
+| 1266932744 | 2876 |
+
 ```sql
 
 WITH vtable AS (
-    SELECT matches[1] AS p,matches[2] AS t,status_code
+    SELECT matches[1] AS p,((matches[2]::integer)-2786)/200 AS t,status_code
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{6}(\d{4})_\d{10}', 'g') matches, status_code
         FROM t_task
@@ -255,33 +259,32 @@ WITH vtable AS (
     ) tt
 )
 SELECT p,
-    SUM(status_code) FILTER (WHERE t = '0225') AS c00,
-    SUM(status_code) FILTER (WHERE t = '0425') AS c01,
-    SUM(status_code) FILTER (WHERE t = '0625') AS c02,
-    SUM(status_code) FILTER (WHERE t = '0825') AS c03,
-    SUM(status_code) FILTER (WHERE t = '1025') AS c04,
-    SUM(status_code) FILTER (WHERE t = '1225') AS c05,
-    SUM(status_code) FILTER (WHERE t = '1425') AS c06,
-    SUM(status_code) FILTER (WHERE t = '1625') AS c07,
-    SUM(status_code) FILTER (WHERE t = '1825') AS c08,
-    SUM(status_code) FILTER (WHERE t = '2025') AS c09,
-    SUM(status_code) FILTER (WHERE t = '2225') AS c10,
-    SUM(status_code) FILTER (WHERE t = '2425') AS c11,
-    SUM(status_code) FILTER (WHERE t = '2625') AS c12,
-    SUM(status_code) FILTER (WHERE t = '2825') AS c13,
-    SUM(status_code) FILTER (WHERE t = '3025') AS c14,
-    SUM(status_code) FILTER (WHERE t = '3225') AS c15,
-    SUM(status_code) FILTER (WHERE t = '3425') AS c16,
-    SUM(status_code) FILTER (WHERE t = '3625') AS c17,
-    SUM(status_code) FILTER (WHERE t = '3825') AS c18,
-    SUM(status_code) FILTER (WHERE t = '4025') AS c19,
-    SUM(status_code) FILTER (WHERE t = '4225') AS c20,
-    SUM(status_code) FILTER (WHERE t = '4425') AS c21,
-    SUM(status_code) FILTER (WHERE t = '4625') AS c22,
-    SUM(status_code) FILTER (WHERE t = '4825') AS c23
+    SUM(status_code) FILTER (WHERE t = 0) AS t00,
+    SUM(status_code) FILTER (WHERE t = 1) AS t01,
+    SUM(status_code) FILTER (WHERE t = 2) AS t02,
+    SUM(status_code) FILTER (WHERE t = 3) AS t03,
+    SUM(status_code) FILTER (WHERE t = 4) AS t04,
+    SUM(status_code) FILTER (WHERE t = 5) AS t05,
+    SUM(status_code) FILTER (WHERE t = 6) AS t06,
+    SUM(status_code) FILTER (WHERE t = 7) AS t07,
+    SUM(status_code) FILTER (WHERE t = 8) AS t08,
+    SUM(status_code) FILTER (WHERE t = 9) AS t09,
+    SUM(status_code) FILTER (WHERE t = 10) AS t10,
+    SUM(status_code) FILTER (WHERE t = 11) AS t11,
+    SUM(status_code) FILTER (WHERE t = 12) AS t12,
+    SUM(status_code) FILTER (WHERE t = 13) AS t13,
+    SUM(status_code) FILTER (WHERE t = 14) AS t14,
+    SUM(status_code) FILTER (WHERE t = 15) AS t15,
+    SUM(status_code) FILTER (WHERE t = 16) AS t16,
+    SUM(status_code) FILTER (WHERE t = 17) AS t17,
+    SUM(status_code) FILTER (WHERE t = 18) AS t18,
+    SUM(status_code) FILTER (WHERE t = 19) AS t19,
+    SUM(status_code) FILTER (WHERE t = 20) AS t20,
+    SUM(status_code) FILTER (WHERE t = 21) AS t21,
+    SUM(status_code) FILTER (WHERE t = 22) AS t22,
+    SUM(status_code) FILTER (WHERE t = 23) AS t23
 FROM vtable
 GROUP BY 1
 ORDER BY 1
 
 ```
-

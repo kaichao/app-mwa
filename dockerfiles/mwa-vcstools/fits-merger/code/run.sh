@@ -5,12 +5,12 @@
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_1CHX="/local${LOCAL_INPUT_ROOT}/mwa/1chx"
 else
-    DIR_1CHX=/data/mwa/1chx
+    DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_24CH="/local${LOCAL_OUTPUT_ROOT}/mwa/24ch"
 else
-    DIR_24CH=/data/mwa/24ch
+    DIR_24CH=/cluster_data_root/mwa/24ch
 fi
 echo "DIR_1CHX:${DIR_1CHX}, DIR_24CH:${DIR_24CH}"
 

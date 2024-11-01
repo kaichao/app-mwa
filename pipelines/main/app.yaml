@@ -20,14 +20,14 @@ jobs:
       code_path: ${CODE_BASE}/dockerfiles/cluster-dist/code
       task_timeout_seconds: 1800
       # 5TB读缓存的临时空间
-      dir_limit_gb: ${SHARED_ROOT}/tar~5120
+      dir_limit_gb: /cluster_data_root/mwa/tar~8192
     parameters:
       # 1257010784/1257010786_1257010815_ch109.dat.tar.zst
       # 以时间排序的打包文件
       key_group_regex: ^([0-9]+)/([0-9]+_[0-9]+)_ch([0-9]+).+$
       key_group_index: 1,2,3
     environments:
-      - TARGET_URL=${SHARED_ROOT}/tar
+      - TARGET_URL=/cluster_data_root/mwa/tar
     hosts:
       - ${IO_NODES}
 
@@ -210,7 +210,7 @@ jobs:
       retry_rules: "['255:3']"
     environments:
       - KEEP_SOURCE_FILE=no
-      - SOURCE_URL=${SHARED_ROOT}/24ch
+      - SOURCE_URL=${CLUSTER_DATA_ROOT}/mwa/24ch
       - TARGET_URL=${RESULT_24CH_URL}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
     hosts:
@@ -247,7 +247,6 @@ jobs:
       # 依据计算节点列表，计算其名称前缀
       - NODES="${NODES}"
       - ENABLE_CLUSTER_DIST=yes
-      - SHARED_ROOT=${SHARED_ROOT}
       # - TRACE=yes
     hosts:
       - h0:4

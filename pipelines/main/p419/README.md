@@ -25,6 +25,8 @@ WHERE job=685 and status_code>0;
 ```sh
 SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 TARGET_URL=/data1/tmp DIR_NAME=1266932744 REGEX_FILTER= scalebox app create
 
+SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa TARGET_URL=/data2/tmp DIR_NAME=tar1206977296 REGEX_FILTER= scalebox app create
+
 ```
 
 - 预拷贝文件到共享存储
@@ -60,8 +62,13 @@ rsync -av /mnt/old_mount/ /backup/
 # 2. 卸载分区
 umount /dev/sda1
 
+
+
 # 3. 格式化为 XFS
 mkfs.xfs /dev/sda1
+parted /dev/sdb mklabel gpt
+parted /dev/sdb mkpart primary 0% 100%
+mkfs.xfs -f /dev/sdb
 
 # 4. 挂载分区
 mkdir /mnt/new_mount
