@@ -25,6 +25,9 @@ if __name__ == '__main__':
     grpnum = int(os.getenv("GRPNUM"))
     ncpus = int(os.getenv("NCPUS"))
     workdir = os.getenv("WORK_DIR")
+    target_mode=int(os.getenv("TARGET_MODE", 0))
+    target_DM=float(os.getenv("TARGET_DM", 0))
+
     print(searchargs)
     # read rfi file name from command line
     if len(sys.argv) > 2:
@@ -68,10 +71,18 @@ if __name__ == '__main__':
             linenum += 1
             for ii in range(subcall):
                 cnt += 1
-                if cnt != grpnum:
+                if target_mode == 0 and cnt != grpnum:
                     continue
                 subDM = startDM + (ii+0.5)*dsubDM
                 loDM = startDM + ii*dsubDM
+                if target_mode != 0:
+                    hiDM = startDM + (ii+1)*dsubDM
+                    if loDM > target_DM or hiDM < target_DM:
+                        continue
+                    else:
+                        subDM = target_DM
+                        loDM = target_DM - 5*dDM
+                        dmspercall = 10
                 if outsubs:
                     # Get our downsampling right
                     subdownsamp = downsamp // 2

@@ -23,7 +23,10 @@ if [ -f $file_path ]; then
     echo $total_lines
     date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
     # for ((p = PB; p <= PE; p += 1)); do
-    for pointing in $( cat /app/bin/pointings.txt ); do
+
+    /app/bin/list_missing.sh $dataset pointings.txt
+
+    for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
         # pi=$(printf "%05d" "$p")
         sema="fits-24ch-presto-ready:$dataset/$pointing"
         echo "$sema"

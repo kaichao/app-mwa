@@ -14,12 +14,12 @@ date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_DEDISP="/local${LOCAL_INPUT_ROOT}/mwa/dedisp"
 else
-    DIR_DEDISP=/data/mwa/dedisp
+    DIR_DEDISP=/cluster_data_root/mwa/dedisp
 fi
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_TAR="/local${LOCAL_INPUT_ROOT}/mwa/dedisp/tar"
 else
-    DIR_DEDISP=/data/mwa/dedisp/tar
+    DIR_DEDISP=/cluster_data_root/mwa/dedisp/tar
 fi
 
 m=$1

@@ -1,5 +1,5 @@
 # FROM presto-rocm:1.3
-FROM presto-rocm-dtk-small:1.4.5
+FROM presto-rocm-dtk-small:1.4.6
 
 RUN apt-get update \
     && apt-get install -y zstd \
