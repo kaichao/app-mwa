@@ -31,7 +31,7 @@ jobs:
       # code_path: ${CODE_BASE}/dockerfiles/presto-modules/local-copy-unpack/code
       # dir_limit_gb: ${UNPACK_LIMIT_GB} #/tmp/data/mwa/24ch
       # dir_free_gb: ${UNPACK_FREE_GB}
-      dir_limit_gb: ${SHARED_ROOT}/24ch~12800
+      dir_limit_gb: ${SHARED_ROOT}/24ch~10240
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
@@ -47,8 +47,9 @@ jobs:
       # - JUMP_SERVERS=${JUMP_SERVERS}
       - SOURCE_URL=${SOURCE_DIR}
       - TARGET_URL=${SHARED_ROOT}/mwa/24ch
+      - TARGET_MODE=LOCAL
     hosts:
-      - n0:4
+      - n0:2
 
   # local-copy-unpack:
   #   base_image: ${FILE_COPY}
@@ -178,19 +179,6 @@ jobs:
     hosts:
       - ${NODES}:1
 
-  # clean-up:
-  #   base_image: ${PRESTO_SEARCH}
-  #   parameters:
-  #     task_dist_mode: ${TASK_DIST_MODE}
-  #   environments:
-  #     - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
-  #     - LOCAL_DEDISP_ROOT=${LOCAL_SHM_ROOT}
-  #   arguments:
-  #     code_path: ${CODE_BASE}/dockerfiles/presto-modules/clean-up/code
-  #     max_sleep_count: 4800
-  #   hosts:
-  #     - ${NODES}:1
-
   result-push:
     base_image: ${FILE_COPY}
     arguments:
@@ -210,6 +198,7 @@ jobs:
       - SOURCE_URL=${LOCAL_SHM_ROOT}/mwa/png
       - TARGET_URL=${RESULT_DIR}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
+      - TARGET_MODE=RSYNC_OVER_SSH
       - WITH_HEADERS=yes
     hosts:
       -  ${NODES}:1
@@ -233,7 +222,7 @@ jobs:
       - LOCAL_FITS_ROOT=${LOCAL_FITS_ROOT}
       - LOCAL_SHM_ROOT=${LOCAL_SHM_ROOT}
       - SHARED_ROOT=${SHARED_ROOT}
-      - DATASET_URI=${TARGET_POINTING}
+      # - DATASET_URI=${TARGET_POINTING}
       - MAX_LINENUM=${MAX_LINENUM}
       - RESULT_DIR=${RESULT_DIR}
       - SOURCE_DIR=${SOURCE_DIR}

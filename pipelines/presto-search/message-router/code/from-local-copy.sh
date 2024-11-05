@@ -28,11 +28,15 @@ if [ "$n" -eq 0 ]; then
     # order=$(( ($pi - 1) % $NUM_OF_NODES ))
     # node=$(printf "%04d.p419" "$order")
 
-    order=$(( ($pi - 1) % ${#ip_list[@]} ))
-    node=${ip_list[$order]}
-    echo $node
+    # order=$(( ($pi - 1) % ${#ip_list[@]} ))
+    # node=${ip_list[$order]}
+    # echo $node
     echo $NODES_GROUP
-
+    /app/bin/get_hosts.py ${pi}
+    code=$?
+    [ $code -ne 0 ] && echo "[ERROR] looking for valid hosts! " >&2 && exit 20
+    node=$( cat ./host.txt ) && rm ./host.txt
+    echo $node
     # scalebox task add --sink-job rfi-find --to-host ${NODES_GROUP}-${node} ${p}
     scalebox task add --sink-job rfi-find --to-host ${node} ${p}
 fi

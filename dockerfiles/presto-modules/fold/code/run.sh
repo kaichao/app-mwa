@@ -14,12 +14,12 @@ date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_DEDISP="/local${LOCAL_INPUT_ROOT}/mwa/dedisp"
 else
-    DIR_DEDISP=/data/mwa/dedisp
+    DIR_DEDISP=/cluster_data_root/mwa/dedisp
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_PNG="/local${LOCAL_OUTPUT_ROOT}/mwa/png"
 else
-    DIR_PNG=/data/mwa/png
+    DIR_PNG=/cluster_data_root/mwa/png
 fi
 if [ $SHARED_ROOT ]; then
     DIR_SHARED="/local${SHARED_ROOT}/mwa/png"

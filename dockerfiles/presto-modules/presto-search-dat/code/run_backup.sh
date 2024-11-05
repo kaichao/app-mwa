@@ -16,18 +16,18 @@ source /root/.bashrc
 if [ $LOCAL_INPUT_ROOT ]; then
     DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"
 else
-    DIR_FITS=/data/mwa/24ch
+    DIR_FITS=/cluster_data_root/mwa/24ch
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_PNG="/local${LOCAL_OUTPUT_ROOT}/mwa/png"
 else
-    DIR_PNG=/data/mwa/png
+    DIR_PNG=/cluster_data_root/mwa/png
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
     DIR_DEDISP="/local${LOCAL_OUTPUT_ROOT}/mwa/dedisp"
 else
-    DIR_DEDISP=/data/mwa/dedisp
+    DIR_DEDISP=/cluster_data_root/mwa/dedisp
 fi
 
 # decompress zst file
