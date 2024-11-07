@@ -37,9 +37,9 @@ if [ -f $file_path ]; then
             line=$(sed -n "${i}p" $file_path)
             calls=$(echo $line | awk '{print $8}')
             j=$((i - 1))
-            echo "line $j: $calls"
+            # echo "line $j: $calls"
             sema="dm-group-ready:$dataset/$pointing/dm$j"
-            echo "$sema"
+            # echo "$sema"
             scalebox semaphore create $sema $calls
         done
         
