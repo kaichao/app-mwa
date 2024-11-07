@@ -78,6 +78,14 @@ def get_hosts(group_id):
     put_connection(conn)
     return rows
 
+def get_hosts_likely(group_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT hostname FROM t_host WHERE group_id ~ %s", (group_id,))
+    rows = cur.fetchall()
+    put_connection(conn)
+    return rows
+
 # 给定一个job_id， 返回和该job具有相同app的所有job的id和name
 def get_same_app_jobs(job_id):
     conn = get_connection()

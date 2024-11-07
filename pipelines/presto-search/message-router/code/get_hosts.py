@@ -1,7 +1,7 @@
 #!/usr/local/bin/python3
 import os
 import sys
-from query_db import get_same_app_job_by_name, get_job_slot, create_job_slots, get_same_app_jobs, get_hosts
+from query_db import get_same_app_job_by_name, get_job_slot, create_job_slots, get_same_app_jobs, get_hosts, get_hosts_likely
 
 job_slots = {"rfi-find": 1, "dedisp-search": 4, "fold": 1, "result-push": 1}
 
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # 从命令行参数获取指向参数 pointing
     pointing = int(sys.argv[1])
     # 查询数据库，获取 group_id 对应的所有 host
-    hosts = get_hosts(group_id)
+    hosts = get_hosts_likely(group_id)
     # for hh in hosts:
     #     print(hh[0])
     num_hosts = len(hosts)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     if num_hosts == 0:
         sys.exit(1)
-    print(host)
+    # print(host)
     with open("./host.txt", "w") as f:
         f.write(host)
         
