@@ -8,6 +8,7 @@ import (
 // not used
 func (cube *DataCube) getTimeRangeIndex(t int) int {
 	t -= cube.TimeBegin
+
 	if 0 > t || t >= cube.NumOfSeconds {
 		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
 			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)

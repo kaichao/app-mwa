@@ -27,6 +27,8 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 TARGET_URL
 
 SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa TARGET_URL=/data2/tmp DIR_NAME=tar1206977296 REGEX_FILTER= scalebox app create
 
+TARGET_URL=scalebox@159.226.237.136:10022/raid0/tmp/24ch SOURCE_URL=/data1/mydata/mwa/24ch DIR_NAME=1266932744-241102 REGEX_FILTER= scalebox app create
+
 ```
 
 - 预拷贝文件到共享存储
@@ -37,6 +39,8 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa TARGET_URL=/data2/tmp DI
 TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data1/mydata/mwa/tar DIR_NAME=1301240224 REGEX_FILTER="/1301240[2-5]" scalebox app create
 
 TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data1/mydata/mwa/tar DIR_NAME=1301240224 REGEX_FILTER='/130124(16\|17\|18\|19\|20\|21)' scalebox app create
+
+TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266932744 REGEX_FILTER='/126693(2\|3[01])' scalebox app create
 
 ```
 
@@ -65,10 +69,9 @@ umount /dev/sda1
 
 
 # 3. 格式化为 XFS
-mkfs.xfs /dev/sda1
-parted /dev/sdb mklabel gpt
-parted /dev/sdb mkpart primary 0% 100%
-mkfs.xfs -f /dev/sdb
+parted /dev/sda mklabel gpt
+parted /dev/sda mkpart primary 0% 100%
+mkfs.xfs -f /dev/sda
 
 # 4. 挂载分区
 mkdir /mnt/new_mount
@@ -140,4 +143,16 @@ date +"%y-%m-%dT%H:%M:%S.%6N"
 - 将字符串转为postgresql的timestamp类型
 ```sql
 SELECT TO_TIMESTAMP('24-10-08T22:58:36.963924', 'YY-MM-DD"T"HH24:MI:SS.US');
+```
+
+## 设置hostname
+
+- centos 9
+```sh
+hostnamectl set-hostname scalebox-server
+```
+
+- /etc/hosts文件
+```
+
 ```

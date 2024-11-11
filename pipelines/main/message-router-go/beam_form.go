@@ -29,7 +29,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 
 	AddTimeStamp("before-sema-progress-counter")
 	index := (ch - 109) % len(hosts)
-	sema := fmt.Sprintf("progress-counter_beam-maker_s%02d:%s", index/24, hosts[index])
+	sema := fmt.Sprintf("progress-counter_beam-maker:%s", hosts[index])
 
 	countDown(sema)
 
@@ -100,15 +100,11 @@ func fromDownSampler(message string, headers map[string]string) int {
 	fmt.Printf("n=%d,numNodesPerGroup=%d\n", nPointing, len(ips))
 	fmt.Printf("num of hosts=%d,index=%d\n", len(ips), (nPointing-1)%len(ips))
 
-	num := (nPointing - 1) % len(ips)
-	if len(ips) > 24 {
-		// 24的倍数，multi-block
-		cube := datacube.GetDataCube(ss[1])
-		num = cube.GetNumWithBlockID(t, (nPointing-1)%24)
-	}
+	cube := datacube.GetDataCube(ss[1])
+	num := cube.GetHostIndex(t, (nPointing-1)%24, len(ips))
+	fmt.Printf("In fromDownSampler(), message:%s, len=%d, nPointing=%d, num=%d, t=%d\n",
+		message, len(ips), nPointing, num, t)
 	toIP := ips[num]
-
-	fmt.Printf("In fromDownSampler(), nPointing=%d, num=%d, t=%d\n", nPointing, num, t)
 
 	AddTimeStamp("before-fits-redist")
 	if fromIP != toIP {
@@ -161,15 +157,9 @@ func toFitsMerger(message string, headers map[string]string) int {
 	if n := countDown(sema); n == 0 {
 		// 1257010784/1257010786_1257010815/00022
 		nPointing, _ := strconv.Atoi(ss[3])
-		num := (nPointing - 1) % len(ips)
-		if len(ips) > 24 {
-			// 24倍数，multi-block
-			cube := datacube.GetDataCube(ss[2])
-			t, _ := strconv.Atoi(ss[4])
-			num = cube.GetNumWithBlockID(t, (nPointing-1)%24)
-
-			fmt.Printf("In toFitsMerger(), nPointing=%d, num=%d, t=%d\n", nPointing, num, t)
-		}
+		cube := datacube.GetDataCube(ss[2])
+		t, _ := strconv.Atoi(ss[4])
+		num := cube.GetHostIndex(t, (nPointing-1)%24, len(ips))
 
 		AddTimeStamp("before-sendNodeAwareMessage()")
 		return sendNodeAwareMessage(ss[1], make(map[string]string), "fits-merger", num)

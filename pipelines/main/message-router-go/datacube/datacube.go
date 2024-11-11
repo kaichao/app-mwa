@@ -27,7 +27,6 @@ type DataCube struct {
 	// 单次beam-maker的时长，通常为40的倍数；120/160/200/240/320/400
 	TimeStep int `yaml:"timeStep"`
 	// 24节点为单元的分区数量
-	NumPerSeg int `yaml:"numPerSeg"`
 
 	PointingBegin int `yaml:"pointingBegin"`
 	PointingEnd   int `yaml:"pointingEnd"`
@@ -63,19 +62,41 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	if cube.NumOfSeconds == 0 {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
-	if cube.NumPerSeg == 0 {
-		cube.NumPerSeg = 1
-	}
 
 	return &cube
 }
 
+/*
 // GetNumWithBlockID ...
 func (cube *DataCube) GetNumWithBlockID(t int, num int) int {
+	fmt.Printf("In GetNumWithBlockID(),t=%d,num=%d,num-per-seg=%d\n", t, num, cube.NumPerSeg)
 	if cube.NumPerSeg == 1 {
 		return num
 	}
 
 	index := cube.getTimeRangeIndex(t)
 	return (index%cube.NumPerSeg)*24 + num
+}
+*/
+// GetHostIndex ...
+func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
+	// index := ch - cube.ChannelBegin
+	if numHosts < 24 {
+		return index % numHosts
+	} else if numHosts == 24 {
+		return index
+	}
+	rangeIndex := cube.getTimeRangeIndex(t)
+	numSeg := numHosts / 24
+	return (rangeIndex%numSeg)*24 + index
+}
+
+func (cube *DataCube) toCubeString() string {
+	return fmt.Sprintf(`
+			cube: 
+				t0=%d,t1=%d, tstep=%d
+				p0=%d,p1=%d, pstep=%d \n
+		`,
+		cube.TimeBegin, cube.TimeEnd, cube.TimeStep,
+		cube.PointingBegin, cube.PointingEnd, cube.PointingStep)
 }

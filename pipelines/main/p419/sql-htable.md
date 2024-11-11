@@ -16,10 +16,13 @@ WITH vtable AS (
         SELECT t,
             SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t) AS group_num
         FROM (
-            SELECT t,sum(status_code) sum_code
+            SELECT t,
+                SUM(status_code) sum_code,
+                COUNT(status_code) not_null_count
             FROM vtable
             GROUP BY 1
         ) tt1
+        WHERE not_null_count=24
     ) tt2 
     WHERE group_num = 0
 )
@@ -78,11 +81,14 @@ WITH vtable AS (
         SELECT t,p,
             SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
         FROM (
-            SELECT t,p,sum(status_code) sum_code
+            SELECT t,p,
+                SUM(status_code) sum_code,
+                COUNT(status_code) not_null_count
             FROM vtable
             GROUP BY 1,2
         ) tt1
-    ) tt2 
+        WHERE not_null_count=24
+    ) tt2
     WHERE group_num = 0
 )
 SELECT t, p,
@@ -136,7 +142,7 @@ WITH vtable AS (
             SUM(CASE WHEN sum_code = 0 THEN 0 ELSE 1 END) OVER (ORDER BY t,p) AS group_num
         FROM (
             SELECT t,p,
-                sum(status_code) sum_code,
+                SUM(status_code) sum_code,
                 COUNT(status_code) not_null_count
             FROM vtable
             GROUP BY 1,2
@@ -251,7 +257,7 @@ ORDER BY 1,2
 ```sql
 
 WITH vtable AS (
-    SELECT matches[1] AS p,((matches[2]::integer)-2786)/200 AS t,status_code
+    SELECT matches[1] AS p,((matches[2]::integer)-2746)/200 AS t,status_code
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{6}(\d{4})_\d{10}', 'g') matches, status_code
         FROM t_task
@@ -287,4 +293,39 @@ FROM vtable
 GROUP BY 1
 ORDER BY 1
 
+```
+
+## slot的横表
+- 按计算节点的横表
+```sql
+WITH vtable AS (
+    SELECT host, t_slot.id AS sid, t_host.ip_addr, t_job.name, serial_num, t_slot.status
+    FROM t_slot 
+        JOIN t_job ON(t_slot.job=t_job.id)
+        JOIN t_host ON(t_slot.host=t_host.hostname)
+    WHERE t_slot.host LIKE 'c-%'
+        AND app=188
+    ORDER BY 1,2,3
+)
+SELECT host, ip_addr,
+    STRING_AGG( format('%s (%s)',status,sid) || '', ' ') FILTER (WHERE name = 'pull-unpack') AS pull_unpack,
+    STRING_AGG(format('%s (%s)',status,sid), E'\t') FILTER (WHERE name = 'beam-maker') AS beam_maker,
+    STRING_AGG(format('%s (%s)',status,sid), ' ') FILTER (WHERE name = 'down-sampler') AS down_sampler,
+    STRING_AGG(format('%s (%s)',status,sid), ' ') FILTER (WHERE name = 'fits-redist') AS fits_redist,
+    STRING_AGG(format('%s (%s)',status,sid), ' ') FILTER (WHERE name = 'fits-merger') AS fits_merger
+FROM vtable
+GROUP BY 1,2
+ORDER BY 1
+```
+
+- 系统级slot列表
+```sql
+WITH v_job AS (
+    SELECT id, name
+    FROM t_job
+    WHERE app=194
+        AND name in ('message-router-main','dir-list','cluster-dist','fits-24ch-push')
+)
+SELECT v_job.id AS jid, v_job.name AS jname, t_slot.id AS sid, host,serial_num,t_slot.status
+FROM v_job JOIN t_slot ON (v_job.id=t_slot.job);
 ```
