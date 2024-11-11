@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 top_level_dir="/tmp/scalebox"
 # 查找并遍历所有名为 work-* 的子目录

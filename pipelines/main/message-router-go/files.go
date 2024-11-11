@@ -98,10 +98,9 @@ func toPullUnpack(message string, headers map[string]string) int {
 	// add batch-index to message body.
 	// batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
 	// m = fmt.Sprintf("%s~b%02d", m, batchIndex)
-	num := (ch - 109) % len(ips)
-	if len(ips) > 24 {
-		num = cube.GetNumWithBlockID(t0, ch-109)
-	}
+
+	num := cube.GetHostIndex(t0, ch-cube.ChannelBegin, len(ips))
+
 	fmt.Printf("In toPullUnpack(), ch=%d, num=%d, t0=%d\n", ch, num, t0)
 	return sendNodeAwareMessage(message, headers, "pull-unpack", num)
 }
@@ -138,8 +137,9 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	ch, _ := strconv.Atoi(ss[3])
 	tb, te := cube.GetTimeRange(t)
 
-	index := (ch - 109) % len(hosts)
-	sema := fmt.Sprintf("progress-counter_pull-unpack_s%02d:%s", index/24, hosts[index])
+	index := cube.GetHostIndex(t, ch-cube.ChannelBegin, len(ips))
+	// index := (ch - 109) % len(hosts)
+	sema := fmt.Sprintf("progress-counter_pull-unpack:%s", hosts[index])
 	countDown(sema)
 
 	sema = getSemaDatReadyName(cube, t, ch)
@@ -174,7 +174,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 120)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
@@ -211,14 +211,9 @@ func removeLocalDatFiles(sema string) int {
 	dir := fmt.Sprintf("/tmp/scalebox/mydata/mwa/dat/%s/%s/%d_%d/", ds, ch, beg, end)
 	num, _ := strconv.Atoi(ch[2:])
 	cube := datacube.GetDataCube(ss[1])
-	if len(ips) > 24 {
-		num = cube.GetNumWithBlockID(beg, num-109)
-	} else {
-		num = (num - 109) % len(ips)
-	}
+	num = cube.GetHostIndex(beg, num-cube.ChannelBegin, len(ips))
 	fmt.Printf("In removeLocalDatFiles(), ch=%s, num=%d, t0=%d\n", ch, num, beg)
 
-	// i := (num - 109) % len(ips)
 	defaultUser := os.Getenv("DEFAULT_USER")
 	sshPort := 50022
 	cmdTxt = fmt.Sprintf("ssh -p %d %s@%s rm -rf %s", sshPort, defaultUser, ips[num], dir)

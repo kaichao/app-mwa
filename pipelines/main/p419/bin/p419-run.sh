@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 i=0
 for h in $(cat /tmp/ip_list.txt);do
