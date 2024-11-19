@@ -31,6 +31,13 @@ TARGET_URL=scalebox@159.226.237.136:10022/raid0/tmp/24ch SOURCE_URL=/data1/mydat
 
 ```
 
+- 从main到p419(push)
+
+```sh
+SOURCE_URL=/raid0/tmp/mwa TARGET_URL=scalebox@60.245.128.60:10022/data2/tmp DIR_NAME=tar1266329600 REGEX_FILTER='zst$' scalebox app create
+
+```
+
 - 预拷贝文件到共享存储
 
 在scalebox/dockerfiles/files/app-dir-copy目录下
@@ -108,6 +115,27 @@ echo "* soft nofile 262144" >> /etc/security/limits.conf
 netstat -an | grep :50051 | grep ESTABLISHED | wc -l
 
 ss -ant | grep :50051 | grep ESTABLISHED | wc -l
+```
+
+## 数据库优化
+
+- 将存储设备的调度器设置为 noop
+
+在 SSD 或 NVMe 上，noop 能减少 CPU 资源占用，避免对顺序进行不必要的调整，因为固态硬盘本身可以高效处理随机和顺序 I/O。
+
+```sh
+echo noop | sudo tee /sys/block/<device>/queue/scheduler
+```
+
+- 分离数据和 WAL 文件
+  - 将数据目录和 WAL 日志目录分配到不同的物理磁盘上，减少 I/O 竞争；
+  - WAL目录在```/var/lib/postgresql/data/pg_wal```
+  
+- 使用 PostgreSQL 的 synchronous_commit 配置
+   PostgreSQL 默认使用同步写入来保证事务持久性。可调整 synchronous_commit 参数，以增加异步写入的比例。
+   
+```sql
+ALTER SYSTEM SET synchronous_commit = 'off';
 ```
 
 ## 进程操作

@@ -2,7 +2,7 @@ package datacube
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -14,7 +14,7 @@ import (
 //
 //	Pointing Demension: PointingRange, PointingBatch
 type DataCube struct {
-	DatasetID string `yaml:"datasetID"`
+	DatasetID string
 
 	ChannelBegin  int `yaml:"channelBegin"`
 	NumOfChannels int `yaml:"numOfChannels"`
@@ -48,7 +48,7 @@ var (
 func getDataCubeFromFile(datasetID string) *DataCube {
 	config := map[string]map[string]DataCube{}
 
-	yamlFile, err := ioutil.ReadFile(datacubeFile)
+	yamlFile, err := os.ReadFile(datacubeFile)
 	if err != nil {
 		logrus.Fatalf("Read yaml file %s, err:%v", datacubeFile, err)
 	}
@@ -59,6 +59,7 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 
 	fmt.Println("config:", config)
 	cube := config["datasets"][datasetID]
+	cube.DatasetID = datasetID
 	if cube.NumOfSeconds == 0 {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
