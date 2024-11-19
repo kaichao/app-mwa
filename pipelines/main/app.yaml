@@ -21,7 +21,7 @@ jobs:
       task_timeout_seconds: 1800
       slot_options: tmpfs_workdir
       # 5TB读缓存的临时空间
-      dir_limit_gb: /cluster_data_root/mwa/tar~11500
+      dir_limit_gb: /cluster_data_root/mwa/tar~3500
     parameters:
       # 1257010784/1257010786_1257010815_ch109.dat.tar.zst
       # 以时间排序的打包文件
@@ -47,8 +47,10 @@ jobs:
       dir_free_gb: ${UNPACK_DIR_FREE_GB}
       dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
       # 3 * 40s = 120s
-      # Multi-seg 冲突，取消该限制
       progress_counter_diff: 120
+      # 每单位计算资源上的运行task数量
+      # group_running_vtasks: 3
+      host_running_vtasks: 3
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
     parameters:

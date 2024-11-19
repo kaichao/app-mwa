@@ -1,7 +1,8 @@
 datasets:
   1257010784:
-    datasetID: 1257010784
     # 1257010786 ~ 1257015583, 4798
+    url: /data2/mydata/mwa/tar
+    # url: /work1/cstu0036/mydata/mwa/tar
 
     # channel dimension
     channelBegin: 109
@@ -22,7 +23,6 @@ datasets:
     numPerBatch: 16
 
   1301240224:
-    datasetID: 1301240224
     # 1301240225 ~ 1301245022, 4798
 
     # channel dimension
@@ -48,7 +48,6 @@ datasets:
     numPerBatch: 60
 
   1266932744:
-    datasetID: 1266932744
     # 1266932746 ~ 1266937543, 4798
 
     # channel dimension
@@ -65,15 +64,39 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 961
-    # pointingEnd: 10157
-    pointingEnd: 2400
+    pointingBegin: 3361
+    # pointingEnd: 10180
+    pointingEnd: 4320
     pointingStep: 24
     # numPerBatch: 1
-    numPerBatch: 60
+    numPerBatch: 40
+
+1266329600:
+  # 1266329602 ~ 1266334399, 4798
+
+  # channel dimension
+  channelBegin: 109
+  numOfChannels: 24
+
+  # time dimenstion
+  timeBegin: 1266329602
+  # numOfSeconds: 4798
+  timeEnd: 1266334399
+
+  # packSize:
+  timeUnit: 40
+  timeStep: 200
+
+  # pointing dimension
+  pointingBegin: 3361
+  # pointingEnd: 10157
+  pointingEnd: 4320
+  pointingStep: 24
+  # numPerBatch: 1
+  numPerBatch: 40
+
 
   1206977296:
-    datasetID: 1206977296
     # 1206977303 ~ 1206981016, 3714
 
     # channel dimension
