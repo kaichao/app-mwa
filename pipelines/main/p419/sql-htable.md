@@ -252,7 +252,8 @@ ORDER BY 1,2
 | 数据集 | 起始时间 |
 | ------ | ------- |
 | 1301240224 | 225 |
-| 1266932744 | 2876 |
+| 1266932744 | 2746 |
+| 1266329600 | 29602 |
 
 ```sql
 
@@ -329,4 +330,68 @@ WITH v_job AS (
 SELECT v_job.id AS jid, v_job.name AS jname, t_slot.id AS sid, host,serial_num,t_slot.status
 FROM v_job JOIN t_slot ON (v_job.id=t_slot.job)
 ORDER BY 1,5;
+```
+
+## tc_json处理的横表
+
+```sql
+
+WITH mapped AS (    -- label到索引号的映射
+    SELECT
+        name,
+        ordinality AS index
+    FROM 
+        unnest(ARRAY[
+            'before-mr', 
+            'before-sema-progress-counter', 
+            'after-sema-progress-counter',
+            'before-sendJobRefMessage()',
+            'before-leave-fromBeamMaker()',
+            'before-exit'
+        ]) WITH ORDINALITY AS name
+),
+expanded AS (
+    SELECT
+        id,task,jsonb_array_elements(tc_json->'timestamps') AS elem
+    FROM t_task_exec
+    WHERE task IN (
+        SELECT id
+        FROM t_task
+        WHERE job=263 
+            AND from_job='beam-maker' AND status_code=0
+        ORDER BY id
+        OFFSET 130000
+        LIMIT 500
+    )
+),
+numbered AS (   -- label名转换为序号
+    SELECT
+        task,
+        elem->>'t' AS timestamp,
+        index AS rn
+--        ROW_NUMBER() OVER (PARTITION BY task) AS rn
+    FROM expanded JOIN mapped ON(elem->>'label' = name)
+),htable AS (
+    SELECT task,
+        MAX(CASE WHEN rn = 1 THEN timestamp END) AS t0,
+        MAX(CASE WHEN rn = 2 THEN timestamp END) AS t1,
+        MAX(CASE WHEN rn = 3 THEN timestamp END) AS t2,
+        MAX(CASE WHEN rn = 4 THEN timestamp END) AS t3,
+        MAX(CASE WHEN rn = 5 THEN timestamp END) AS t4,
+        MAX(CASE WHEN rn = 6 THEN timestamp END) AS t5
+    FROM numbered
+    GROUP BY 1
+), diff_table AS (
+    SELECT
+        task,
+        (EXTRACT(EPOCH FROM (t1::timestamp - t0::timestamp)) * 1000000)::integer AS dt0,
+        (EXTRACT(EPOCH FROM (t2::timestamp - t1::timestamp)) * 1000000)::integer AS dt1,
+        (EXTRACT(EPOCH FROM (t3::timestamp - t2::timestamp)) * 1000000)::integer AS dt2,
+        (EXTRACT(EPOCH FROM (t4::timestamp - t3::timestamp)) * 1000000)::integer AS dt3,
+        (EXTRACT(EPOCH FROM (t5::timestamp - t4::timestamp)) * 1000000)::integer AS dt4
+    FROM htable
+)
+SELECT t_task.begin_time, diff_table.* 
+FROM diff_table JOIN t_task ON (diff_table.task=t_task.id)
+
 ```
