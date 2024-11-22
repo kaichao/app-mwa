@@ -70,7 +70,7 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 	}
 
 	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
+	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 60)
 	fmt.Printf("stdout for task-add:\n%s\n", stdout)
 	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
 	return code
