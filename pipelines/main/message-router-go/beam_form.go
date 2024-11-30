@@ -38,14 +38,14 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	n := countDown(sema)
 	fmt.Printf("In fromBeamMaker(),sema: %s,value:%d\n", sema, n)
 	if n != 0 {
-		AddTimeStamp("before-sendJobRefMessage()")
+		AddTimeStamp("before-sendJobRefMessage")
 		// 该batch中还未处理完
 		return sendJobRefMessage(message, make(map[string]string), "down-sampler")
 	}
 
-	AddTimeStamp("before-removeLocalDatFiles()")
+	AddTimeStamp("before-removeLocalDatFiles")
 	removeLocalDatFiles(sema)
-	AddTimeStamp("after-removeLocalDatFiles()")
+	AddTimeStamp("after-removeLocalDatFiles")
 
 	// 数据删除，修改信号量值
 	batchIndex := countDownSemaPointingBatchIndex(cube, tb, ch)

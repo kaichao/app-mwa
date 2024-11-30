@@ -7,7 +7,7 @@ parameters:
 jobs:
   down-sampler:
     base_image: app-mwa/down-sampler
-    variables:
+    arguments:
       # 20-min
       max_sleep_count: 200
     parameters:

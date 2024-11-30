@@ -11,7 +11,7 @@ jobs:
     base_image: ${RSYNC_COPY}
     # node1上的文件读取错误，需设置特权权限。可能更新该节点上docker到最新版本可解决该问题
     command: ${UNPACK_COMMAND}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/pull-unpack/code
       task_timeout_seconds: 1800
     parameters:
@@ -30,7 +30,7 @@ jobs:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
-    variables:
+    arguments:
       task_timeout_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
@@ -54,7 +54,7 @@ jobs:
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
     parameters:
       key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
@@ -69,7 +69,7 @@ jobs:
   fits-merger:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
-    variables:
+    arguments:
       task_timeout_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
@@ -90,15 +90,13 @@ jobs:
     label: 主消息路由
     base_image: hub.cstcloud.cn/scalebox/agent
     parameters:
-      slot_on_head: yes
       start_message: ANY
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/pipelines/single-pointing/message-router/code
-      slot_options: reserved_on_exit
+      slot_options: reserved_on_exit,slot_on_head
       local_ip_index: 1
     environments:
       - LOG_LEVEL=warn
-      - WITH_HEADERS=yes
       - TRACE=
       - KEEP_24CH_FILE=${KEEP_24CH_FILE}
     sink_jobs:

@@ -8,7 +8,7 @@ jobs:
   fits-merger:
     label: 24通道fits合并
     base_image: app-mwa/mwa-vcstools:rocm-4.0.1
-    variables:
+    arguments:
     # 1 hour
       max_sleep_count: 720
       slot_options: reserved_on_exit

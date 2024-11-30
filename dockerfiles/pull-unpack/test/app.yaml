@@ -9,7 +9,7 @@ parameters:
 jobs:
   pull-unpack:
     base_image: ${RSYNC_COPY}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/pull-unpack/code
       task_timeout_seconds: 1800
     parameters:
@@ -19,7 +19,6 @@ jobs:
     environments:
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
-      - WITH_HEADERS=yes
       # for test only
       - SOURCE_URL=scalebox@159.226.237.136:10022:/raid0/tmp/mwa/tar1301240224
       - TARGET_URL=/tmp/scalebox/mydata/mwa/dat/1301240224/ch132/1301244875_1301245022

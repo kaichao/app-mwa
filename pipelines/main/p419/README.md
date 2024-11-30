@@ -49,6 +49,9 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL
 
 TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266932744 REGEX_FILTER='/126693(2\|3[01])' scalebox app create
 
+# 1266329600的前240个文件
+TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 REGEX_FILTER='/1266329' scalebox app create
+
 ```
 
 
