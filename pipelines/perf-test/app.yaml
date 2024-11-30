@@ -11,7 +11,7 @@ jobs:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
-    variables:
+    arguments:
       task_timeout_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
@@ -34,7 +34,7 @@ jobs:
 
   down-sampler:
     base_image: ${DOWN_SAMPLER}
-    variables:
+    arguments:
       code_path: ${CODE_BASE}/dockerfiles/down-sampler/code
     parameters:
       key_group_regex: ^([0-9]+)/p([0-9]+)/t([0-9]+_[0-9]+)/ch([0-9]{3}).fits$
@@ -49,7 +49,7 @@ jobs:
   fits-merger:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
-    variables:
+    arguments:
       task_timeout_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
@@ -72,7 +72,7 @@ jobs:
     parameters:
       slot_on_head: yes
       start_message: ANY
-    variables:
+    arguments:
       # code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
       code_path: ${HOME}/app-mwa/pipelines/perf-test/message-router/code
       slot_options: reserved_on_exit

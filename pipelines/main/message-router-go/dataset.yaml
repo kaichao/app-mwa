@@ -64,9 +64,9 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 3361
+    pointingBegin: 4321
     # pointingEnd: 10180
-    pointingEnd: 4320
+    pointingEnd: 5280
     pointingStep: 24
     # numPerBatch: 1
     numPerBatch: 40
@@ -80,6 +80,7 @@ datasets:
 
     # time dimenstion
     timeBegin: 1266329602
+    # timeBegin: 1266331002
     # numOfSeconds: 4798
     timeEnd: 1266334399
 
@@ -88,9 +89,9 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 1
-    # pointingEnd: 8893
-    pointingEnd: 960
+    pointingBegin: 2881
+    # pointingEnd: 8895
+    pointingEnd: 3840
     pointingStep: 24
     # numPerBatch: 1
     numPerBatch: 40
