@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/jackc/pgx/v5 v5.6.0
-	github.com/kaichao/scalebox v0.0.0-20240920125115-35041567b202
+	github.com/kaichao/scalebox v0.0.0-20241211012018-d8bc144fd5a2
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -17,6 +17,6 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 )

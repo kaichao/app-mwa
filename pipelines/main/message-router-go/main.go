@@ -86,13 +86,6 @@ func defaultFunc(message string, headers map[string]string) int {
 	createBeamMakerProgressCountSemaphores(cube)
 
 	cmd := fmt.Sprintf("scalebox task add --header prefix_url=%s %s", ss[0], ss[1])
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmd, -1)
-	fmt.Printf("exit-code for task-add:\n%d\n", code)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-	if code > 0 {
-		return code
-	}
-
-	return 0
+	code := misc.ExecCommandReturnExitCode(cmd, 0)
+	return code
 }

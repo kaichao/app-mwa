@@ -123,13 +123,6 @@ func fromDownSampler(message string, headers map[string]string) int {
 
 		AddTimeStamp("before-sendNodeAwareMessage()")
 		return sendNodeAwareMessage(message, hs, sinkJob, num)
-
-		// cmdTxt := fmt.Sprintf("scalebox task add --sink-job %s --header source_url=%s --to-ip %s %s",
-		// 	sinkJob, sourceURL, toIP, message)
-		// code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 20)
-		// fmt.Printf("stdout for task-add:\n%s\n", stdout)
-		// fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-		// return code
 	}
 
 	AddTimeStamp("before-toFitsMerger()")

@@ -316,7 +316,7 @@ SELECT host, ip_addr,
     STRING_AGG(format('%s (%s)',status,sid), ' ') FILTER (WHERE name = 'fits-merger') AS fits_merger
 FROM vtable
 GROUP BY 1,2
-ORDER BY 1
+ORDER BY 1;
 ```
 
 - 系统级slot列表
@@ -332,7 +332,7 @@ FROM v_job JOIN t_slot ON (v_job.id=t_slot.job)
 ORDER BY 1,5;
 ```
 
-## tc_json处理的横表
+## extras处理的横表
 
 ```sql
 
@@ -352,7 +352,7 @@ WITH mapped AS (    -- label到索引号的映射
 ),
 expanded AS (
     SELECT
-        id,task,jsonb_array_elements(tc_json->'timestamps') AS elem
+        id,task,jsonb_array_elements(extras->'timestamps') AS elem
     FROM t_task_exec
     WHERE task IN (
         SELECT id
