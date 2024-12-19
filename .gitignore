@@ -2,4 +2,8 @@
 tmp/
 .DS_Store
 *.drawio
-/cal
+
+cal/**
+!cal/
+!cal/**/
+!cal/**/pointings.txt

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -12,46 +13,38 @@ import (
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	code := misc.ExecCommandReturnExitCode(cmdText, 15)
 	return code
 }
 
 func countDown(semaName string) int {
-	cmdText := fmt.Sprintf("scalebox semaphore countdown %s", semaName)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
-	fmt.Printf("exit-code for semaphore countdown:\n%d\n", code)
-	fmt.Printf("stdout for semaphore countdown:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for semaphore countdown:\n%s\n", stderr)
-	if code > 0 {
-		return -10
+	cmdText := fmt.Sprintf("scalebox semaphore decrement %s", semaName)
+	stdout := misc.ExecCommandReturnStdout(cmdText, 15)
+	if stdout == "" {
+		return math.MinInt
 	}
-	code, err := strconv.Atoi(strings.TrimSpace(stdout))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore countdown:\n%v\n", err)
-		return -11
+	if val, err := strconv.Atoi(strings.TrimSpace(stdout)); err != nil {
+		fmt.Fprintf(os.Stderr, "err to convert semaphore value:%s\n%v\n", stdout, err)
+	} else {
+		return val
 	}
 
-	return code
+	return math.MinInt
 }
 
 func getSemaphore(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdText, 15)
-	fmt.Printf("exit-code for semaphore get:\n%d\n", code)
-	fmt.Printf("stdout for semaphore get:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for semaphore get:\n%s\n", stderr)
-	if code > 0 {
-		return -10
+	stdout := misc.ExecCommandReturnStdout(cmdText, 15)
+	if stdout == "" {
+		return math.MinInt
 	}
-	code, err := strconv.Atoi(strings.TrimSpace(stdout))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "stderr for convert to code in semaphore get:\n%v\n", err)
-		return -11
+	if val, err := strconv.Atoi(strings.TrimSpace(stdout)); err == nil {
+		fmt.Fprintf(os.Stderr, "err to convert semaphore value:\n%v\n", err)
+	} else {
+		return val
 	}
 
-	return code
+	return math.MinInt
 }
 
 // Sema ...

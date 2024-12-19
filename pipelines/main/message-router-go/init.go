@@ -50,12 +50,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 60)
-	// code, stdout, stderr := ExecWithRetries(cmdTxt, 5, 15)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-	return code
+	return misc.ExecCommandReturnExitCode(cmdTxt, 60)
 }
 
 func sendJobRefMessage(message string, headers map[string]string, sinkJob string) int {
@@ -69,11 +64,7 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 		}
 	}
 
-	fmt.Printf("cmd-text for task-add:%s\n", cmdTxt)
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 60)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
-	return code
+	return misc.ExecCommandReturnExitCode(cmdTxt, 60)
 }
 
 func initHosts() {
@@ -119,7 +110,7 @@ func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, stri
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr = misc.ExecShellCommandWithExitCode(cmd, timeout)
+		code, stdout, stderr = misc.ExecCommandReturnAll(cmd, timeout)
 		if code == 0 {
 			return code, stdout, stderr
 		}

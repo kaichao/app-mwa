@@ -79,7 +79,7 @@ datasets:
     numOfChannels: 24
 
     # time dimenstion
-    timeBegin: 1266329602
+    timeBegin: 1266330202
     # timeBegin: 1266331002
     # numOfSeconds: 4798
     timeEnd: 1266334399
@@ -89,13 +89,12 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 2881
-    # pointingEnd: 8895
-    pointingEnd: 3840
+    pointingBegin: 5761
+    # pointingEnd: 8921
+    pointingEnd: 6720
     pointingStep: 24
     # numPerBatch: 1
-    numPerBatch: 40
-
+    numPerBatch: 80
 
   1206977296:
     # 1206977303 ~ 1206981016, 3714

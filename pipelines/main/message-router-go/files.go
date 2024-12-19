@@ -143,9 +143,10 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	countDown(sema)
 
 	sema = getSemaDatReadyName(cube, t, ch)
-	AddTimeStamp("")
+	AddTimeStamp("before-sema-dec")
 	// 信号量dat-ready减1
 	if n := countDown(sema); n > 0 {
+		misc.AppendToFile(os.Getenv("WORK_DIR")+"/extra-attributes.txt", fmt.Sprintf("sema:%d", n))
 		// 该group未全部就绪
 		return 0
 	} else if n < 0 {
@@ -155,8 +156,10 @@ func fromPullUnpack(message string, headers map[string]string) int {
 
 	// 单批次完成，信号量dat-ready触发
 	batchIndex := getSemaPointingBatchIndex(cube, t, ch)
+	batchIndex = 0
 	arr := cube.GetPointingRangesByBatchIndex(batchIndex)
 
+	fmt.Printf("001:message=%s,ds=%s,t=%d, ch=%v\n", message, ss[1], t, ch)
 	fmt.Printf("In fromUnpack(), batch-index=%d,p-ranges:%v\n", batchIndex, arr)
 	fileName := os.Getenv("WORK_DIR") + "/task-body.txt"
 	for i := 0; i < len(arr); i += 2 {
@@ -174,9 +177,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code, stdout, stderr := misc.ExecShellCommandWithExitCode(cmdTxt, 120)
-	fmt.Printf("stdout for task-add:\n%s\n", stdout)
-	fmt.Fprintf(os.Stderr, "stderr for task-add:\n%s\n", stderr)
+	code := misc.ExecCommandReturnExitCode(cmdTxt, 120)
 	return code
 }
 
