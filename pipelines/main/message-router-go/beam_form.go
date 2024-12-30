@@ -162,20 +162,26 @@ func toFitsMerger(message string, headers map[string]string) int {
 }
 
 func fromFitsMerger(message string, headers map[string]string) int {
-	defer func() {
-		AddTimeStamp("before-leave-fromFitsMerger()")
-	}()
-	// message: 1257010784/p00022/t1257010786_1257010815
-	re := regexp.MustCompile(`p([0-9]+)/`)
-	ss := re.FindStringSubmatch(message)
-	if ss == nil {
-		fmt.Fprintf(os.Stderr, "invalid message format in fromFitsMerger(), message=%s \n", message)
-		return 3
-	}
-	pointing, _ := strconv.Atoi(ss[1])
-	fmt.Printf("pointing:%d\n", pointing)
-	m := fmt.Sprintf(`%s.fits.zst`, message)
+	return 1
+	/*
+	   	defer func() {
+	   		AddTimeStamp("before-leave-fromFitsMerger()")
+	   	}()
 
-	AddTimeStamp("before-sendJobRefMessage()")
-	return sendJobRefMessage(m, make(map[string]string), "fits-24ch-push")
+	   // message: 1257010784/p00022/t1257010786_1257010815
+	   re := regexp.MustCompile(`p([0-9]+)/`)
+	   ss := re.FindStringSubmatch(message)
+
+	   	if ss == nil {
+	   		fmt.Fprintf(os.Stderr, "invalid message format in fromFitsMerger(), message=%s \n", message)
+	   		return 3
+	   	}
+
+	   pointing, _ := strconv.Atoi(ss[1])
+	   fmt.Printf("pointing:%d\n", pointing)
+	   m := fmt.Sprintf(`%s.fits.zst`, message)
+
+	   AddTimeStamp("before-sendJobRefMessage()")
+	   return sendJobRefMessage(m, make(map[string]string), "fits-24ch-push")
+	*/
 }
