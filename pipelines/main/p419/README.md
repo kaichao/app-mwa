@@ -49,12 +49,12 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL
 TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data1/mydata/mwa/tar DIR_NAME=1301240224 REGEX_FILTER='/130124(16\|17\|18\|19\|20\|21)' scalebox app create
 
 # 1266932744的前240个文件
-TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/tar SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266932744 REGEX_FILTER='/126693(2\|3[01])' scalebox app create
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266932744 REGEX_FILTER='/126693(2\|3[01])' scalebox app create
 
 # 1266329600的前240个文件
-TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 REGEX_FILTER='/1266329' scalebox app create
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 REGEX_FILTER='/1266329' scalebox app create
 
-TARGET_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 REGEX_FILTER='/1266330[0123]' scalebox app create
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 scalebox app create
 
 ```
 
@@ -200,25 +200,35 @@ SET status_code=-1, headers=jsonb_set(COALESCE(headers, '{}'::jsonb), '{repeatab
 WHERE job=230 AND status_code=137;
 ```
 
-## 按job统计slot效率
+## 按job统计slot/host效率
 
 ```sql
 
 WITH task_exec AS (
   SELECT task, slot, t2, t3
   FROM t_task_exec
-  WHERE job=230
-), stat_exec AS (
+  WHERE t3 IS NOT NULL AND job=584
+), exec_by_slot AS (
   SELECT slot, sum(t3-t2), avg(t3-t2),max(t3),min(t2)
   FROM task_exec
   GROUP BY 1
 ), stat_exec_by_slot AS (
-  SELECT t_slot.host,stat_exec.*,
-    ROUND(extract(epoch FROM stat_exec.sum) / extract(epoch FROM stat_exec.max-stat_exec.min), 4)
-  FROM stat_exec JOIN t_slot ON (stat_exec.slot=t_slot.id)
-)
+  SELECT t_slot.host, t_slot.serial_num AS num, exec_by_slot.*, max-min AS duration,
+    ROUND(extract(epoch FROM exec_by_slot.sum) / 
+      extract(epoch FROM exec_by_slot.max - exec_by_slot.min), 6) AS ratio
+  FROM exec_by_slot JOIN t_slot ON (exec_by_slot.slot=t_slot.id) 
+), exec_by_host AS (
+  SELECT host, sum(sum), avg(avg),max(max),min(min),max(max)-min(min) as duration
+  FROM exec_by_slot JOIN t_slot ON (exec_by_slot.slot=t_slot.id)
+  GROUP BY 1
+), stat_exec_by_host AS (
+  SELECT *,
+    ROUND(extract(epoch FROM sum) / 
+      extract(epoch FROM max - min), 6) AS ratio
+  FROM exec_by_host 
+) 
 SELECT *
-FROM stat_exec_by_slot
+FROM stat_exec_by_host
 ORDER BY 1,2
 
 ```
