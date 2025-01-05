@@ -1,0 +1,26 @@
+name: pull-unpack.test
+label: mwa-comput
+cluster: ${CLUSTER}
+parameters:
+  initial_status: RUNNING
+  message_router: message-router
+  default_sleep_count: 20
+
+jobs:
+  pull-unpack:
+    base_image: ${PULL_UNPACK}
+    arguments:
+      code_path: ${PWD}/../code
+      slot_options: slot_on_head,tmpfs_workdir
+    parameters:
+      start_message: ${START_MESSAGE}
+    environments:
+      - JUMP_SERVERS=${JUMP_SERVERS}
+      - SOURCE_URL=${SOURCE_URL}
+      - TARGET_URL=${TARGET_URL}
+
+  message-router:
+    base_image: hub.cstcloud.cn/scalebox/agent
+    arguments:
+      code_path: ${PWD}/../message-router
+
