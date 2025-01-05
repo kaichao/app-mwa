@@ -1,0 +1,32 @@
+name: beam-make.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  beam-make:
+    base_image: app-mwa/mwa-vcstools:rocm-4.0.1
+    command: docker run -d --rm
+        --group-add video 
+        --device /dev/kfd 
+        --device /dev/dri/card1
+        --device /dev/dri/renderD129 
+        --security-opt seccomp=unconfined 
+        --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    arguments:
+      slot_options: reserved_on_exit
+      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/beam-make/code
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message:
+    environments:
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=
+      - ZSTD_TARGET_FILE=no
+    hosts:
+      - n-0[023]:1
+    sink_jobs:
+      - next
+  next:
+    base_image: hub.cstcloud.cn/scalebox/agent
