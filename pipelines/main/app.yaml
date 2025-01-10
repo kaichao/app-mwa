@@ -81,7 +81,7 @@ jobs:
       dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
-      progress_counter_diff: 96
+      progress_counter_diff: 192
       slot_options: tmpfs_workdir
       sleep_interval_seconds: ${SLEEP_INTERVAL_SECONDS}
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}

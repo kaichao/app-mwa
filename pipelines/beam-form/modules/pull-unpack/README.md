@@ -12,7 +12,7 @@
 | --------------- | ---------------  | ----------------------------------- |
 | source_url      | SOURCE_URL       | 本地 或 rsync-over-ssh               |
 | target_url      | TARGET_URL       | 本地目录                             |
-|                 | JUMP_SERVERS     | ssh的jump_servers                   |
+| source_jump_servers | SOURCE_JUMP_SERVERS     | ssh的jump_servers                   |
 |                 | BW_LIMIT         | 读取数据的最大带宽，10k/10m/10g        |
 |                 | KEEP_SOURCE_FILE | 拉取数据后，是否保留原始文件，'yes'/'no' |
 
@@ -27,6 +27,8 @@
 ## 二、模块测试
 
 ### 2.1 单个文件测试
+
+### 本地文件系统
 ```sh
 SOURCE_URL=/data2/mydata/mwa/tar \
 TARGET_URL=/dev/shm/scalebox/mydata/mwa/dat \
@@ -34,6 +36,7 @@ START_MESSAGE=1257617424/1257622186_1257622223_ch132.dat.tar.zst \
 scalebox app create
 ```
 
+### SSH
 ```sh
 ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
 TARGET_URL=/tmp/mydata/mwa/dat \
@@ -41,8 +44,35 @@ scalebox app create)
 app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
 scalebox task add --app-id=${app_id} --sink-job=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
+```
+### SSH + jump-server 
+
+```sh
+ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
+TARGET_URL=/tmp/mydata/mwa/dat \
+SOURCE_JUMP_SERVERS=10.200.1.100:22 \
+CLUSTER=dcu \
+HOSTS=n-00:1 \
+scalebox app create)
+app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
+
+scalebox task add --app-id=${app_id} --sink-job=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
+```
+
+- 加上jump-server，会运行出错：
+
+对应的shell命令为：
+```sh
+ssh -p 10022 -J '10.200.1.100:22' scalebox@159.226.237.136 "cat /raid0/tmp/mwa/tar1266932744/1266932744/1266937506_1266937543_ch132.dat.tar.zst" - | zstd -d | tar --touch -xvf -
+```
+
+  - 在docker容器中（debian 12,zstd version:1.5.6），则报以下错误
 
 ```
+zstd: error 104 : Failed creating I/O thread pool 
+```
+
+  - 同样的命令，在物理主机（CentOS7，zstd 1.4.9）上运行正常
 
 ### 2.2 文件组测试
 

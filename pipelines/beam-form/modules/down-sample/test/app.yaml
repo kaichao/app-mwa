@@ -23,7 +23,7 @@ jobs:
     hosts:
       - n-03:1
     sink_jobs:
-      - next-job
+      - next
 
-  next-job:
+  next:
     base_image: hub.cstcloud.cn/scalebox/agent

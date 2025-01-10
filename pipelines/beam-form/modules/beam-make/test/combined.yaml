@@ -24,10 +24,31 @@ jobs:
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
-      - KEEP_TARGET_FILE=${KEEP_TARGET_FILE}
+      - KEEP_TARGET_FILE=
     hosts:
       - ${HOSTS}
     sink_jobs:
+      - down-sample
+
+  down-sample:
+    base_image: app-mwa/down-sampler
+    arguments:
+      # 20-min
+      max_sleep_count: 200
+      slot_options: reserved_on_exit
+      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/down-sample/code
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message:
+    environments:
+      - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
+      - KEEP_SOURCE_FILE=yes
+      - ENABLE_LOCAL_COMPUTE=
+    hosts:
+      - n-03:1
+    sink_jobs:
       - next
+
   next:
     base_image: hub.cstcloud.cn/scalebox/agent
