@@ -79,13 +79,15 @@ fi
 code=$?
 [[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 
+fits_dir=${DIR_1CH}/${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}
 # 将生成的fits文件转移到规范目录下
 declare -i i=0
 point_arr=($(echo $POINTS | tr "," "\n" ))
 for ii in $(seq $PTHEAD $PTTAIL); do
     pi=$(printf "%05d" $ii)
-    dest_file_r=${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}/p${pi}.fits
-    dest_file=${DIR_1CH}/${dest_file_r}
+    # dest_file_r=${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}/p${pi}.fits
+    # dest_file=${DIR_1CH}/${dest_file_r}
+    dest_file=${fits_dir}/p${pi}.fits
     orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
 
     # BUG：压缩参数开启会导致post_check检查出错 ！
@@ -95,7 +97,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
         dest_file="${dest_file}.zst"
     fi
 
-    mkdir -p $(dirname ${dest_file}) && mv -f $orig_file $dest_file
+    mkdir -p ${fits_dir} && mv -f $orig_file $dest_file
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
 
@@ -127,12 +129,12 @@ echo '{
 if [ "$KEEP_SOURCE_FILE" = "no" ]; then
     # only used for test
     echo "remove dat files"
-    # for ((n=BEG; n<=END; n++)); do
-    #     file_name="${OBSID}/${OBSID}_${n}_ch${ch}.dat"
-    #     echo "file_name to remove:${DIR_DAT}/${file_name}"
-    #     rm -f "${DIR_DAT}/${file_name}"
-    # done
-    rm -rf ${dat_dir}
+    echo ${dat_dir} >> ${WORK_DIR}/removed-files.txt
+fi
+if [ "$KEEP_TARGET_FILE" = "no" ]; then
+    # only used for test
+    echo "remove fits files"
+    echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 
 echo stdout,code=$code 

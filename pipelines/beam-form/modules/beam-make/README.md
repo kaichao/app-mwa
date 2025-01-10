@@ -16,7 +16,7 @@
 |                   | LOCAL_INPUT_ROOT  | 输入文件单通道dat的本地根目录。设为非空，用于本地计算。  |
 |                   | LOCAL_OUTPUT_ROOT | 输出fits文件的本地根目录。设为非空，用于本地计算。 |
 |                   | LOCAL_CAL_ROOT    | 定标文件的本地根目录。设为非空，用于本地计算。     |
-|                   | KEEP_SOURCE_FILE  | 是否保留原始文件。设为no，用于生产运行        |
+|                   | KEEP_SOURCE_FILE  | 是否保留原始文件。设为no，则用于测试。        |
 |                   | KEEP_TARGET_FILE  | 是否保留目标文件。设为no，则用于测试。        |
 | pointing_range    |                   | 指向范围，用于确定输入数据的目录。        |
 
@@ -32,7 +32,7 @@
 ```sh
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00048 1257617424/p00001_00024/t1257617426_1257617505/ch109
+scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617465/ch109
 
 ```
 

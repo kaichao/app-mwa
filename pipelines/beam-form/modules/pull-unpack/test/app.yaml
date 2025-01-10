@@ -11,13 +11,16 @@ jobs:
     base_image: ${PULL_UNPACK}
     arguments:
       code_path: ${PWD}/../code
-      slot_options: slot_on_head,tmpfs_workdir
+      slot_options: tmpfs_workdir
     parameters:
       start_message: ${START_MESSAGE}
     environments:
-      - JUMP_SERVERS=${JUMP_SERVERS}
       - SOURCE_URL=${SOURCE_URL}
+      - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
+      - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
+    hosts:
+      - ${HOSTS}    
 
   message-router:
     base_image: hub.cstcloud.cn/scalebox/agent
