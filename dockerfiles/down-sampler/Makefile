@@ -12,6 +12,9 @@ dist-dcu: build
 	@ date
 	docker save $(IMAGE_NAME) | zstd -T4 > /raid0/tmp/my.img.zst
 	pdsh -w node[1-4] -l root 'zstd -dc /raid0/tmp/my.img.zst | docker load' | dshbak -c
+	make singularity
+	mkdir -p $(SINGULARITY_DIR)/app-mwa/
+	mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
 	@ date
 
 singularity:
@@ -21,8 +24,6 @@ singularity:
 	date
 
 dist-singularity: singularity
-	# mkdir -p $(SINGULARITY_DIR)/app-mwa/
-	# mv -f ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
 	ssh login1 mkdir -p singularity/app-mwa/
 	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
 
