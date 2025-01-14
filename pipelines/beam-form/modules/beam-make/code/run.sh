@@ -50,7 +50,8 @@ echo UTT=${UTT}
 echo "dat_dir=${dat_dir}"
 
 # PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
-PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
+pointing_file="${POINTING_FILE:-pointings.txt}"
+PTLIST=${DIR_CAL}/${OBSID}/${pointing_file}
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 echo "POINTS:${POINTS}"
 

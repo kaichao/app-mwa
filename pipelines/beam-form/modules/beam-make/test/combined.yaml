@@ -6,47 +6,39 @@ parameters:
 
 jobs:
   beam-make:
-    base_image: app-mwa/mwa-vcstools:rocm-4.0.1
-    # command: docker run -d --rm
-    #     --group-add video 
-    #     --device /dev/kfd 
-    #     --device /dev/dri/card1
-    #     --device /dev/dri/renderD129 
-    #     --security-opt seccomp=unconfined 
-    #     --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
     arguments:
       slot_options: reserved_on_exit
-      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/beam-make/code
+      code_path: ${CODE_BASE}/beam-make/code
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message:
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
-      - KEEP_TARGET_FILE=
+      - KEEP_TARGET_FILE=yes
     hosts:
-      - ${HOSTS}
+      - n-02:${NUM_SLOTS}
     sink_jobs:
       - down-sample
 
   down-sample:
-    base_image: app-mwa/down-sampler
+    base_image: ${DOWN_SAMPLE}
     arguments:
       # 20-min
       max_sleep_count: 200
       slot_options: reserved_on_exit
-      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/down-sample/code
+      code_path: ${CODE_BASE}/down-sample/code
     parameters:
       key_group_regex: ^(.+)$
-      start_message:
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
-      - KEEP_SOURCE_FILE=yes
-      - ENABLE_LOCAL_COMPUTE=
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - KEEP_SOURCE_FILE=no
+      - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
     hosts:
-      - n-03:1
+      - n-02:1
     sink_jobs:
       - next
 

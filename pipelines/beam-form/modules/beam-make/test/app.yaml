@@ -6,7 +6,7 @@ parameters:
 
 jobs:
   beam-make:
-    base_image: app-mwa/mwa-vcstools:rocm-4.0.1
+    base_image: ${MWA_VCSTOOLS}
     # command: docker run -d --rm
     #     --group-add video 
     #     --device /dev/kfd 
@@ -17,17 +17,18 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       slot_options: reserved_on_exit
-      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/beam-make/code
+      code_path: ${CODE_BASE}/beam-make/code
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message:
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
-      - KEEP_TARGET_FILE=${KEEP_TARGET_FILE}
+      - KEEP_TARGET_FILE=no
     hosts:
-      - ${HOSTS}
+      - n-00:${NUM_SLOTS}
     sink_jobs:
       - next
+
   next:
     base_image: hub.cstcloud.cn/scalebox/agent
