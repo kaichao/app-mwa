@@ -16,6 +16,7 @@
 |                   | LOCAL_INPUT_ROOT  | 输入文件单通道dat的本地根目录。设为非空，用于本地计算。  |
 |                   | LOCAL_OUTPUT_ROOT | 输出fits文件的本地根目录。设为非空，用于本地计算。 |
 |                   | LOCAL_CAL_ROOT    | 定标文件的本地根目录。设为非空，用于本地计算。     |
+|                   | POINTING_FILE     | 指向文件的名称，缺省为pointings.txt。     |
 |                   | KEEP_SOURCE_FILE  | 是否保留原始文件。设为no，则用于测试。        |
 |                   | KEEP_TARGET_FILE  | 是否保留目标文件。设为no，则用于测试。        |
 | pointing_range    |                   | 指向范围，用于确定输入数据的目录。        |
