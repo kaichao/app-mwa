@@ -64,18 +64,12 @@ done
   - 不同数据量：从40秒到480秒，分别对应dat目录从1到12。
 
 ```sh
-ret=$( \
-    LOCAL_INPUT_ROOT=/tmp/scalebox/mydata \
-    LOCAL_OUTPUT_ROOT=/dev/shm/scalebox/mydata \
-    HOSTS=n-02:2 \
-    KEEP_TARGET_FILE=no \
-    scalebox app create )
-app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
+app_id=$( NUM_SLOTS=2 scalebox app create | cut -d':' -f2 | tr -d '}' )
 ```
 
 - 添加单个消息
 ```sh
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617665/ch109
+scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617625/ch109
 ```
 
 - 添加n个消息
@@ -88,11 +82,20 @@ for ((i=0; i<n; i++)); do
   start=$((i * 24 + 1))
   end=$((start + 23))
   s=$(printf "%05d_%05d" $start $end)
-  scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617745/ch109
+  scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617625/ch109
 done
 ```
 
 ### 2.4 实验二：基于本地存储的波束合成+下采样
+
+```sh
+app_id=$( NUM_SLOTS=1 scalebox app create combined.yaml | cut -d':' -f2 | tr -d '}' )
+```
+
+```sh
+app_id=$( ENABLE_LOCAL_COMPUTE=no NUM_SLOTS=1 scalebox app create combined.yaml | cut -d':' -f2 | tr -d '}' )
+```
+
 
 ### 2.5 波束合成的测试结果
 
@@ -164,6 +167,42 @@ while true; do
 done
 
 ```
+
+
+## 磁盘读写带宽测试
+
+- 单客户端性能测试
+- 数据量：20480 MiB
+- 带宽单位：MiB/s
+
+| num |  fs     | read-bw|write-bw|   spec                  |
+| --- | ------- | ------ | ------ | ----------------------- |
+|  1  |  ext4   |  502.0 |  178.7 | SATA SSD                |
+|  2  |  tmpfs  | 4382.2 | 2027.2 | DDR4 2666MHz x8         |
+|  3  |  ext4   | 8167.5 | 2386.6 | nvme SSD, raid1 x2      |
+|  4  |  xfs    | 9946.1 | 3691.3 | nvme SSD, raid0 x2      |
+|  5  |  xfs    | 1513.7 | 1924.8 | disk, raid5 x8          |
+|  6  |  tmpfs  | 4936.0 | 1500.1 | DDR4 3200MHz x8         |
+|  7  | ParaStor|  334.1 |  416.3 | 500+ disks              |
+
+### 测试脚本
+- tmpfs
+```sh
+dd if=/dev/zero of=/dev/shm/testfile bs=1G count=20 
+dd if=/dev/shm/testfile of=/dev/null bs=1G
+rm -f /dev/shm/testfile
+```
+
+- 非tmpfs
+  - dir={/tmp,/opt/tmp,/work2/cstu0036}
+```sh
+dir=/tmp
+dd if=/dev/zero of=${dir}/testfile bs=1G count=20 oflag=direct
+dd if=${dir}/testfile of=/dev/null bs=1G iflag=direct
+rm -f ${dir}
+```
+
+### 测试结果
 
 ## 四、实验结论
 

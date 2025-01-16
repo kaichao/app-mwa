@@ -95,6 +95,7 @@ jobs:
       key_group_index: 1,2,3
       # beam-maker的message-router耗时长，独立处理
       message_router_index: 1
+      retry_rules: "['139:1']"
       pod_id: pod_0
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_DISK_ROOT}
@@ -147,7 +148,7 @@ jobs:
       key_group_index: 1,3,2
       bulk_message_size: 3
       # 255 12
-      retry_rules: "['5:3','23:3']"
+      retry_rules: "['255:2','12:1']"
       message_router_index: 3
       slot_options: tmpfs_workdir
     environments:
@@ -176,7 +177,7 @@ jobs:
     environments:
       - KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE}
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - LOCAL_OUTPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=/work1/cstu0036/mydata
       # - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       # "500k"/"1m"/...
       - BW_LIMIT=

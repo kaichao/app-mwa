@@ -30,18 +30,24 @@ function post_check() {
     echo "Output file:$output_file, size:$output_size" >> ${WORK_DIR}/custom-out.txt
 
     # 计算压缩比
-    compression_ratio=$(($input_size * 100 / $output_size))
+    compression_ratio=$(($output_size * 100 / $input_size))
     echo "compression_ratio: $compression_ratio %" >> ${WORK_DIR}/custom-out.txt
 
-    # 判断压缩比是否异常
-    # Check if compression ratio is less than 5
-    if [ ! $(($input_size / 5)) -le $output_size ]; then
-        echo "[Warn] Possible abnormal compression. Input file is 5 times larger than output file."  >> ${WORK_DIR}/custom-out.txt
+    # 判断压缩比是否异常，压缩比在：4..10之间
+    if [[ $compression_ratio -ge 10 && $compression_ratio -le 25 ]]; then
+        return 0
+    else
+        echo "[Warn] Possible abnormal compression, filename:$1." >> ${WORK_DIR}/custom-out.txt
+        return 1
     fi
+    # # Check if compression ratio is less than 4
+    # if [ ! $(($input_size / 4)) -le $output_size ]; then
+    #     echo "[Warn] Possible abnormal compression. Input file $1 is 4 times larger than output file."  >> ${WORK_DIR}/custom-out.txt
+    # fi
 
-    # Check if compression ratio is less than 6
-    if [ ! $(($input_size / 6)) -le $output_size ]; then
-        echo "[Error] Compression ratio exceeds normal limits. Exiting with error code 93." >> ${WORK_DIR}/custom-out.txt
-        return 93
-    fi
+    # # Check if compression ratio is less than 8
+    # if [ ! $(($input_size / 8)) -le $output_size ]; then
+    #     echo "[Error] Compression ratio exceeds normal limits. Exiting with error code 93." >> ${WORK_DIR}/custom-out.txt
+    #     return 93
+    # fi
 }
