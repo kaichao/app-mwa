@@ -75,8 +75,6 @@ for f in *.fits; do
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/custom-out.txt && exit $code
 
-    [ "$KEEP_SOURCE_FILE" == "no" ] && echo "${dir_1ch}/${f}" > ${WORK_DIR}/removed-files.txt
-
     # 下采样后文件
     f0="${dir_1chx}/${f}.zst"
     # 按pointing再分发后文件
@@ -105,6 +103,13 @@ for f in *.fits; do
     fi
     echo "${dir_1ch}/${f}" > ${WORK_DIR}/input-files.txt
 done
+
+[ "$KEEP_SOURCE_FILE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt
+# 用于测试
+[ "$KEEP_TARGET_FILE" == "no" ] && echo "${dir_1chx}" >> ${WORK_DIR}/removed-files.txt
+
+echo "removed-files:" >> ${WORK_DIR}/custom-out.txt
+cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/custom-out.txt
 
 if [ "$ENABLE_LOCAL_COMPUTE" != "yes" ]; then
     rmdir $dir_1chx

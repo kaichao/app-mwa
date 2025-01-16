@@ -1,4 +1,4 @@
-name: beam-make.test
+name: combined.test
 label: 单元测试
 cluster: dcu
 parameters:
@@ -19,26 +19,28 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
       - KEEP_TARGET_FILE=yes
     hosts:
-      - n-02:${NUM_SLOTS}
+      - n-00:${NUM_SLOTS}
     sink_jobs:
       - down-sample
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
+    command: ${DOWN_SAMPLE_COMMAND}
     arguments:
       # 20-min
       max_sleep_count: 200
       slot_options: reserved_on_exit
       code_path: ${CODE_BASE}/down-sample/code
     parameters:
-      key_group_regex: ^(.+)$
+      key_group_regex: ^([0-9]+)$
     environments:
       - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_SOURCE_FILE=no
-      - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
+      - KEEP_TARGET_FILE=no
+      - ENABLE_LOCAL_COMPUTE=yes
     hosts:
-      - n-02:1
+      - n-00:1
     sink_jobs:
       - next
 
