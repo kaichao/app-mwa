@@ -25,7 +25,7 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
       - KEEP_TARGET_FILE=no
     hosts:
-      - n-02:${NUM_SLOTS}
+      - n-00:${NUM_SLOTS}
     sink_jobs:
       - next
 

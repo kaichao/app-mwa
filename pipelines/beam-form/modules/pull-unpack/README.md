@@ -85,7 +85,8 @@ ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
     TARGET_URL=/raid0/scalebox/mydata/mwa/dat \
     scalebox app create)
 app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
-
+```
+```sh
 for ch in {109..132}; do
 scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
     -h target_subdir=1257617424/p00001_00048/t1257617426_1257617505/ch${ch} \

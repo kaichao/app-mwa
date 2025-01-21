@@ -13,17 +13,17 @@ pointing_range=$(get_parameter "$2" "pointing_range")
 KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
 
 if [ $LOCAL_CAL_ROOT ]; then
-    DIR_CAL="/local${LOCAL_CAL_ROOT}/mwa/cal"
+    DIR_CAL=$(get_host_dir "${LOCAL_CAL_ROOT}/mwa/cal")
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_DAT="/local${LOCAL_INPUT_ROOT}/mwa/dat"
+    DIR_DAT=$(get_host_dir "${LOCAL_INPUT_ROOT}/mwa/dat")
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CH="/local${LOCAL_OUTPUT_ROOT}/mwa/1ch"
+    DIR_1CH=$(get_host_dir "${LOCAL_OUTPUT_ROOT}/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
