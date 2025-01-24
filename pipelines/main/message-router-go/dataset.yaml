@@ -66,10 +66,10 @@ datasets:
 
     # pointing dimension
     # next: 9121
-    pointingBegin: 8161
-    pointingEnd: 9120
+    pointingBegin: 9121
+    pointingEnd: 9600
     pointingStep: 24
-    numPerBatch: 40
+    numPerBatch: 20
 
   1266329600:
     # 1266329602 ~ 1266334399, 4798
@@ -89,7 +89,7 @@ datasets:
 
     # pointing dimension
     # next: 8641
-    pointingBegin: 7681
+    pointingBegin: 8641
     # pointingEnd: 8996
     pointingEnd: 7860
     pointingStep: 24
@@ -113,12 +113,12 @@ datasets:
     timeStep: 200
 
     # pointing dimension
-    pointingBegin: 1
+    pointingBegin: 961
     # pointingEnd: 8798
-    pointingEnd: 960
+    pointingEnd: 2880
     pointingStep: 24
     # numPerBatch: 1
-    numPerBatch: 40
+    numPerBatch: 80
 
   1206977296:
     # 1206977303 ~ 1206981016, 3714
@@ -142,3 +142,26 @@ datasets:
     pointingStep: 24
     # numPerBatch: 1
     numPerBatch: 40
+
+  1255803168:
+    # t: 1255803170 ~ 1255807967, 4798
+    # p: 10093
+
+    # channel dimension
+    channelBegin: 109
+    numOfChannels: 24
+
+    # time dimenstion
+    timeBegin: 1255803170
+    # numOfSeconds: 4798
+    timeEnd: 1255807967
+
+    # packSize:
+    timeUnit: 40
+    timeStep: 200
+
+    # pointing dimension
+    pointingBegin: 1
+    pointingEnd: 10093
+    pointingStep: 24
+    numPerBatch: 80

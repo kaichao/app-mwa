@@ -40,8 +40,11 @@ ii=$(( ch - 108 ))
 # let ii=$((10#${ch}))-108
 printf -v i "%02d" $ii
 
-dat_dir="${DIR_DAT}/${OBSID}/${pointing_range}/t${BEG}_${END}/ch${ch}"
-#dat_dir="${DIR_DAT}/${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}"
+if [ $pointing_range ]; then
+    dat_dir="${DIR_DAT}/${OBSID}/${pointing_range}/t${BEG}_${END}/ch${ch}"
+else
+    dat_dir="${DIR_DAT}/${OBSID}/t${BEG}_${END}/ch${ch}"
+fi
 
 UTT=$( /app/bin/gps2utc.py ${BEG} )
 # UTT=2019-11-05T17:43:25.00

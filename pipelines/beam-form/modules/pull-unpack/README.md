@@ -105,7 +105,25 @@ scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
     1257617424/1257617546_1257617585_ch${ch}.dat.tar.zst
 done
 
+1257010784/1257015546_1257015583_ch117.dat.tar.zst,1257010784/p00001_00960/t1257015386_1257015583/ch132
+
 ```
 ### 2.3 全数据集测试
 
+```sh
+SOURCE_URL=astro@10.100.1.30:10022/data2/mydata/mwa/tar \
+    TARGET_URL=/work2/cstu0036/mydata/mwa/dat \
+    START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+    HOSTS=n0:1 \
+    CLUSTER=p419 \
+    scalebox app create
+```
 
+- p419-singularity
+```sh
+    START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+    scalebox app create -e p419.env
+```
+```sh
+    START_MESSAGE=1257617424 scalebox app create -e p419.env
+```
