@@ -30,6 +30,8 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa TARGET_URL=/data2/tmp DI
 
 TARGET_URL=scalebox@159.226.237.136:10022/raid0/tmp/24ch SOURCE_URL=/data1/mydata/mwa/24ch DIR_NAME=1266932744-241102 REGEX_FILTER= scalebox app create
 
+SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa TARGET_URL=/data2/tmp DIR_NAME=tar1255803168 REGEX_FILTER=.+zst$ scalebox app create
+
 ```
 
 - 从main到p419(push)
@@ -56,6 +58,7 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 
 TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1266329600 scalebox app create
 
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1257617424 scalebox app create
 ```
 
 
@@ -79,7 +82,6 @@ rsync -av /mnt/old_mount/ /backup/
 
 # 2. 卸载分区
 umount /dev/sda1
-
 
 
 # 3. 格式化为 XFS

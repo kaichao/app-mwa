@@ -10,10 +10,8 @@ jobs:
   pull-unpack:
     base_image: ${PULL_UNPACK}
     arguments:
-      code_path: ${PWD}/../code
+      code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-    parameters:
-      start_message: ${START_MESSAGE}
     environments:
       - SOURCE_URL=${SOURCE_URL}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
@@ -23,7 +21,9 @@ jobs:
       - ${HOSTS}    
 
   message-router:
-    base_image: hub.cstcloud.cn/scalebox/agent
-    arguments:
-      code_path: ${PWD}/../message-router
-
+    base_image: app-mwa/message-router-pull-unpack-test
+    parameters:
+      key_group_regex: ^([0-9]+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - h0:1

@@ -19,7 +19,7 @@
 |                   | POINTING_FILE     | 指向文件的名称，缺省为pointings.txt。     |
 |                   | KEEP_SOURCE_FILE  | 是否保留原始文件。设为no，则用于测试。        |
 |                   | KEEP_TARGET_FILE  | 是否保留目标文件。设为no，则用于测试。        |
-| pointing_range    |                   | 指向范围，用于确定输入数据的目录。        |
+| pointing_range    | POINTING_RANGE    | 指向范围，用于确定输入数据的目录。        |
 
 
 ### 用户应用的退出码

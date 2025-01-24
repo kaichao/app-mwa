@@ -1,7 +1,8 @@
 name: app-base.beam-form
-cluster: dcu
+cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
+  message_router: message-router
 
 jobs:
   wait-queue:
@@ -20,6 +21,7 @@ jobs:
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
       - KEEP_TARGET_FILE=yes
+      - POINTING_RANGE=p00001_00048
     hosts:
       - n-02:1
       # - n-0[12]:${NUM_SLOTS}
