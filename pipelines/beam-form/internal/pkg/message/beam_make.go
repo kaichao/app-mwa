@@ -56,15 +56,17 @@ func ProcessForBeamMake(m string) ([]string, []string, []string) {
 	// fits-done:1257010784/p00001/t1257010786_1257010985
 	// pointing-done:1257010784/p00001
 	nTimeRanges := len(ts) / 2
-	for k := pBegin; k <= pEnd; k++ {
+	for k := 0; k < len(ps); k += 2 {
 		for j := 0; j < len(ts); j += 2 {
-			sema := fmt.Sprintf(`"fits-done:%s/p%05d/t%d_%d":%d`,
-				dataset, k, ts[j], ts[j+1], 24)
+			sema := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
+				dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
 			semaFitsDone = append(semaFitsDone, sema)
 		}
+	}
+	for p := pBegin; p <= pEnd; p++ {
 		if ss[7] == "" {
 			sema := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`,
-				dataset, k, nTimeRanges)
+				dataset, p, nTimeRanges)
 			semaPointingDone = append(semaPointingDone, sema)
 		}
 	}

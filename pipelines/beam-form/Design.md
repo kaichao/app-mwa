@@ -15,15 +15,15 @@
 
 ## 二、模块设计
 
-| num | module_name      | image_name        | std_image|cust_shell| input_message     | input_path     | output_message    | output_path    |
+| num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
 | 1 | remote_tar_pull | scalebox/ file-copy | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744 | ${input_message} | mwa/tar/p00001_00960/1266932744 |
 | 2 | local_wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
 | 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
 | 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
-| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message}/p00001 | ${input_message} | mwa/1chx/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
-| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00023/t1257010786_1257010965/ch121.fits.zst |mwa/1chx/${input_message}|${input_message} |mwa/1chx/${input_message}|
-| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chx/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
+| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
+| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
+| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
 | 8 | remote_fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
 
 
