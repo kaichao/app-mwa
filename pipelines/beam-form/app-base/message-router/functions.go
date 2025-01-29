@@ -93,7 +93,6 @@ func fromDownSample(message string, headers map[string]string) int {
 		misc.AppendToFile(taskFile, m)
 	}
 	code := misc.ExecCommandReturnExitCode("scalebox task add --sink-job=fits-merge", 120)
-	// misc.ExecCommandReturnExitCode("scalebox task add "+fmt.Sprintf("%s/p%05d/%s", ds, pBegin, t), 5)
 	return code
 }
 
