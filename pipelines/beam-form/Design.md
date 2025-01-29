@@ -5,7 +5,7 @@
 
 - message-router
 - remote-tar-pull：按需，从外部存储拷贝原始数据到本地共享存储
-- local-wait-queue：实现group_running_vtasks的流控模块，每节点组的最大并行数作为流控机制，按顺序释放消息，管理后续所有HOST-BOUND模块。
+- wait-queue：实现group_running_vtasks的流控模块，每节点组的最大并行数作为流控机制，按顺序释放消息，管理后续所有HOST-BOUND模块。
 - pull-unpack：按通道，将远端存储/本地共享存储将数据拉取到计算节点的本地存储，并解包。（标准模块+定制脚本）
 - beam-make：按通道的波束合成。
 - down-sample：波束合成结果fits文件做1/4下采样，降低数据量
@@ -18,7 +18,7 @@
 | num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
 | 1 | remote_tar_pull | scalebox/ file-copy | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744 | ${input_message} | mwa/tar/p00001_00960/1266932744 |
-| 2 | local_wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
+| 2 | wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
 | 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
 | 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
 | 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
@@ -46,7 +46,7 @@
 - task-timeout
 
 
-### 2.2 local-wait-queue
+### 2.2 wait-queue
 
 - 处理步骤
   1. 若信号量值为0，自动停止
@@ -122,7 +122,7 @@
 
 - 信号量初值：120
 - 信号量操作：完成一个tar的copy，信号量减一
-- 信号量触发：值为0，给local-wait-queue发消息
+- 信号量触发：值为0，给wait-queue发消息
 
 ### dat-ready
 
@@ -162,9 +162,9 @@
 
 | from_module            | input_message            | to_module                    | output_message        |
 | ---------------------- | ------------------------ | --------------------------- | ---------------------- |
-| (default) | 1257010784 <br/> 1257010784/p00001_00960 <br/> 1257010784/p00001_00960/t1257012766_1257012965 | local_wait_queue <br/> remote_tar_pull | 1257010784/p00001_00960/t1257012766_1257012965 <br/> p00001_00960/1266932744/1266933866_1266933905_ch112.dat.tar.zst | 
-| remote_tar_pull | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | local_wait_queue | ${input_message} |
-| local_wait_queue | 1257010784/p00001_00960/t1257012766_1257012965 | pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst |
+| (default) | 1257010784 <br/> 1257010784/p00001_00960 <br/> 1257010784/p00001_00960/t1257012766_1257012965 | wait_queue <br/> remote_tar_pull | 1257010784/p00001_00960/t1257012766_1257012965 <br/> p00001_00960/1266932744/1266933866_1266933905_ch112.dat.tar.zst | 
+| remote_tar_pull | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | wait_queue | ${input_message} |
+| wait_queue | 1257010784/p00001_00960/t1257012766_1257012965 | pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst |
 | pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 |
 | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | down_sample |  ${input_message} |
 | down_sample | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | fits_redist <br/> fits_merge | 1257010784/p00023/t1257010786_1257010965/ch121.fits <br/> 1257010784/p00023/t1257010786_1257010965 |
@@ -184,7 +184,7 @@
 
 - 处理步骤
   1. 若使用了外部存储，则给remote-tar-copy发一组消息，创建信号量```tar-ready```；
-  2. 否则，直接给local-wait-queue发一条消息；针对消息格式1/2，按需创建信号量```fits-ts-ready```，用于与presto-search流水线的同步通信。
+  2. 否则，直接给wait-queue发一条消息；针对消息格式1/2，按需创建信号量```pointing-done```，用于与presto-search流水线的同步通信。
 
 - 输入消息
   - 格式1：1257010784。（全数据集处理）
@@ -194,25 +194,25 @@
 - 输出消息：1257010784/p00001_00960/t1257012766_1257012965
 
 - 消息头/环境变量：
-  - BEAM_FORM_ONLY：不创建信号量```fits-ts-ready```
+  - BEAM_FORM_ONLY：不创建信号量```pointing-done```
 
 
 ### remote-tar-pull
 
 - 处理步骤
   - 1. 信号量```tar-ready```减一
-  - 2. 若信号量值为0，给local-wait-queue发消息
+  - 2. 若信号量值为0，给wait-queue发消息
 
 - 输入消息：p00001_00960/1266932744/1266933866_1266933905_ch112.dat.tar.zst
 - 消息头/环境变量：
   
-- 输出消息（local-wait-queue）：1257010784/p00001_00960/t1257012766_1257012965
+- 输出消息（wait-queue）：1257010784/p00001_00960/t1257012766_1257012965
 
 
-### local-wait-queue
+### wait-queue
 
 - 处理步骤
-  - 创建后续处理相关信号量（dat-ready/dat-processed/fits-ready）
+  - 创建后续处理相关信号量（dat-ready/dat-done/fits-ready）
   - 给pull-unpack发一组消息
 
 - 输入消息：1257010784/p00001_00960/t1257012766_1257012965

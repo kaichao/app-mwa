@@ -110,8 +110,8 @@ datasets:
 
     # pointing dimension
     pointingBegin: 1
-    # pointingEnd: 8798
-    pointingEnd: 960
+    pointingEnd: 8798
+    # pointingEnd: 960
     pointingStep: 24
     # numPerBatch: 1
     numPerBatch: 40

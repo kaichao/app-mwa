@@ -46,8 +46,9 @@ func ProcessForBeamMake(m string) ([]string, []string, []string) {
 	for k := 0; k < len(ps); k += 2 {
 		for j := 0; j < len(ts); j += 2 {
 			for i := 0; i < cube.NumOfChannels; i++ {
-				messages = append(messages, fmt.Sprintf("%s/p%05d_%05d/t%d_%d/ch%03d",
-					dataset, ps[k], ps[k+1], ts[j], ts[j+1], cube.ChannelBegin+i))
+				m := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/ch%03d",
+					dataset, ps[k], ps[k+1], ts[j], ts[j+1], cube.ChannelBegin+i)
+				messages = append(messages, m)
 			}
 		}
 	}
