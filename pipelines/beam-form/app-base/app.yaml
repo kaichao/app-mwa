@@ -10,10 +10,11 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
+      task_timeout_seconds: 3600
     parameters:
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
-      task_cache_expired_minutes: 60
+      task_cache_expired_minutes: 65
     environments:
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
@@ -50,7 +51,7 @@ jobs:
       max_sleep_count: 720
       code_path: ${CODE_BASE}/fits-merge/code
     parameters:
-      key_group_regex: ^(.+)
+      key_group_regex: ^([0-9]+)
     environments:
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
@@ -58,7 +59,7 @@ jobs:
     hosts:
       - ${NODES}
 
-  message-router:
+  message-router-beam-form:
     base_image: app-mwa/message-router-app-base
     parameters:
       key_group_regex: ^([0-9]+)$

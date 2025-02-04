@@ -61,6 +61,10 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1257617424 scalebox app create
 ```
 
+- 24ch结果从共享存储拷贝回头节点
+```sh
+SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch TARGET_URL=/data1/mydata/mwa/24ch DIR_NAME=1266932744-250121 REGEX_FILTER= KEEP_SOURCE_FILE=no scalebox app create
+```
 
 ## /tmp目录下文件自动删除
 

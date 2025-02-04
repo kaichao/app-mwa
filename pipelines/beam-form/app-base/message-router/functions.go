@@ -13,6 +13,11 @@ import (
 )
 
 func defaultFunc(msg string, headers map[string]string) int {
+	defer func() {
+		misc.AddTimeStamp("leave-defaultFunc()")
+	}()
+	misc.AddTimeStamp("enter-defaultFunc()")
+
 	// input message:
 	// 	1257010784
 	// 	1257010784/p00001_00960
@@ -22,6 +27,8 @@ func defaultFunc(msg string, headers map[string]string) int {
 		fmt.Sprintf("n_messages:%d,nsemaFitsDone:%d,nsemaPointingDone:%d\n",
 			len(messages), len(semaFitsDone), len(semaPointingDone)))
 	fmtSemaCreate := `scalebox semaphore create '{"semaphores":{%s}}'`
+
+	misc.AddTimeStamp("after-ProcessForBeamMake()")
 	batchSize := 120
 	for i := 0; i < len(semaFitsDone); i += batchSize {
 		end := i + batchSize
@@ -33,6 +40,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 			return code
 		}
 	}
+	misc.AddTimeStamp("after-semaFitsDone")
 	for i := 0; i < len(semaPointingDone); i += batchSize {
 		end := i + batchSize
 		if end > len(semaPointingDone) {
@@ -43,6 +51,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 			return code
 		}
 	}
+	misc.AddTimeStamp("after-semaPointingDone")
 
 	for _, m := range messages {
 		misc.AppendToFile(os.Getenv("WORK_DIR")+"/task-body.txt", m)
@@ -50,7 +59,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	cmd := "scalebox task add --sink-job=beam-make"
-	return misc.ExecCommandReturnExitCode(cmd, 600)
+	return misc.ExecCommandReturnExitCode(cmd, 3600)
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
