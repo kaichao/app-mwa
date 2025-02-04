@@ -3,7 +3,7 @@
 source functions.sh
 source $(dirname $0)/functions.sh
 
-env | sort > ${WORK_DIR}/custom-out.txt
+# env | sort > ${WORK_DIR}/custom-out.txt
 
 # OBSID/p{PTHEAD}_{PTTAIL}/t{BEG}_{END}/ch{ch}/
 # m="1257617424/p00001_00048/t1257617426_1257617505/ch109"
@@ -56,7 +56,6 @@ echo "dat_dir=${dat_dir}"
 pointing_file="${POINTING_FILE:-pointings.txt}"
 PTLIST=${DIR_CAL}/${OBSID}/${pointing_file}
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
-echo "POINTS:${POINTS}"
 
 cd ${WORK_DIR}
 if [ "$RUNNING_MODE" = "1" ]; then
@@ -103,7 +102,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
 
     mkdir -p ${fits_dir} && mv -f $orig_file $dest_file
     code=$?
-    [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR]exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >> ${WORK_DIR}/custom-out.txt && exit $code
 
     # 统计输出文件的字节数
     echo $dest_file >> ${WORK_DIR}/output-files.txt
@@ -114,12 +113,9 @@ done
 # 检查输出文件是否完整
 post_check $OBSID $ch $PTHEAD $PTTAIL $BEG $END $DIR_1CH
 code=$?
-[[ $code -ne 0 ]] && echo "exit after post-check output files, exit_code:$code" >&2 && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] exit after post-check output files, exit_code:$code" >> ${WORK_DIR}/custom-out.txt && exit $code
 
 echo $1 > ${WORK_DIR}/messages.txt
-
-# scalebox task add "$1"; code=$?
-# [[ $code -ne 0 ]] && echo "[ERROR] task-add, error_code:$code" >&2 && exit $code
 
 # 统计输入文件的总字节数
 num_points=${#point_arr[@]}
@@ -141,7 +137,6 @@ if [ "$KEEP_TARGET_FILE" = "no" ]; then
     echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 
-echo stdout,code=$code 
-echo stderr >&2
+echo stdout,code=$code >> ${WORK_DIR}/custom-out.txt
 
 exit $code
