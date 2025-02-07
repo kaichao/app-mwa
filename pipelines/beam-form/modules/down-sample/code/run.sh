@@ -19,19 +19,19 @@ source $(dirname $0)/functions.sh
 
 # 1. set the input / output directory
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_1CH=$(get_host_dir "${LOCAL_INPUT_ROOT}/mwa/1ch")
+    DIR_1CH=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_dir "${LOCAL_OUTPUT_ROOT}/mwa/1chx")
+    DIR_1CHX=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1chx")
 else
     DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 # 
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_dir "${LOCAL_OUTPUT_ROOT}/mwa/1chz")
+    DIR_1CHZ=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1chz")
 else
     DIR_1CHZ=/cluster_data_root/mwa/1chz
 fi
@@ -42,7 +42,7 @@ dir_1ch="$DIR_1CH/$m"
 dir_1chx="$DIR_1CHX/$m"
 dir_1chz="$DIR_1CHZ/$m"
 mkdir -p $dir_1chx; code=$?
-[[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir_1chx" >&2 && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir_1chx"  >> ${WORK_DIR}/custom-out.txt && exit $code
 
 # remove existing intermediate files in output dir
 rm -f $dir_1chx/*
@@ -56,14 +56,14 @@ cd ${dir_1ch}
 
 for f in *.fits; do
     if [ ! -e "$f" ]; then
-        echo "No .fits files found in the current directory."
+        echo "No .fits files found in the current directory."  >> ${WORK_DIR}/custom-out.txt
         break
     fi
     echo "filename:$f"
     # 3. run the programs to downsample the files
     psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${dir_1chx}/$f ${dir_1ch}/$f
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f " >&2 && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f "  >> ${WORK_DIR}/custom-out.txt && exit $code
 
     # rename file to normalized
     mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f} && zstd --long -T8 --rm ${dir_1chx}/${f}
@@ -99,9 +99,9 @@ for f in *.fits; do
             exit 81
         fi
     else
-        echo $f0 > ${WORK_DIR}/output-files.txt
+        echo $f0 >> ${WORK_DIR}/output-files.txt
     fi
-    echo "${dir_1ch}/${f}" > ${WORK_DIR}/input-files.txt
+    echo "${dir_1ch}/${f}" >> ${WORK_DIR}/input-files.txt
 done
 
 [ "$KEEP_SOURCE_FILE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt

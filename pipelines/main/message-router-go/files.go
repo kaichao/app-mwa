@@ -11,6 +11,7 @@ import (
 	"github.com/kaichao/scalebox/pkg/misc"
 )
 
+/*
 func fromDirList(message string, headers map[string]string) int {
 	// 	1257010784/1257010786_1257010815_ch120.dat.tar.zst
 	if !filterDataCube(message) {
@@ -23,32 +24,33 @@ func fromDirList(message string, headers map[string]string) int {
 	// message: 1257010784/1257010786_1257010815_ch111.dat.tar.zst
 	return toPullUnpack(message, hs)
 }
+*/
 
-/*
-	func fromDirList(message string, headers map[string]string) int {
-		// 	1257010784/1257010786_1257010815_ch120.dat.tar.zst
-		if !filterDataCube(message) {
-			// filtered
-			return 0
-		}
+func fromDirList(message string, headers map[string]string) int {
+	// 	1257010784/1257010786_1257010815_ch120.dat.tar.zst
+	if !filterDataCube(message) {
+		// filtered
+		return 0
+	}
 
-		AddTimeStamp("")
-		m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
-		if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
-			// 以共享存储中转
-			hs := map[string]string{
-				"source_url": headers["source_url"],
-				"target_url": os.Getenv("CLUSTER_DATA_ROOT") + "/mwa/tar",
-			}
-			return sendJobRefMessage(m, hs, "cluster-dist")
-		}
-
+	AddTimeStamp("")
+	m := fmt.Sprintf("%s~b%02d", message, getBatchIndex(message))
+	if os.Getenv("ENABLE_CLUSTER_DIST") == "yes" {
+		// 以共享存储中转
 		hs := map[string]string{
 			"source_url": headers["source_url"],
+			// "target_url": "/work1/cstu0036/mydata/mwa/tar",
+			"target_url": os.Getenv("CLUSTER_DATA_ROOT") + "/mwa/tar",
 		}
-		return toPullUnpack(m, hs)
+		return sendJobRefMessage(m, hs, "cluster-dist")
 	}
-*/
+
+	hs := map[string]string{
+		"source_url": headers["source_url"],
+	}
+	return toPullUnpack(m, hs)
+}
+
 func fromClusterDist(message string, headers map[string]string) int {
 	hs := map[string]string{
 		"source_url": "/cluster_data_root/mwa/tar",

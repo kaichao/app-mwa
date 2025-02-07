@@ -8,25 +8,29 @@ source $(dirname $0)/functions.sh
 # OBSID/p{PTHEAD}_{PTTAIL}/t{BEG}_{END}/ch{ch}/
 # m="1257617424/p00001_00048/t1257617426_1257617505/ch109"
 m=$1
-pointing_range=$(get_parameter "$2" "pointing_range")
+pointing_range=$(get_header "$2" "pointing_range")
 
 KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
 
 if [ $LOCAL_CAL_ROOT ]; then
-    DIR_CAL=$(get_host_dir "${LOCAL_CAL_ROOT}/mwa/cal")
+    DIR_CAL=$(get_host_path "${LOCAL_CAL_ROOT}/mwa/cal")
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_DAT=$(get_host_dir "${LOCAL_INPUT_ROOT}/mwa/dat")
+    DIR_DAT=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/dat")
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CH=$(get_host_dir "${LOCAL_OUTPUT_ROOT}/mwa/1ch")
+    DIR_1CH=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
+
+echo "LOCAL_INPUT_ROOT=$LOCAL_INPUT_ROOT" >> ${WORK_DIR}/custom-out.txt
+echo "DIR_DAT=$DIR_DAT" >> ${WORK_DIR}/custom-out.txt
+
 
 my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
 OBSID=${my_arr[0]}
@@ -49,8 +53,8 @@ fi
 UTT=$( /app/bin/gps2utc.py ${BEG} )
 # UTT=2019-11-05T17:43:25.00
 
-echo UTT=${UTT}
-echo "dat_dir=${dat_dir}"
+echo UTT=${UTT} >> ${WORK_DIR}/custom-out.txt
+echo "dat_dir=${dat_dir}" >> ${WORK_DIR}/custom-out.txt
 
 # PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
 pointing_file="${POINTING_FILE:-pointings.txt}"
@@ -128,12 +132,12 @@ echo '{
 
 if [ "$KEEP_SOURCE_FILE" = "no" ]; then
     # only used for test
-    echo "remove dat files"
+    echo "removing dat files" >> ${WORK_DIR}/custom-out.txt
     echo ${dat_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 if [ "$KEEP_TARGET_FILE" = "no" ]; then
     # only used for test
-    echo "remove fits files"
+    echo "remove fits files" >> ${WORK_DIR}/custom-out.txt
     echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 

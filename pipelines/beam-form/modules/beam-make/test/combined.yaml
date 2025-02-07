@@ -13,10 +13,9 @@ jobs:
       code_path: ${CODE_BASE}/beam-make/code
     parameters:
       key_group_regex: ^([0-9]+)$
-      start_message:
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_INPUT_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=
       - KEEP_TARGET_FILE=yes
     hosts:
       - n-00:${NUM_SLOTS}
@@ -34,10 +33,10 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
-      - KEEP_TARGET_FILE=no
+      - KEEP_TARGET_FILE=yes
       - ENABLE_LOCAL_COMPUTE=yes
     hosts:
       - n-00:1
