@@ -20,7 +20,7 @@ else
     echo "[ERROR] Input does not match :$1" >&2 && exit 5
 fi
 
-# jump_servers=$(get_parameter "$2" "jump_servers")
+# jump_servers=$(get_header "$2" "jump_servers")
 # jump_servers_option=""
 # if [ $jump_servers ]; then
 #     jump_servers_option="-J '${jump_servers}' "
@@ -28,10 +28,10 @@ fi
 # ssh_args="-T -c aes128-gcm@openssh.com -o Compression=no -x ${jump_servers_option}"
 
 # target_url is local-dir
-target_url=$(get_parameter "$2" "target_url")
+target_url=$(get_header "$2" "target_url")
 target_dir="/local${target_url}"
 
-source_url=$(get_parameter "$2" "source_url")
+source_url=$(get_header "$2" "source_url")
 source_mode=$(get_mode "$source_url")
 source_dir=$(get_data_root "$source_url")
 
