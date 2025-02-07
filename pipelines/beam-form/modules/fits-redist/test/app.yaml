@@ -1,0 +1,29 @@
+name: fits-redist.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  fits-redist:
+    label: 24通道fits再分发
+    base_image: hub.cstcloud.cn/scalebox/file-copy
+    arguments:
+      slot_options: reserved_on_exit
+      code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/fits-redist/code
+    parameters:
+      key_group_regex: ^([0-9]+)$
+      start_message: ${START_MESSAGE}
+    environments:
+      - KEEP_SOURCE_FILE=yes
+      - TARGET_HOSTS=${TARGET_HOSTS}
+      - TARGET_USER=
+      - TARGET_PORT=
+      # - TARGET_ROOT=/tmp/scalebox/mydata/mwa/1chz
+    hosts:
+      - h0:1
+    sink_jobs:
+      - next-job
+
+  next-job:
+    base_image: hub.cstcloud.cn/scalebox/agent
