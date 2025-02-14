@@ -1,5 +1,14 @@
 # app-base
 
+
+```mermaid
+flowchart TD
+  subgraph beam-form
+    beam-make --> down-sample
+    down-sample --> fits-merge
+  end
+```
+
 基于共享存储的波束合成
 
 ```sh

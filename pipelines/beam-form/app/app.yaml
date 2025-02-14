@@ -1,10 +1,23 @@
-name: app-base.beam-form
+name: app.beam-form
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: message-router-beam-form
 
 jobs:
+  wait-queue:
+    parameters:
+      task_dist_mode: HOST-BOUND
+
+  pull-unpack:
+    arguments:
+      code_path: ${CODE_BASE}/pull-unpack/code
+    parameters:
+      task_dist_mode: HOST-BOUND
+    environments:
+      - LOCAL_INPUT_ROOT=
+      - LOCAL_OUTPUT_ROOT=${LOCAL_TMP_ROOT}
+
   beam-make:
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
@@ -12,12 +25,13 @@ jobs:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
     parameters:
+      task_dist_mode: HOST-BOUND
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       task_cache_expired_minutes: 65
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - LOCAL_INPUT_ROOT=${LOCAL_TMP_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
@@ -34,14 +48,18 @@ jobs:
       code_path: ${CODE_BASE}/down-sample/code
     parameters:
       key_group_regex: ^([0-9]+)
+      task_dist_mode: HOST-BOUND
+
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
     hosts:
       - ${NODES}
+
+  fits-redist:
 
   fits-merge:
     label: 24通道fits合并
@@ -53,14 +71,16 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
     environments:
-      - LOCAL_INPUT_ROOT=
+      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
       - LOCAL_OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}
 
+  fits-push:
+
   message-router-beam-form:
-    base_image: app-mwa/message-router-app-base
+    base_image: app-mwa/message-router-app
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
