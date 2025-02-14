@@ -103,15 +103,23 @@
 
 ### 2.8 remote-fits-push
 
-## 三、信号量设计
+## 三、信号量/共享变量的设计
 
-| category      | sema_name                                                | comment           |
-| ------------- | -------------------------------------------------------- |  ---------------- |
-| tar-ready     | tar-ready:1257010784/p00001_00960/t1257010786_1257010985 |                   |
-| dat-ready     | dat-ready:1257010784/p00001_00960/t1257010786_1257010985 |                   |
-| dat-done      | dat-done:1257010784/p00001_00960/t1257010786_1257010985  |                   |
-| fits-done     | fits-done:1257010784/p00001_00024/t1257010786_1257010985 |                   |
-| pointing-done | pointing-done:1257010784/p00001                          |                   |
+信号量表
+| category      | sema_name                                                | comment                            |
+| ------------- | -------------------------------------------------------- |  --------------------------------- |
+| tar-ready     | tar-ready:1257010784/p00001_00960/t1257010786_1257010985 |                                    |
+| dat-ready     | dat-ready:1257010784/p00001_00960/t1257010786_1257010985 |                                    |
+| dat-done      | dat-done:1257010784/p00001_00960/t1257010786_1257010985  |                                    |
+| fits-done     | fits-done:1257010784/p00001_00024/t1257010786_1257010985 |                                    |
+| pointing-done | pointing-done:1257010784/p00001                          |                                    |
+| progress-beam-make | progress-beam-make:g01h00                           | 用于beam-make同步                   |
+| capacity-presto-search | capacity-presto-search:h0000                   | 计算节点上可容纳的presto-search任务数  |
+
+变量表
+| category     | var_name        | value                            |
+| ------------ | --------------- |  ------------------------------- |
+| pointing     | pointing:00001  |  g01h00                          |
 
 
 ### tar-ready

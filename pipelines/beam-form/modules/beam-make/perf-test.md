@@ -64,7 +64,7 @@ done
   - 不同数据量：从40秒到480秒，分别对应dat目录从1到12。
 
 ```sh
-app_id=$( NUM_SLOTS=2 scalebox app create | cut -d':' -f2 | tr -d '}' )
+app_id=$( NUM_SLOTS=1 scalebox app create | cut -d':' -f2 | tr -d '}' )
 ```
 
 - 添加单个消息
@@ -77,12 +77,12 @@ scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p000
 每个DCU用8个消息测试，n取值为8/16/24/32
 
 ```sh
-n=64
+n=8
 for ((i=0; i<n; i++)); do
   start=$((i * 24 + 1))
   end=$((start + 23))
   s=$(printf "%05d_%05d" $start $end)
-  scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617745/ch109
+  scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617585/ch109
 done
 ```
 
