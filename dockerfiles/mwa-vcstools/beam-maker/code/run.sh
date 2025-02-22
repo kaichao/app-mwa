@@ -11,17 +11,17 @@ m=$1
 KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
 
 if [ $LOCAL_CAL_ROOT ]; then
-    DIR_CAL="/local${LOCAL_CAL_ROOT}/mwa/cal"
+    DIR_CAL="/local_data_root${LOCAL_CAL_ROOT}/mwa/cal"
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_DAT="/local${LOCAL_INPUT_ROOT}/mwa/dat"
+    DIR_DAT="/local_data_root${LOCAL_INPUT_ROOT}/mwa/dat"
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CH="/local${LOCAL_OUTPUT_ROOT}/mwa/1ch"
+    DIR_1CH="/local_data_root${LOCAL_OUTPUT_ROOT}/mwa/1ch"
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
@@ -49,6 +49,17 @@ PTLIST=${DIR_CAL}/${OBSID}/pointings.txt
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 
 cd ${WORK_DIR}
+
+# 删除生成的fits文件
+declare -i i=0
+point_arr=($(echo $POINTS | tr "," "\n" ))
+for ii in $(seq $PTHEAD $PTTAIL); do
+    pi=$(printf "%05d" $ii)
+    orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
+    rm -f $orig_file
+
+    i=$((i + 1))
+done
 
 if [ "$RUNNING_MODE" = "1" ]; then
     make_beam -o ${OBSID} -b ${BEG} -e ${END} \

@@ -66,10 +66,10 @@ datasets:
 
     # pointing dimension
     # next: 9121
-    pointingBegin: 9121
-    pointingEnd: 9600
+    pointingBegin: 9601
+    pointingEnd: 11750
     pointingStep: 24
-    numPerBatch: 20
+    numPerBatch: 90
 
   1266329600:
     # 1266329602 ~ 1266334399, 4798
@@ -91,10 +91,10 @@ datasets:
     # next: 8641
     pointingBegin: 8641
     # pointingEnd: 8996
-    pointingEnd: 7860
+    pointingEnd: 9833
     pointingStep: 24
     # numPerBatch: 40
-    numPerBatch: 8
+    numPerBatch: 50
 
   1257617424:
     # 1257617426 ~ 1257622223, 4798
@@ -162,6 +162,6 @@ datasets:
 
     # pointing dimension
     pointingBegin: 1
-    pointingEnd: 10093
+    pointingEnd: 960
     pointingStep: 24
-    numPerBatch: 80
+    numPerBatch: 40
