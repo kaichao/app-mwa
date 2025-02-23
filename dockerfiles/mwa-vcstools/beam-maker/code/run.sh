@@ -2,7 +2,7 @@
 
 source $(dirname $0)/functions.sh
 
-env | sort > ${WORK_DIR}/custom-out.txt
+# env | sort > ${WORK_DIR}/custom-out.txt
 
 # OBSID/BEG_END/ch/PTHEAD_PTTAIL
 m=$1
@@ -50,16 +50,6 @@ POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTA
 
 cd ${WORK_DIR}
 
-# 删除生成的fits文件
-declare -i i=0
-point_arr=($(echo $POINTS | tr "," "\n" ))
-for ii in $(seq $PTHEAD $PTTAIL); do
-    pi=$(printf "%05d" $ii)
-    orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
-    rm -f $orig_file
-
-    i=$((i + 1))
-done
 
 if [ "$RUNNING_MODE" = "1" ]; then
     make_beam -o ${OBSID} -b ${BEG} -e ${END} \
@@ -93,7 +83,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     dest_file_r=${OBSID}/p${pi}/t${BEG}_${END}/ch${ch}.fits
     dest_file=${DIR_1CH}/${dest_file_r}
     orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
-    mkdir -p $(dirname ${dest_file}) && mv $orig_file $dest_file
+    mkdir -p $(dirname ${dest_file}) && mv -f $orig_file $dest_file
     code=$?
     [[ $code -ne 0 ]] && echo "exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >&2 && exit $code
 
