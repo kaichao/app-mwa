@@ -14,8 +14,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=${INPUT_ROOT}
+      - OUTPUT_ROOT=${OUTPUT_ROOT}
       - KEEP_TARGET_FILE=yes
     hosts:
       - n-00:${NUM_SLOTS}
@@ -33,8 +33,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=${INPUT_ROOT}
+      - OUTPUT_ROOT=${OUTPUT_ROOT}
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=yes
       - ENABLE_LOCAL_COMPUTE=yes

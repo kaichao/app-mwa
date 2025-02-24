@@ -13,13 +13,13 @@
 
 | 消息头             | 环境变量              | 变量说明                   |
 |------------------ | ------------------ | --------------------------- |
-|                   | LOCAL_INPUT_ROOT  | 输入文件单通道dat的本地根目录。设为非空，用于本地计算。  |
-|                   | LOCAL_OUTPUT_ROOT | 输出fits文件的本地根目录。设为非空，用于本地计算。 |
-|                   | LOCAL_CAL_ROOT    | 定标文件的本地根目录。设为非空，用于本地计算。     |
-|                   | POINTING_FILE     | 指向文件的名称，缺省为pointings.txt。     |
+|                   | INPUT_ROOT  | 输入文件单通道dat的本地根目录。设为非空，用于本地计算。|
+|                   | OUTPUT_ROOT | 输出fits文件的本地根目录。设为非空，用于本地计算。    |
+|                   | CAL_ROOT    | 定标文件的本地根目录。设为非空，用于本地计算。        |
+|                   | POINTING_FILE     | 指向文件的名称，缺省为pointings.txt。       |
 |                   | KEEP_SOURCE_FILE  | 是否保留原始文件。设为no，则用于测试。        |
 |                   | KEEP_TARGET_FILE  | 是否保留目标文件。设为no，则用于测试。        |
-| pointing_range    | POINTING_RANGE    | 指向范围，用于确定输入数据的目录。        |
+| pointing_range    | POINTING_RANGE    | 指向范围，用于确定输入数据的目录。            |
 
 
 ### 用户应用的退出码
@@ -27,9 +27,18 @@
 ### 输出消息格式
 - 若退出码为0，则输出与输入消息相同的消息。
 
-## 二、模块测试
+## 二、功能测试
 
-### 2.1 单个task测试
+```sh
+ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
+
+scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617505/ch109
+
+```
+
+## 三、性能测试
+
+### 3.1 单个task测试
 ```sh
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
@@ -37,7 +46,7 @@ scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p000
 
 ```
 
-### 2.2 全波束24task测试
+### 3.2 全波束24task测试
 ```sh
 ret=$(scalebox app create combined.yaml); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 

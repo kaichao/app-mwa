@@ -16,8 +16,8 @@ jobs:
       retry_rules: "['*']"
       task_cache_expired_minutes: 65
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=
+      - OUTPUT_ROOT=
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
@@ -35,8 +35,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=
+      - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
@@ -53,8 +53,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=
+      - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}

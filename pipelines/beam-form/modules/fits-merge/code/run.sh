@@ -4,14 +4,14 @@ source functions.sh
 
 # DOWN_SAMPLER_ENABLED
 
-if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/1chz")
+if [ $INPUT_ROOT ]; then
+    DIR_1CHZ=$(get_host_path "${INPUT_ROOT}/mwa/1chz")
 else
     DIR_1CHZ=/cluster_data_root/mwa/1chz
 fi
 
-if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_24CH=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/24ch")
+if [ $OUTPUT_ROOT ]; then
+    DIR_24CH=$(get_host_path "${OUTPUT_ROOT}/mwa/24ch")
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi

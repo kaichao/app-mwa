@@ -57,7 +57,7 @@ done
 - 波束合成单次处理24个指向；
 
 - 应用参数设置：
-  - 本地SSD/内存环境，通过环境变量 ```LOCAL_INPUT_ROOT``` 来设定
+  - 本地SSD/内存环境，通过环境变量 ```INPUT_ROOT``` 来设定
     - 本地SSD：```/tmp/scalebox/mydata```
     - 本地内存：```/dev/shm/scalebox/mydata```
   - DCU数量通过环境变量 ```HOSTS``` 来设定，可设定用1/2/3/4个GPU
