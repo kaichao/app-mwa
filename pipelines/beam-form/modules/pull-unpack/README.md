@@ -8,13 +8,13 @@
 
 ### 1.2 消息头/环境变量
 
-| 消息头           | 环境变量          | 说明                                 |
-| --------------- | ---------------  | ----------------------------------- |
-| source_url      | SOURCE_URL       | 本地 或 rsync-over-ssh               |
-| target_url      | TARGET_URL       | 本地目录                             |
-| source_jump_servers | SOURCE_JUMP_SERVERS     | ssh的jump_servers                   |
-|                 | BW_LIMIT         | 读取数据的最大带宽，10k/10m/10g        |
-|                 | KEEP_SOURCE_FILE | 拉取数据后，是否保留原始文件，'yes'/'no' |
+| 消息头               | 环境变量          | 说明                                 |
+| ------------------- | ---------------  | ----------------------------------- |
+| source_url          | SOURCE_URL       | 本地 或 rsync-over-ssh               |
+| target_url          | TARGET_URL       | 本地目录                             |
+| source_jump_servers | SOURCE_JUMP_SERVERS | ssh的jump_servers                   |
+|                     | BW_LIMIT         | 读取数据的最大带宽，10k/10m/10g        |
+|                     | KEEP_SOURCE_FILE | 拉取数据后，是否保留原始文件，'yes'/'no' |
 
 
 

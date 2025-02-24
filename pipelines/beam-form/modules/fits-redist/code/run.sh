@@ -3,14 +3,14 @@
 source functions.sh
 # source $(dirname $0)/functions.sh
 
-if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/1chx")
+if [ $INPUT_ROOT ]; then
+    DIR_1CHX=$(get_host_path "${INPUT_ROOT}/mwa/1chx")
 else
     DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 
-if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1chz")
+if [ $OUTPUT_ROOT ]; then
+    DIR_1CHZ=$(get_host_path "${OUTPUT_ROOT}/mwa/1chz")
 else
     DIR_1CHZ=/cluster_data_root/mwa/1chz
 fi

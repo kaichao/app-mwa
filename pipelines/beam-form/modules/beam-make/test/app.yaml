@@ -21,8 +21,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_TMP_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${INPUT_ROOT}
+      - OUTPUT_ROOT=${OUTPUT_ROOT}
       - KEEP_TARGET_FILE=no
     hosts:
       - n-00:${NUM_SLOTS}

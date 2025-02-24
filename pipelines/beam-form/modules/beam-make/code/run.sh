@@ -12,23 +12,23 @@ pointing_range=$(get_header "$2" "pointing_range")
 
 KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
 
-if [ $LOCAL_CAL_ROOT ]; then
-    DIR_CAL=$(get_host_path "${LOCAL_CAL_ROOT}/mwa/cal")
+if [ $CAL_ROOT ]; then
+    DIR_CAL=$(get_host_path "${CAL_ROOT}/mwa/cal")
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
-if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_DAT=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/dat")
+if [ $INPUT_ROOT ]; then
+    DIR_DAT=$(get_host_path "${INPUT_ROOT}/mwa/dat")
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
-if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1ch")
+if [ $OUTPUT_ROOT ]; then
+    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
-echo "LOCAL_INPUT_ROOT=$LOCAL_INPUT_ROOT" >> ${WORK_DIR}/custom-out.txt
+echo "INPUT_ROOT=$INPUT_ROOT" >> ${WORK_DIR}/custom-out.txt
 echo "DIR_DAT=$DIR_DAT" >> ${WORK_DIR}/custom-out.txt
 
 

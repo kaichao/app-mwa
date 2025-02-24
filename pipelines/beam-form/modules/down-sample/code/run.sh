@@ -18,20 +18,20 @@ source $(dirname $0)/functions.sh
 # m="1257010784/1257010786_1257010795/00001/ch123.fits"
 
 # 1. set the input / output directory
-if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${LOCAL_INPUT_ROOT}/mwa/1ch")
+if [ $INPUT_ROOT ]; then
+    DIR_1CH=$(get_host_path "${INPUT_ROOT}/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
-if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1chx")
+if [ $OUTPUT_ROOT ]; then
+    DIR_1CHX=$(get_host_path "${OUTPUT_ROOT}/mwa/1chx")
 else
     DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 # 
-if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_path "${LOCAL_OUTPUT_ROOT}/mwa/1chz")
+if [ $OUTPUT_ROOT ]; then
+    DIR_1CHZ=$(get_host_path "${OUTPUT_ROOT}/mwa/1chz")
 else
     DIR_1CHZ=/cluster_data_root/mwa/1chz
 fi
