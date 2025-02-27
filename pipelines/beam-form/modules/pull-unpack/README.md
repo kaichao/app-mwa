@@ -24,28 +24,21 @@
 ### 1.4 返回错误码
 
 
-## 二、模块测试
+## 二、算法模块测试
 
 ### 2.1 单个文件测试
 
-### 本地文件系统
-```sh
-SOURCE_URL=/data2/mydata/mwa/tar \
-TARGET_URL=/dev/shm/scalebox/mydata/mwa/dat \
-START_MESSAGE=1257617424/1257622186_1257622223_ch132.dat.tar.zst \
-scalebox app create
-```
+#### 本地文件系统
 
-### SSH
+#### SSH
 ```sh
-ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
+app_id=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
 TARGET_URL=/tmp/mydata/mwa/dat \
-scalebox app create)
-app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
+scalebox app create | cut -d':' -f2 | tr -d '}')
 
 scalebox task add --app-id=${app_id} --sink-job=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
 ```
-### SSH + jump-server 
+#### SSH + jump-server 
 
 ```sh
 ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
@@ -105,17 +98,29 @@ scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
     1257617424/1257617546_1257617585_ch${ch}.dat.tar.zst
 done
 
-1257010784/1257015546_1257015583_ch117.dat.tar.zst,1257010784/p00001_00960/t1257015386_1257015583/ch132
-
 ```
-### 2.3 全数据集测试
 
+## 三、消息路由测试
+
+### p419集群
+- tar文件、dat文件都在h0上
 ```sh
-SOURCE_URL=astro@10.100.1.30:10022/data2/mydata/mwa/tar \
-    TARGET_URL=/work2/cstu0036/mydata/mwa/dat \
+SOURCE_URL=/data2/mydata/mwa/tar \
+    TARGET_URL=/data2/tmp/mydata/mwa/dat \
     START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
-    HOSTS=n0:1 \
-    CLUSTER=p419 \
+    CODE_BASE=~/app-mwa/pipelines/beam-form/modules \
+    HOSTS=h0:1 \
+    CLUSTER=local \
+    scalebox app create
+```
+- tar文件在远端；dat文件在h0上
+```sh
+SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
+    TARGET_URL=/data2/tmp/mydata/mwa/dat \
+    START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+    CODE_BASE=~/app-mwa/pipelines/beam-form/modules \
+    HOSTS=h0:1 \
+    CLUSTER=local \
     scalebox app create
 ```
 
@@ -124,6 +129,14 @@ SOURCE_URL=astro@10.100.1.30:10022/data2/mydata/mwa/tar \
     START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
     scalebox app create -e p419.env
 ```
+
+### dcu集群
 ```sh
-    START_MESSAGE=1257617424 scalebox app create -e p419.env
+SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
+    TARGET_URL=/raid0/scalebox/mydata/mwa/dat \
+    START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+    CODE_BASE=/raid0/root/app-mwa/pipelines/beam-form/modules \
+    HOSTS=h0:1 \
+    CLUSTER=local \
+    scalebox app create
 ```

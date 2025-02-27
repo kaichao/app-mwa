@@ -8,7 +8,11 @@ import (
 )
 
 // ProcessForPullUnpack ...
-func ProcessForPullUnpack(m string) []string {
+//
+//	messages : array of message
+//
+// dat-ready's sema-pair list, '\n' as separator
+func ProcessForPullUnpack(m string) ([]string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
 	dataset := ss[1]
@@ -39,18 +43,23 @@ func ProcessForPullUnpack(m string) []string {
 	}
 
 	messages := []string{}
+	semas := ""
 	prefix := fmt.Sprintf("%s/p%05d_%05d", dataset, pBegin, pEnd)
 	for i := 0; i < cube.NumOfChannels; i++ {
 		for j := 0; j < len(ts); j += 2 {
-			header := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
+			hValue := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
+			header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
 			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
 			for k := 0; k < len(tus); k += 2 {
 				body := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", dataset, tus[k], tus[k+1], cube.ChannelBegin+i)
 				messages = append(messages, body+","+header)
 			}
+
+			semaName := "dat-ready:" + header
+			semaVal := len(tus) / 2
+			semaPair := fmt.Sprintf("\"dat-ready:%s\":%d\n", semaName, semaVal)
+			semas += semaPair
 		}
 	}
-	return messages
-	// 1257617424/1257617506_1257617545_ch${ch}.dat.tar.zst
-	// header: 1257617424/p00001_00048/t1257617506_1257617585/ch${ch}
+	return messages, semas
 }
