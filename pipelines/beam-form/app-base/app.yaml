@@ -14,6 +14,7 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
+      max_tasks_per_minute: 3
       task_cache_expired_minutes: 65
     environments:
       - INPUT_ROOT=
@@ -60,7 +61,7 @@ jobs:
       - ${NODES}
 
   message-router-beam-form:
-    base_image: app-mwa/message-router-app-base
+    base_image: app-mwa/message-router-beam-form-app-base
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}

@@ -2,9 +2,9 @@ package main
 
 import (
 	"beamform/internal/pkg/message"
+	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
@@ -17,15 +17,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	messages := message.ProcessForPullUnpack(os.Args[1])
-	fmt.Println("messages:")
-	fmt.Println(messages)
-	for _, m := range messages {
-		ss := strings.Split(m, ",")
-		cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack -h target_subdir=%s %s`,
-			ss[1], ss[0])
-		if code := misc.ExecCommandReturnExitCode(cmd, 10); code != 0 {
-			os.Exit(code)
-		}
+	headers := make(map[string]string)
+	if err := json.Unmarshal([]byte(os.Args[2]), &headers); err != nil {
+		logrus.Fatalf("err:%v\n", err)
+		os.Exit(2)
 	}
+
+	if headers["from_job"] == "pull-unpack" {
+		logrus.Printf("message from pull-unpack")
+		os.Exit(0)
+	}
+
+	messages, _ := message.ProcessForPullUnpack(os.Args[1])
+	for _, m := range messages {
+		misc.AppendToFile("my_messages.txt", m)
+	}
+	var headerOption string
+	if v := os.Getenv("SOURCE_URL"); v != "" {
+		headerOption = fmt.Sprintf("%s -h source_url=%s", headerOption, v)
+	}
+	if v := os.Getenv("TARGET_URL"); v != "" {
+		headerOption = fmt.Sprintf("%s -h target_url=%s", headerOption, v)
+	}
+	cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my_messages.txt`,
+		headerOption)
+	code := misc.ExecCommandReturnExitCode(cmd, 300)
+	os.Exit(code)
 }

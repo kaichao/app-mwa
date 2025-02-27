@@ -8,15 +8,15 @@ parameters:
 
 jobs:
   pull-unpack:
-    base_image: ${PULL_UNPACK}
+    base_image: ${FILE_COPY}
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
     environments:
-      - SOURCE_URL=${SOURCE_URL}
+      - SOURCE_URL=
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
-      - TARGET_SUBDIR=${TARGET_SUBDIR}
-      - TARGET_URL=${TARGET_URL}
+      - TARGET_SUBDIR=
+      - TARGET_URL=
     hosts:
       - ${HOSTS}    
 
@@ -25,5 +25,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
+    environments:
+      - SOURCE_URL=${SOURCE_URL}
+      - TARGET_URL=${TARGET_URL}
     hosts:
       - h0:1

@@ -17,7 +17,6 @@ func defaultFunc(msg string, headers map[string]string) int {
 		misc.AddTimeStamp("leave-defaultFunc()")
 	}()
 	misc.AddTimeStamp("enter-defaultFunc()")
-
 	// input message:
 	// 	1257010784
 	// 	1257010784/p00001_00960
