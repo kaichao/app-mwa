@@ -19,7 +19,6 @@ datasets:
     pointingEnd: 12985
     # pointingEnd: 384
     pointingStep: 24
-    numPerBatch: 16
 
   1301240224:
     # Processing ...
@@ -42,9 +41,6 @@ datasets:
     pointingEnd: 8640
     # pointingEnd: 10060
     pointingStep: 24
-    # numPerBatch: 1
-    # numPerBatch: 8
-    numPerBatch: 60
 
   1266932744:
     # t: 1266932746 ~ 1266937543, 4798
@@ -67,7 +63,6 @@ datasets:
     pointingBegin: 8161
     pointingEnd: 9120
     pointingStep: 24
-    numPerBatch: 40
 
   1266329600:
     # 1266329602 ~ 1266334399, 4798
@@ -90,8 +85,6 @@ datasets:
     # pointingEnd: 8996
     pointingEnd: 7860
     pointingStep: 24
-    # numPerBatch: 40
-    numPerBatch: 8
 
   1257617424:
     # 1257617426 ~ 1257622223, 4798
@@ -113,8 +106,6 @@ datasets:
     pointingEnd: 8798
     # pointingEnd: 960
     pointingStep: 24
-    # numPerBatch: 1
-    numPerBatch: 40
 
   1206977296:
     # 1206977303 ~ 1206981016, 3714
@@ -135,5 +126,3 @@ datasets:
     pointingBegin: 1
     pointingEnd: 960
     pointingStep: 24
-    # numPerBatch: 1
-    numPerBatch: 40

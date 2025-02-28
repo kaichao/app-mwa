@@ -6,7 +6,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
@@ -25,39 +24,41 @@ func defaultFunc(msg string, headers map[string]string) int {
 	misc.AppendToFile("/work/custom-out.txt",
 		fmt.Sprintf("n_messages:%d,nsemaFitsDone:%d,nsemaPointingDone:%d\n",
 			len(messages), len(semaFitsDone), len(semaPointingDone)))
-	fmtSemaCreate := `scalebox semaphore create '{"semaphores":{%s}}'`
 
 	misc.AddTimeStamp("after-ProcessForBeamMake()")
-	batchSize := 120
-	for i := 0; i < len(semaFitsDone); i += batchSize {
-		end := i + batchSize
-		if end > len(semaFitsDone) {
-			end = len(semaFitsDone)
-		}
-		cmd := fmt.Sprintf(fmtSemaCreate, strings.Join(semaFitsDone[i:end], ","))
-		if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
-			return code
-		}
+
+	misc.AppendToFile("my-sema-fits-done.txt", semaFitsDone)
+	cmd := `scalebox semaphore create --sema-file my-sema-fits-done.txt`
+	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
+		return code
 	}
+	// batchSize := 120
+	// for i := 0; i < len(semaFitsDone); i += batchSize {
+	// 	end := i + batchSize
+	// 	if end > len(semaFitsDone) {
+	// 		end = len(semaFitsDone)
+	// 	}
+	// 	cmd := fmt.Sprintf(fmtSemaCreate, strings.Join(semaFitsDone[i:end], ","))
+	// 	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
+	// 		return code
+	// 	}
+	// }
+
 	misc.AddTimeStamp("after-semaFitsDone")
-	for i := 0; i < len(semaPointingDone); i += batchSize {
-		end := i + batchSize
-		if end > len(semaPointingDone) {
-			end = len(semaPointingDone)
-		}
-		cmd := fmt.Sprintf(fmtSemaCreate, strings.Join(semaPointingDone[i:end], ","))
-		if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
-			return code
-		}
+	misc.AppendToFile("my-sema-pointing-done.txt", semaPointingDone)
+	cmd = `scalebox semaphore create --sema-file my-sema-pointing-done.txt`
+	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
+		return code
 	}
+
 	misc.AddTimeStamp("after-semaPointingDone")
 
 	for _, m := range messages {
-		misc.AppendToFile(os.Getenv("WORK_DIR")+"/task-body.txt", m)
+		misc.AppendToFile("my-tasks.txt", m)
 	}
 
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	cmd := "scalebox task add --sink-job=beam-make"
+	cmd = "scalebox task add --sink-job=beam-make --task-file my-tasks.txt"
 	return misc.ExecCommandReturnExitCode(cmd, 3600)
 }
 
@@ -83,24 +84,22 @@ func fromDownSample(message string, headers map[string]string) int {
 	misc.AppendToFile(os.Getenv("WORK_DIR")+"/custom-out.txt", cmd)
 	fmt.Printf("cmd=%s\n", cmd)
 	s := misc.ExecCommandReturnStdout(cmd, 5)
-	fmt.Printf("run-cmd,stdout=%s\n", s)
 	if s == "-32768" {
 		// error while decrement semaphore
-		return 1
+		return 2
 	}
 	if s != "0" {
 		// 24ch not done.
 		return 0
 	}
 	// output message: 1257010784/p00023/t1257010786_1257010965
-	taskFile := os.Getenv("WORK_DIR") + "/task-body.txt"
-	fmt.Println("000,task-file:", taskFile)
+	taskFile := "my-tasks.txt"
 	for p := pBegin; p <= pEnd; p++ {
 		m := fmt.Sprintf("%s/p%05d/%s", ds, p, t)
-		fmt.Println("001,message:", m)
 		misc.AppendToFile(taskFile, m)
 	}
-	code := misc.ExecCommandReturnExitCode("scalebox task add --sink-job=fits-merge", 120)
+	cmd = "scalebox task add --sink-job=fits-merge --task-file=my-tasks.txt"
+	code := misc.ExecCommandReturnExitCode(cmd, 120)
 	return code
 }
 
@@ -118,7 +117,7 @@ func fromFitsMerge(message string, headers map[string]string) int {
 	s := misc.ExecCommandReturnStdout(cmd, 5)
 	if s == "-32768" {
 		// error while decrement semaphore
-		return 1
+		return 2
 	}
 	if s != "0" {
 		// pointing not done.
@@ -127,12 +126,3 @@ func fromFitsMerge(message string, headers map[string]string) int {
 
 	return 0
 }
-
-var (
-	fromFuncs = map[string]func(string, map[string]string) int{
-		"":               defaultFunc,
-		"message-router": fromMessageRouter,
-		"down-sample":    fromDownSample,
-		"fits-merge":     fromFitsMerge,
-	}
-)

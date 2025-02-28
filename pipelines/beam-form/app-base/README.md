@@ -1,5 +1,7 @@
 # app-base
 
+基于共享存储的波束合成
+
 
 ```mermaid
 flowchart TD
@@ -9,12 +11,19 @@ flowchart TD
   end
 ```
 
-基于共享存储的波束合成
+## 流水线测试
 
+### p419
 ```sh
-START_MESSAGE=1257617424/p05113_05520 scalebox app create -e p419.env
+START_MESSAGE=1257617424/p06073_06120 scalebox app create -e p419.env
 ```
 
+
+### dcu
+
+```sh
+START_MESSAGE=1257617424/p00001_00048/t1257617426_1257617505 scalebox app create
+```
 
 
 ## 测试结果
