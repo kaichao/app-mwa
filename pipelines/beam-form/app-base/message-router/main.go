@@ -42,3 +42,12 @@ func main() {
 	misc.AddTimeStamp("before-exit")
 	os.Exit(exitCode)
 }
+
+var (
+	fromFuncs = map[string]func(string, map[string]string) int{
+		"":               defaultFunc,
+		"message-router": fromMessageRouter,
+		"down-sample":    fromDownSample,
+		"fits-merge":     fromFitsMerge,
+	}
+)

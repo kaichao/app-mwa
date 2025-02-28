@@ -55,10 +55,10 @@ func ProcessForPullUnpack(m string) ([]string, string) {
 				messages = append(messages, body+","+header)
 			}
 
-			semaName := "dat-ready:" + header
+			semaName := "dat-ready:" + hValue
 			semaVal := len(tus) / 2
-			semaPair := fmt.Sprintf("\"dat-ready:%s\":%d\n", semaName, semaVal)
-			semas += semaPair
+			semaPair := fmt.Sprintf(`"%s":%d`, semaName, semaVal)
+			semas += semaPair + "\n"
 		}
 	}
 	return messages, semas

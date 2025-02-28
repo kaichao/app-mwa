@@ -7,11 +7,11 @@ import (
 	"strconv"
 )
 
-// Process ...
+// ProcessForBeamMake ...
 // return:
 //
 //	messages, sema fits-done, sema pointing-done
-func ProcessForBeamMake(m string) ([]string, []string, []string) {
+func ProcessForBeamMake(m string) ([]string, string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
 	dataset := ss[1]
@@ -42,6 +42,10 @@ func ProcessForBeamMake(m string) ([]string, []string, []string) {
 	}
 	ps := cube.GetPointingRangesByInterval(pBegin, pEnd)
 
+	semaFitsDone := ""
+	// fits-done:1257010784/p00001/t1257010786_1257010985
+	nTimeRanges := len(ts) / 2
+
 	messages := []string{}
 	for k := 0; k < len(ps); k += 2 {
 		for j := 0; j < len(ts); j += 2 {
@@ -50,25 +54,20 @@ func ProcessForBeamMake(m string) ([]string, []string, []string) {
 					dataset, ps[k], ps[k+1], ts[j], ts[j+1], cube.ChannelBegin+i)
 				messages = append(messages, m)
 			}
-		}
-	}
-	semaFitsDone := []string{}
-	semaPointingDone := []string{}
-	// fits-done:1257010784/p00001/t1257010786_1257010985
-	// pointing-done:1257010784/p00001
-	nTimeRanges := len(ts) / 2
-	for k := 0; k < len(ps); k += 2 {
-		for j := 0; j < len(ts); j += 2 {
-			sema := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
+
+			semaPair := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
 				dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
-			semaFitsDone = append(semaFitsDone, sema)
+			semaFitsDone += semaPair + "\n"
 		}
 	}
+
+	semaPointingDone := ""
+	// pointing-done:1257010784/p00001
 	for p := pBegin; p <= pEnd; p++ {
 		if ss[7] == "" {
-			sema := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`,
+			semaPair := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`,
 				dataset, p, nTimeRanges)
-			semaPointingDone = append(semaPointingDone, sema)
+			semaPointingDone += semaPair + "\n"
 		}
 	}
 	return messages, semaFitsDone, semaPointingDone
