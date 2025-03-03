@@ -28,9 +28,9 @@ func main() {
 		os.Exit(0)
 	}
 
-	messages, sema := message.ProcessForPullUnpack(os.Args[1])
+	messages, sema := message.ParseForPullUnpack(os.Args[1])
 	for _, m := range messages {
-		misc.AppendToFile("my_messages.txt", m)
+		misc.AppendToFile("my-messages.txt", m)
 	}
 	fmt.Println("sema:", sema)
 	var headerOption string
@@ -40,7 +40,7 @@ func main() {
 	if v := os.Getenv("TARGET_URL"); v != "" {
 		headerOption = fmt.Sprintf("%s -h target_url=%s", headerOption, v)
 	}
-	cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my_messages.txt`,
+	cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my-messages.txt`,
 		headerOption)
 	code := misc.ExecCommandReturnExitCode(cmd, 300)
 	os.Exit(code)

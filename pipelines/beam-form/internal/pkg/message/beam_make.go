@@ -7,11 +7,14 @@ import (
 	"strconv"
 )
 
-// ProcessForBeamMake ...
+// ParseForBeamMake ...
 // return:
 //
-//	messages, sema fits-done, sema pointing-done
-func ProcessForBeamMake(m string) ([]string, string, string) {
+// messages:
+// semaphores:	dat-ready/dat-done/fits-done/pointing-done
+//
+//	pointing-done
+func ParseForBeamMake(m string) ([]string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
 	dataset := ss[1]
@@ -42,6 +45,8 @@ func ProcessForBeamMake(m string) ([]string, string, string) {
 	}
 	ps := cube.GetPointingRangesByInterval(pBegin, pEnd)
 
+	semaDatReady := ""
+	semaDatDone := ""
 	semaFitsDone := ""
 	// fits-done:1257010784/p00001/t1257010786_1257010985
 	nTimeRanges := len(ts) / 2
@@ -49,14 +54,20 @@ func ProcessForBeamMake(m string) ([]string, string, string) {
 	messages := []string{}
 	for k := 0; k < len(ps); k += 2 {
 		for j := 0; j < len(ts); j += 2 {
+			id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d`, dataset, ps[k], ps[k+1], ts[j], ts[j+1])
 			for i := 0; i < cube.NumOfChannels; i++ {
 				m := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/ch%03d",
 					dataset, ps[k], ps[k+1], ts[j], ts[j+1], cube.ChannelBegin+i)
 				messages = append(messages, m)
+				semaPair := fmt.Sprintf(`"dat-ready:%s/ch%d":%d`, id, cube.ChannelBegin+i, nTimeRanges)
+				semaDatReady += semaPair + "\n"
 			}
 
-			semaPair := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
-				dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
+			semaPair := fmt.Sprintf(`"dat-done:%s":%d`, id, 24)
+			semaDatDone += semaPair + "\n"
+			// semaPair := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
+			// 	dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
+			semaPair = fmt.Sprintf(`"fits-done:%s":%d`, id, 24)
 			semaFitsDone += semaPair + "\n"
 		}
 	}
@@ -70,5 +81,6 @@ func ProcessForBeamMake(m string) ([]string, string, string) {
 			semaPointingDone += semaPair + "\n"
 		}
 	}
-	return messages, semaFitsDone, semaPointingDone
+	semaphores := semaDatReady + semaDatDone + semaFitsDone + semaPointingDone
+	return messages, semaphores
 }
