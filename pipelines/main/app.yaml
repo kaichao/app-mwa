@@ -48,7 +48,7 @@ jobs:
       dir_free_gb: ${UNPACK_DIR_FREE_GB}
       dir_limit_gb: ${UNPACK_DIR_LIMIT_GB}
       # 3 * 40s = 120s
-      progress_counter_diff: 120
+      progress_counter_diff: 160
       # 每单位计算资源上的运行task数量
       # group_running_vtasks: 3
       # host_running_vtasks: 3
@@ -69,8 +69,8 @@ jobs:
       # 可给message-router发送重复名的消息（覆盖）
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
-      - KEEP_SOURCE_FILE=yes
-      # - KEEP_SOURCE_FILE=no
+      # - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=no
     hosts:
       -  ${NODES}:1
 

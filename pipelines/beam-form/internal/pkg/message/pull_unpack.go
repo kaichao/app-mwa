@@ -7,12 +7,12 @@ import (
 	"strconv"
 )
 
-// ProcessForPullUnpack ...
+// ParseForPullUnpack ...
 //
 //	messages : array of message
 //
 // dat-ready's sema-pair list, '\n' as separator
-func ProcessForPullUnpack(m string) ([]string, string) {
+func ParseForPullUnpack(m string) ([]string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
 	dataset := ss[1]

@@ -3,7 +3,6 @@ package main
 import (
 	"beamform/internal/pkg/message"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 
@@ -20,38 +19,19 @@ func defaultFunc(msg string, headers map[string]string) int {
 	// 	1257010784
 	// 	1257010784/p00001_00960
 	// 	1257010784/p00001_00960/t1257012766_1257012965
-	messages, semaFitsDone, semaPointingDone := message.ProcessForBeamMake(msg)
-	misc.AppendToFile("/work/custom-out.txt",
-		fmt.Sprintf("n_messages:%d,nsemaFitsDone:%d,nsemaPointingDone:%d\n",
-			len(messages), len(semaFitsDone), len(semaPointingDone)))
+	messages, semas := message.ParseForBeamMake(msg)
+	misc.AppendToFile("custom-out.txt",
+		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
 
 	misc.AddTimeStamp("after-ProcessForBeamMake()")
 
-	misc.AppendToFile("my-sema-fits-done.txt", semaFitsDone)
-	cmd := `scalebox semaphore create --sema-file my-sema-fits-done.txt`
-	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
-		return code
-	}
-	// batchSize := 120
-	// for i := 0; i < len(semaFitsDone); i += batchSize {
-	// 	end := i + batchSize
-	// 	if end > len(semaFitsDone) {
-	// 		end = len(semaFitsDone)
-	// 	}
-	// 	cmd := fmt.Sprintf(fmtSemaCreate, strings.Join(semaFitsDone[i:end], ","))
-	// 	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
-	// 		return code
-	// 	}
-	// }
-
-	misc.AddTimeStamp("after-semaFitsDone")
-	misc.AppendToFile("my-sema-pointing-done.txt", semaPointingDone)
-	cmd = `scalebox semaphore create --sema-file my-sema-pointing-done.txt`
+	misc.AppendToFile("my-semas.txt", semas)
+	cmd := `scalebox semaphore create --sema-file my-semas.txt`
 	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
 		return code
 	}
 
-	misc.AddTimeStamp("after-semaPointingDone")
+	misc.AddTimeStamp("after-semaphores")
 
 	for _, m := range messages {
 		misc.AppendToFile("my-tasks.txt", m)
@@ -81,7 +61,7 @@ func fromDownSample(message string, headers map[string]string) int {
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	cmd := fmt.Sprintf("scalebox semaphore decrement fits-done:%s", ss[1])
-	misc.AppendToFile(os.Getenv("WORK_DIR")+"/custom-out.txt", cmd)
+	misc.AppendToFile("custom-out.txt", cmd)
 	fmt.Printf("cmd=%s\n", cmd)
 	s := misc.ExecCommandReturnStdout(cmd, 5)
 	if s == "-32768" {
