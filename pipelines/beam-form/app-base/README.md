@@ -20,6 +20,11 @@ OUTPUT_ROOT_24CH=/work1/cstu0036/mydata \
 scalebox app create -e p419.env
 ```
 
+```sh
+START_MESSAGE=1257617424/p06841_07200 \
+scalebox app create -e p419.env
+```
+
 
 
 ### dcu
