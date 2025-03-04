@@ -21,17 +21,17 @@ func ParseForBeamMake(m string) ([]string, string) {
 	cube := datacube.GetDataCube(dataset)
 	var (
 		pBegin, pEnd int
-		ts           []int
+		tBegin, tEnd int
 	)
 	if ss[7] != "" {
 		// 	1257010784/p00001_00960/t1257012766_1257012965
-		t0, _ := strconv.Atoi(ss[7])
-		t1, _ := strconv.Atoi(ss[8])
-		ts = append(ts, t0, t1)
+		tBegin, _ = strconv.Atoi(ss[7])
+		tEnd, _ = strconv.Atoi(ss[8])
 	} else {
 		// 	1257010784/p00001_00960
 		// 	1257010784
-		ts = cube.GetTimeRanges()
+		tBegin = cube.TimeBegin
+		tEnd = cube.TimeEnd
 	}
 	if ss[4] != "" {
 		// 	1257010784/p00001_00960/t1257012766_1257012965
@@ -43,27 +43,35 @@ func ParseForBeamMake(m string) ([]string, string) {
 		pBegin = cube.PointingBegin
 		pEnd = cube.PointingEnd
 	}
-	ps := cube.GetPointingRangesByInterval(pBegin, pEnd)
+	tUnits := cube.GetTimeUnitsWithinInterval(tBegin, tEnd)
+	tRanges := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
+	pRanges := cube.GetPointingRangesByInterval(pBegin, pEnd)
 
 	semaDatReady := ""
+	nTimeUnits := len(tUnits) / 2
+	for j := 0; j < len(tRanges); j += 2 {
+		for i := 0; i < cube.NumOfChannels; i++ {
+			semaPair := fmt.Sprintf(`"dat-ready:%s/p%05d_%05d/t%d_%d/ch%d":%d`,
+				dataset, pBegin, pEnd, tRanges[j], tRanges[j+1], cube.ChannelBegin+i, nTimeUnits)
+			semaDatReady += semaPair + "\n"
+		}
+	}
+
 	semaDatDone := ""
 	semaFitsDone := ""
 	// fits-done:1257010784/p00001/t1257010786_1257010985
-	nTimeRanges := len(ts) / 2
-
 	messages := []string{}
-	for k := 0; k < len(ps); k += 2 {
-		for j := 0; j < len(ts); j += 2 {
-			id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d`, dataset, ps[k], ps[k+1], ts[j], ts[j+1])
+	nPointingRanges := len(pRanges) / 2
+	for k := 0; k < len(pRanges); k += 2 {
+		for j := 0; j < len(tRanges); j += 2 {
 			for i := 0; i < cube.NumOfChannels; i++ {
 				m := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/ch%03d",
-					dataset, ps[k], ps[k+1], ts[j], ts[j+1], cube.ChannelBegin+i)
+					dataset, pRanges[k], pRanges[k+1], tRanges[j], tRanges[j+1], cube.ChannelBegin+i)
 				messages = append(messages, m)
-				semaPair := fmt.Sprintf(`"dat-ready:%s/ch%d":%d`, id, cube.ChannelBegin+i, nTimeRanges)
-				semaDatReady += semaPair + "\n"
 			}
 
-			semaPair := fmt.Sprintf(`"dat-done:%s":%d`, id, 24)
+			id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d`, dataset, pRanges[k], pRanges[k+1], tRanges[j], tRanges[j+1])
+			semaPair := fmt.Sprintf(`"dat-done:%s":%d`, id, nPointingRanges)
 			semaDatDone += semaPair + "\n"
 			// semaPair := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
 			// 	dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
@@ -74,6 +82,7 @@ func ParseForBeamMake(m string) ([]string, string) {
 
 	semaPointingDone := ""
 	// pointing-done:1257010784/p00001
+	nTimeRanges := len(tRanges) / 2
 	for p := pBegin; p <= pEnd; p++ {
 		if ss[7] == "" {
 			semaPair := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`,

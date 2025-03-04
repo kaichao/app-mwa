@@ -3,6 +3,7 @@ package datacube
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -73,21 +74,13 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
 
+	// 设定定制的time step，用于测试
+	if v, _ := strconv.Atoi(os.Getenv("TIME_STEP")); v > 0 {
+		cube.TimeStep = v
+	}
 	return &cube
 }
 
-/*
-// GetNumWithBlockID ...
-func (cube *DataCube) GetNumWithBlockID(t int, num int) int {
-	fmt.Printf("In GetNumWithBlockID(),t=%d,num=%d,num-per-seg=%d\n", t, num, cube.NumPerSeg)
-	if cube.NumPerSeg == 1 {
-		return num
-	}
-
-	index := cube.getTimeRangeIndex(t)
-	return (index%cube.NumPerSeg)*24 + num
-}
-*/
 // GetHostIndex ...
 func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
 	// index := ch - cube.ChannelBegin
@@ -101,7 +94,8 @@ func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
 	return (rangeIndex%numSeg)*24 + index
 }
 
-func (cube *DataCube) toCubeString() string {
+// ToCubeString ...
+func (cube *DataCube) ToCubeString() string {
 	return fmt.Sprintf(`
 			cube: 
 				t0=%d,t1=%d, tstep=%d

@@ -22,7 +22,7 @@ jobs:
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
-      - ${NODES}:4
+      - ${NODES}:3
     sink_jobs:
       - down-sample
 
@@ -55,7 +55,7 @@ jobs:
       key_group_regex: ^([0-9]+)
     environments:
       - INPUT_ROOT=
-      - OUTPUT_ROOT=
+      - OUTPUT_ROOT=${OUTPUT_ROOT_24CH}
       - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}
