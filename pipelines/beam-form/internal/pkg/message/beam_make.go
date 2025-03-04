@@ -43,13 +43,13 @@ func ParseForBeamMake(m string) ([]string, string) {
 		pBegin = cube.PointingBegin
 		pEnd = cube.PointingEnd
 	}
-	tUnits := cube.GetTimeUnitsWithinInterval(tBegin, tEnd)
 	tRanges := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
 	pRanges := cube.GetPointingRangesByInterval(pBegin, pEnd)
 
 	semaDatReady := ""
-	nTimeUnits := len(tUnits) / 2
 	for j := 0; j < len(tRanges); j += 2 {
+		tUnits := cube.GetTimeUnitsWithinInterval(tRanges[j], tRanges[j+1])
+		nTimeUnits := len(tUnits) / 2
 		for i := 0; i < cube.NumOfChannels; i++ {
 			semaPair := fmt.Sprintf(`"dat-ready:%s/p%05d_%05d/t%d_%d/ch%d":%d`,
 				dataset, pBegin, pEnd, tRanges[j], tRanges[j+1], cube.ChannelBegin+i, nTimeUnits)
