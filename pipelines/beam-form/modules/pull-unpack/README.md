@@ -134,8 +134,9 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
 ```sh
 SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
     TARGET_URL=/raid0/scalebox/mydata/mwa/dat \
-    START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+    START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
     CODE_BASE=/raid0/root/app-mwa/pipelines/beam-form/modules \
+    TIME_STEP=80 \
     HOSTS=h0:1 \
     CLUSTER=local \
     scalebox app create

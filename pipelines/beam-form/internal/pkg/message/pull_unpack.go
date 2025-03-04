@@ -19,18 +19,19 @@ func ParseForPullUnpack(m string) ([]string, string) {
 	cube := datacube.GetDataCube(dataset)
 	var (
 		pBegin, pEnd int
-		ts           []int
+		tBegin, tEnd int
 	)
 	if ss[7] != "" {
 		// 	1257010784/p00001_00960/t1257012766_1257012965
-		t0, _ := strconv.Atoi(ss[7])
-		t1, _ := strconv.Atoi(ss[8])
-		ts = append(ts, t0, t1)
+		tBegin, _ = strconv.Atoi(ss[7])
+		tEnd, _ = strconv.Atoi(ss[8])
 	} else {
 		// 	1257010784/p00001_00960
 		// 	1257010784
-		ts = cube.GetTimeRanges()
+		tBegin = cube.TimeBegin
+		tEnd = cube.TimeEnd
 	}
+
 	if ss[4] != "" {
 		// 	1257010784/p00001_00960/t1257012766_1257012965
 		// 	1257010784/p00001_00960
@@ -42,6 +43,7 @@ func ParseForPullUnpack(m string) ([]string, string) {
 		pEnd = cube.PointingEnd
 	}
 
+	ts := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
 	messages := []string{}
 	semas := ""
 	prefix := fmt.Sprintf("%s/p%05d_%05d", dataset, pBegin, pEnd)

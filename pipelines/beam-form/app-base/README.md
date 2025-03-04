@@ -15,14 +15,17 @@ flowchart TD
 
 ### p419
 ```sh
-START_MESSAGE=1257617424/p06073_06120 scalebox app create -e p419.env
+START_MESSAGE=1257617424/p06841_07200 \
+OUTPUT_ROOT_24CH=/work1/cstu0036/mydata \
+scalebox app create -e p419.env
 ```
+
 
 
 ### dcu
 
 ```sh
-START_MESSAGE=1257617424/p00001_00048/t1257617426_1257617505 scalebox app create
+START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617505 scalebox app create
 ```
 
 
