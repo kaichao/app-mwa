@@ -4,8 +4,7 @@
 ## 一、功能模块表
 
 - message-router
-- remote-tar-pull：按需，从外部存储拷贝原始数据到本地共享存储
-- wait-queue：实现group_running_vtasks的流控模块，每节点组的最大并行数作为流控机制，按顺序释放消息，管理后续所有HOST-BOUND模块。
+- wait-queue：实现group_vtasks的流控模块，每节点组的最大并行数作为流控机制，按顺序释放消息，管理后续所有HOST-BOUND模块。
 - pull-unpack：按通道，将远端存储/本地共享存储将数据拉取到计算节点的本地存储，并解包。（标准模块+定制脚本）
 - beam-make：按通道的波束合成。
 - down-sample：波束合成结果fits文件做1/4下采样，降低数据量
@@ -17,36 +16,16 @@
 
 | num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
-| 1 | remote_tar_pull | scalebox/ file-copy | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744 | ${input_message} | mwa/tar/p00001_00960/1266932744 |
-| 2 | wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
-| 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
-| 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
-| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
-| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
-| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
-| 8 | remote_fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
+| 1 | wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
+| 2 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
+| 3 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
+| 4 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
+| 5 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
+| 6 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
+| 7 | remote_fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
 
 
-### 2.1 remote-tar-pull
-
-- 处理步骤
-  - 将tar文件从集群外拉取到集群存储，实现分级
-
-- 输入消息头：
-  - source_url: astro@10.100.1.30:10022/data2/mydata/mwa/tar
-  - target_url: mwa/tar/p00001_00960
-- 主要环境变量
-- task分发排序(定制排序)
-  - sorted_tag: {pointing}
-  - group_regex: ^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)
-  - group_index: 1,2,3
-- 流控参数：
-  - dir_limit_gb: mwa/tar~3000
-
-- task-timeout
-
-
-### 2.2 wait-queue
+### 2.1 wait-queue
 
 - 处理步骤
   1. 若信号量值为0，自动停止
@@ -69,7 +48,7 @@
 
 - task-timeout
 
-### 2.3 pull-unpack
+### 2.2 pull-unpack
 - 输入消息头：
     - target_subdir:1266932746_1266932945
 
@@ -90,18 +69,18 @@
   - 
 - task-timeout
 
-### 2.4 beam-make
+### 2.3 beam-make
 
-### 2.5 down-sample
+### 2.4 down-sample
 
 - 主要环境变量
   - LOCAL_COMPUTE: 本地计算模式，取值'yes'。若为非本地计算模式，需对最终输出的fits文件的目录结构做调整。
 
-### 2.6 fits-redist
+### 2.5 fits-redist
 
-### 2.7 fits-merge
+### 2.6 fits-merge
 
-### 2.8 remote-fits-push
+### 2.7 remote-fits-push
 
 ## 三、信号量/共享变量的设计
 
@@ -170,10 +149,9 @@
 
 | from_module            | input_message            | to_module                    | output_message        |
 | ---------------------- | ------------------------ | --------------------------- | ---------------------- |
-| (default) | 1257010784 <br/> 1257010784/p00001_00960 <br/> 1257010784/p00001_00960/t1257012766_1257012965 | wait_queue <br/> remote_tar_pull | 1257010784/p00001_00960/t1257012766_1257012965 <br/> p00001_00960/1266932744/1266933866_1266933905_ch112.dat.tar.zst | 
-| remote_tar_pull | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | wait_queue | ${input_message} |
+| (default) | 1257010784 <br/> 1257010784/p00001_00960 <br/> 1257010784/p00001_00960/t1257012766_1257012965 | wait_queue <br/> remote_tar_pull | 1257010784/p00001_00960/t1257012766_1257012965 <br/> 1266932744/p00001_00960/1266933866_1266933905_ch112.dat.tar.zst | 
 | wait_queue | 1257010784/p00001_00960/t1257012766_1257012965 | pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst |
-| pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 |
+| pull_unpack | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 |
 | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | down_sample |  ${input_message} |
 | down_sample | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | fits_redist <br/> fits_merge | 1257010784/p00023/t1257010786_1257010965/ch121.fits <br/> 1257010784/p00023/t1257010786_1257010965 |
 | fits_redist | 1257010784/p00023/t1257010786_1257010965/ch121.fits | fits_merge |  ${input_message} |
@@ -203,19 +181,6 @@
 
 - 消息头/环境变量：
   - BEAM_FORM_ONLY：不创建信号量```pointing-done```
-
-
-### remote-tar-pull
-
-- 处理步骤
-  - 1. 信号量```tar-ready```减一
-  - 2. 若信号量值为0，给wait-queue发消息
-
-- 输入消息：p00001_00960/1266932744/1266933866_1266933905_ch112.dat.tar.zst
-- 消息头/环境变量：
-  
-- 输出消息（wait-queue）：1257010784/p00001_00960/t1257012766_1257012965
-
 
 ### wait-queue
 
@@ -289,6 +254,4 @@
 - 处理步骤
   - 1.
   - 2.  
-
-
 

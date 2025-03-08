@@ -19,20 +19,18 @@ func defaultFunc(msg string, headers map[string]string) int {
 	// 	1257010784
 	// 	1257010784/p00001_00960
 	// 	1257010784/p00001_00960/t1257012766_1257012965
-	messages, semas := message.ParseForBeamMake(msg)
-	misc.AppendToFile("custom-out.txt",
-		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
-
-	misc.AddTimeStamp("after-ProcessForBeamMake()")
-
+	// messages, semas := message.ParseForBeamMake(msg)
+	semas := message.GetSemaphores(msg)
 	misc.AppendToFile("my-semas.txt", semas)
 	cmd := `scalebox semaphore create --sema-file my-semas.txt`
 	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
 		return code
 	}
-
 	misc.AddTimeStamp("after-semaphores")
 
+	messages := message.GetMessagesForBeamMake(msg)
+	misc.AppendToFile("custom-out.txt",
+		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
 	for _, m := range messages {
 		misc.AppendToFile("my-tasks.txt", m)
 	}

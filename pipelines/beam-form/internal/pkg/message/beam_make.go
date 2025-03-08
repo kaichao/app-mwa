@@ -2,18 +2,22 @@ package message
 
 import (
 	"beamform/internal/pkg/datacube"
+	"beamform/internal/pkg/json"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 )
 
-// ParseForBeamMake ...
+// ParseForBeamMake for shared storage
 // return:
 //
 // messages:
 // semaphores:	dat-ready/dat-done/fits-done/pointing-done
 //
 //	pointing-done
+//
+// deprecated.
 func ParseForBeamMake(m string) ([]string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
@@ -92,4 +96,37 @@ func ParseForBeamMake(m string) ([]string, string) {
 	}
 	semaphores := semaDatReady + semaDatDone + semaFitsDone + semaPointingDone
 	return messages, semaphores
+}
+
+// GetMessagesForBeamMake ...
+func GetMessagesForBeamMake(m string) []string {
+	dataset, pBegin, pEnd, tBegin, tEnd, err := ParseParts(m)
+	if err != nil {
+		return []string{}
+	}
+	cube := datacube.GetDataCube(dataset)
+
+	tRanges := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
+	pRanges := cube.GetPointingRangesByInterval(pBegin, pEnd)
+
+	messages := []string{}
+	pointingRange := fmt.Sprintf("p%05d_%05d", pBegin, pEnd)
+	headers := json.SetAttribute("{}", "pointing_range", pointingRange)
+	fmt.Println("headers:", headers)
+	for k := 0; k < len(pRanges); k += 2 {
+		for j := 0; j < len(tRanges); j += 2 {
+			for i := 0; i < cube.NumOfChannels; i++ {
+				m := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d/ch%03d`,
+					dataset, pRanges[k], pRanges[k+1],
+					tRanges[j], tRanges[j+1],
+					cube.ChannelBegin+i)
+				if os.Getenv("WITH_POINTING_PATH") != "no" {
+					m += "," + headers
+				}
+				fmt.Println("m=", m)
+				messages = append(messages, m)
+			}
+		}
+	}
+	return messages
 }

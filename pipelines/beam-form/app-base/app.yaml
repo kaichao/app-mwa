@@ -65,5 +65,8 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
+    environments:
+      - TIME_STEP=${TIME_STEP}
+      - WITH_POINTING_PATH=no
     hosts:
       - h0:1

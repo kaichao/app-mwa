@@ -4,7 +4,7 @@
 
 ### 1.1 输入消息
 
-
+p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst
 
 ### 1.2 消息头/环境变量
 
@@ -137,7 +137,7 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
     START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
     CODE_BASE=/raid0/root/app-mwa/pipelines/beam-form/modules \
     TIME_STEP=80 \
-    HOSTS=h0:1 \
+    HOSTS=h0:3 \
     CLUSTER=local \
     scalebox app create
 ```
