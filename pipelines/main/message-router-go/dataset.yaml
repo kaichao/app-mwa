@@ -91,7 +91,6 @@ datasets:
     pointingBegin: 8641
     pointingEnd: 9740
     pointingStep: 24
-    numPerBatch: 46
 
   1257617424:
     # 1257617426 ~ 1257622223, 4798

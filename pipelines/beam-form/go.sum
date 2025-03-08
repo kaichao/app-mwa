@@ -3,6 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/kaichao/scalebox v0.0.0-20250102213848-67142acfbd3c h1:j3AIwd0fWk99SxyG1l1wtv+Tr8u3HLUeNjr66nS9qng=
 github.com/kaichao/scalebox v0.0.0-20250102213848-67142acfbd3c/go.mod h1:WE8T94blnV8GVEHptVP7poLm70g1hI2tECR36TSZ/3I=
+github.com/kaichao/scalebox v0.0.0-20250226031318-19df0e793ca2 h1:wPoWgg2dgHvKCelg1mhM4Fs63Z2XoUk4eIW3USjQTqs=
+github.com/kaichao/scalebox v0.0.0-20250226031318-19df0e793ca2/go.mod h1:WE8T94blnV8GVEHptVP7poLm70g1hI2tECR36TSZ/3I=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=

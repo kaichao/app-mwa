@@ -12,6 +12,7 @@ import (
 //	messages : array of message
 //
 // dat-ready's sema-pair list, '\n' as separator
+// deprecated.
 func ParseForPullUnpack(m string) ([]string, string) {
 	re := regexp.MustCompile("^([0-9]+)((/p([0-9]+)_([0-9]+))(/t([0-9]+)_([0-9]+))?)?$")
 	ss := re.FindStringSubmatch(m)
@@ -49,11 +50,13 @@ func ParseForPullUnpack(m string) ([]string, string) {
 	prefix := fmt.Sprintf("%s/p%05d_%05d", dataset, pBegin, pEnd)
 	for i := 0; i < cube.NumOfChannels; i++ {
 		for j := 0; j < len(ts); j += 2 {
-			hValue := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
+			hValue := fmt.Sprintf("%s/t%d_%d/ch%d",
+				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
 			header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
 			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
 			for k := 0; k < len(tus); k += 2 {
-				body := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", dataset, tus[k], tus[k+1], cube.ChannelBegin+i)
+				body := fmt.Sprintf("%s/p%05d_%05d/%d_%d_ch%d.dat.tar.zst",
+					dataset, pBegin, pEnd, tus[k], tus[k+1], cube.ChannelBegin+i)
 				messages = append(messages, body+","+header)
 			}
 
@@ -64,4 +67,30 @@ func ParseForPullUnpack(m string) ([]string, string) {
 		}
 	}
 	return messages, semas
+}
+
+// GetMessagesForPullUnpack ...
+func GetMessagesForPullUnpack(m string) []string {
+	dataset, pBegin, pEnd, tBegin, tEnd, err := ParseParts(m)
+	if err != nil {
+		return []string{}
+	}
+	cube := datacube.GetDataCube(dataset)
+	ts := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
+	messages := []string{}
+	prefix := fmt.Sprintf("%s/p%05d_%05d", dataset, pBegin, pEnd)
+	for i := 0; i < cube.NumOfChannels; i++ {
+		for j := 0; j < len(ts); j += 2 {
+			hValue := fmt.Sprintf("%s/t%d_%d/ch%d",
+				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
+			header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
+			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
+			for k := 0; k < len(tus); k += 2 {
+				body := fmt.Sprintf("%s/p%05d_%05d/%d_%d_ch%d.dat.tar.zst",
+					dataset, pBegin, pEnd, tus[k], tus[k+1], cube.ChannelBegin+i)
+				messages = append(messages, body+","+header)
+			}
+		}
+	}
+	return messages
 }

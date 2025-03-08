@@ -1,128 +1,97 @@
 datasets:
   1257010784:
-    # 1257010786 ~ 1257015583, 4798
-    # done
+    # 1257010786 ~ 1257015583, 4798, done
 
     # channel dimension
     channelBegin: 109
-    numOfChannels: 24
+    # numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1257010786
     timeEnd: 1257015583
     # numOfSeconds: 4798
-    timeUnit: 40
-    timeStep: 200
+    # timeUnit: 40
+    # timeStep: 200
 
     # pointing dimension
-    pointingBegin: 1
+    # pointingBegin: 1
     pointingEnd: 12985
-    # pointingEnd: 384
-    pointingStep: 24
+    # pointingStep: 24
 
   1301240224:
-    # Processing ...
     # 1301240225 ~ 1301245022, 4798
     # channel dimension
     channelBegin: 109
-    numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1301240225
-    # timeBegin: 1301240225
-    # numOfSeconds: 4798
     timeEnd: 1301245022
-    # packSize:
-    timeUnit: 40
-    timeStep: 200
 
     # pointing dimension
-    pointingBegin: 7681
-    pointingEnd: 8640
-    # pointingEnd: 10060
-    pointingStep: 24
+    pointingEnd: 10060
 
   1266932744:
     # t: 1266932746 ~ 1266937543, 4798
-    # running, 9120, all: 10265
 
     # channel dimension
     channelBegin: 109
-    numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1266932746
     # numOfSeconds: 4798
     timeEnd: 1266937543
 
-    # packSize:
-    timeUnit: 40
-    timeStep: 200
-
-    # pointing dimension    # next: 9121
-    pointingBegin: 8161
-    pointingEnd: 9120
-    pointingStep: 24
+    # pointing dimension
+    pointingEnd: 11582
 
   1266329600:
-    # 1266329602 ~ 1266334399, 4798
-    # running, next: 8641, total: 
+    # 1266329602 ~ 1266334399, 4798, done
     # channel dimension
     channelBegin: 109
-    numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1266329602
-    # numOfSeconds: 4798
     timeEnd: 1266334399
 
-    # packSize:
-    timeUnit: 40
-    timeStep: 200
-
     # pointing dimension
-    pointingBegin: 7681
-    # pointingEnd: 8996
-    pointingEnd: 7860
-    pointingStep: 24
+    pointingEnd: 9740
 
   1257617424:
     # 1257617426 ~ 1257622223, 4798
 
     # channel dimension
     channelBegin: 109
-    numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1257617426
-    # numOfSeconds: 4798
     timeEnd: 1257622223
 
-    timeUnit: 40
-    timeStep: 200
-
     # pointing dimension
-    pointingBegin: 1
     pointingEnd: 8798
-    # pointingEnd: 960
-    pointingStep: 24
 
   1206977296:
     # 1206977303 ~ 1206981016, 3714
     # channel dimension
     channelBegin: 133
-    numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1206977303
-    # numOfSeconds: 3714
     timeEnd: 1206981016
 
-    # packSize:
-    timeUnit: 40
-    timeStep: 200
+    # pointing dimension
+    pointingEnd: 960
+
+  1255803168:
+    # t: 1255803170 ~ 1255807967, 4798
+    # p: 10093
+
+    # channel dimension
+    channelBegin: 109
+
+    # time dimenstion
+    timeBegin: 1255803170
+    # numOfSeconds: 4798
+    timeEnd: 1255807967
 
     # pointing dimension
-    pointingBegin: 1
     pointingEnd: 960
-    pointingStep: 24

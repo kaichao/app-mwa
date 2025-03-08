@@ -28,11 +28,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	messages, sema := message.ParseForPullUnpack(os.Args[1])
+	messages := message.GetMessagesForPullUnpack(os.Args[1])
+	// messages, sema := message.ParseForPullUnpack(os.Args[1])
 	for _, m := range messages {
 		misc.AppendToFile("my-messages.txt", m)
 	}
-	fmt.Println("sema:", sema)
+	// fmt.Println("sema:", sema)
 	var headerOption string
 	if v := os.Getenv("SOURCE_URL"); v != "" {
 		headerOption = fmt.Sprintf("%s -h source_url=%s", headerOption, v)

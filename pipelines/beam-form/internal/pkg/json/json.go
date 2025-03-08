@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 // SetAttribute ...
@@ -13,6 +15,7 @@ func SetAttribute(jsonString string, attrName string, attrValue string) string {
 
 	// 解析原始JSON
 	if err := json.Unmarshal([]byte(jsonString), &data); err != nil {
+		logrus.Errorf("json.Unmarshal(), err-info:%v", err)
 		return "" // 无效JSON返回空字符串
 	}
 
@@ -29,6 +32,7 @@ func SetAttribute(jsonString string, attrName string, attrValue string) string {
 	// 生成新JSON
 	result, err := json.Marshal(data)
 	if err != nil {
+		logrus.Errorf("json.Marshal(), err-info:%v", err)
 		return ""
 	}
 	return string(result)

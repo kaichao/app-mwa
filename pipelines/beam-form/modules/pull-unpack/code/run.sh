@@ -4,22 +4,24 @@ source functions.sh
 source /app/share/bin/functions.sh
 source $(dirname $0)/functions.sh
 
-# 1257010784/1257010786_1257010815_ch109.dat.tar.zst
-m=$1
+# 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst
+# s=$1
+# 删除第一个'/'之前的部分，得到 1257010784/1257010786_1257010815_ch109.dat.tar.zst
+# m="${s#*/}"
+# pointing="${s%%/*}"
 
-# remove last characters ~b01
-#m="${m0%~*}"
-#batch="${m0##*~}"
-
-if [[ $m =~ ^([0-9]+)/([0-9]+)_([0-9]+)_ch([0-9]+)\.dat\.tar\.zst$ ]]; then
+if [[ $1 =~ ^([0-9]+)/((p[0-9]+_[0-9]+)/)?(([0-9]+)_([0-9]+)_ch([0-9]+)\.dat\.tar\.zst)$ ]]; then
     dataset="${BASH_REMATCH[1]}"
-    begin="${BASH_REMATCH[2]}"
-    end="${BASH_REMATCH[3]}"
-    ch="${BASH_REMATCH[4]}"
+    pointing_path="${BASH_REMATCH[3]}"
+    file_name="${BASH_REMATCH[4]}"
+    begin="${BASH_REMATCH[5]}"
+    end="${BASH_REMATCH[6]}"
+    ch="${BASH_REMATCH[7]}"
 else
     echo "[ERROR] Input does not match :$1" >&2 && exit 5
 fi
 
+echo "pointing_path=$pointing_path"
 # jump_servers=$(get_header "$2" "jump_servers")
 # jump_servers_option=""
 # if [ $jump_servers ]; then
@@ -47,11 +49,11 @@ fi
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
     source_dir=$(get_host_path $source_dir)
-    cmd="cat ${source_dir}/$m | ${cmd_part}"
+    cmd="cat ${source_dir}/$1 | ${cmd_part}"
 else
-    # RSYNC-OVER-SSH
+    # SSH
     ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump_servers")
-    cmd="$ssh_cmd \"cat ${source_dir}/$m\" - | ${cmd_part}"
+    cmd="$ssh_cmd \"cat ${source_dir}/$dataset/$file_name\" - | ${cmd_part}"
 fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
@@ -86,9 +88,9 @@ done
 echo "$1" >> ${WORK_DIR}/messages.txt
 
 if [ "$source_mode" = "LOCAL" ]; then
-    echo "${source_dir}/$m" > ${WORK_DIR}/output-files.txt
+    echo "${source_dir}/$1" > ${WORK_DIR}/output-files.txt
     if [ "$KEEP_SOURCE_FILE" != "yes" ]; then
-        echo "${source_dir}/$m" > ${WORK_DIR}/removed-files.txt
+        echo "${source_dir}/$1" > ${WORK_DIR}/removed-files.txt
     fi
 fi
 

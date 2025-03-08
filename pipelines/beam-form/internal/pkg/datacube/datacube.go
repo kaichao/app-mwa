@@ -33,8 +33,6 @@ type DataCube struct {
 	PointingEnd   int `yaml:"pointingEnd"`
 	// 单次beam-maker处理的指向数，通常取24的倍数
 	PointingStep int `yaml:"pointingStep"`
-	// 单批次beam-maker的执行次数，batchIndex从0起
-	NumPerBatch int `yaml:"numPerBatch"`
 }
 
 var (
@@ -74,10 +72,34 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
 	}
 
-	// 设定定制的time step，用于测试
+	if cube.NumOfChannels == 0 {
+		cube.NumOfChannels = 24
+	}
+	if cube.TimeUnit == 0 {
+		cube.TimeUnit = 40
+	}
+	if cube.TimeStep == 0 {
+		cube.TimeStep = 200
+	}
+	if cube.PointingBegin == 0 {
+		cube.PointingBegin = 1
+	}
+	if cube.PointingStep == 0 {
+		cube.PointingStep = 24
+	}
+	// 设定定制的time_step，用于测试
 	if v, _ := strconv.Atoi(os.Getenv("TIME_STEP")); v > 0 {
 		cube.TimeStep = v
 	}
+	// 设定定制的pointing_begin
+	if v, _ := strconv.Atoi(os.Getenv("POINTING_BEGIN")); v > 0 {
+		cube.PointingBegin = v
+	}
+	// 设定定制的pointing_end
+	if v, _ := strconv.Atoi(os.Getenv("POINTING_ENG")); v > 0 {
+		cube.PointingEnd = v
+	}
+
 	return &cube
 }
 

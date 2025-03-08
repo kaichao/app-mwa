@@ -10,9 +10,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY internal /go/src/internal
-COPY app-base/message-router/*.go /go/src/app-base/message-router/
+COPY app/message-router/*.go /go/src/app/message-router/
 
-WORKDIR /go/src/app-base/message-router
+WORKDIR /go/src/app/message-router
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -31,7 +31,7 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/app-base/message-router/message-router /app/bin/
+COPY --from=0 /go/src/app/message-router/message-router /app/bin/
 
 COPY dataset.yaml /
 

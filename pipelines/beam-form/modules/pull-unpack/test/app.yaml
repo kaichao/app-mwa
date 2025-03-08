@@ -28,6 +28,7 @@ jobs:
     environments:
       - SOURCE_URL=${SOURCE_URL}
       - TARGET_URL=${TARGET_URL}
+      - POINTING_PATH=${POINTING_PATH}
       - TIME_STEP=${TIME_STEP}
     hosts:
       - h0:1
