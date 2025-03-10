@@ -65,7 +65,7 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 		logrus.Errorf("Error parsing yaml file %s, err:%v", datacubeFile, err)
 	}
 
-	fmt.Println("config:", config)
+	// fmt.Println("config:", config)
 	cube := config["datasets"][datasetID]
 	cube.DatasetID = datasetID
 	if cube.NumOfSeconds == 0 {

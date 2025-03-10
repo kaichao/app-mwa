@@ -113,6 +113,7 @@ func GetMessagesForBeamMake(m string) []string {
 	pointingRange := fmt.Sprintf("p%05d_%05d", pBegin, pEnd)
 	headers := json.SetAttribute("{}", "pointing_range", pointingRange)
 	fmt.Println("headers:", headers)
+	withPointingPath := os.Getenv("WITH_POINTING_PATH") == "yes"
 	for k := 0; k < len(pRanges); k += 2 {
 		for j := 0; j < len(tRanges); j += 2 {
 			for i := 0; i < cube.NumOfChannels; i++ {
@@ -120,7 +121,7 @@ func GetMessagesForBeamMake(m string) []string {
 					dataset, pRanges[k], pRanges[k+1],
 					tRanges[j], tRanges[j+1],
 					cube.ChannelBegin+i)
-				if os.Getenv("WITH_POINTING_PATH") != "no" {
+				if withPointingPath {
 					m += "," + headers
 				}
 				fmt.Println("m=", m)
