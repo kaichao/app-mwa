@@ -11,6 +11,21 @@ flowchart TD
   end
 ```
 
+## 一、数据准备
+
+### p419集群
+
+- 从管理节点本地存储到共享存储
+
+```sh
+cd pipelines/beam-form/modules/pull-unpack/test
+
+
+START_MESSAGE=1255803168 \
+scalebox app create -e p419.env
+
+```
+
 ## 流水线测试
 
 ### p419
@@ -21,7 +36,7 @@ scalebox app create -e p419.env
 ```
 
 ```sh
-START_MESSAGE=1257617424/p07921_08160 \
+START_MESSAGE=1257617424/p08521_08798 \
 scalebox app create -e p419.env
 ```
 
