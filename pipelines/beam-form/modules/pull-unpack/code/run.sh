@@ -79,7 +79,6 @@ post_check $dataset $ch $begin $end $target_dir
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code
 
-# 消息加上批次号，以免在多批次处理过程中，在message-router中有同名冲突
 for ((n=$begin; n<=$end; n++))
 do
     echo "${target_dir}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
@@ -88,7 +87,7 @@ done
 echo "$1" >> ${WORK_DIR}/messages.txt
 
 if [ "$source_mode" = "LOCAL" ]; then
-    echo "${source_dir}/$1" > ${WORK_DIR}/output-files.txt
+    echo "${source_dir}/$1" >> ${WORK_DIR}/output-files.txt
     if [ "$KEEP_SOURCE_FILE" != "yes" ]; then
         echo "${source_dir}/$1" > ${WORK_DIR}/removed-files.txt
     fi

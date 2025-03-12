@@ -30,28 +30,28 @@ func GetSemaphores(m string) string {
 	pRanges := cube.GetPointingRangesByInterval(pBegin, pEnd)
 
 	semaDatReady := ""
+	semaDatDone := ""
+	nPRanges := len(pRanges) / 2
 	for j := 0; j < len(tRanges); j += 2 {
 		tUnits := cube.GetTimeUnitsWithinInterval(tRanges[j], tRanges[j+1])
 		nTimeUnits := len(tUnits) / 2
 		for i := 0; i < cube.NumOfChannels; i++ {
-			semaPair := fmt.Sprintf(`"dat-ready:%s/p%05d_%05d/t%d_%d/ch%d":%d`,
-				dataset, pBegin, pEnd, tRanges[j], tRanges[j+1], cube.ChannelBegin+i, nTimeUnits)
+			id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d/ch%d`,
+				dataset, pBegin, pEnd, tRanges[j], tRanges[j+1], cube.ChannelBegin+i)
+			semaPair := fmt.Sprintf(`"dat-ready:%s":%d`, id, nTimeUnits)
 			semaDatReady += semaPair + "\n"
+
+			semaPair = fmt.Sprintf(`"dat-done:%s":%d`, id, nPRanges)
+			semaDatDone += semaPair + "\n"
 		}
 	}
 
-	semaDatDone := ""
 	semaFitsDone := ""
 	// fits-done:1257010784/p00001/t1257010786_1257010985
-	nPointingRanges := len(pRanges) / 2
 	for k := 0; k < len(pRanges); k += 2 {
 		for j := 0; j < len(tRanges); j += 2 {
 			id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d`, dataset, pRanges[k], pRanges[k+1], tRanges[j], tRanges[j+1])
-			semaPair := fmt.Sprintf(`"dat-done:%s":%d`, id, nPointingRanges)
-			semaDatDone += semaPair + "\n"
-			// semaPair := fmt.Sprintf(`"fits-done:%s/p%05d_%05d/t%d_%d":%d`,
-			// 	dataset, ps[k], ps[k+1], ts[j], ts[j+1], 24)
-			semaPair = fmt.Sprintf(`"fits-done:%s":%d`, id, 24)
+			semaPair := fmt.Sprintf(`"fits-done:%s":%d`, id, 24)
 			semaFitsDone += semaPair + "\n"
 		}
 	}

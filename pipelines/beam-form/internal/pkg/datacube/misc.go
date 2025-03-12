@@ -1,8 +1,6 @@
 package datacube
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // Print ...
 func Print(s string) {
