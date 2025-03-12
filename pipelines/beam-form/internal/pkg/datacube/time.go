@@ -3,6 +3,8 @@ package datacube
 import (
 	"fmt"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 // not used
@@ -21,7 +23,7 @@ func (cube *DataCube) getTimeRangeIndex(t int) int {
 func (cube *DataCube) getTimeUnit(t int) (int, int) {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
-		fmt.Fprintf(os.Stderr, "[WARN]getTimeUnit(), timestamp %d is out of range [%d..%d]\n",
+		logrus.Warnf("getTimeUnit(), timestamp %d is out of range [%d..%d]\n",
 			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
 		return -1, -1
 	}
@@ -36,10 +38,11 @@ func (cube *DataCube) getTimeUnit(t int) (int, int) {
 
 // GetTimeRange ...
 func (cube *DataCube) GetTimeRange(t int) (int, int) {
+	fmt.Println("cube:", cube)
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
-		fmt.Fprintf(os.Stderr, "[WARN]getTimeRange(),timestamp %d is out of range [%d..%d]\n",
-			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
+		logrus.Warnf("getTimeRange(),timestamp %d is out of range [%d..%d]\n",
+			t+cube.TimeBegin, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
 		return -1, -1
 	}
 	index := t / cube.TimeStep

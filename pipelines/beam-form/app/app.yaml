@@ -6,17 +6,25 @@ parameters:
 
 jobs:
   wait-queue:
-    parameters:
-      task_dist_mode: HOST-BOUND
+    base_image: hub.cstcloud.cn/scalebox/agent
 
   pull-unpack:
+    base_image: ${FILE_COPY}
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
+      slot_options: tmpfs_workdir
+      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~13
+      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~120
     parameters:
       task_dist_mode: HOST-BOUND
+      pod_id: pod_beam_form
     environments:
-      - LOCAL_INPUT_ROOT=
-      - LOCAL_OUTPUT_ROOT=${LOCAL_TMP_ROOT}
+      - SOURCE_URL=${SOURCE_URL}
+      - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
+      - TARGET_SUBDIR=${TARGET_SUBDIR}
+      - TARGET_URL=${TARGET_URL}
+    hosts:
+      - ${NODES}    
 
   beam-make:
     base_image: ${MWA_VCSTOOLS}
@@ -26,18 +34,17 @@ jobs:
       task_timeout_seconds: 3600
     parameters:
       task_dist_mode: HOST-BOUND
+      pod_id: pod_beam_form
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       task_cache_expired_minutes: 65
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_TMP_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_TMP_ROOT}
+      - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
-      - ${NODES}:4
-    sink_jobs:
-      - down-sample
+      - ${NODES}:1
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
@@ -49,17 +56,20 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
-
+      pod_id: pod_beam_form
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
-      - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
+      - ENABLE_LOCAL_COMPUTE=no
     hosts:
       - ${NODES}
+    sink_jobs:
+      - fits-redist
 
   fits-redist:
+    base_image: ${FILE_COPY}
 
   fits-merge:
     label: 24通道fits合并
@@ -71,18 +81,19 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
     environments:
-      - LOCAL_INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - LOCAL_OUTPUT_ROOT=
+      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}
 
-  fits-push:
-
   message-router-beam-form:
-    base_image: app-mwa/message-router-app
+    base_image: app-mwa/message-router-beam-form-app
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
+    environments:
+      - TIME_STEP=${TIME_STEP}
+      - NODES=${NODES}
     hosts:
       - h0:1

@@ -90,17 +90,13 @@ func GetMessagesForPullUnpack(m string) []string {
 			hValue := fmt.Sprintf("%s/t%d_%d/ch%d",
 				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
 			headers := json.SetAttribute("{}", "target_subdir", hValue)
-			// headers = json.SetAttribute(headers, "to_host",
-			// 	cube.GetNodeNameByTimeChannel(ts[j], i))
+			headers = json.SetAttribute(headers, "to_host",
+				cube.GetNodeNameByTimeChannel(ts[j], i+cube.ChannelBegin))
 			// header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
 			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
 			for k := 0; k < len(tus); k += 2 {
-				body := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst",
-					dataset, tus[k], tus[k+1], cube.ChannelBegin+i)
-				if withPointingPath {
-					body = fmt.Sprintf("%s/p%05d_%05d/%d_%d_ch%d.dat.tar.zst",
-						dataset, pBegin, pEnd, tus[k], tus[k+1], cube.ChannelBegin+i)
-				}
+				body := fmt.Sprintf("%s/p%05d_%05d/%d_%d_ch%d.dat.tar.zst",
+					dataset, pBegin, pEnd, tus[k], tus[k+1], cube.ChannelBegin+i)
 				messages = append(messages, body+","+headers)
 			}
 		}

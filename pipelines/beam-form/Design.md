@@ -17,7 +17,7 @@
 | num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
 | 1 | wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
-| 2 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
+| 2 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
 | 3 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
 | 4 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
 | 5 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
@@ -26,6 +26,8 @@
 
 
 ### 2.1 wait-queue
+
+流水处理的vtask流控。
 
 - 处理步骤
   1. 若信号量值为0，自动停止
@@ -49,10 +51,11 @@
 - task-timeout
 
 ### 2.2 pull-unpack
+- 输出消息体：1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst
+
 - 输入消息头：
     - target_subdir:1266932746_1266932945
 
-- 输出消息：p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst
 - 输入目录：
 - 输出目录：
 
@@ -89,7 +92,7 @@
 | ------------- | ---------------------------------------------------------- |  --------------- | -------- |
 | tar-ready     | tar-ready:1257010784/p00001_00960/t1257010786_1257010985   |                  |          |
 | dat-ready | dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109 | tar.zst打包文件数 |          |
-| dat-done      | dat-done:1257010784/p00001_00960/t1257010786_1257010985    | 指向组处理次数     |          |
+| dat-done   | dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109 | 指向组处理次数     |          |
 | fits-done     | fits-done:1257010784/p00001_00024/t1257010786_1257010985   |       24         |          |
 | pointing-done | pointing-done:1257010784/p00001                            |  时间区段长度      |          |
 | progress-beam-make | progress-beam-make:g01h00                             |                  |          |
@@ -117,11 +120,13 @@
 
 若beam-make单次处理200秒数据，则涉及有5个tar文件
 
-- 信号量初值：5
+- 信号量初值：典型值为5（200秒）
 - 信号量操作：每个打包文件解包完成，对应信号量减一
 - 信号量触发：按指向给beam-maker发送消息
 
 ### dat-done
+
+用于流式处理过程中，原始科学数据删除的标志位。
 
 标识beam-make单组dat文件需执行的波束合成次数，作为删除本地dat文件的条件。
 
@@ -135,7 +140,7 @@
 
 - 信号量初值：24，24通道
 - 信号量操作：每个单通道的fits完成后
-- 信号量触发：按指向给beam-maker发送消息
+- 信号量触发：按指向给beam-make发送消息
 
 ### pointing-done
 若单次处理200秒数据，则4800秒数据需处理24次。

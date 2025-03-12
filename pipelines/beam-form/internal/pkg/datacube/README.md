@@ -2,15 +2,14 @@
 
 ## Channel
 
-109..132
+- [109..132]
+- [133..157]
 
 ## Time 
 
 - unit: seconds in repacked file(40-sec)
 
 - range: seconds in beam-form op.
-
-- seg: for 24-node group. (n * ranges)
 
 ## Pointing
 
