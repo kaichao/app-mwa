@@ -3,9 +3,12 @@ package main
 import (
 	"beamform/internal/pkg/datacube"
 	"beamform/internal/pkg/message"
+	"beamform/internal/pkg/semaphore"
+	"beamform/internal/pkg/task"
 	"fmt"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
@@ -17,11 +20,23 @@ func defaultFunc(msg string, headers map[string]string) int {
 	}()
 	misc.AddTimeStamp("enter-defaultFunc()")
 
+	cmd := "scalebox variable get datasets"
+	val := misc.ExecCommandReturnStdout(cmd, 5)
+	if val == "" {
+		val = msg
+	} else {
+		val += "," + msg
+	}
+	cmd = "scalebox variable set datasets " + msg
+	if code := misc.ExecCommandReturnExitCode(cmd, 5); code != 0 {
+		return code
+	}
+
 	// messages, sema := message.ParseForPullUnpack(msg)
 	messages := message.GetMessagesForPullUnpack(msg)
 	sema := message.GetSemaphores(msg)
 	misc.AppendToFile("my-sema.txt", sema)
-	cmd := "scalebox semaphore create --sema-file my-sema.txt"
+	cmd = "scalebox semaphore create --sema-file my-sema.txt"
 	if code := misc.ExecCommandReturnExitCode(cmd, 600); code > 0 {
 		return code
 	}
@@ -79,12 +94,76 @@ func fromMessageRouter(message string, headers map[string]string) int {
 	return 0
 }
 func fromBeamMake(message string, headers map[string]string) int {
+	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
+	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
+	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_[0-9]+)/(t[0-9]+_[0-9]+/ch[0-9]+)$`)
+	ss := re.FindStringSubmatch(message)
+	if len(ss) == 0 {
+		logrus.Errorf("Invalid Message Format, body=%s\n", message)
+		return 1
+	}
+	obsID := ss[2]
+	// datasetID := ss[1]
+	suffix := ss[4]
+
+	p := ss[3]
+	var p0, p1 string
+	cmd := "scalebox variable get datasets"
+	val := misc.ExecCommandReturnStdout(cmd, 5)
+	re = regexp.MustCompile(`^[0-9]+/p([0-9]+)_([0-9]+)`)
+	for _, ds := range strings.Split(val, ",") {
+		ss := re.FindStringSubmatch(ds)
+		if len(ss) == 0 {
+			logrus.Errorf("Invalid Format of message, dataset=%s\n", ds)
+			return 1
+		}
+		if ss[1] <= p && p <= ss[2] {
+			p0 = ss[1]
+			p1 = ss[2]
+			break
+		}
+	}
+	if p0 == "" {
+		logrus.Errorln("dataset not found in variable datasets")
+		return 2
+	}
+	// 用obsID，但可能有边界对齐问题？
+	semaName := fmt.Sprintf("dat-done:%s/p%s_%s/%s", obsID, p0, p1, suffix)
 	// 信号量操作
+	v, err := semaphore.Decrement(semaName)
+	if err != nil {
+		logrus.Errorf("semaphore-decrement, err-info:%v\n", err)
+		return 2
+	}
 	// 若信号量为0，则删除dat文件目录（？）
-	return 0
+	if v == 0 {
+		ipAddr := headers["from_ip"]
+		cmd := fmt.Sprintf(`ssh %s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
+			ipAddr, obsID, suffix)
+		fmt.Printf("cmd:%s\n", cmd)
+		if code := misc.ExecCommandReturnExitCode(cmd, 60); code != 0 {
+			return code
+		}
+	}
+	return task.Add("down-sample", message, "")
 }
 
-func fromDownSample(message string, headers map[string]string) int {
+func fromDownSample(m string, headers map[string]string) int {
+	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// 产生hosts列表
+	// dataset, p0, p1, t0, t1, err := message.ParseParts(m)
+
+	dataset, _, _, t0, _, _ := message.ParseParts(m)
+	cube := datacube.GetDataCube(dataset)
+	nodes := cube.GetNodeNameListByTime(t0)
+	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, nodes)
+	fmt.Printf("in fromDownSample(),hosts=%s\n", hs)
+	code := task.Add("fits-redist", m, hs)
+	fmt.Printf("Exit-code:%d\n", code)
+	return code
+}
+
+func fromFitsRedist(message string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t[0-9]+_[0-9]+))(/ch[0-9]+)$`)
 	ss := re.FindStringSubmatch(message)
@@ -112,19 +191,21 @@ func fromDownSample(message string, headers map[string]string) int {
 		// 24ch not done.
 		return 0
 	}
+	// ds := fmt.Sprintf("%s/p%05d_%05d",)
+	cube := datacube.GetDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	taskFile := "my-tasks.txt"
-	fmt.Println("000,task-file:", taskFile)
+	fmt.Println("task-file:", taskFile)
 	for p := pBegin; p <= pEnd; p++ {
-		m := fmt.Sprintf("%s/p%05d/%s", ds, p, t)
-		fmt.Println("001,message:", m)
+		toHost := cube.GetNodeNameByPointing(p)
+		m := fmt.Sprintf(`%s/p%05d/%s,{"to_host":"%s"}`, ds, p, t, toHost)
+		fmt.Println(m)
 		misc.AppendToFile(taskFile, m)
 	}
 	cmd = "scalebox task add --sink-job=fits-merge --task-file=my-tasks.txt"
 	code := misc.ExecCommandReturnExitCode(cmd, 120)
 	return code
 }
-
 func fromFitsMerge(message string, headers map[string]string) int {
 	// 1257010784/p00001/t1257010786_1257010965
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)

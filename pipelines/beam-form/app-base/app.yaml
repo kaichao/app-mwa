@@ -20,6 +20,8 @@ jobs:
       - INPUT_ROOT=
       - OUTPUT_ROOT=
       - KEEP_TARGET_FILE=yes
+      - POINTING_FILE=
+      # - POINTING_FILE=pointing-250313.txt
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
       - ${NODES}:3

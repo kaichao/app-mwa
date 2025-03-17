@@ -16,7 +16,7 @@
 | target_hosts | TARGET_HOSTS     | 将本组文件分发的目标节点列表，以逗号分隔的ip地址；若不需要分发，则以localhost替换 |
 |              | TARGET_USER      | 目标端用户名，缺省为root                            |
 |              | TARGET_PORT      | 目标端的端口号，缺省为22                            |
-|              | TARGET_ROOT      | 目标端的根目录，缺省为${CLUSTER_DATA_ROOT}/mwa/1chz |
+|              | TARGET_ROOT      | 目标端的根目录，缺省为${CLUSTER_DATA_ROOT}          |
 
 ## 二、模块测试
 

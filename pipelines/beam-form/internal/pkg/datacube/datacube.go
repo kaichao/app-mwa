@@ -3,6 +3,7 @@ package datacube
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	// 获取当前工作目录
 	dir, err := os.Getwd()
 	if err != nil {
-		fmt.Println("Error:", err)
+		logrus.Errorln("Error:", err)
 	}
 	fmt.Println("Current Directory:", dir)
 
@@ -66,6 +67,18 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	}
 
 	// fmt.Println("config:", config)
+
+	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?$`)
+	ss := re.FindStringSubmatch(datasetID)
+
+	if len(ss) == 0 {
+		logrus.Errorf("Invalid format, datasetID=%s\n", datasetID)
+		return nil
+	}
+	datasetID = ss[1]
+	p0, _ := strconv.Atoi(ss[3])
+	p1, _ := strconv.Atoi(ss[4])
+
 	cube := config["datasets"][datasetID]
 	cube.DatasetID = datasetID
 	if cube.NumOfSeconds == 0 {
@@ -98,6 +111,11 @@ func getDataCubeFromFile(datasetID string) *DataCube {
 	// 设定定制的pointing_end
 	if v, _ := strconv.Atoi(os.Getenv("POINTING_ENG")); v > 0 {
 		cube.PointingEnd = v
+	}
+
+	if p0 > 0 {
+		cube.PointingBegin = p0
+		cube.PointingEnd = p1
 	}
 
 	return &cube
