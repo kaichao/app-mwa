@@ -19,7 +19,7 @@ jobs:
       - TARGET_HOSTS=${TARGET_HOSTS}
       - TARGET_USER=
       - TARGET_PORT=
-      # - TARGET_ROOT=/tmp/scalebox/mydata/mwa/1chz
+      # - TARGET_ROOT=/tmp/scalebox/mydata
     hosts:
       - h0:1
     sink_jobs:

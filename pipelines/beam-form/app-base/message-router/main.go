@@ -6,6 +6,8 @@ import (
 
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {

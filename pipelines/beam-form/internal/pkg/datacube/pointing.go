@@ -1,5 +1,7 @@
 package datacube
 
+import "fmt"
+
 /*
 // GetNumOfPointingBatch ...
 func (cube *DataCube) GetNumOfPointingBatch() int {
@@ -27,9 +29,13 @@ func (cube *DataCube) GetPointingRangesByInterval(pBegin, pEnd int) []int {
 		if p1 > cube.PointingEnd {
 			p1 = cube.PointingEnd
 		}
+		if p1 > pEnd {
+			p1 = pEnd
+		}
 		ret = append(ret, p0, p1)
 	}
 
+	fmt.Printf("pBegin:%d,pEnd:%d,ret:%v\n", pBegin, pEnd, ret)
 	return ret
 }
 

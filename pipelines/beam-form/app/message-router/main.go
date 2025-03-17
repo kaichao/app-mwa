@@ -52,6 +52,7 @@ var (
 		"pull-unpack":    fromPullUnpack,
 		"beam-make":      fromBeamMake,
 		"down-sample":    fromDownSample,
+		"fits-redist":    fromFitsRedist,
 		"fits-merge":     fromFitsMerge,
 	}
 )
