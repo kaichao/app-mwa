@@ -2,8 +2,10 @@ package task
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/sirupsen/logrus"
 )
 
 // Add ...
@@ -23,6 +25,23 @@ func AddWithMapHeaders(sinkJob string, message string, headers map[string]string
 }
 
 // AddTasks ...
-func AddTasks(sinkJob string, messages []string, headers string) int {
+func AddTasks(sinkJob string, messages []string, headers string, timeout int) int {
+	taskFile := "my-tasks.txt"
+	for _, m := range messages {
+		misc.AppendToFile(taskFile, m)
+	}
+	if headers == "" {
+		headers = "{}"
+	}
+	cmd := fmt.Sprintf(`scalebox task add --headers='%s' --sink-job=%s --task-file=my-tasks.txt`, headers, sinkJob)
+	code := misc.ExecCommandReturnExitCode(cmd, timeout)
+	if code != 0 {
+		return code
+	}
+
+	if err := os.Remove(taskFile); err != nil {
+		logrus.Errorf("remove file %s\n", taskFile)
+		return 1
+	}
 	return 0
 }

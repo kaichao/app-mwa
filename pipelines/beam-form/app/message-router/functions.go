@@ -32,22 +32,17 @@ func defaultFunc(msg string, headers map[string]string) int {
 		return code
 	}
 
-	// messages, sema := message.ParseForPullUnpack(msg)
 	messages := message.GetMessagesForPullUnpack(msg)
-	sema := message.GetSemaphores(msg)
-	misc.AppendToFile("my-sema.txt", sema)
-	cmd = "scalebox semaphore create --sema-file my-sema.txt"
-	if code := misc.ExecCommandReturnExitCode(cmd, 600); code > 0 {
+	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	if code := task.AddTasks("pull-unpack", messages, "", 600); code > 0 {
 		return code
 	}
-	fmt.Printf("num-of-messages:%d,num-of-sema:%d\n", len(messages), len(sema))
-	for _, m := range messages {
-		misc.AppendToFile("my-tasks.txt", m)
+	sema := message.GetSemaphores(msg)
+	if err := semaphore.Create(sema); err != nil {
+		return 1
 	}
-
-	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	cmd = "scalebox task add --sink-job=pull-unpack --task-file my-tasks.txt"
-	return misc.ExecCommandReturnExitCode(cmd, 600)
+	fmt.Printf("num-of-messages:%d,num-of-sema:%d\n", len(messages), len(sema))
+	return 0
 }
 
 func fromPullUnpack(msg string, headers map[string]string) int {
@@ -70,24 +65,22 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	t0, t1 := cube.GetTimeRange(t)
 
 	sema := fmt.Sprintf(`dat-ready:%s/t%d_%d/%s`, prefix, t0, t1, ch)
-	cmd := fmt.Sprintf(`scalebox semaphore decrement %s`, sema)
-	s := misc.ExecCommandReturnStdout(cmd, 600)
-	semaVal, err := strconv.Atoi(s)
+	semaVal, err := semaphore.Decrement(sema)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s\n", sema)
 		return 2
 	}
-	if semaVal == 0 {
-		ps := cube.GetPointingRangesByInterval(p0, p1)
-		for k := 0; k < len(ps); k += 2 {
-			body := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/%s",
-				obsID, ps[k], ps[k+1], t0, t1, ch)
-			misc.AppendToFile("my-tasks.txt", body)
-		}
-		cmd = `scalebox task add --sink-job=beam-make --task-file my-tasks.txt`
-		return misc.ExecCommandReturnExitCode(cmd, 10)
+	if semaVal > 0 {
+		return 0
 	}
-	return 0
+	ps := cube.GetPointingRangesByInterval(p0, p1)
+	messages := []string{}
+	for k := 0; k < len(ps); k += 2 {
+		body := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/%s",
+			obsID, ps[k], ps[k+1], t0, t1, ch)
+		messages = append(messages, body)
+	}
+	return task.AddTasks("beam-make", messages, "", 600)
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
@@ -152,7 +145,6 @@ func fromDownSample(m string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 产生hosts列表
 	// dataset, p0, p1, t0, t1, err := message.ParseParts(m)
-
 	dataset, _, _, t0, _, _ := message.ParseParts(m)
 	cube := datacube.GetDataCube(dataset)
 	nodes := cube.GetNodeNameListByTime(t0)
@@ -178,33 +170,30 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	t := ss[5]
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
-	cmd := fmt.Sprintf("scalebox semaphore decrement fits-done:%s", ss[1])
-	misc.AppendToFile("custom-out.txt", cmd)
-	fmt.Printf("cmd=%s\n", cmd)
-	s := misc.ExecCommandReturnStdout(cmd, 5)
-	fmt.Printf("run-cmd,stdout=%s\n", s)
-	if s == "-32768" {
-		// error while decrement semaphore
+	sema := "fits-done:" + ss[1]
+	semaVal, err := semaphore.Decrement(sema)
+	if err != nil {
+		logrus.Errorf("err:%v\n", err)
 		return 1
 	}
-	if s != "0" {
+	if semaVal > 0 {
 		// 24ch not done.
 		return 0
 	}
+
 	// ds := fmt.Sprintf("%s/p%05d_%05d",)
 	cube := datacube.GetDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	taskFile := "my-tasks.txt"
 	fmt.Println("task-file:", taskFile)
+	messages := []string{}
 	for p := pBegin; p <= pEnd; p++ {
 		toHost := cube.GetNodeNameByPointing(p)
 		m := fmt.Sprintf(`%s/p%05d/%s,{"to_host":"%s"}`, ds, p, t, toHost)
 		fmt.Println(m)
-		misc.AppendToFile(taskFile, m)
+		messages = append(messages, m)
 	}
-	cmd = "scalebox task add --sink-job=fits-merge --task-file=my-tasks.txt"
-	code := misc.ExecCommandReturnExitCode(cmd, 120)
-	return code
+	return task.AddTasks("fits-merge", messages, "", 600)
 }
 func fromFitsMerge(message string, headers map[string]string) int {
 	// 1257010784/p00001/t1257010786_1257010965
@@ -216,14 +205,15 @@ func fromFitsMerge(message string, headers map[string]string) int {
 	}
 
 	// semaphore: pointing-ready:1257010784/p00001
-	cmd := fmt.Sprintf("scalebox semaphore decrement pointing-done:%s", ss[1])
-	s := misc.ExecCommandReturnStdout(cmd, 5)
-	if s == "-32768" {
+	sema := "pointing-done:" + ss[1]
+	semaVal, err := semaphore.Decrement(sema)
+	if err != nil {
 		// error while decrement semaphore
+		logrus.Errorf("err:%v\n", err)
 		return 1
 	}
-	if s != "0" {
-		// pointing not done.
+	if semaVal > 0 {
+		// 24ch not done.
 		return 0
 	}
 

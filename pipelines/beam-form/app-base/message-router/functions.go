@@ -2,6 +2,8 @@ package main
 
 import (
 	"beamform/internal/pkg/message"
+	"beamform/internal/pkg/semaphore"
+	"beamform/internal/pkg/task"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -21,23 +23,18 @@ func defaultFunc(msg string, headers map[string]string) int {
 	// 	1257010784/p00001_00960/t1257012766_1257012965
 	// messages, semas := message.ParseForBeamMake(msg)
 	semas := message.GetSemaphores(msg)
-	misc.AppendToFile("my-semas.txt", semas)
-	cmd := `scalebox semaphore create --sema-file my-semas.txt`
-	if code := misc.ExecCommandReturnExitCode(cmd, 600); code != 0 {
-		return code
+	if err := semaphore.Create(semas); err != nil {
+		logrus.Errorf("semaphore-create,errInfo:%v\n", err)
+		logrus.Errorf("semaphore:\n%s\n", semas)
+		return 1
 	}
 	misc.AddTimeStamp("after-semaphores")
 
+	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	messages := message.GetMessagesForBeamMake(msg)
 	misc.AppendToFile("custom-out.txt",
 		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
-	for _, m := range messages {
-		misc.AppendToFile("my-tasks.txt", m)
-	}
-
-	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	cmd = "scalebox task add --sink-job=beam-make --task-file my-tasks.txt"
-	return misc.ExecCommandReturnExitCode(cmd, 3600)
+	return task.AddTasks("beam-make", messages, "", 1800)
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
@@ -58,27 +55,24 @@ func fromDownSample(message string, headers map[string]string) int {
 	t := ss[5]
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
-	cmd := fmt.Sprintf("scalebox semaphore decrement fits-done:%s", ss[1])
-	misc.AppendToFile("custom-out.txt", cmd)
-	fmt.Printf("cmd=%s\n", cmd)
-	s := misc.ExecCommandReturnStdout(cmd, 5)
-	if s == "-32768" {
-		// error while decrement semaphore
+	sema := "fits-done:" + ss[1]
+	semaValue, err := semaphore.Decrement(sema)
+	if err != nil {
+		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2
 	}
-	if s != "0" {
+	if semaValue > 0 {
 		// 24ch not done.
 		return 0
 	}
+
 	// output message: 1257010784/p00023/t1257010786_1257010965
-	taskFile := "my-tasks.txt"
+	messages := []string{}
 	for p := pBegin; p <= pEnd; p++ {
 		m := fmt.Sprintf("%s/p%05d/%s", ds, p, t)
-		misc.AppendToFile(taskFile, m)
+		messages = append(messages, m)
 	}
-	cmd = "scalebox task add --sink-job=fits-merge --task-file=my-tasks.txt"
-	code := misc.ExecCommandReturnExitCode(cmd, 120)
-	return code
+	return task.AddTasks("fits-merge", messages, "", 120)
 }
 
 func fromFitsMerge(message string, headers map[string]string) int {
@@ -90,15 +84,15 @@ func fromFitsMerge(message string, headers map[string]string) int {
 		return 1
 	}
 
-	// semaphore: pointing-ready:1257010784/p00001
-	cmd := fmt.Sprintf("scalebox semaphore decrement pointing-done:%s", ss[1])
-	s := misc.ExecCommandReturnStdout(cmd, 5)
-	if s == "-32768" {
-		// error while decrement semaphore
+	// semaphore: pointing-done:1257010784/p00001
+	sema := "pointing-done:" + ss[1]
+	semaValue, err := semaphore.Decrement(sema)
+	if err != nil {
+		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2
 	}
-	if s != "0" {
-		// pointing not done.
+	if semaValue > 0 {
+		// 24ch not done.
 		return 0
 	}
 

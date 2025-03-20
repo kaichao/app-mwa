@@ -72,14 +72,15 @@ ORDER BY 1,2
 | 1266932744 | 2746 |
 | 1266329600 | 29602 |
 | 1257617424 | 17426 |
+| 1255803168 | 3170 |
 
 ```sql
 WITH vtable AS (
-    SELECT matches[1] AS p,((matches[2]::integer)-17426)/200 AS t,status_code
+    SELECT matches[1] AS p,((matches[2]::integer)-3170)/200 AS t,status_code
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{5}(\d{5})_\d{10}', 'g') matches, status_code
         FROM t_task
-        WHERE job=1412
+        WHERE job=466
     ) tt
 ),finished AS (
     SELECT p
