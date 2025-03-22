@@ -61,6 +61,7 @@ target_root=${TARGET_ROOT:-${CLUSTER_DATA_ROOT}}
 target_dir="${target_root}/mwa/1chz"
 echo "target_dir:$target_dir"
 
+ret_code=0
 for i in "${!arr_files[@]}"; do
     echo "file: ${arr_files[i]}, host: ${arr_hosts[i]}"
     f=${arr_files[i]}
@@ -73,7 +74,7 @@ for i in "${!arr_files[@]}"; do
     else
         mv -f $f $file_1chy
     fi
-    echo "KEEP_SOURCE_FILE=$KEEP_SOURCE_FILE,source=$f,target=$file_1chy,m=$m,host:${arr_hosts[i]}"
+    echo "source=$f,target=$file_1chy,m=$m,host:${arr_hosts[i]}" >> ${WORK_DIR}/custom-out.txt
 
     if [ ${arr_hosts[i]} == "localhost" ]; then
         continue
@@ -83,8 +84,16 @@ for i in "${!arr_files[@]}"; do
     # 循环调用/app/share/bin/run.sh，分发文件
     eval "/app/share/bin/run.sh '$m' '$2'"
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR]exit after file-copy, error_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code
+    if [[ $code -ne 0 ]]; then
+        ret_code=$code
+    fi
+    echo "after file-copy,file=$m, ret_code=$ret_code, code:$code" >> "${WORK_DIR}/custom-out.txt"
 done
+
+if [[ $ret_code -ne 0 ]]; then
+    rm -f ${WORK_DIR}/messages.txt
+    exit $ret_code
+fi
 
 echo removed-files: >> ${WORK_DIR}/custom-out.txt
 cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/custom-out.txt

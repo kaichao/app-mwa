@@ -6,6 +6,7 @@ import (
 	"beamform/internal/pkg/semaphore"
 	"beamform/internal/pkg/task"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -131,8 +132,16 @@ func fromBeamMake(message string, headers map[string]string) int {
 	// 若信号量为0，则删除dat文件目录（？）
 	if v == 0 {
 		ipAddr := headers["from_ip"]
-		cmd := fmt.Sprintf(`ssh %s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
-			ipAddr, obsID, suffix)
+		sshPort := os.Getenv("SSH_PORT")
+		if sshPort == "" {
+			sshPort = "22"
+		}
+		sshUser := os.Getenv("SSH_USER")
+		if sshUser == "" {
+			sshUser = "root"
+		}
+		cmd := fmt.Sprintf(`ssh -p %s %s@%s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
+			sshPort, sshUser, ipAddr, obsID, suffix)
 		fmt.Printf("cmd:%s\n", cmd)
 		if code := misc.ExecCommandReturnExitCode(cmd, 60); code != 0 {
 			return code
@@ -184,8 +193,6 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	// ds := fmt.Sprintf("%s/p%05d_%05d",)
 	cube := datacube.GetDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
-	taskFile := "my-tasks.txt"
-	fmt.Println("task-file:", taskFile)
 	messages := []string{}
 	for p := pBegin; p <= pEnd; p++ {
 		toHost := cube.GetNodeNameByPointing(p)

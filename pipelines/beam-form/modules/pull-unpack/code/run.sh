@@ -42,7 +42,7 @@ source_dir=$(get_data_root "$source_url")
 # 设置--touch，将文件更新时间更新为当前时间，以免在/tmp中被删除
 if [ -n "$BW_LIMIT" ]; then
     # 已设置
-    cmd_part="pv -L ${BW_LIMIT}|zstd -d | tar --touch -xvf -"
+    cmd_part="pv -q -L ${BW_LIMIT}|zstd -d | tar --touch -xvf -"
 else
     cmd_part="zstd -d | tar --touch -xvf -"
 fi
@@ -58,14 +58,11 @@ fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
-echo "source_url:$source_url" >> ${WORK_DIR}/custom-out.txt
-echo "source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
-echo "target_url:$target_url" >> ${WORK_DIR}/custom-out.txt
-echo "target_subdir:$target_subdir" >> ${WORK_DIR}/custom-out.txt
-echo "target_dir:$target_dir" >> ${WORK_DIR}/custom-out.txt
+echo "source_url:$source_url, source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
+echo "target_url:$target_url, target_dir:$target_dir, target_subdir:$target_subdir" >> ${WORK_DIR}/custom-out.txt
 echo "cmd:$cmd" >> ${WORK_DIR}/custom-out.txt
 
-echo "message:$m" >> ${WORK_DIR}/custom-out.txt
+echo "message:$1" >> ${WORK_DIR}/custom-out.txt
 
 # cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
 mkdir -p ${target_dir} && cd ${target_dir} && eval $cmd 

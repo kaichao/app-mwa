@@ -3,6 +3,7 @@
 source functions.sh
 
 # DOWN_SAMPLER_ENABLED
+env >> ${WORK_DIR}/custom-out.txt
 
 if [ $INPUT_ROOT ]; then
     DIR_1CHZ=$(get_host_path "${INPUT_ROOT}/mwa/1chz")
@@ -36,6 +37,7 @@ output_dir=$(dirname ${output_file})
 filename=$(basename ${output_file})
 
 echo "new feature for local-copy" >> ${WORK_DIR}/custom-out.txt
+echo "output_dir:$output_dir" >> ${WORK_DIR}/custom-out.txt
 
 cd ${WORK_DIR} && mv -f all*.fits ${filename} 
 # mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}

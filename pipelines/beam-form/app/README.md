@@ -24,12 +24,19 @@ flowchart TD
 
 - 数据位于共享存储
 ```sh
-  SOURCE_URL=astro@10.100.1.30:10022/data2/mydata/mwa/tar \
-  TARGET_URL=/tmp/scalebox/mydata/mwa/dat \
   START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
-  NODES=n-0000 \
+  TIME_STEP=80 \
+  NODES=n-001[0-2] \
   scalebox app create -e p419.env
 ```
+
+```sh
+  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
+  TIME_STEP=80 \
+  NODES="n-000[0-9]|n-001[01]" \
+  scalebox app create -e p419.env
+```
+
 
 - 数据位于管理服务器
 
