@@ -30,19 +30,13 @@ scalebox app create -e p419.env
 
 ### p419
 ```sh
-START_MESSAGE=1255803168/p02881_02904 \
+START_MESSAGE=1255803168/p00505_00528 \
 OUTPUT_ROOT_24CH=/work1/cstu0036/mydata \
+NODES=n-00.+ \
 scalebox app create -e p419.env
 
 ```
 
-```sh
-START_MESSAGE=1257617424/p00121_00144 \
-OUTPUT_ROOT_24CH=/work1/cstu0036/mydata \
-NODES=n-00[01][0-9] \
-scalebox app create -e p419.env
-
-```
 
 ### dcu
 

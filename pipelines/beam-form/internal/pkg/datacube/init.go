@@ -1,7 +1,9 @@
 package datacube
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
@@ -20,9 +22,11 @@ func init() {
 }
 
 func loadNodeNames() {
-	nodes := os.Getenv("NODES")
-	if nodes == "" {
-		nodes = "n.+"
+	nodesRegex := os.Getenv("NODES")
+	// regex replace
+	nodesRegex = strings.ReplaceAll(nodesRegex, `\|`, `|`)
+	if nodesRegex == "" {
+		nodesRegex = "n.+"
 	}
 	clusterName := os.Getenv("CLUSTER")
 	sqlText := `
@@ -32,7 +36,7 @@ func loadNodeNames() {
 			AND hostname ~ $2
 		ORDER BY 1
 	`
-	rows, err := misc.GetDB().Query(sqlText, clusterName, nodes)
+	rows, err := misc.GetDB().Query(sqlText, clusterName, nodesRegex)
 	defer rows.Close()
 	if err != nil {
 		logrus.Errorf("query t_app error: %v\n", err)
@@ -46,6 +50,7 @@ func loadNodeNames() {
 		nodeIPs = append(nodeIPs, ipAddr)
 	}
 
+	fmt.Printf("regex:%s,nodes:%v\n", nodesRegex, nodeNames)
 	// 检查 rows 是否有错误
 	if err := rows.Err(); err != nil {
 		logrus.Errorf("Query Resultset, err-info:%v\n", err)

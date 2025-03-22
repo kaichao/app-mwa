@@ -13,7 +13,7 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~13
+      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~17
       dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~120
     parameters:
       task_dist_mode: HOST-BOUND
@@ -44,7 +44,7 @@ jobs:
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
     hosts:
-      - ${NODES}:2
+      - ${NODES}:4
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
@@ -76,6 +76,7 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: pod_beam_form
+      retry_rules: "['*']"
     environments:
       # 1chx
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
@@ -83,7 +84,8 @@ jobs:
       - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       # 1chz
       - TARGET_ROOT=${LOCAL_SHM_ROOT}
-      - TARGET_PORT=
+      - TARGET_USER=${TARGET_USER}
+      - TARGET_PORT=${TARGET_PORT}
       - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}
@@ -113,5 +115,7 @@ jobs:
     environments:
       - TIME_STEP=${TIME_STEP}
       - NODES=${NODES}
+      - SSH_USER=${TARGET_USER}
+      - SSH_PORT=${TARGET_PORT}
     hosts:
       - h0:1
