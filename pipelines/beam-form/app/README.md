@@ -22,13 +22,7 @@ flowchart TD
 
 ## p419集群
 
-- 数据位于共享存储
-```sh
-  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
-  TIME_STEP=80 \
-  NODES=n-001[0-2] \
-  scalebox app create -e p419.env
-```
+- 数据位于管理服务器
 
 ```sh
   START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
@@ -37,8 +31,22 @@ flowchart TD
   scalebox app create -e p419.env
 ```
 
+```sh
+  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
+  TIME_STEP=80 \
+  NODES="n-00[01][0-9]|n-002[0-3]" \
+  scalebox app create -e p419.env
+```
 
-- 数据位于管理服务器
+- 生产测试
+```sh
+  START_MESSAGE=1255803168/p03121_03600 \
+  NODES="n-00[01][0-9]|n-002[0-3]" \
+  scalebox app create -e p419.env
+```
+
+- 数据位于共享存储
+
 
 
 ## dcu集群

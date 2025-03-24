@@ -6,9 +6,9 @@ source functions.sh
 env >> ${WORK_DIR}/custom-out.txt
 
 if [ $INPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_path "${INPUT_ROOT}/mwa/1chz")
+    DIR_1CHY=$(get_host_path "${INPUT_ROOT}/mwa/1chy")
 else
-    DIR_1CHZ=/cluster_data_root/mwa/1chz
+    DIR_1CHY=/cluster_data_root/mwa/1chy
 fi
 
 if [ $OUTPUT_ROOT ]; then
@@ -16,11 +16,11 @@ if [ $OUTPUT_ROOT ]; then
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi
-echo "DIR_1CHZ:${DIR_1CHZ}, DIR_24CH:${DIR_24CH}"
+echo "DIR_1CHY:${DIR_1CHY}, DIR_24CH:${DIR_24CH}"
 
 # 应该是 ${单通道目录根}/${观测号}/指向号/${起始时间戳}_${结尾时间戳}
 # m="1257010784/p00001/t1257010986_1257011185"
-cd ${DIR_1CHZ}/$1
+cd ${DIR_1CHY}/$1
 zstd -d --rm *.zst
 
 input_files=$(ls *.fits)
@@ -51,7 +51,7 @@ code=$?
 echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
 [ "$KEEP_TARGET_FILE" = "no" ] && echo "${output_file}.zst" >> ${WORK_DIR}/removed-files.txt
 
-full_path="${DIR_1CHZ}/$1"
+full_path="${DIR_1CHY}/$1"
 echo [DEBUG]full_path:$full_path
 [ "$KEEP_SOURCE_FILE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
 echo $full_path >> ${WORK_DIR}/input-files.txt

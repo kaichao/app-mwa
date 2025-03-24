@@ -53,7 +53,8 @@ if [ ${#arr_files[@]} -ne ${#arr_hosts[@]} ]; then
     exit 1
 fi
 
-export SOURCE_URL=${DIR_1CHY}
+#export SOURCE_URL=${DIR_1CHY}
+export SOURCE_URL=/dev/shm/scalebox
 
 target_user=${TARGET_USER:-root}
 target_port=${TARGET_PORT:-22}
@@ -66,8 +67,8 @@ for i in "${!arr_files[@]}"; do
     echo "file: ${arr_files[i]}, host: ${arr_hosts[i]}"
     f=${arr_files[i]}
     p="${f%%.fits.zst}"
-    m="${ds}/${p}/${t_label}/${ch}.fits.zst"
-    file_1chy="${DIR_1CHY}/$m"
+    fn="${ds}/${p}/${t_label}/${ch}.fits.zst"
+    file_1chy="${DIR_1CHY}/$fn"
     mkdir -p "$(dirname $file_1chy)"
     if [ "$KEEP_SOURCE_FILE" == "yes" ]; then
         cp -f $f $file_1chy
@@ -79,9 +80,10 @@ for i in "${!arr_files[@]}"; do
     if [ ${arr_hosts[i]} == "localhost" ]; then
         continue
     fi
-    # export TARGET_URL=root@${arr_hosts[i]}:22${DIR_1CHZ}
-    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${target_dir}
+#    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${target_dir}
+    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}/dev/shm/scalebox
     # 循环调用/app/share/bin/run.sh，分发文件
+    m="mydata/mwa/1chy/$fn"
     eval "/app/share/bin/run.sh '$m' '$2'"
     code=$?
     if [[ $code -ne 0 ]]; then
@@ -90,16 +92,20 @@ for i in "${!arr_files[@]}"; do
     echo "after file-copy,file=$m, ret_code=$ret_code, code:$code" >> "${WORK_DIR}/custom-out.txt"
 done
 
-if [[ $ret_code -ne 0 ]]; then
-    rm -f ${WORK_DIR}/messages.txt
-    exit $ret_code
-fi
-
 echo removed-files: >> ${WORK_DIR}/custom-out.txt
 cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/custom-out.txt
+cat "ret_code:$ret_code" >> ${WORK_DIR}/custom-out.txt
 
 # 删除 /app/share/bin/run.sh 调用产生的消息
 rm -f ${WORK_DIR}/messages.txt
+if [[ $ret_code -ne 0 ]]; then
+    rm -f ${WORK_DIR}/removed-files.txt
+    # TODO : 1chy -> 1chx
+
+    exit $ret_code
+fi
+
+
 echo "$1" > ${WORK_DIR}/messages.txt
 
 exit 0
