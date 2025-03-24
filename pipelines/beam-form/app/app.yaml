@@ -32,11 +32,15 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: pod_beam_form
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
+      max_tasks_per_minute: 3
+      message_router_index: 1
       task_cache_expired_minutes: 65
     environments:
       - INPUT_ROOT=${LOCAL_TMP_ROOT}
@@ -53,6 +57,8 @@ jobs:
       # 20-min
       max_sleep_count: 200
       code_path: ${CODE_BASE}/down-sample/code
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
@@ -72,6 +78,8 @@ jobs:
       # 20-min
       max_sleep_count: 200
       code_path: ${CODE_BASE}/fits-redist/code
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
@@ -97,6 +105,8 @@ jobs:
     # 1 hour
       max_sleep_count: 720
       code_path: ${CODE_BASE}/fits-merge/code
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
@@ -112,10 +122,12 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
+      task_dist_mode: SLOT-BOUND
+      bulk_message_size: 10
     environments:
       - TIME_STEP=${TIME_STEP}
       - NODES=${NODES}
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
     hosts:
-      - h0:1
+      - h0:2

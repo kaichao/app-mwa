@@ -34,13 +34,12 @@ func (cube *DataCube) GetNodeNameListByTime(t int) string {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", n)
 		return ""
 	}
-	if n < 24 {
+	if n <= 24 {
 		// 24的约数
 		var hosts []string
+		// indexCh := (ch - cube.ChannelBegin) % n
 		for i := 0; i < 24/n; i++ {
-			for j := 0; j < n; j++ {
-				hosts = append(hosts, nodeIPs[j])
-			}
+			hosts = append(hosts, nodeIPs...)
 		}
 		return strings.Join(hosts, ",")
 	}
@@ -55,9 +54,14 @@ func (cube *DataCube) GetNodeNameByPointing(p int) string {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", n)
 		return ""
 	}
-	if n < 24 {
+	if n <= 24 {
 		// 24的约数
 		index := (p - cube.PointingBegin) % n
+		// n := (ch - cube.ChannelBegin) % n
+		// fmt.Printf("pointing:%d,ch:%d,index-p:%d,index-ch:%d\n", p, ch, index, n)
+		// if n == index {
+		// 	return "localhost"
+		// }
 		return nodeNames[index]
 	}
 	return ""

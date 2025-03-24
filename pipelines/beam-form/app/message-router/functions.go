@@ -154,10 +154,28 @@ func fromDownSample(m string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 产生hosts列表
 	// dataset, p0, p1, t0, t1, err := message.ParseParts(m)
-	dataset, _, _, t0, _, _ := message.ParseParts(m)
+	re := regexp.MustCompile(`^([0-9]+)/p[0-9]+_[0-9]+/t([0-9]+)_[0-9]+/ch([0-9]+)$`)
+	ss := re.FindStringSubmatch(m)
+	if len(ss) == 0 {
+		logrus.Errorf("Invalid Message Format, body=%s\n", m)
+		return 1
+	}
+	dataset := ss[1]
+	t0, _ := strconv.Atoi(ss[2])
+	// ch, _ := strconv.Atoi(ss[3])
 	cube := datacube.GetDataCube(dataset)
 	nodes := cube.GetNodeNameListByTime(t0)
-	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, nodes)
+	// local-ip-addr -> "localhost"
+	fromIP := headers["from_ip"]
+	ips := []string{}
+	for _, s := range strings.Split(nodes, ",") {
+		if s == fromIP {
+			ips = append(ips, "localhost")
+		} else {
+			ips = append(ips, s)
+		}
+	}
+	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(ips, ","))
 	fmt.Printf("in fromDownSample(),hosts=%s\n", hs)
 	code := task.Add("fits-redist", m, hs)
 	fmt.Printf("Exit-code:%d\n", code)
@@ -166,7 +184,7 @@ func fromDownSample(m string, headers map[string]string) int {
 
 func fromFitsRedist(message string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t[0-9]+_[0-9]+))(/ch[0-9]+)$`)
+	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t[0-9]+_[0-9]+))/ch([0-9]+)$`)
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		logrus.Errorf("Invalid format, message:%s\n", message)
@@ -177,6 +195,7 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	pBegin, _ := strconv.Atoi(ss[3])
 	pEnd, _ := strconv.Atoi(ss[4])
 	t := ss[5]
+	// ch, _ := strconv.Atoi(ss[6])
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	sema := "fits-done:" + ss[1]
