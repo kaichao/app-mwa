@@ -29,8 +29,21 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
+# install Redis 7
+RUN apt-get update \
+    && apt-get install -y curl gnupg \
+    && curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb bookworm main" > /etc/apt/sources.list.d/redis.list \
+    && apt-get update \
+    && apt-get install -y redis \
+    && apt-get clean autoclean \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN echo 'redis-cli() { command redis-cli -h "${REDIS_HOST:-localhost}" -p "${REDIS_PORT:-6379}" "$@"; }' >> /root/.bashrc
+
+COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 COPY --from=0 /go/src/app/message-router/message-router /app/bin/
 
 COPY dataset.yaml /
@@ -42,6 +55,8 @@ ENV \
     LOG_LEVEL= \
     NUM_OF_NODES=24 \
     DEFAULT_USER=root \
+    REDIS_HOST= \
+    REDIS_PORT= \
     BATCH_INSERT= 
 
 COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local

@@ -90,7 +90,7 @@ func createPullUnpackProgressCountSemaphores(cube *datacube.DataCube) {
 	semaArr := []Sema{}
 	for _, h := range hosts {
 		// multi-seg support
-		sema := fmt.Sprintf("progress-counter_pull-unpack:%s", h)
+		sema := fmt.Sprintf("task_progress:pull-unpack:%s", h)
 		semaArr = append(semaArr, Sema{name: sema, value: initValue})
 	}
 	doInsert(semaArr)
@@ -106,7 +106,7 @@ func createBeamMakerProgressCountSemaphores(cube *datacube.DataCube) {
 	semaArr := []Sema{}
 	for _, h := range hosts {
 		// multi-seg support
-		sema := fmt.Sprintf("progress-counter_beam-maker:%s", h)
+		sema := fmt.Sprintf("task_progress:beam-maker:%s", h)
 		semaArr = append(semaArr, Sema{name: sema, value: initValue})
 	}
 	doInsert(semaArr)

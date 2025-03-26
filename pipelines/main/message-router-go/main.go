@@ -86,6 +86,6 @@ func defaultFunc(message string, headers map[string]string) int {
 	createBeamMakerProgressCountSemaphores(cube)
 
 	cmd := fmt.Sprintf("scalebox task add --header prefix_url=%s %s", ss[0], ss[1])
-	code := misc.ExecCommandReturnExitCode(cmd, 0)
+	code, _ := misc.ExecCommandReturnExitCode(cmd, 0)
 	return code
 }

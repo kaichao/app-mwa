@@ -30,7 +30,7 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	AddTimeStamp("before-sema-progress-counter")
 	index := cube.GetHostIndex(tb, ch-cube.ChannelBegin, len(ips))
 	// index := (ch - 109) % len(hosts)
-	sema := fmt.Sprintf("progress-counter_beam-maker:%s", hosts[index])
+	sema := fmt.Sprintf("task_progress:beam-maker:%s", hosts[index])
 
 	countDown(sema)
 

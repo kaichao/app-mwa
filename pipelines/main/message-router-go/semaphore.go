@@ -13,13 +13,13 @@ import (
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	code := misc.ExecCommandReturnExitCode(cmdText, 15)
+	code, _ := misc.ExecCommandReturnExitCode(cmdText, 15)
 	return code
 }
 
 func countDown(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore decrement %s", semaName)
-	stdout := misc.ExecCommandReturnStdout(cmdText, 15)
+	stdout, _ := misc.ExecCommandReturnStdout(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}
@@ -34,7 +34,7 @@ func countDown(semaName string) int {
 
 func getSemaphore(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
-	stdout := misc.ExecCommandReturnStdout(cmdText, 15)
+	stdout, _ := misc.ExecCommandReturnStdout(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}

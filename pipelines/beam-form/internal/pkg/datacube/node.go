@@ -20,7 +20,7 @@ func (cube *DataCube) GetNodeNameByTimeChannel(t int, ch int) string {
 		index := (ch - cube.ChannelBegin) % n
 		return nodeNames[index]
 	}
-	// 24的倍数
+	// 24的倍数，也可支持24的约数？
 	indexTime := cube.getTimeRangeIndex(t)
 	indexCH := ch - cube.ChannelBegin
 	index := (indexTime*cube.NumOfChannels + indexCH) % n
@@ -64,5 +64,6 @@ func (cube *DataCube) GetNodeNameByPointing(p int) string {
 		// }
 		return nodeNames[index]
 	}
-	return ""
+	index := (p - cube.PointingBegin) % n
+	return nodeNames[index]
 }

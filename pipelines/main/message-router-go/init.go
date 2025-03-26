@@ -50,7 +50,8 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	return misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	return code
 }
 
 func sendJobRefMessage(message string, headers map[string]string, sinkJob string) int {
@@ -63,8 +64,8 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --headers '%s' %s", sinkJob, h, message)
 		}
 	}
-
-	return misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	return code
 }
 
 func initHosts() {
@@ -110,7 +111,7 @@ func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, stri
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr = misc.ExecCommandReturnAll(cmd, timeout)
+		code, stdout, stderr, _ = misc.ExecCommandReturnAll(cmd, timeout)
 		if code == 0 {
 			return code, stdout, stderr
 		}
