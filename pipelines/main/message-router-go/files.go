@@ -164,7 +164,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 
 	index := cube.GetHostIndex(t, ch-cube.ChannelBegin, len(ips))
 	// index := (ch - 109) % len(hosts)
-	sema := fmt.Sprintf("progress-counter_pull-unpack:%s", hosts[index])
+	sema := fmt.Sprintf("task_progress:pull-unpack:%s", hosts[index])
 	countDown(sema)
 
 	sema = getSemaDatReadyName(cube, t, ch)
@@ -202,7 +202,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code := misc.ExecCommandReturnExitCode(cmdTxt, 120)
+	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 120)
 	return code
 }
 

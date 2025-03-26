@@ -22,19 +22,27 @@ func defaultFunc(msg string, headers map[string]string) int {
 	misc.AddTimeStamp("enter-defaultFunc()")
 
 	cmd := "scalebox variable get datasets"
-	val := misc.ExecCommandReturnStdout(cmd, 5)
+	val, err := misc.ExecCommandReturnStdout(cmd, 5)
+	if err != nil {
+		return 125
+	}
 	if val == "" {
 		val = msg
 	} else {
 		val += "," + msg
 	}
 	cmd = "scalebox variable set datasets " + msg
-	if code := misc.ExecCommandReturnExitCode(cmd, 5); code != 0 {
+	code, err := misc.ExecCommandReturnExitCode(cmd, 5)
+	if err != nil {
+		return 125
+	}
+	if code != 0 {
 		return code
 	}
 
 	messages := message.GetMessagesForPullUnpack(msg)
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// 1266932744/p00001_00960/1266933866_1266933905_ch112.dat.tar.zst
 	if code := task.AddTasks("pull-unpack", messages, "", 600); code > 0 {
 		return code
 	}
@@ -103,7 +111,10 @@ func fromBeamMake(message string, headers map[string]string) int {
 	p := ss[3]
 	var p0, p1 string
 	cmd := "scalebox variable get datasets"
-	val := misc.ExecCommandReturnStdout(cmd, 5)
+	val, err := misc.ExecCommandReturnStdout(cmd, 5)
+	if err != nil {
+		return 125
+	}
 	re = regexp.MustCompile(`^[0-9]+/p([0-9]+)_([0-9]+)`)
 	for _, ds := range strings.Split(val, ",") {
 		ss := re.FindStringSubmatch(ds)
@@ -143,7 +154,11 @@ func fromBeamMake(message string, headers map[string]string) int {
 		cmd := fmt.Sprintf(`ssh -p %s %s@%s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
 			sshPort, sshUser, ipAddr, obsID, suffix)
 		fmt.Printf("cmd:%s\n", cmd)
-		if code := misc.ExecCommandReturnExitCode(cmd, 60); code != 0 {
+		code, err := misc.ExecCommandReturnExitCode(cmd, 60)
+		if err != nil {
+			return 125
+		}
+		if code != 0 {
 			return code
 		}
 	}

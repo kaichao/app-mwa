@@ -43,6 +43,10 @@ func main() {
 	}
 	cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my-messages.txt`,
 		headerOption)
-	code := misc.ExecCommandReturnExitCode(cmd, 300)
+	code, err := misc.ExecCommandReturnExitCode(cmd, 300)
+	if err != nil {
+		os.Exit(126)
+	}
+
 	os.Exit(code)
 }

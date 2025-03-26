@@ -175,12 +175,12 @@ scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
   - dir_limit_gb：读缓存大小，可设定为2048~5120（流式，2TB~5TB）
 - pull-unpack模块
   - dir_free_gb：UNPACK_DIR_FREE_GB。针对40s数据包，解压后约13GB，考虑到临时空间需求，可设定为15~20
-  - progress_counter_diff：同步各节点上打包文件数，以免因后续处理速度差别，而耗完本地SSD容量。每个文件解包后约12.5GB，该值固定为120，即不超过3个文件；
+  - task_progress_diff：同步各节点上打包文件数，以免因后续处理速度差别，而耗完本地SSD容量。每个文件解包后约12.5GB，该值固定为120，即不超过3个文件；
   - BW_LIMIT: 最大带宽，缺省为25m
 - beam-maker模块
   - dir_free_gb: ${BEAM_MAKER_DIR_FREE_GB}，为主要流控参数。用流控表达式表示。
     - 针对单次150秒数据，可取值为{~n*5+8~}，其中单次24指向150秒数据产生的中间结果约4450MB，取值为5；考虑到其他模块中间存储、保留存储的需求，首个容器的取值为8
-  - progress_counter_diff: 取值范围96~288（1~3组），缺省值可取为144.
+  - task_progress_diff: 取值范围96~288（1~3组），缺省值可取为144.
 - down-sampler模块
   - ？
 - fits-redist

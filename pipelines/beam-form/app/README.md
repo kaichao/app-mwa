@@ -16,6 +16,14 @@ flowchart TD
 
 ### p419集群
 
+在scalebox/dockerfiles/files/app-dir-copy目录下
+
+#### 预拷贝文件到共享存储
+- 全数据集拷贝
+
+```sh
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1255803168 scalebox app create
+```
 ### dcu集群
 
 ## 二、波束合成计算
@@ -42,6 +50,18 @@ flowchart TD
 ```sh
   START_MESSAGE=1255803168/p03121_03600 \
   NODES="n-00[01][0-9]|n-002[0-3]" \
+  scalebox app create -e p419.env
+```
+
+```sh
+  START_MESSAGE=1255803168/p03121_03600/t1255805770_1255807967 \
+  NODES="n-00[01][0-9]|n-002[0-3]" \
+  scalebox app create -e p419.env
+```
+- 多组测试
+```sh
+  START_MESSAGE=1255803168/p03601_04080 \
+  NODES="n-00[0123][0-9]|n-004[0-7]" \
   scalebox app create -e p419.env
 ```
 

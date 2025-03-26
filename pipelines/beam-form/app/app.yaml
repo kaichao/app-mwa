@@ -23,6 +23,7 @@ jobs:
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
+      - BW_LIMIT=100m
     hosts:
       - ${NODES}    
 
@@ -32,8 +33,10 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
+      # task_progress_diff: 6
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
+      dir_free_gb: ${BEAM_MAKE_DIR_FREE_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: pod_beam_form
@@ -47,6 +50,7 @@ jobs:
       - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
+      - ZSTD_TARGET_FILE=no
     hosts:
       - ${NODES}:4
 
@@ -54,9 +58,10 @@ jobs:
     base_image: ${DOWN_SAMPLE}
     command: ${DOWN_SAMPLE_COMMAND}
     arguments:
+      code_path: ${CODE_BASE}/down-sample/code
+      dir_free_gb: ${DOWN_SAMPLE_DIR_FREE_GB}
       # 20-min
       max_sleep_count: 200
-      code_path: ${CODE_BASE}/down-sample/code
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
     parameters:
@@ -75,9 +80,9 @@ jobs:
   fits-redist:
     base_image: ${FILE_COPY}
     arguments:
+      code_path: ${CODE_BASE}/fits-redist/code
       # 20-min
       max_sleep_count: 200
-      code_path: ${CODE_BASE}/fits-redist/code
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
     parameters:
@@ -102,9 +107,9 @@ jobs:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
     arguments:
+      code_path: ${CODE_BASE}/fits-merge/code
     # 1 hour
       max_sleep_count: 720
-      code_path: ${CODE_BASE}/fits-merge/code
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
     parameters:
@@ -114,6 +119,8 @@ jobs:
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
       - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
+      # "500k"/"1m"/...
+      - BW_LIMIT=
     hosts:
       - ${NODES}
 
@@ -127,7 +134,9 @@ jobs:
     environments:
       - TIME_STEP=${TIME_STEP}
       - NODES=${NODES}
+      # 用于删除 dat 文件
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
+      - REDISCLI_HOST=
     hosts:
       - h0:2

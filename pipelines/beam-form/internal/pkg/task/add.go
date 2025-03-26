@@ -15,7 +15,11 @@ func Add(sinkJob string, message string, headers string) int {
 	}
 	cmd := fmt.Sprintf(`scalebox task add --sink-job=%s --headers='%s' %s`,
 		sinkJob, headers, message)
-	code := misc.ExecCommandReturnExitCode(cmd, 15)
+	code, err := misc.ExecCommandReturnExitCode(cmd, 15)
+	if err != nil {
+		logrus.Errorf("tasks-add, err-info:%v", err)
+		return -1
+	}
 	return code
 }
 
@@ -34,7 +38,11 @@ func AddTasks(sinkJob string, messages []string, headers string, timeout int) in
 		headers = "{}"
 	}
 	cmd := fmt.Sprintf(`scalebox task add --headers='%s' --sink-job=%s --task-file=my-tasks.txt`, headers, sinkJob)
-	code := misc.ExecCommandReturnExitCode(cmd, timeout)
+	code, err := misc.ExecCommandReturnExitCode(cmd, timeout)
+	if err != nil {
+		logrus.Errorf("tasks-add, err-info:%v", err)
+		return -2
+	}
 	if code != 0 {
 		return code
 	}
