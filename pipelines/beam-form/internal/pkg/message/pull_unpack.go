@@ -85,8 +85,8 @@ func GetMessagesForPullUnpack(m string) []string {
 	if withPointingPath {
 		prefix = fmt.Sprintf("%s/p%05d_%05d", dataset, pBegin, pEnd)
 	}
-	for i := 0; i < cube.NumOfChannels; i++ {
-		for j := 0; j < len(ts); j += 2 {
+	for j := 0; j < len(ts); j += 2 {
+		for i := 0; i < cube.NumOfChannels; i++ {
 			hValue := fmt.Sprintf("%s/t%d_%d/ch%d",
 				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
 			headers := json.SetAttribute("{}", "target_subdir", hValue)

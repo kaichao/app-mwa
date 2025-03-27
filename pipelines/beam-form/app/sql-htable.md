@@ -9,7 +9,7 @@
 WITH vtable AS (
     SELECT matches[1] AS t,(matches[2]::integer)-109 AS ch,status_code
     FROM (
-        SELECT regexp_matches(body, '\d{6}(\d{4})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
+        SELECT regexp_matches(body, '\d{5}(\d{5})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
         FROM t_task
         WHERE job=11
     ) tt0

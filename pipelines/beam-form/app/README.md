@@ -67,14 +67,19 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 
 - 数据位于共享存储
 
-
-
 ## dcu集群
 
 - 数据位于远端共享存储
 
 ```sh
   START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
+  TIME_STEP=80 \
+  NODES=n-0[123] \
+  scalebox app create
+```
+
+```sh
+  START_MESSAGE=1257617424/p00001_00048 \
   TIME_STEP=80 \
   NODES=n-0[123] \
   scalebox app create
