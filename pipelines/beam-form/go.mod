@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/jackc/pgx/v5 v5.7.2
-	github.com/kaichao/scalebox v0.0.0-20250226031318-19df0e793ca2
+	github.com/kaichao/scalebox v0.0.0-20250326060939-7ae3a91c097e
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v2 v2.4.0
 )

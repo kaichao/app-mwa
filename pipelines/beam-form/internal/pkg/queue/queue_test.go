@@ -1,0 +1,48 @@
+package queue_test
+
+import (
+	"beamform/internal/pkg/queue"
+	"fmt"
+	"os"
+	"testing"
+
+	"github.com/sirupsen/logrus"
+)
+
+func TestPush(t *testing.T) {
+	os.Setenv("PATH", "/usr/local/bin:$PATH")
+	err := queue.Push("192.168.0.1", 1.0)
+	if err != nil {
+		logrus.Println(err)
+	}
+	err = queue.Push("192.168.0.2", 2.0)
+	if err != nil {
+		logrus.Println(err)
+	}
+}
+
+func TestPopN(t *testing.T) {
+	os.Setenv("PATH", "/usr/local/bin:$PATH")
+	ips, err := queue.PopN(3)
+
+	if err != nil {
+		logrus.Println(err)
+	} else {
+		fmt.Println(ips)
+	}
+}
+
+func TestQuery(t *testing.T) {
+	os.Setenv("PATH", "/usr/local/bin:$PATH")
+	if err := queue.Query(); err != nil {
+		logrus.Errorf("err:%v\n", err)
+
+	}
+}
+
+func TestClear(t *testing.T) {
+	os.Setenv("PATH", "/usr/local/bin:$PATH")
+	if err := queue.Clear(); err != nil {
+		logrus.Errorf("err:%v\n", err)
+	}
+}
