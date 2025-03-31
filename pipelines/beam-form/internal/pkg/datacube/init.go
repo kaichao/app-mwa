@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
 	// _ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -36,7 +36,7 @@ func loadNodeNames() {
 			AND hostname ~ $2
 		ORDER BY 1
 	`
-	rows, err := misc.GetDB().Query(sqlText, clusterName, nodesRegex)
+	rows, err := postgres.GetDB().Query(sqlText, clusterName, nodesRegex)
 	defer rows.Close()
 	if err != nil {
 		logrus.Errorf("query t_app error: %v\n", err)

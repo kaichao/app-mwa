@@ -8,6 +8,7 @@ import (
 
 	"mr/datacube"
 
+	"github.com/kaichao/scalebox/pkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
 )
 
@@ -202,7 +203,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 120)
+	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 120)
 	return code
 }
 
