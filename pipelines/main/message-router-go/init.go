@@ -10,7 +10,9 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"github.com/kaichao/scalebox/pkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
 )
 
@@ -50,7 +52,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 60)
 	return code
 }
 
@@ -64,7 +66,7 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --headers '%s' %s", sinkJob, h, message)
 		}
 	}
-	code, _ := misc.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 60)
 	return code
 }
 
@@ -83,7 +85,7 @@ func initHosts() {
 	clustName := os.Getenv("CLUSTER")
 	numOfNodes, _ := strconv.Atoi(os.Getenv("NUM_OF_NODES"))
 	fmt.Printf("num-of-nodes:%d in cluster %s\n", numOfNodes, clustName)
-	rows, err := misc.GetDB().Query(sqlText, clustName, numOfNodes)
+	rows, err := postgres.GetDB().Query(sqlText, clustName, numOfNodes)
 	defer rows.Close()
 	if err != nil {
 		logrus.Errorf("query t_host error: %v\n", err)
@@ -111,7 +113,7 @@ func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, stri
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr, _ = misc.ExecCommandReturnAll(cmd, timeout)
+		code, stdout, stderr, _ = exec.ExecCommandReturnAll(cmd, timeout)
 		if code == 0 {
 			return code, stdout, stderr
 		}

@@ -85,5 +85,12 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
   scalebox app create
 ```
 
+```sh
+  START_MESSAGE=1257617424/p00001_00048/t1257618626_1257622223 \
+  TIME_STEP=80 \
+  NODES=n-0[123] \
+  scalebox app create
+```
+
 - 数据位于本地共享存储
 

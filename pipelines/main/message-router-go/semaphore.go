@@ -7,19 +7,20 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/exec"
+	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
 )
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	code, _ := misc.ExecCommandReturnExitCode(cmdText, 15)
+	code, _ := exec.ExecCommandReturnExitCode(cmdText, 15)
 	return code
 }
 
 func countDown(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore decrement %s", semaName)
-	stdout, _ := misc.ExecCommandReturnStdout(cmdText, 15)
+	stdout, _ := exec.ExecCommandReturnStdout(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}
@@ -34,7 +35,7 @@ func countDown(semaName string) int {
 
 func getSemaphore(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
-	stdout, _ := misc.ExecCommandReturnStdout(cmdText, 15)
+	stdout, _ := exec.ExecCommandReturnStdout(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}
@@ -61,7 +62,7 @@ func doInsert(values []Sema) {
 		return
 	}
 	// start transaction
-	tx, err := misc.GetDB().Begin()
+	tx, err := postgres.GetDB().Begin()
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 	}
@@ -99,7 +100,7 @@ func doInsert(values []Sema) {
 		fmt.Printf("[%d..%d], %d row(s) inserted.\n", i, end, end-i)
 
 		// start next batch
-		if tx, err = misc.GetDB().Begin(); err != nil {
+		if tx, err = postgres.GetDB().Begin(); err != nil {
 			logrus.Errorf("err:%v\n", err)
 		}
 	}
