@@ -1,17 +1,18 @@
-package datacube
+package datacube_test
 
 import (
+	"beamform/internal/pkg/datacube"
 	"fmt"
 	"testing"
 )
 
 func TestGetDataCubeFromFile(t *testing.T) {
-	cube := getDataCubeFromFile("1257010784")
+	cube := datacube.GetDataCubeFromFile("1257010784")
 	fmt.Println(cube)
 }
 
-func getMyDataCube() *DataCube {
-	datacube := &DataCube{
+func getMyDataCube() *datacube.DataCube {
+	datacube := &datacube.DataCube{
 		DatasetID:     "1257010784",
 		ChannelBegin:  109,
 		NumOfChannels: 24,

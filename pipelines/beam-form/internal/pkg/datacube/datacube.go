@@ -40,10 +40,11 @@ var (
 	datacubeFile = "/dataset.yaml"
 
 	// GetDataCube ...
-	GetDataCube = getDataCubeFromFile
+	GetDataCube = GetDataCubeFromFile
 )
 
-func getDataCubeFromFile(datasetID string) *DataCube {
+// GetDataCubeFromFile ...
+func GetDataCubeFromFile(datasetID string) *DataCube {
 	// 获取当前工作目录
 	dir, err := os.Getwd()
 	if err != nil {

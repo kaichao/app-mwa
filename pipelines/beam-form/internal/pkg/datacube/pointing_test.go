@@ -1,4 +1,4 @@
-package datacube
+package datacube_test
 
 import (
 	"fmt"

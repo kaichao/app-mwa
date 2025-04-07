@@ -13,7 +13,7 @@ import (
 // n0000 .. n9999
 // g00n00 .. g00n23 ... g99n00 .. g99n23
 var (
-	nodeNames []string
+	NodeNames []string
 	nodeIPs   []string
 )
 
@@ -46,11 +46,11 @@ func loadNodeNames() {
 		if err := rows.Scan(&hostname, &ipAddr); err != nil {
 			logrus.Errorf("Scan hostname, err-info:%v\n", err)
 		}
-		nodeNames = append(nodeNames, hostname)
+		NodeNames = append(NodeNames, hostname)
 		nodeIPs = append(nodeIPs, ipAddr)
 	}
 
-	fmt.Printf("regex:%s,nodes:%v\n", nodesRegex, nodeNames)
+	fmt.Printf("regex:%s,nodes:%v\n", nodesRegex, NodeNames)
 	// 检查 rows 是否有错误
 	if err := rows.Err(); err != nil {
 		logrus.Errorf("Query Resultset, err-info:%v\n", err)

@@ -1,19 +1,20 @@
-package datacube
+package datacube_test
 
 import (
+	"beamform/internal/pkg/datacube"
 	"fmt"
 	"os"
 	"testing"
 )
 
 func TestGetNodeNameByTimeChannel(t *testing.T) {
-	nodeNames = []string{}
+	datacube.NodeNames = []string{}
 	loadNodeNamesMock(72)
 
-	fmt.Println("node-names:", nodeNames)
+	fmt.Println("node-names:", datacube.NodeNames)
 
 	os.Setenv("DATACUBE_FILE", "../../../dataset.yaml")
-	cube := GetDataCube("1255803168")
+	cube := datacube.GetDataCube("1255803168")
 	fmt.Println("cube:", cube)
 	for tm := cube.TimeBegin; tm < cube.TimeBegin+5*cube.TimeStep; tm += cube.TimeStep {
 		for ch := 109; ch <= 132; ch++ {
@@ -28,12 +29,12 @@ func TestGetNodeNameByTimeChannel(t *testing.T) {
 func loadNodeNamesMock(n int) {
 	if n < 24 {
 		for i := 0; i < n; i++ {
-			nodeNames = append(nodeNames, fmt.Sprintf("n%03d", i))
+			datacube.NodeNames = append(datacube.NodeNames, fmt.Sprintf("n%03d", i))
 		}
 	} else {
 		for j := 0; j < n/24; j++ {
 			for i := 0; i < 24; i++ {
-				nodeNames = append(nodeNames, fmt.Sprintf("g%02dn%02d", j, i))
+				datacube.NodeNames = append(datacube.NodeNames, fmt.Sprintf("g%02dn%02d", j, i))
 			}
 		}
 	}

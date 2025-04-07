@@ -1,6 +1,7 @@
 package datacube
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -9,7 +10,7 @@ import (
 // GetNodeNameByTimeChannel ...
 func (cube *DataCube) GetNodeNameByTimeChannel(t int, ch int) string {
 	// fmt.Printf("ch=%d\n", ch)
-	n := len(nodeNames)
+	n := len(NodeNames)
 	if (n < 2) || (n%24 != 0 && 24%n != 0) {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", n)
 		return ""
@@ -18,18 +19,18 @@ func (cube *DataCube) GetNodeNameByTimeChannel(t int, ch int) string {
 	if n < 24 {
 		// 24的约数
 		index := (ch - cube.ChannelBegin) % n
-		return nodeNames[index]
+		return NodeNames[index]
 	}
 	// 24的倍数，也可支持24的约数？
 	indexTime := cube.getTimeRangeIndex(t)
 	indexCH := ch - cube.ChannelBegin
 	index := (indexTime*cube.NumOfChannels + indexCH) % n
-	return nodeNames[index]
+	return NodeNames[index]
 }
 
 // GetNodeNameListByTime ...
 func (cube *DataCube) GetNodeNameListByTime(t int) string {
-	n := len(nodeNames)
+	n := len(NodeNames)
 	if (n < 2) || (n%24 != 0 && 24%n != 0) {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", n)
 		return ""
@@ -43,13 +44,15 @@ func (cube *DataCube) GetNodeNameListByTime(t int) string {
 		}
 		return strings.Join(hosts, ",")
 	}
-
-	return ""
+	index := cube.getTimeRangeIndex(t)
+	i := index % (n / 24)
+	hosts := nodeIPs[i*24 : (i+1)*24]
+	return strings.Join(hosts, ",")
 }
 
-// GetNodeNameByPointing ...
-func (cube *DataCube) GetNodeNameByPointing(p int) string {
-	n := len(nodeNames)
+// GetNodeNameByPointingTime ...
+func (cube *DataCube) GetNodeNameByPointingTime(p int, t int) string {
+	n := len(NodeNames)
 	if (n < 2) || (n%24 != 0 && 24%n != 0) {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", n)
 		return ""
@@ -57,13 +60,12 @@ func (cube *DataCube) GetNodeNameByPointing(p int) string {
 	if n <= 24 {
 		// 24的约数
 		index := (p - cube.PointingBegin) % n
-		// n := (ch - cube.ChannelBegin) % n
-		// fmt.Printf("pointing:%d,ch:%d,index-p:%d,index-ch:%d\n", p, ch, index, n)
-		// if n == index {
-		// 	return "localhost"
-		// }
-		return nodeNames[index]
+		return NodeNames[index]
 	}
-	index := (p - cube.PointingBegin) % n
-	return nodeNames[index]
+	tIndex := cube.getTimeRangeIndex(t)
+	i := tIndex % (n / 24)
+	index := i*24 + (p-cube.PointingBegin)%24
+	fmt.Printf("tIndex=%d,t=%d; p=%d, begin=%d\n",
+		tIndex, t, p, cube.PointingBegin)
+	return NodeNames[index]
 }
