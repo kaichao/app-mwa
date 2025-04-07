@@ -1,0 +1,25 @@
+name: copy-unpack-test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  local-copy-unpack:
+    label: copy-unpack-test
+    base_image: hub.cstcloud.cn/scalebox/rsync-copy
+    command: ${UNPACK_COMMAND}
+    environments:
+      # - TARGET_DIR=${TARGET_DIR}
+      - JUMP_SERVERS=${JUMP_SERVERS}
+      # - ZSTD_CLEVEL=1
+    variables:
+    # 1 hour
+      max_sleep_count: 720
+      slot_options: reserved_on_exit
+      code_path: /raid0/zhzhang/app-mwa/dockerfiles/presto-modules/local-copy-unpack/code
+    parameters:
+      key_group_regex: ^(.+)$
+      start_message: ${START_MESSAGE}
+    hosts:
+      - n0:1
