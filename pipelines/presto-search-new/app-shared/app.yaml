@@ -1,0 +1,135 @@
+name: presto-shared.test
+label: 消色散
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+  message_router: message-router-presto-shared
+
+jobs:
+  rfi-find:
+    label: rfi-find-test
+    base_image: ${PRESTO_SEARCH}
+    command: docker run -d --rm
+        --tmpfs /work 
+        --network=host 
+        {{ENVS}} {{VOLUMES}} {{IMAGE}}
+    arguments:
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/pipelines/presto-search-new/modules/rfi-find/code
+      slot_options: tmpfs_workdir
+      
+    environments:
+      - COMPRESSED_INPUT=yes
+      - COMPRESS_OUTFITS=no
+      - RFIARGS=${RFIARGS}
+    parameters:
+      # 1257010784/p00001
+      key_group_regex: ^([^/]+)/p([0-9]+)$
+      key_group_index: 1,2
+      # message_router_index: 2
+      # start_message: ${START_MESSAGE}
+      retry_rules: "['2:2', '12:2', '13:2']"
+      repeatable: yes
+    hosts:
+      - ${NODES}:1
+    # sink_jobs:
+    #   - dedisp-search
+  
+  dedisp-search:
+    label: dedisp-search-test
+    base_image: ${PRESTO_SEARCH}
+    command: ${ROCM_COMMAND}
+    arguments:
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/pipelines/presto-search-new/modules/dedisp-search/code
+      # 最大占用4.8G*4组，外加4.8G*4临时空间，外加4.8G*4已完成处理数据，共57.6G;至少9.6G保证单个slot正确运行
+      # dir_limit_gb: ${DEDISP_DIR_LIMIT_GB}
+      # dir_free_gb: ${DEDISP_DIR_FREE_GB}
+      slot_options: tmpfs_workdir
+      
+    environments:
+      - COMPRESSED_INPUT=no
+      - LINEMODE=1
+      - NSUB=${NSUB}
+      - NCPUS=${NCPUS}
+      - SEARCHARGS=${SEARCHARGS}
+      - DEDISPARGS=${DEDISPARGS}
+      - PLAN_FILE=${PLAN_FILE}
+      - DIR_RFI=${DIR_RFI}
+
+    parameters:
+      # task_dist_mode: ${TASK_DIST_MODE}
+      # 1257010784/p00001/01
+      key_group_regex: ^([^/]+)/p([0-9]+)/([0-9]+)$
+      key_group_index: 1,2,3
+      # message_router_index: 1
+      retry_rules: "['2:2','13:3','14:3','-100:3','124:2']"
+      repeatable: yes
+      # pod_id: 1
+    hosts:
+      - ${NODES}:2
+
+  fold:
+    label: presto-search-fold-test
+    base_image: ${PRESTO_SEARCH}
+    
+    arguments:
+      max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
+      task_timeout_seconds: 43200
+      output_text_size: 1048576
+      code_path: ${CODE_BASE}/pipelines/presto-search-new/modules/fold/code
+      # dir_limit_gb: ${FOLD_LIMIT_GB}
+      # dir_free_gb: ${FOLD_FREE_GB}
+      slot_options: tmpfs_workdir
+      
+    environments:
+      - KEEP_SOURCE_FILE=no
+      - SEARCHARGS=${SEARCHARGS}
+    parameters:
+      # task_dist_mode: ${TASK_DIST_MODE}
+      # 1257010784/1257010786_1257010795/00001
+      # key_group_regex: ^(.+)$
+      # message_router_index: 2
+      pod_id: 1
+      retry_rules: "['2:2']"
+      repeatable: yes
+    hosts:
+      - ${NODES}:1
+
+  message-router-presto-shared:
+    label: 主消息路由
+    base_image: hub.cstcloud.cn/scalebox/agent
+    parameters:
+      # slot_on_head: yes
+      start_message: ${START_MESSAGE}
+      bulk_message_size: 40
+      # task_dist_mode: SLOT-BOUND
+    arguments:
+      code_path: ${CODE_BASE}/pipelines/presto-search-new/app-shared/message-router/code
+      slot_options: tmpfs_workdir
+      # reserved_on_exit: yes
+      task_timeout_seconds: 1800
+    environments:
+      - LOG_LEVEL=warn
+      - WITH_HEADERS=yes
+      - LOCAL_MODE=
+      - TRACE=
+      # - SHARED_ROOT=${SHARED_ROOT}
+      - MAX_LINENUM=${MAX_LINENUM}
+      # - LOCAL_IP_INDEX=${MESSAGE_ROUTER_LOCAL_IP_INDEX}
+      # - DEFAULT_USER=${DEFAULT_USER}
+      # - SSH_PORT=${SSH_PORT}
+      # - NUM_OF_NODES=${NUM_OF_NODES}
+      # - POINTING_BEGIN=${POINTING_BEGIN}
+      # - POINTING_END=${POINTING_END}
+      - PLAN_FILE=${PLAN_FILE}
+    hosts:
+      - h0:1
+    sink_jobs:
+      - rfi-find
+      - dedisp-search
+      - fold

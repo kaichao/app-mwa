@@ -1,0 +1,24 @@
+name: fits-merge.test
+label: 单元测试
+cluster: dcu
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  fits-merge:
+    label: 24通道fits合并
+    base_image: app-mwa/mwa-vcstools:rocm-4.0.1
+    arguments:
+    # 1 hour
+      max_sleep_count: 720
+      slot_options: reserved_on_exit
+      code_path: /raid0/zhzhang/app-mwa/pipelines/presto-search-new/modules/fits-merge/code
+    parameters:
+      key_group_regex: ^(.+)$
+    hosts:
+      - h0:1
+    sink_jobs:
+      - next-job
+
+  next-job:
+    base_image: hub.cstcloud.cn/scalebox/agent
