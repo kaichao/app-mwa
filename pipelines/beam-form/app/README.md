@@ -61,7 +61,14 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 - 多组测试
 ```sh
   START_MESSAGE=1255803168/p03601_04080 \
-  NODES="n-00[0123][0-9]|n-004[0-7]" \
+  NODES="n-00[0-6][0-9]|n-007[01]" \
+  scalebox app create -e p419.env
+```
+
+```sh
+  START_MESSAGE=1255803168/p03601_04080 \
+  TIME_STEP=80 \
+  NODES="n-00[0-3][0-9]|n-004[0-7]" \
   scalebox app create -e p419.env
 ```
 

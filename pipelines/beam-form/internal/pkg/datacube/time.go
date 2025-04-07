@@ -119,3 +119,11 @@ func (cube *DataCube) GetTimeUnitsWithinInterval(lower, upper int) []int {
 	}
 	return ret
 }
+
+// GetTimeRangeIndex ...
+func (cube *DataCube) GetTimeRangeIndex(t int) int {
+	index := (t - cube.TimeBegin) / cube.TimeStep
+	fmt.Printf("begin=%d,step=%d,t=%d,index=%d\n",
+		cube.TimeBegin, cube.TimeStep, t, index)
+	return index
+}

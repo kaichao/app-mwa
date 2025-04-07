@@ -1,4 +1,4 @@
-package datacube
+package datacube_test
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ func TestGetTimeIndex(t *testing.T) {
 	}
 	datacube := getMyDataCube()
 	for _, tc := range testCases {
-		result := datacube.getTimeRangeIndex(tc.t)
+		result := datacube.GetTimeRangeIndex(tc.t)
 		if result != tc.expected {
 			t.Errorf("datacube.getTimeIndex(%d) = %d, expected %d",
 				tc.t, result, tc.expected)
@@ -112,4 +112,26 @@ func TestGetTimeRange(t *testing.T) {
 				tc.t, t0, t1, tc.e0, tc.e1)
 		}
 	}
+}
+
+func TestGetTimeRangeIndex(t *testing.T) {
+	testCases := []struct {
+		t, idx int
+	}{
+		{1257010785, -1},
+		{1257010786, 0},
+		{1257010935, 0},
+		{1257010936, 1},
+		{1257015583, 31},
+		{1257015584, -1},
+	}
+	datacube := getMyDataCube()
+	for _, tc := range testCases {
+		idx := datacube.GetTimeRangeIndex(tc.t)
+		if idx != tc.idx {
+			t.Errorf("datacube.getTimeRangeIndex(%d) = %d, expected %d",
+				tc.t, idx, tc.idx)
+		}
+	}
+
 }

@@ -192,15 +192,13 @@ func fromDownSample(m string, headers map[string]string) int {
 		}
 	}
 	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(ips, ","))
-	fmt.Printf("in fromDownSample(),hosts=%s\n", hs)
 	code := task.Add("fits-redist", m, hs)
-	fmt.Printf("Exit-code:%d\n", code)
 	return code
 }
 
 func fromFitsRedist(message string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t[0-9]+_[0-9]+))/ch([0-9]+)$`)
+	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t([0-9]+)_[0-9]+))/ch([0-9]+)$`)
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		logrus.Errorf("Invalid format, message:%s\n", message)
@@ -211,7 +209,7 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	pBegin, _ := strconv.Atoi(ss[3])
 	pEnd, _ := strconv.Atoi(ss[4])
 	t := ss[5]
-	// ch, _ := strconv.Atoi(ss[6])
+	ti, _ := strconv.Atoi(ss[6])
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	sema := "fits-done:" + ss[1]
@@ -230,9 +228,8 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
 	for p := pBegin; p <= pEnd; p++ {
-		toHost := cube.GetNodeNameByPointing(p)
+		toHost := cube.GetNodeNameByPointingTime(p, ti)
 		m := fmt.Sprintf(`%s/p%05d/%s,{"to_host":"%s"}`, ds, p, t, toHost)
-		fmt.Println(m)
 		messages = append(messages, m)
 	}
 	return task.AddTasks("fits-merge", messages, "", 600)
