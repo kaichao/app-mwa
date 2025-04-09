@@ -8,18 +8,6 @@ import (
 )
 
 // not used
-func (cube *DataCube) getTimeRangeIndex(t int) int {
-	t -= cube.TimeBegin
-
-	if 0 > t || t >= cube.NumOfSeconds {
-		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
-			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
-		return -1
-	}
-	return t / cube.TimeStep
-}
-
-// not used
 func (cube *DataCube) getTimeUnit(t int) (int, int) {
 	t -= cube.TimeBegin
 	if 0 > t || t >= cube.NumOfSeconds {
@@ -121,9 +109,21 @@ func (cube *DataCube) GetTimeUnitsWithinInterval(lower, upper int) []int {
 }
 
 // GetTimeRangeIndex ...
+// func (cube *DataCube) GetTimeRangeIndex(t int) int {
+// 	index := (t - cube.TimeBegin) / cube.TimeStep
+// 	fmt.Printf("begin=%d,step=%d,t=%d,index=%d\n",
+// 		cube.TimeBegin, cube.TimeStep, t, index)
+// 	return index
+// }
+
+// GetTimeRangeIndex ...
 func (cube *DataCube) GetTimeRangeIndex(t int) int {
-	index := (t - cube.TimeBegin) / cube.TimeStep
-	fmt.Printf("begin=%d,step=%d,t=%d,index=%d\n",
-		cube.TimeBegin, cube.TimeStep, t, index)
-	return index
+	t -= cube.TimeBegin
+
+	if 0 > t || t >= cube.NumOfSeconds {
+		fmt.Fprintf(os.Stderr, "[WARN]timestamp %d is out of range [%d..%d]\n",
+			t, cube.TimeBegin, cube.TimeBegin+cube.NumOfSeconds-1)
+		return -1
+	}
+	return t / cube.TimeStep
 }

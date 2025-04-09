@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kaichao/scalebox/pkg/exec"
+	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
 )
@@ -44,7 +44,7 @@ func main() {
 	}
 	cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my-messages.txt`,
 		headerOption)
-	code, err := exec.ExecCommandReturnExitCode(cmd, 300)
+	code, err := exec.RunReturnExitCode(cmd, 300)
 	if err != nil {
 		os.Exit(126)
 	}

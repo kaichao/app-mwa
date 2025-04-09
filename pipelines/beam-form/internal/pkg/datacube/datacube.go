@@ -67,8 +67,6 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 		logrus.Errorf("Error parsing yaml file %s, err:%v", datacubeFile, err)
 	}
 
-	// fmt.Println("config:", config)
-
 	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?$`)
 	ss := re.FindStringSubmatch(datasetID)
 
@@ -122,6 +120,7 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 	return &cube
 }
 
+/*
 // GetHostIndex ...
 func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
 	// index := ch - cube.ChannelBegin
@@ -134,7 +133,7 @@ func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
 	numSeg := numHosts / 24
 	return (rangeIndex%numSeg)*24 + index
 }
-
+*/
 // ToCubeString ...
 func (cube *DataCube) ToCubeString() string {
 	return fmt.Sprintf(`
