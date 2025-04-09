@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kaichao/scalebox/pkg/exec"
+	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -23,7 +23,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 	misc.AddTimeStamp("enter-defaultFunc()")
 
 	cmd := "scalebox variable get datasets"
-	val, err := exec.ExecCommandReturnStdout(cmd, 5)
+	val, err := exec.RunReturnStdout(cmd, 5)
 	if err != nil {
 		return 125
 	}
@@ -33,7 +33,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 		val += "," + msg
 	}
 	cmd = "scalebox variable set datasets " + msg
-	code, err := exec.ExecCommandReturnExitCode(cmd, 5)
+	code, err := exec.RunReturnExitCode(cmd, 5)
 	if err != nil {
 		return 125
 	}
@@ -112,7 +112,7 @@ func fromBeamMake(message string, headers map[string]string) int {
 	p := ss[3]
 	var p0, p1 string
 	cmd := "scalebox variable get datasets"
-	val, err := exec.ExecCommandReturnStdout(cmd, 5)
+	val, err := exec.RunReturnStdout(cmd, 5)
 	if err != nil {
 		return 125
 	}
@@ -155,7 +155,7 @@ func fromBeamMake(message string, headers map[string]string) int {
 		cmd := fmt.Sprintf(`ssh -p %s %s@%s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
 			sshPort, sshUser, ipAddr, obsID, suffix)
 		fmt.Printf("cmd:%s\n", cmd)
-		code, err := exec.ExecCommandReturnExitCode(cmd, 60)
+		code, err := exec.RunReturnExitCode(cmd, 60)
 		if err != nil {
 			return 125
 		}
@@ -184,7 +184,7 @@ func fromDownSample(m string, headers map[string]string) int {
 	// local-ip-addr -> "localhost"
 	fromIP := headers["from_ip"]
 	ips := []string{}
-	for _, s := range strings.Split(nodes, ",") {
+	for _, s := range nodes {
 		if s == fromIP {
 			ips = append(ips, "localhost")
 		} else {

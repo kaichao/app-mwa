@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kaichao/scalebox/pkg/exec"
+	"github.com/kaichao/gopkg/exec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,7 +32,7 @@ func Push(item string, priority float32) error {
 	timestamp := time.Now().UnixMilli()
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZADD %s %f %s:%d`,
 		redisHost, redisPort, queueKey, priority, item, timestamp)
-	code, _, stderr, err := exec.ExecCommandReturnAll(cmd, 5)
+	code, _, stderr, err := exec.RunReturnAll(cmd, 5)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func Push(item string, priority float32) error {
 func PopN(num int) ([]string, error) {
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZPOPMIN %s %d`,
 		redisHost, redisPort, queueKey, num)
-	code, stdout, stderr, err := exec.ExecCommandReturnAll(cmd, 5)
+	code, stdout, stderr, err := exec.RunReturnAll(cmd, 5)
 	if err != nil {
 		return []string{}, err
 	}
@@ -66,7 +66,7 @@ func PopN(num int) ([]string, error) {
 func Query() error {
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZRANGE %s 0 -1`,
 		redisHost, redisPort, queueKey)
-	code, stdout, stderr, err := exec.ExecCommandReturnAll(cmd, 5)
+	code, stdout, stderr, err := exec.RunReturnAll(cmd, 5)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func getParsed(s string) []string {
 func Clear() error {
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d DEL %s`,
 		redisHost, redisPort, queueKey)
-	code, stdout, stderr, err := exec.ExecCommandReturnAll(cmd, 5)
+	code, stdout, stderr, err := exec.RunReturnAll(cmd, 5)
 	if err != nil {
 		return err
 	}

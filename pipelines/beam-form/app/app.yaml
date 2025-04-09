@@ -52,7 +52,7 @@ jobs:
       - POINTING_RANGE=${POINTING_RANGE}
       - ZSTD_TARGET_FILE=no
     hosts:
-      - ${NODES}:4
+      - ${NODES}:${NUM_BEAM_MAKE}
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
