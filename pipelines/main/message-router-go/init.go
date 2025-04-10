@@ -10,8 +10,8 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/kaichao/scalebox/pkg/exec"
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/gopkg/common"
+	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
 )
@@ -52,7 +52,7 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := exec.RunReturnExitCode(cmdTxt, 60)
 	return code
 }
 
@@ -66,7 +66,7 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --headers '%s' %s", sinkJob, h, message)
 		}
 	}
-	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 60)
+	code, _ := exec.RunReturnExitCode(cmdTxt, 60)
 	return code
 }
 
@@ -113,7 +113,7 @@ func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, stri
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr, _ = exec.ExecCommandReturnAll(cmd, timeout)
+		code, stdout, stderr, _ = exec.RunReturnAll(cmd, timeout)
 		if code == 0 {
 			return code, stdout, stderr
 		}
@@ -130,5 +130,5 @@ func AddTimeStamp(label string) {
 	fileName := os.Getenv("WORK_DIR") + "/timestamps.txt"
 	timeStamp := time.Now().Format("2006-01-02T15:04:05.000000Z07:00")
 	// fmt.Printf("timestamp:%s\n", timeStamp)
-	misc.AppendToFile(fileName, timeStamp+","+label)
+	common.AppendToFile(fileName, timeStamp+","+label)
 }

@@ -8,8 +8,8 @@ import (
 
 	"mr/datacube"
 
-	"github.com/kaichao/scalebox/pkg/exec"
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/gopkg/common"
+	"github.com/kaichao/gopkg/exec"
 )
 
 // 用共享存储
@@ -172,7 +172,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 	AddTimeStamp("before-sema-dec")
 	// 信号量dat-ready减1
 	if n := countDown(sema); n > 0 {
-		misc.AppendToFile(os.Getenv("WORK_DIR")+"/extra-attributes.txt", fmt.Sprintf("sema:%d", n))
+		common.AppendToFile(os.Getenv("WORK_DIR")+"/extra-attributes.txt", fmt.Sprintf("sema:%d", n))
 		// 该group未全部就绪
 		return 0
 	} else if n < 0 {
@@ -195,7 +195,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
 		// 通过headers中的sorted_tag，设定显式排序
 		line := fmt.Sprintf(`%s,{"sorted_tag":"%s"}`, m, getSortedTagForBeamForm(cube, tb, p0, ch))
-		misc.AppendToFile(fileName, line)
+		common.AppendToFile(fileName, line)
 		// h := map[string]string{"sorted_tag": getSortedTagForBeamForm(cube, tb, p0, ch)}
 		// ret := sendJobRefMessage(m, h, "beam-maker")
 		// if ret != 0 {
@@ -203,7 +203,7 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code, _ := exec.ExecCommandReturnExitCode(cmdTxt, 120)
+	code, _ := exec.RunReturnExitCode(cmdTxt, 120)
 	return code
 }
 

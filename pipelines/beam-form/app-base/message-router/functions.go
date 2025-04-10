@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -32,7 +33,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	messages := message.GetMessagesForBeamMake(msg)
-	misc.AppendToFile("custom-out.txt",
+	common.AppendToFile("custom-out.txt",
 		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
 	return task.AddTasks("beam-make", messages, "", 1800)
 }
