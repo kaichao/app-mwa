@@ -2,9 +2,10 @@ package message
 
 import (
 	"beamform/internal/pkg/datacube"
-	"beamform/internal/pkg/json"
 	"fmt"
 	"os"
+
+	"github.com/kaichao/gopkg/common"
 )
 
 // ParseForBeamMake for shared storage
@@ -109,7 +110,7 @@ func GetMessagesForBeamMake(m string) []string {
 
 	messages := []string{}
 	pointingRange := fmt.Sprintf("p%05d_%05d", pBegin, pEnd)
-	headers := json.SetAttribute("{}", "pointing_range", pointingRange)
+	headers := common.SetJSONAttribute("{}", "pointing_range", pointingRange)
 	fmt.Println("headers:", headers)
 	withPointingPath := os.Getenv("WITH_POINTING_PATH") == "yes"
 	for k := 0; k < len(pRanges); k += 2 {

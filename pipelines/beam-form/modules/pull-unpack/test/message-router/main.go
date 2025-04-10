@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
-	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,7 +32,7 @@ func main() {
 	messages := message.GetMessagesForPullUnpack(os.Args[1])
 	// messages, sema := message.ParseForPullUnpack(os.Args[1])
 	for _, m := range messages {
-		misc.AppendToFile("my-messages.txt", m)
+		common.AppendToFile("my-messages.txt", m)
 	}
 	// fmt.Println("sema:", sema)
 	var headerOption string
