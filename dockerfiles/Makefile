@@ -30,3 +30,8 @@ clean:
 	@for dir in $(dirs); do \
 		$(MAKE) -C $$dir clean; \
 	done
+
+dist-dcu:
+	make -C mwa-vcstools dist-dcu
+	make -C down-sampler dist-dcu
+	make -C ~/scalebox/dockerfiles/files/file-copy dist-dcu

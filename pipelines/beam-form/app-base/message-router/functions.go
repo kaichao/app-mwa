@@ -2,13 +2,13 @@ package main
 
 import (
 	"beamform/internal/pkg/message"
+	"beamform/internal/pkg/semaphore"
 	"fmt"
 	"regexp"
 	"strconv"
 
 	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/scalebox/pkg/misc"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
