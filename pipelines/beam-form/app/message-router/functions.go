@@ -3,6 +3,7 @@ package main
 import (
 	"beamform/internal/pkg/datacube"
 	"beamform/internal/pkg/message"
+	"beamform/internal/pkg/semaphore"
 	"fmt"
 	"os"
 	"regexp"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
