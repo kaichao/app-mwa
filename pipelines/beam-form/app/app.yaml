@@ -2,7 +2,7 @@ name: app.beam-form
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-beam-form
+  message_router: mr-beam-form
 
 jobs:
   wait-queue:
@@ -17,7 +17,7 @@ jobs:
       dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~120
     parameters:
       task_dist_mode: HOST-BOUND
-      pod_id: pod_beam_form
+      pod_id: by_channel
     environments:
       - SOURCE_URL=${SOURCE_URL}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
@@ -39,7 +39,7 @@ jobs:
       dir_free_gb: ${BEAM_MAKE_DIR_FREE_GB}
     parameters:
       task_dist_mode: HOST-BOUND
-      pod_id: pod_beam_form
+      pod_id: by_channel
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       max_tasks_per_minute: 3
@@ -67,7 +67,7 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
-      pod_id: pod_beam_form
+      pod_id: by_channel
     environments:
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
       - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
@@ -88,7 +88,7 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
-      pod_id: pod_beam_form
+      pod_id: by_channel
       retry_rules: "['*']"
     environments:
       # 1chx
@@ -115,6 +115,7 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
+      pod_id: by_pointing
     environments:
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
       - OUTPUT_ROOT=
@@ -124,7 +125,21 @@ jobs:
     hosts:
       - ${NODES}
 
-  message-router-beam-form:
+  fits-push:
+    base_image: ${FILE_COPY}
+    arguments:
+      # 避免工作目录放在 /tmp下，被定期删除
+      slot_options: tmpfs_workdir
+    parameters:
+      key_group_regex: ^([0-9]+)
+      task_dist_mode: HOST-BOUND
+      pod_id: by_pointing
+    environments:
+      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+    hosts:
+      - ${NODES}
+
+  mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app
     parameters:
       key_group_regex: ^([0-9]+)$
@@ -133,6 +148,7 @@ jobs:
       bulk_message_size: 10
     environments:
       - TIME_STEP=${TIME_STEP}
+      - TIME_END=${TIME_END}
       - NODES=${NODES}
       # 用于删除 dat 文件
       - SSH_USER=${TARGET_USER}

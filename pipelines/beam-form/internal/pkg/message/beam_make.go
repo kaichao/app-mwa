@@ -99,7 +99,7 @@ import (
 
 // GetMessagesForBeamMake ...
 func GetMessagesForBeamMake(m string) []string {
-	dataset, pBegin, pEnd, tBegin, tEnd, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
 	if err != nil {
 		return []string{}
 	}

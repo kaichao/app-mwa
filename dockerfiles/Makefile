@@ -32,6 +32,6 @@ clean:
 	done
 
 dist-dcu:
+	make -C ~/scalebox/dockerfiles/files/file-copy
 	make -C mwa-vcstools dist-dcu
 	make -C down-sampler dist-dcu
-	make -C ~/scalebox/dockerfiles/files/file-copy dist-dcu

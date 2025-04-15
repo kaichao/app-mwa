@@ -1,4 +1,4 @@
-package datacube
+package node
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
-	// _ "github.com/jackc/pgx/v5/stdlib"
 )
 
 // n0000 .. n9999
@@ -18,9 +17,20 @@ var (
 )
 
 func init() {
+	if IsInTest() {
+		return
+	}
 	loadNodeNames()
 }
 
+func IsInTest() bool {
+	for _, arg := range os.Args {
+		if strings.HasPrefix(arg, "-test.") {
+			return true
+		}
+	}
+	return false
+}
 func loadNodeNames() {
 	nodesRegex := os.Getenv("NODES")
 	// regex replace

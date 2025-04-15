@@ -3,6 +3,7 @@ package main
 import (
 	"beamform/internal/pkg/datacube"
 	"beamform/internal/pkg/message"
+	"beamform/internal/pkg/node"
 	"beamform/internal/pkg/semaphore"
 	"fmt"
 	"os"
@@ -170,6 +171,13 @@ func fromDownSample(m string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 产生hosts列表
 	// dataset, p0, p1, t0, t1, err := message.ParseParts(m)
+
+	// 获取24个指向的对应的IP地址，
+	// 1. 从队列中读取24个消息，分配给给相关指向；（类型1）
+	// 2. 若有部分指向未有对应消息，则分发给计算组内IP地址（类型2/类型3）
+	// 3. 写共享变量pointing-data-root
+	// 4. 完成target_hosts的数据采集，向fits-redist发送task对应消息
+
 	re := regexp.MustCompile(`^([0-9]+)/p[0-9]+_[0-9]+/t([0-9]+)_[0-9]+/ch([0-9]+)$`)
 	ss := re.FindStringSubmatch(m)
 	if len(ss) == 0 {
@@ -180,7 +188,7 @@ func fromDownSample(m string, headers map[string]string) int {
 	t0, _ := strconv.Atoi(ss[2])
 	// ch, _ := strconv.Atoi(ss[3])
 	cube := datacube.GetDataCube(dataset)
-	nodes := cube.GetNodeNameListByTime(t0)
+	nodes := node.GetNodeNameListByTime(cube, t0)
 	// local-ip-addr -> "localhost"
 	fromIP := headers["from_ip"]
 	ips := []string{}
@@ -191,6 +199,7 @@ func fromDownSample(m string, headers map[string]string) int {
 			ips = append(ips, s)
 		}
 	}
+
 	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(ips, ","))
 	code := task.Add("fits-redist", m, hs)
 	return code
@@ -228,7 +237,7 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
 	for p := pBegin; p <= pEnd; p++ {
-		toHost := cube.GetNodeNameByPointingTime(p, ti)
+		toHost := node.GetNodeNameByPointingTime(cube, p, ti)
 		m := fmt.Sprintf(`%s/p%05d/%s,{"to_host":"%s"}`, ds, p, t, toHost)
 		messages = append(messages, m)
 	}
@@ -243,6 +252,8 @@ func fromFitsMerge(message string, headers map[string]string) int {
 		return 1
 	}
 
+	// 查共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
+
 	// semaphore: pointing-ready:1257010784/p00001
 	sema := "pointing-done:" + ss[1]
 	semaVal, err := semaphore.Decrement(sema)
@@ -255,6 +266,12 @@ func fromFitsMerge(message string, headers map[string]string) int {
 		// 24ch not done.
 		return 0
 	}
+
+	return 0
+}
+
+func fromFitsPush(message string, headers map[string]string) int {
+	// 信号量pointing-done的操作，给presto-search流水线发消息
 
 	return 0
 }

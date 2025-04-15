@@ -103,6 +103,14 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 	if v, _ := strconv.Atoi(os.Getenv("TIME_STEP")); v > 0 {
 		cube.TimeStep = v
 	}
+	// 设定定制的time_begin，用于测试
+	if v, _ := strconv.Atoi(os.Getenv("TIME_BEGIN")); v > 0 {
+		cube.TimeBegin = v
+	}
+	// 设定定制的time_end，用于测试
+	if v, _ := strconv.Atoi(os.Getenv("TIME_END")); v > 0 {
+		cube.TimeEnd = v
+	}
 	// 设定定制的pointing_begin
 	if v, _ := strconv.Atoi(os.Getenv("POINTING_BEGIN")); v > 0 {
 		cube.PointingBegin = v
@@ -120,20 +128,6 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 	return &cube
 }
 
-/*
-// GetHostIndex ...
-func (cube *DataCube) GetHostIndex(t, index, numHosts int) int {
-	// index := ch - cube.ChannelBegin
-	if numHosts < 24 {
-		return index % numHosts
-	} else if numHosts == 24 {
-		return index
-	}
-	rangeIndex := cube.getTimeRangeIndex(t)
-	numSeg := numHosts / 24
-	return (rangeIndex%numSeg)*24 + index
-}
-*/
 // ToCubeString ...
 func (cube *DataCube) ToCubeString() string {
 	return fmt.Sprintf(`

@@ -12,9 +12,9 @@ dist-dcu: build
 	@ date
 	docker save $(IMAGE_NAME) | zstd -T4 > /raid0/tmp/my.img.zst
 	pdsh -w node[1-4] -l root 'zstd -dc /raid0/tmp/my.img.zst | docker load' | dshbak -c
-	make singularity
-	mkdir -p $(SINGULARITY_DIR)/app-mwa/
-	mv -f ~/singularity/app-mwa/mwa-vcstools.sif $(SINGULARITY_DIR)/app-mwa/
+	# make singularity
+	# mkdir -p $(SINGULARITY_DIR)/app-mwa/
+	# mv -f ~/singularity/app-mwa/mwa-vcstools.sif $(SINGULARITY_DIR)/app-mwa/
 	@ date
 
 
