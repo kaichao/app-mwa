@@ -15,24 +15,27 @@ import (
 //     1257010784/p00001_00960
 //     1257010784/t1257012766_1257012965
 //     1257010784/p00001_00960/t1257012766_1257012965
+//     1257010784/p00001_00960/t1257012766_1257012965/ch109
 //
 // 返回值：
-//   - dataset, p0, p1, t0, t1
+//   - dataset, p0, p1, t0, t1, ch, err
 //
 // 环境变量：
 //
 //	-
-func ParseParts(m string) (string, int, int, int, int, error) {
-	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?(/t([0-9]+)_([0-9]+))?$`)
+func ParseParts(m string) (string, int, int, int, int, int, error) {
+	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?(/t([0-9]+)_([0-9]+))?(/ch([0-9]+))?$`)
 	ss := re.FindStringSubmatch(m)
 	if len(ss) == 0 {
-		return "", 0, 0, 0, 0, errors.New("invalid message format")
+		return "", 0, 0, 0, 0, 0, errors.New("invalid message format")
 	}
 	dataset := ss[1]
 	cube := datacube.GetDataCube(dataset)
 
 	var (
-		p0, p1, t0, t1 int
+		p0, p1 int
+		t0, t1 int
+		ch     int
 	)
 	if ss[3] == "" {
 		p0 = cube.PointingBegin
@@ -48,5 +51,10 @@ func ParseParts(m string) (string, int, int, int, int, error) {
 		t0, _ = strconv.Atoi(ss[6])
 		t1, _ = strconv.Atoi(ss[7])
 	}
-	return dataset, p0, p1, t0, t1, nil
+	if ss[9] == "" {
+		ch = -1
+	} else {
+		ch, _ = strconv.Atoi(ss[9])
+	}
+	return dataset, p0, p1, t0, t1, ch, nil
 }

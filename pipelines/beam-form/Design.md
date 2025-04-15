@@ -10,7 +10,7 @@
 - down-sample：波束合成结果fits文件做1/4下采样，降低数据量
 - fits-redist：下采样后fits文件，按pointing再分发，以便按指向合并；
 - fits-merge：按Pointing归并，合并结果：1.存放到共享存储；2.存放到本地（供presto-search流水线拉取；通知presto-search流水线来拉取）
-- remote-fits-push：按需，将结果数据拷贝到外部存储
+- fits-push：按需，将结果数据拷贝到外部共享存储
 
 ## 二、模块设计
 
@@ -22,7 +22,7 @@
 | 4 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chy/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
 | 5 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
 | 6 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
-| 7 | remote_fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
+| 7 | fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
 
 
 ### 2.1 wait-queue
@@ -31,7 +31,7 @@
 
 - 处理步骤
   1. 若信号量值为0，自动停止
-  2. 信号量```group-running-vtask```自动减一
+  2. 信号量```group_vtask_size```自动减一
 
 - 镜像名：scalebox/agent
 - 输入消息：
@@ -83,7 +83,7 @@
 
 ### 2.6 fits-merge
 
-### 2.7 remote-fits-push
+### 2.7 fits-push
 
 ## 三、信号量/共享变量的设计
 
@@ -95,13 +95,13 @@
 | dat-done   | dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109 | 指向组处理次数     |          |
 | fits-done     | fits-done:1257010784/p00001_00024/t1257010786_1257010985   |       24         |          |
 | pointing-done | pointing-done:1257010784/p00001                            |  时间区段长度      |          |
-| progress-beam-make | progress-beam-make:g01h00                             |                  |          |
+| task_progress | task_progress:beam-make:g01h00                             |                  |          |
 | capacity-presto-search | capacity-presto-search:h0000                   |  |计算节点上presto-search的vtask数 |
 
 变量表
-| category     | var_name        | value                            |
-| ------------ | --------------- |  ------------------------------- |
-| pointing     | pointing:00001  |  g01h00                          |
+| category      | var_name        | value                            |
+| ------------- | --------------- | ------------------------------- |
+| pointing_data_root | pointing_data_root:p00001  | 10.2.3.4 (计算节点) <br/>  /local_root(本地共享存储) <br/>   remote_user@remote_ip:port/remote-root     |
 
 
 ### tar-ready
@@ -149,6 +149,21 @@
 - 信号量操作：
 - 信号量触发：
 
+### pointing-data-root
+每个指向的数据存储位置。分为三种情况：
+- 计算节点本地存储：用所在节点的IP地址表示，缺省目录：/dev/shm/scalebox/mydata/mwa
+- 计算集群共享存储：用共享目标表示
+- 外部的共享存储：通过ssh表示表示（user@ip-addr:port/remote-dir）
+
+在message-router的```from_module='down-sample'```中，生成、使用该变量。
+- 若变量表中不存在该指向对应的变量，则通过以下步骤生成：
+  - 优先读取优先队列，生成计算节点；
+  - 则依据各个可用共享存储的当前带宽、可用容量等，综合选择一个共享存储。
+
+在message-router的```from_module='fits-merge'```中，使用该变量。若用外部共享存储，通过```fits-push```将生成结果推送过去。
+
+在presto搜索模块中，收到消息后，通过该变量获取波束合成结果。
+
 ## 四、message-router设计
 
 | from_module            | input_message            | to_module                    | output_message        |
@@ -159,8 +174,8 @@
 | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | down_sample |  ${input_message} |
 | down_sample | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | fits_redist <br/> fits_merge | 1257010784/p00023/t1257010786_1257010965/ch121.fits <br/> 1257010784/p00023/t1257010786_1257010965 |
 | fits_redist | 1257010784/p00023/t1257010786_1257010965/ch121.fits | fits_merge |  ${input_message} |
-| fits_merge | 1257010784/p00023/t1257010786_1257010965 | remote_fits_push |  ${input_message} |
-| remote_fits_push | 1257010784/p00023/t1257010786_1257010965 | (NULL) |  |
+| fits_merge | 1257010784/p00023/t1257010786_1257010965 | fits_push |  ${input_message} |
+| fits_push | 1257010784/p00023/t1257010786_1257010965 | (NULL) |  |
 
 ### init()
 
@@ -249,7 +264,7 @@
   - 1. 
   - 2. 
 
-### remote-fits-push
+### fits-push
 
 - 输入消息格式
   - 格式1：

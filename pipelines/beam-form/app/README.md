@@ -8,7 +8,7 @@ flowchart TD
     C --> D[down-sample]
     D --> E([fits-redist])
     E --> F[fits-merge]
-    F --> G([remote-fits-push])
+    F --> G([fits-push])
   end
 ```
 
@@ -77,6 +77,14 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 ## dcu集群
 
 - 数据位于远端共享存储
+
+```sh
+  START_MESSAGE=1257617424/p00001_00096 \
+  TIME_STEP=80 \
+  TIME_END=1257617585 \
+  NODES=n-0[123] \
+  scalebox app create
+```
 
 ```sh
   START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \

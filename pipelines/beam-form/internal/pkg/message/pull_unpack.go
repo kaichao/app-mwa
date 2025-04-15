@@ -2,6 +2,7 @@ package message
 
 import (
 	"beamform/internal/pkg/datacube"
+	"beamform/internal/pkg/node"
 	"fmt"
 	"os"
 	"regexp"
@@ -74,7 +75,7 @@ func ParseForPullUnpack(m string) ([]string, string) {
 
 // GetMessagesForPullUnpack ...
 func GetMessagesForPullUnpack(m string) []string {
-	dataset, pBegin, pEnd, tBegin, tEnd, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
 	if err != nil {
 		return []string{}
 	}
@@ -92,7 +93,7 @@ func GetMessagesForPullUnpack(m string) []string {
 				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
 			headers := common.SetJSONAttribute("{}", "target_subdir", hValue)
 			headers = common.SetJSONAttribute(headers, "to_host",
-				cube.GetNodeNameByTimeChannel(ts[j], i+cube.ChannelBegin))
+				node.GetNodeNameByTimeChannel(cube, ts[j], i+cube.ChannelBegin))
 			// header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
 			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
 			for k := 0; k < len(tus); k += 2 {

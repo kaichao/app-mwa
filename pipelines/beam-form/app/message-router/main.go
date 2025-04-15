@@ -54,5 +54,6 @@ var (
 		"down-sample":    fromDownSample,
 		"fits-redist":    fromFitsRedist,
 		"fits-merge":     fromFitsMerge,
+		"fits-push":      fromFitsPush,
 	}
 )

@@ -20,7 +20,7 @@ import (
 // 环境变量：
 //   - []string: 计算出的商
 func GetSemaphores(m string) string {
-	dataset, pBegin, pEnd, tBegin, tEnd, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
 	if err != nil {
 		return ""
 	}
