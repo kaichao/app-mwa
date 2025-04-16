@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/sirupsen/logrus"
@@ -29,12 +30,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	messages := message.GetMessagesForPullUnpack(os.Args[1])
-	// messages, sema := message.ParseForPullUnpack(os.Args[1])
+	// host-bound==false
+	messages := message.GetMessagesForPullUnpack(os.Args[1], false)
 	for _, m := range messages {
 		common.AppendToFile("my-messages.txt", m)
 	}
-	// fmt.Println("sema:", sema)
+
 	var headerOption string
 	if v := os.Getenv("SOURCE_URL"); v != "" {
 		headerOption = fmt.Sprintf("%s -h source_url=%s", headerOption, v)

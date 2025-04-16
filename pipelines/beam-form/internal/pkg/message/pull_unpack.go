@@ -5,11 +5,11 @@ import (
 	"beamform/internal/pkg/node"
 	"fmt"
 	"os"
-	"regexp"
-	"strconv"
 
 	"github.com/kaichao/gopkg/common"
 )
+
+/*
 
 // ParseForPullUnpack ...
 //
@@ -73,8 +73,10 @@ func ParseForPullUnpack(m string) ([]string, string) {
 	return messages, semas
 }
 
+*/
+
 // GetMessagesForPullUnpack ...
-func GetMessagesForPullUnpack(m string) []string {
+func GetMessagesForPullUnpack(m string, hostBound bool) []string {
 	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
 	if err != nil {
 		return []string{}
@@ -92,9 +94,10 @@ func GetMessagesForPullUnpack(m string) []string {
 			hValue := fmt.Sprintf("%s/t%d_%d/ch%d",
 				prefix, ts[j], ts[j+1], cube.ChannelBegin+i)
 			headers := common.SetJSONAttribute("{}", "target_subdir", hValue)
-			headers = common.SetJSONAttribute(headers, "to_host",
-				node.GetNodeNameByTimeChannel(cube, ts[j], i+cube.ChannelBegin))
-			// header := fmt.Sprintf(`{"target_subdir":"%s"}`, hValue)
+			if hostBound {
+				headers = common.SetJSONAttribute(headers, "to_host",
+					node.GetNodeNameByTimeChannel(cube, ts[j], i+cube.ChannelBegin))
+			}
 			tus := cube.GetTimeUnitsWithinInterval(ts[j], ts[j+1])
 			for k := 0; k < len(tus); k += 2 {
 				body := fmt.Sprintf("%s/p%05d_%05d/%d_%d_ch%d.dat.tar.zst",
