@@ -14,9 +14,6 @@ source $(dirname $0)/functions.sh
 # psrfits_subband -dstime 4 -outbits 4 -adjustlevels -o 1165080856_J0630_4dt 1165080856_J0630_5s.fits
 ##### also changes the output file to 4-bit format
 
-
-# m="1257010784/1257010786_1257010795/00001/ch123.fits"
-
 # 1. set the input / output directory
 if [ $INPUT_ROOT ]; then
     DIR_1CH=$(get_host_path "${INPUT_ROOT}/mwa/1ch")
@@ -31,16 +28,16 @@ else
 fi
 # 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CHZ=$(get_host_path "${OUTPUT_ROOT}/mwa/1chz")
+    DIR_1CHY=$(get_host_path "${OUTPUT_ROOT}/mwa/1chy")
 else
-    DIR_1CHZ=/cluster_data_root/mwa/1chz
+    DIR_1CHY=/cluster_data_root/mwa/1chy
 fi
 
 # 2. check if the directory exists
 m=$1
 dir_1ch="$DIR_1CH/$m"
 dir_1chx="$DIR_1CHX/$m"
-dir_1chz="$DIR_1CHZ/$m"
+dir_1chy="$DIR_1CHY/$m"
 mkdir -p $dir_1chx; code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir_1chx"  >> ${WORK_DIR}/custom-out.txt && exit $code
 
@@ -78,7 +75,7 @@ for f in *.fits; do
     # 下采样后文件
     f0="${dir_1chx}/${f}.zst"
     # 按pointing再分发后文件
-    f1="${dir_1chz}/${f}.zst"
+    f1="${dir_1chy}/${f}.zst"
     if [ "$ENABLE_LOCAL_COMPUTE" != "yes" ]; then
         # 非本地计算，对fits.zst文件按pointing直接做分发
         regex='^(.+)/(p[0-9]+_[0-9]+)/(t[0-9]+_[0-9]+)/(ch[0-9]+)/(p[0-9]+).fits.zst$'

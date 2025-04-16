@@ -58,9 +58,9 @@ export SOURCE_URL=/dev/shm/scalebox
 
 target_user=${TARGET_USER:-root}
 target_port=${TARGET_PORT:-22}
-target_root=${TARGET_ROOT:-${CLUSTER_DATA_ROOT}}
-target_dir="${target_root}/mwa/1chz"
-echo "target_dir:$target_dir"
+# target_root=${TARGET_ROOT:-${CLUSTER_DATA_ROOT}}
+# target_dir="${target_root}/mwa/1chz"
+# echo "target_dir:$target_dir"
 
 ret_code=0
 for i in "${!arr_files[@]}"; do
@@ -104,7 +104,6 @@ if [[ $ret_code -ne 0 ]]; then
 
     exit $ret_code
 fi
-
 
 echo "$1" > ${WORK_DIR}/messages.txt
 

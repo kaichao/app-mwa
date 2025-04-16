@@ -18,7 +18,7 @@ jobs:
       - TARGET_SUBDIR=
       - TARGET_URL=
     hosts:
-      - ${HOSTS}    
+      - ${NODES}:2
 
   message-router:
     base_image: app-mwa/message-router-pull-unpack-test
@@ -30,5 +30,6 @@ jobs:
       - TARGET_URL=${TARGET_URL}
       - WITH_POINTING_PATH=${WITH_POINTING_PATH}
       - TIME_STEP=${TIME_STEP}
+      - NODES=${NODES}
     hosts:
       - h0:1

@@ -2,7 +2,7 @@ name: app-base.beam-form
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-beam-form
+  message_router: mr-beam-form
 
 jobs:
   beam-make:
@@ -62,7 +62,7 @@ jobs:
     hosts:
       - ${NODES}
 
-  message-router-beam-form:
+  mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app-base
     parameters:
       key_group_regex: ^([0-9]+)$

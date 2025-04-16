@@ -42,7 +42,8 @@ func defaultFunc(msg string, headers map[string]string) int {
 		return code
 	}
 
-	messages := message.GetMessagesForPullUnpack(msg)
+	// host-bound
+	messages := message.GetMessagesForPullUnpack(msg, true)
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 1266932744/p00001_00960/1266933866_1266933905_ch112.dat.tar.zst
 	if code := task.AddTasks("pull-unpack", messages, "", 600); code > 0 {
@@ -97,50 +98,48 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 func fromMessageRouter(message string, headers map[string]string) int {
 	return 0
 }
-func fromBeamMake(message string, headers map[string]string) int {
+func fromBeamMake(m string, headers map[string]string) int {
 	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
-	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_[0-9]+)/(t[0-9]+_[0-9]+/ch[0-9]+)$`)
-	ss := re.FindStringSubmatch(message)
-	if len(ss) == 0 {
-		logrus.Errorf("Invalid Message Format, body=%s\n", message)
+	obsID, p0, _, t0, t1, ch, err := message.ParseParts(m)
+	if err != nil {
+		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
-	obsID := ss[2]
-	// datasetID := ss[1]
-	suffix := ss[4]
+	suffix := fmt.Sprintf("t%d_%d/ch%d", t0, t1, ch)
+	pStr := fmt.Sprintf("%05d", p0)
 
-	p := ss[3]
-	var p0, p1 string
+	// 考虑到环境变量等因素影响，找到准确的指向范围
+	var ps0, ps1 string
 	cmd := "scalebox variable get datasets"
 	val, err := exec.RunReturnStdout(cmd, 5)
 	if err != nil {
 		return 125
 	}
-	re = regexp.MustCompile(`^[0-9]+/p([0-9]+)_([0-9]+)`)
+	re := regexp.MustCompile(`^[0-9]+/p([0-9]+)_([0-9]+)`)
 	for _, ds := range strings.Split(val, ",") {
 		ss := re.FindStringSubmatch(ds)
 		if len(ss) == 0 {
 			logrus.Errorf("Invalid Format of message, dataset=%s\n", ds)
 			return 1
 		}
-		if ss[1] <= p && p <= ss[2] {
-			p0 = ss[1]
-			p1 = ss[2]
+		if ss[1] <= pStr && pStr <= ss[2] {
+			ps0 = ss[1]
+			ps1 = ss[2]
 			break
 		}
 	}
-	if p0 == "" {
+	if ps0 == "" {
 		logrus.Errorln("dataset not found in variable datasets")
 		return 2
 	}
 	// 用obsID，但可能有边界对齐问题？
-	semaName := fmt.Sprintf("dat-done:%s/p%s_%s/%s", obsID, p0, p1, suffix)
+	semaName := fmt.Sprintf("dat-done:%s/p%s_%s/%s", obsID, ps0, ps1, suffix)
 	// 信号量操作
 	v, err := semaphore.Decrement(semaName)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, err-info:%v\n", err)
-		return 2
+		return 3
 	}
 	// 若信号量为0，则删除dat文件目录（？）
 	if v == 0 {
@@ -164,29 +163,23 @@ func fromBeamMake(message string, headers map[string]string) int {
 			return code
 		}
 	}
-	return task.Add("down-sample", message, "")
+	return task.Add("down-sample", m, "")
 }
 
 func fromDownSample(m string, headers map[string]string) int {
-	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	// 产生hosts列表
-	// dataset, p0, p1, t0, t1, err := message.ParseParts(m)
-
 	// 获取24个指向的对应的IP地址，
 	// 1. 从队列中读取24个消息，分配给给相关指向；（类型1）
 	// 2. 若有部分指向未有对应消息，则分发给计算组内IP地址（类型2/类型3）
 	// 3. 写共享变量pointing-data-root
 	// 4. 完成target_hosts的数据采集，向fits-redist发送task对应消息
 
-	re := regexp.MustCompile(`^([0-9]+)/p[0-9]+_[0-9]+/t([0-9]+)_[0-9]+/ch([0-9]+)$`)
-	ss := re.FindStringSubmatch(m)
-	if len(ss) == 0 {
-		logrus.Errorf("Invalid Message Format, body=%s\n", m)
+	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// 产生hosts列表
+	dataset, _, _, t0, _, _, err := message.ParseParts(m)
+	if err != nil {
+		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
-	dataset := ss[1]
-	t0, _ := strconv.Atoi(ss[2])
-	// ch, _ := strconv.Atoi(ss[3])
 	cube := datacube.GetDataCube(dataset)
 	nodes := node.GetNodeNameListByTime(cube, t0)
 	// local-ip-addr -> "localhost"
@@ -205,24 +198,18 @@ func fromDownSample(m string, headers map[string]string) int {
 	return code
 }
 
-func fromFitsRedist(message string, headers map[string]string) int {
+func fromFitsRedist(m string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	re := regexp.MustCompile(`^(([0-9]+)/p([0-9]+)_([0-9]+)/(t([0-9]+)_[0-9]+))/ch([0-9]+)$`)
-	ss := re.FindStringSubmatch(message)
-	if ss == nil {
-		logrus.Errorf("Invalid format, message:%s\n", message)
+	ds, p0, p1, t0, t1, _, err := message.ParseParts(m)
+	if err != nil {
+		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
-	fmt.Println("message-parts:", ss)
-	ds := ss[2]
-	pBegin, _ := strconv.Atoi(ss[3])
-	pEnd, _ := strconv.Atoi(ss[4])
-	t := ss[5]
-	ti, _ := strconv.Atoi(ss[6])
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
-	sema := "fits-done:" + ss[1]
-	semaVal, err := semaphore.Decrement(sema)
+	semaName := fmt.Sprintf("fits-done:%s/p%05d_%05d/t%d_%d",
+		ds, p0, p1, t0, t1)
+	semaVal, err := semaphore.Decrement(semaName)
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 		return 1
@@ -236,13 +223,14 @@ func fromFitsRedist(message string, headers map[string]string) int {
 	cube := datacube.GetDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
-	for p := pBegin; p <= pEnd; p++ {
-		toHost := node.GetNodeNameByPointingTime(cube, p, ti)
-		m := fmt.Sprintf(`%s/p%05d/%s,{"to_host":"%s"}`, ds, p, t, toHost)
+	for p := p0; p <= p1; p++ {
+		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
+		m := fmt.Sprintf(`%s/p%05d/t%d_%d,{"to_host":"%s"}`, ds, p, t0, t1, toHost)
 		messages = append(messages, m)
 	}
 	return task.AddTasks("fits-merge", messages, "", 600)
 }
+
 func fromFitsMerge(message string, headers map[string]string) int {
 	// 1257010784/p00001/t1257010786_1257010965
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
