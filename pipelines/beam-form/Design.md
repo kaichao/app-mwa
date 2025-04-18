@@ -152,7 +152,7 @@
 ### pointing-data-root
 每个指向的数据存储位置。分为三种情况：
 - 计算节点本地存储：用所在节点的IP地址表示，缺省目录：/dev/shm/scalebox/mydata/mwa
-- 计算集群共享存储：用共享目标表示
+- 计算集群共享存储：用共享目录表示
 - 外部的共享存储：通过ssh表示表示（user@ip-addr:port/remote-dir）
 
 在message-router的```from_module='down-sample'```中，生成、使用该变量。
