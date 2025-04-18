@@ -90,6 +90,7 @@ jobs:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
       retry_rules: "['*']"
+      # initial_task_status: INITIAL
     environments:
       # 1chx
       - INPUT_ROOT=${LOCAL_SHM_ROOT}

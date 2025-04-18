@@ -9,8 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func TestPush(t *testing.T) {
+func init() {
 	os.Setenv("PATH", "/usr/local/bin:$PATH")
+}
+func TestPush(t *testing.T) {
 	err := queue.Push("192.168.0.1", 1.0)
 	if err != nil {
 		logrus.Println(err)
@@ -22,7 +24,6 @@ func TestPush(t *testing.T) {
 }
 
 func TestPopN(t *testing.T) {
-	os.Setenv("PATH", "/usr/local/bin:$PATH")
 	ips, err := queue.PopN(3)
 
 	if err != nil {
@@ -33,15 +34,12 @@ func TestPopN(t *testing.T) {
 }
 
 func TestQuery(t *testing.T) {
-	os.Setenv("PATH", "/usr/local/bin:$PATH")
 	if err := queue.Query(); err != nil {
 		logrus.Errorf("err:%v\n", err)
-
 	}
 }
 
 func TestClear(t *testing.T) {
-	os.Setenv("PATH", "/usr/local/bin:$PATH")
 	if err := queue.Clear(); err != nil {
 		logrus.Errorf("err:%v\n", err)
 	}

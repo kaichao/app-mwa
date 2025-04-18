@@ -20,8 +20,7 @@ echo "DIR_1CHY:${DIR_1CHY}, DIR_24CH:${DIR_24CH}"
 
 # 应该是 ${单通道目录根}/${观测号}/指向号/${起始时间戳}_${结尾时间戳}
 # m="1257010784/p00001/t1257010986_1257011185"
-cd ${DIR_1CHY}/$1
-zstd -d --rm *.zst
+cd "${DIR_1CHY}/$1" && zstd -d --rm *.zst
 
 input_files=$(ls *.fits)
 echo input_files:${input_files} >> ${WORK_DIR}/custom-out.txt

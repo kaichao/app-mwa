@@ -10,14 +10,14 @@ func GetNodeNameByTimeChannel(cube *datacube.DataCube, t int, ch int) string {
 	return NodeNames[index]
 }
 
-// GetNodeNameListByTime ...
-func GetNodeNameListByTime(cube *datacube.DataCube, t int) []string {
-	nodes := []string{}
+// GetIPAddrListByTime ...
+func GetIPAddrListByTime(cube *datacube.DataCube, t int) []string {
+	ips := []string{}
 	for ch := 109; ch < 133; ch++ {
 		index := cube.GetTimeChannelIndex(t, ch, len(NodeNames))
-		nodes = append(nodes, nodeIPs[index])
+		ips = append(ips, nodeIPs[index])
 	}
-	return nodes
+	return ips
 }
 
 // GetNodeNameByPointingTime ...

@@ -1,19 +1,26 @@
 package main
 
 import (
+	"beamform/internal/pkg/cache"
 	"beamform/internal/pkg/datacube"
 	"beamform/internal/pkg/message"
 	"beamform/internal/pkg/node"
+	"beamform/internal/pkg/queue"
 	"beamform/internal/pkg/semaphore"
 	"fmt"
+	"math/rand/v2"
+	"net"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/misc"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -168,6 +175,7 @@ func fromBeamMake(m string, headers map[string]string) int {
 
 func fromDownSample(m string, headers map[string]string) int {
 	// 获取24个指向的对应的IP地址，
+	// 0.
 	// 1. 从队列中读取24个消息，分配给给相关指向；（类型1）
 	// 2. 若有部分指向未有对应消息，则分发给计算组内IP地址（类型2/类型3）
 	// 3. 写共享变量pointing-data-root
@@ -175,30 +183,120 @@ func fromDownSample(m string, headers map[string]string) int {
 
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 产生hosts列表
-	dataset, _, _, t0, _, _, err := message.ParseParts(m)
+	dataset, p0, p1, t0, _, _, err := message.ParseParts(m)
 	if err != nil {
 		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
+	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
+	appID := cache.GetAppIDByJobID(jobID)
+
 	cube := datacube.GetDataCube(dataset)
-	nodes := node.GetNodeNameListByTime(cube, t0)
-	// local-ip-addr -> "localhost"
+
+	ips := node.GetIPAddrListByTime(cube, t0)
+
 	fromIP := headers["from_ip"]
-	ips := []string{}
-	for _, s := range nodes {
-		if s == fromIP {
-			ips = append(ips, "localhost")
+
+	// 读取共享变量表。
+	varValues := []string{}
+	for p := p0; p <= p1; p++ {
+		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+		if v, err := variable.Get(varName, appID); err != nil {
+			logrus.Errorf("variable-get %s, err-info:%v\n", varName, err)
+			varValues = append(varValues, "")
 		} else {
-			ips = append(ips, s)
+			varValues = append(varValues, v)
 		}
 	}
 
-	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(ips, ","))
+	toIPs := []string{}
+	// varValues all empty string ""
+	if slices.IndexFunc(varValues, func(s string) bool { return s != "" }) == -1 {
+		fmt.Println("AAA")
+		// create variables
+		list, err := queue.PopN(p1 - p0 + 1)
+		if err != nil {
+			fmt.Printf("Queue pop error, err-info:%v\n", err)
+			logrus.Errorf("Queue pop error, err-info:%v\n", err)
+			return 2
+		}
+
+		for p := p0; p <= p1; p++ {
+			i := p - p0
+			varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+			var varValue, ip string
+			if i < len(list) {
+				// 类型1
+				ip = list[i]
+				varValue = list[i]
+			} else if ips[i] == fromIP {
+				// 类型2、类型3
+				ip = "localhost"
+				varValue = "/raid0/scalebox/mydata/mwa"
+			} else {
+				// 类型2、类型3
+				ip = ips[i]
+				varValue = "/raid0/scalebox/mydata/mwa"
+			}
+			variable.Set(varName, varValue, appID)
+			toIPs = append(toIPs, ip)
+		}
+	} else {
+		// 从共享变量表中读取
+		// 若是远端IP（类型1）
+		for p := p0; p <= p1; p++ {
+			i := p - p0
+			ip := net.ParseIP(varValues[i])
+			if ip != nil && ip.To4() != nil {
+				// ipv4 addr
+				toIPs = append(toIPs, varValues[i])
+			} else if ips[i] == fromIP {
+				toIPs = append(toIPs, "localhost")
+			} else {
+				toIPs = append(toIPs, ips[i])
+			}
+		}
+	}
+
+	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(toIPs, ","))
 	code := task.Add("fits-redist", m, hs)
 	return code
 }
 
+// WeightedItem ...
+type WeightedItem struct {
+	Value  string
+	Weight float64
+}
+
+// WeightedRandomChoice ...
+func WeightedRandomChoice(items []WeightedItem) string {
+	var total float64
+	var maxItem WeightedItem
+
+	for _, item := range items {
+		total += item.Weight
+		if item.Weight > maxItem.Weight {
+			maxItem = item
+		}
+	}
+
+	r := rand.Float64() * total
+	for _, item := range items {
+		if r < item.Weight {
+			return item.Value
+		}
+		r -= item.Weight
+	}
+
+	// fallback: 返回权值最大项
+	return maxItem.Value
+}
+
 func fromFitsRedist(m string, headers map[string]string) int {
+	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
+	appID := cache.GetAppIDByJobID(jobID)
+
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	ds, p0, p1, t0, t1, _, err := message.ParseParts(m)
 	if err != nil {
@@ -219,28 +317,63 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		return 0
 	}
 
-	// ds := fmt.Sprintf("%s/p%05d_%05d",)
 	cube := datacube.GetDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
 	for p := p0; p <= p1; p++ {
+		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+		varValue, err := variable.Get(varName, appID)
+		if err != nil {
+			logrus.Errorf("variable-get, err-info:%v\n", err)
+			return 11
+		}
+
+		headers := ""
 		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
-		m := fmt.Sprintf(`%s/p%05d/t%d_%d,{"to_host":"%s"}`, ds, p, t0, t1, toHost)
+		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
+			// IPv4地址（类型1）
+			// 设置"to_ip"头
+			headers = common.SetJSONAttribute(headers, "to_ip", varValue)
+		} else if strings.Contains(varValue, "@") {
+			// 远端存储（类型3）
+			headers = common.SetJSONAttribute(headers, "to_host", toHost)
+			// 24ch存放在/dev/shm
+		} else {
+			// 共享存储（类型2）
+			headers = common.SetJSONAttribute(headers, "to_host", toHost)
+			// 24ch存放在共享存储
+		}
+		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
+		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
+			varValue, toHost, headers, m)
 		messages = append(messages, m)
 	}
 	return task.AddTasks("fits-merge", messages, "", 600)
 }
 
 func fromFitsMerge(message string, headers map[string]string) int {
+	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
+	appID := cache.GetAppIDByJobID(jobID)
+
 	// 1257010784/p00001/t1257010786_1257010965
-	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
+	re := regexp.MustCompile(`^([0-9]+/p([0-9]+))(/t[0-9]+_[0-9]+)$`)
 	ss := re.FindStringSubmatch(message)
 	if ss == nil {
 		logrus.Errorf("Invalid format, message:%s\n", message)
 		return 1
 	}
 
-	// 查共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
+	varName := fmt.Sprintf("pointing-data-root:p%s", ss[2])
+	varValue, err := variable.Get(varName, appID)
+	if err != nil {
+		logrus.Errorf("variable-get, err-info:%v\n", err)
+		return 11
+	}
+	if strings.Contains(varValue, "@") {
+		// 共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
+		m := ""
+		return task.AddTasks("fits-merge", []string{m}, "", 600)
+	}
 
 	// semaphore: pointing-ready:1257010784/p00001
 	sema := "pointing-done:" + ss[1]
@@ -255,11 +388,15 @@ func fromFitsMerge(message string, headers map[string]string) int {
 		return 0
 	}
 
+	// 给presto-search流水线发消息
+
 	return 0
 }
 
 func fromFitsPush(message string, headers map[string]string) int {
-	// 信号量pointing-done的操作，给presto-search流水线发消息
+	// 信号量pointing-done的操作
+
+	// 给presto-search流水线发消息
 
 	return 0
 }
