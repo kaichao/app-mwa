@@ -5,14 +5,16 @@ source functions.sh
 # DOWN_SAMPLER_ENABLED
 env >> ${WORK_DIR}/custom-out.txt
 
-if [ $INPUT_ROOT ]; then
-    DIR_1CHY=$(get_host_path "${INPUT_ROOT}/mwa/1chy")
+input_root=$(get_header "$2" "input_root")
+if [ $input_root ]; then
+    DIR_1CHY=$(get_host_path "${input_root}/mwa/1chy")
 else
     DIR_1CHY=/cluster_data_root/mwa/1chy
 fi
 
-if [ $OUTPUT_ROOT ]; then
-    DIR_24CH=$(get_host_path "${OUTPUT_ROOT}/mwa/24ch")
+output_root=$(get_header "$2" "output_root")
+if [ $output_root ]; then
+    DIR_24CH=$(get_host_path "${output_root}/mwa/24ch")
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi

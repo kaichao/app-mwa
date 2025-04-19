@@ -7,8 +7,9 @@ import (
 	"beamform/internal/pkg/node"
 	"beamform/internal/pkg/queue"
 	"beamform/internal/pkg/semaphore"
+	"encoding/json"
 	"fmt"
-	"math/rand/v2"
+	"math/rand"
 	"net"
 	"os"
 	"regexp"
@@ -174,15 +175,7 @@ func fromBeamMake(m string, headers map[string]string) int {
 }
 
 func fromDownSample(m string, headers map[string]string) int {
-	// 获取24个指向的对应的IP地址，
-	// 0.
-	// 1. 从队列中读取24个消息，分配给给相关指向；（类型1）
-	// 2. 若有部分指向未有对应消息，则分发给计算组内IP地址（类型2/类型3）
-	// 3. 写共享变量pointing-data-root
-	// 4. 完成target_hosts的数据采集，向fits-redist发送task对应消息
-
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	// 产生hosts列表
 	dataset, p0, p1, t0, _, _, err := message.ParseParts(m)
 	if err != nil {
 		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
@@ -192,12 +185,10 @@ func fromDownSample(m string, headers map[string]string) int {
 	appID := cache.GetAppIDByJobID(jobID)
 
 	cube := datacube.GetDataCube(dataset)
-
 	ips := node.GetIPAddrListByTime(cube, t0)
-
 	fromIP := headers["from_ip"]
 
-	// 读取共享变量表。
+	// 1. 读取共享变量表 pointing-data-root。
 	varValues := []string{}
 	for p := p0; p <= p1; p++ {
 		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
@@ -210,45 +201,46 @@ func fromDownSample(m string, headers map[string]string) int {
 	}
 
 	toIPs := []string{}
-	// varValues all empty string ""
+	// 2. 生成待分发IP列表。若不存在，按需创建共享变量表 pointing-data-root
 	if slices.IndexFunc(varValues, func(s string) bool { return s != "" }) == -1 {
-		fmt.Println("AAA")
-		// create variables
-		list, err := queue.PopN(p1 - p0 + 1)
+		// varValues all empty string ""
+		// 变量不存在，创建共享变量组
+		// 从队列中读取可分配的节点
+		prestoIPs, err := queue.PopN(p1 - p0 + 1)
 		if err != nil {
 			fmt.Printf("Queue pop error, err-info:%v\n", err)
 			logrus.Errorf("Queue pop error, err-info:%v\n", err)
 			return 2
 		}
+		fmt.Println("presto-ips:", prestoIPs)
 
 		for p := p0; p <= p1; p++ {
 			i := p - p0
 			varName := fmt.Sprintf("pointing-data-root:p%05d", p)
 			var varValue, ip string
-			if i < len(list) {
-				// 类型1
-				ip = list[i]
-				varValue = list[i]
-			} else if ips[i] == fromIP {
-				// 类型2、类型3
-				ip = "localhost"
-				varValue = "/raid0/scalebox/mydata/mwa"
+			if i < len(prestoIPs) {
+				// 类型1，非组内IP地址
+				ip = prestoIPs[i]
+				varValue = prestoIPs[i]
 			} else {
-				// 类型2、类型3
-				ip = ips[i]
-				varValue = "/raid0/scalebox/mydata/mwa"
+				// 类型2、类型3，组内地址
+				varValue = weightedTarget()
+				if ips[i] == fromIP {
+					ip = "localhost"
+				} else {
+					ip = ips[i]
+				}
 			}
 			variable.Set(varName, varValue, appID)
 			toIPs = append(toIPs, ip)
 		}
 	} else {
-		// 从共享变量表中读取
-		// 若是远端IP（类型1）
+		// 从已有共享变量表中读取
 		for p := p0; p <= p1; p++ {
 			i := p - p0
 			ip := net.ParseIP(varValues[i])
 			if ip != nil && ip.To4() != nil {
-				// ipv4 addr
+				// 若是远端IP（类型1），ipv4 addr
 				toIPs = append(toIPs, varValues[i])
 			} else if ips[i] == fromIP {
 				toIPs = append(toIPs, "localhost")
@@ -258,39 +250,38 @@ func fromDownSample(m string, headers map[string]string) int {
 		}
 	}
 
+	// 3. 完成target_hosts的数据采集，向fits-redist发送task对应消息
 	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(toIPs, ","))
 	code := task.Add("fits-redist", m, hs)
 	return code
 }
 
-// WeightedItem ...
-type WeightedItem struct {
-	Value  string
-	Weight float64
-}
+func weightedTarget() string {
+	jsonFile := fmt.Sprintf("/%s-target.json", os.Getenv("CLUSTER"))
+	data, _ := os.ReadFile(jsonFile)
+	m := map[string]float64{}
+	json.Unmarshal(data, &m)
 
-// WeightedRandomChoice ...
-func WeightedRandomChoice(items []WeightedItem) string {
-	var total float64
-	var maxItem WeightedItem
-
-	for _, item := range items {
-		total += item.Weight
-		if item.Weight > maxItem.Weight {
-			maxItem = item
-		}
+	var total, maxWeight float64
+	var maxKey string
+	for _, w := range m {
+		total += w
 	}
 
 	r := rand.Float64() * total
-	for _, item := range items {
-		if r < item.Weight {
-			return item.Value
+	for k, w := range m {
+		if w > maxWeight {
+			maxWeight = w
+			maxKey = k
 		}
-		r -= item.Weight
+		if r < w {
+			return k
+		}
+		r -= w
 	}
 
-	// fallback: 返回权值最大项
-	return maxItem.Value
+	// fallback: 返回权重最大项
+	return maxKey
 }
 
 func fromFitsRedist(m string, headers map[string]string) int {
@@ -309,7 +300,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		ds, p0, p1, t0, t1)
 	semaVal, err := semaphore.Decrement(semaName)
 	if err != nil {
-		logrus.Errorf("err:%v\n", err)
+		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
 		return 1
 	}
 	if semaVal > 0 {
@@ -324,24 +315,29 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
 		varValue, err := variable.Get(varName, appID)
 		if err != nil {
-			logrus.Errorf("variable-get, err-info:%v\n", err)
+			logrus.Errorf("variable-get, var-name:%s, err-info:%v\n", varName, err)
 			return 11
 		}
 
 		headers := ""
 		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
-			// IPv4地址（类型1）
-			// 设置"to_ip"头
+			// IPv4地址（类型1）， 设置"to_ip"头
 			headers = common.SetJSONAttribute(headers, "to_ip", varValue)
+			headers = common.SetJSONAttribute(headers,
+				"output_root", "/dev/shm/scalebox/mydata")
 		} else if strings.Contains(varValue, "@") {
 			// 远端存储（类型3）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
+			headers = common.SetJSONAttribute(headers,
+				"output_root", "/dev/shm/scalebox/mydata")
 			// 24ch存放在/dev/shm
 		} else {
 			// 共享存储（类型2）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
 			// 24ch存放在共享存储
+			headers = common.SetJSONAttribute(headers,
+				"output_root", varValue)
 		}
 		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
 		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
@@ -351,15 +347,15 @@ func fromFitsRedist(m string, headers map[string]string) int {
 	return task.AddTasks("fits-merge", messages, "", 600)
 }
 
-func fromFitsMerge(message string, headers map[string]string) int {
+func fromFitsMerge(m string, headers map[string]string) int {
 	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
 	appID := cache.GetAppIDByJobID(jobID)
 
 	// 1257010784/p00001/t1257010786_1257010965
 	re := regexp.MustCompile(`^([0-9]+/p([0-9]+))(/t[0-9]+_[0-9]+)$`)
-	ss := re.FindStringSubmatch(message)
+	ss := re.FindStringSubmatch(m)
 	if ss == nil {
-		logrus.Errorf("Invalid format, message:%s\n", message)
+		logrus.Errorf("Invalid format, message:%s\n", m)
 		return 1
 	}
 
@@ -371,16 +367,35 @@ func fromFitsMerge(message string, headers map[string]string) int {
 	}
 	if strings.Contains(varValue, "@") {
 		// 共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
-		m := ""
-		return task.AddTasks("fits-merge", []string{m}, "", 600)
+		msg := fmt.Sprintf("mwa/24ch/%s.fits.zst", m)
+		headers := common.SetJSONAttribute("{}", "target_url", varValue)
+		// headers = common.SetJSONAttribute("{}", "target_jump_servers", "root@10.200.1.100")
+
+		return task.AddTasks("fits-push", []string{msg}, headers, 10)
 	}
 
-	// semaphore: pointing-ready:1257010784/p00001
-	sema := "pointing-done:" + ss[1]
+	return doCrossAdd(ss[1])
+}
+
+func fromFitsPush(m string, headers map[string]string) int {
+	// mwa/24ch/1257617424/p00021/t1257617426_1257617505.fits.zst
+	re := regexp.MustCompile(`^mwa/24ch/([0-9]+/p[0-9]+)/t[0-9]+_[0-9]+`)
+	ss := re.FindStringSubmatch(m)
+	if ss == nil {
+		logrus.Errorf("Invalid format, message:%s\n", m)
+		return 1
+	}
+	return doCrossAdd(ss[1])
+}
+
+func doCrossAdd(pointing string) int {
+	// 信号量pointing-done的操作
+	// semaphore: pointing-done:1257010784/p00001
+	sema := "pointing-done:" + pointing
 	semaVal, err := semaphore.Decrement(sema)
 	if err != nil {
-		// error while decrement semaphore
-		logrus.Errorf("err:%v\n", err)
+		logrus.Errorf("error while decrement semaphore,sema=%s, err:%v\n",
+			sema, err)
 		return 1
 	}
 	if semaVal > 0 {
@@ -389,14 +404,8 @@ func fromFitsMerge(message string, headers map[string]string) int {
 	}
 
 	// 给presto-search流水线发消息
+	// message = ss[1],source_url=
 
 	return 0
-}
 
-func fromFitsPush(message string, headers map[string]string) int {
-	// 信号量pointing-done的操作
-
-	// 给presto-search流水线发消息
-
-	return 0
 }
