@@ -125,18 +125,20 @@ jobs:
       - BW_LIMIT=
     hosts:
       - ${NODES}
+      - ${PRESTO_NODES}
 
   fits-push:
     base_image: ${FILE_COPY}
     arguments:
-      # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_pointing
     environments:
-      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - SOURCE_URL=${LOCAL_SHM_ROOT}
+      - TARGET_URL=
+      - TARGET_JUMP_SERVERS=${TARGET_JUMP}
     hosts:
       - ${NODES}
 
