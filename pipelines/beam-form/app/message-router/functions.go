@@ -17,9 +17,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
@@ -27,9 +26,9 @@ import (
 
 func defaultFunc(msg string, headers map[string]string) int {
 	defer func() {
-		misc.AddTimeStamp("leave-defaultFunc()")
+		common.AddTimeStamp("leave-defaultFunc()")
 	}()
-	misc.AddTimeStamp("enter-defaultFunc()")
+	common.AddTimeStamp("enter-defaultFunc()")
 
 	cmd := "scalebox variable get datasets"
 	val, err := exec.RunReturnStdout(cmd, 5)
