@@ -8,8 +8,8 @@ import (
 
 	"mr/datacube"
 
-	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
+	"github.com/kaichao/scalebox/pkg/common"
 )
 
 // 用共享存储

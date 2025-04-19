@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/sirupsen/logrus"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -35,13 +35,13 @@ func main() {
 		os.Exit(4)
 	}
 
-	misc.AddTimeStamp("before-mr")
+	common.AddTimeStamp("before-mr")
 	logrus.Infoln("03, message-router not null")
 	exitCode := doMessageRoute(os.Args[1], headers)
 	if exitCode != 0 {
 		logrus.Errorf("error found, error-code=%d\n", exitCode)
 	}
-	misc.AddTimeStamp("before-exit")
+	common.AddTimeStamp("before-exit")
 	os.Exit(exitCode)
 }
 

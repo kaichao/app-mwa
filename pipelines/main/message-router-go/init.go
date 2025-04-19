@@ -10,8 +10,8 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
-	"github.com/kaichao/gopkg/common"
 	"github.com/kaichao/gopkg/exec"
+	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
 )

@@ -7,17 +7,16 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/kaichao/gopkg/common"
-	"github.com/kaichao/scalebox/pkg/misc"
+	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
 
 func defaultFunc(msg string, headers map[string]string) int {
 	defer func() {
-		misc.AddTimeStamp("leave-defaultFunc()")
+		common.AddTimeStamp("leave-defaultFunc()")
 	}()
-	misc.AddTimeStamp("enter-defaultFunc()")
+	common.AddTimeStamp("enter-defaultFunc()")
 	// input message:
 	// 	1257010784
 	// 	1257010784/p00001_00960
@@ -29,7 +28,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 		logrus.Errorf("semaphore:\n%s\n", semas)
 		return 1
 	}
-	misc.AddTimeStamp("after-semaphores")
+	common.AddTimeStamp("after-semaphores")
 
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	messages := message.GetMessagesForBeamMake(msg)
