@@ -1,0 +1,30 @@
+name: copy-test
+label: 单元测试
+cluster: ${CLUSTER}
+parameters:
+  initial_status: RUNNING
+
+jobs:
+  local-copy:
+    label: copy-test
+    base_image: ${FILE_COPY}
+    # command: ${UNPACK_COMMAND}
+    environments:
+      # - TARGET_DIR=${TARGET_DIR}
+      - JUMP_SERVERS=${JUMP_SERVERS}
+      - LOCAL_OUTPUT_ROOT=${LOCAL_OUTPUT_ROOT}
+      # - ZSTD_CLEVEL=1
+    arguments:
+      # 1 hour
+      max_sleep_count: 720
+      code_path: ${CODE_BASE}/pipelines/presto-search-new/modules/local-copy/code
+    parameters:
+      key_group_regex: ^(.+)$
+      # start_message: ${START_MESSAGE}
+    hosts:
+      - n-0000:1
+    sink_jobs:
+      - next
+
+    next:
+      base_image: hub.cstcloud.cn/scalebox/agent

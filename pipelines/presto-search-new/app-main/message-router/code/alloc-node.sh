@@ -23,10 +23,7 @@ code=$?
 [ $code -ne 0 ] && echo "[ERROR] looking for valid hosts! " >&2 && exit 20
 node=$( cat ./host.txt ) && rm ./host.txt
 echo $node
-# scalebox task add --sink-job rfi-find --to-host ${NODES_GROUP}-${node} ${p}
-sema="host-spare:$node"
-n=$(scalebox semaphore decrement $sema)
-code=$?
-[ $code -ne 0 ] && echo "[ERROR] scalebox semaphore decrement! " >&2 && exit $code 
+# scalebox task add --sink-job rfi-find -h to-host=${NODES_GROUP}-${node} ${p}
 
-scalebox task add --sink-job local-copy-unpack --to-host ${node} ${p}
+echo source_url=$2
+scalebox task add --sink-job local-copy -h to-host=${node} -h source_url=$2 ${p}

@@ -1,7 +1,9 @@
 import os
+import sys
 import psycopg2
 from psycopg2 import pool
 import socket
+import string
 
 db = None
 
@@ -19,14 +21,14 @@ def get_db():
             # 如果在代理中，使用 GRPC_SERVER 作为默认的服务器
             grpc_server = os.getenv("GRPC_SERVER")
             pg_host = grpc_server.split(":")[0]
-            print(f"[INFO] Set GRPC_SERVER {grpc_server} as default db server.")
+            sys.stderr.write(f"[INFO] Set GRPC_SERVER {grpc_server} as default db server.")
         if not pg_host:
             pg_host = os.getenv("LOCAL_ADDR")
         if not pg_host:
             # 使用本地 IP 作为默认的数据库服务器
             local_ip = get_local_ip()
             pg_host = local_ip
-            print(f"[INFO] Set local IP {local_ip} as default db server.")
+            sys.stderr.write(f"[INFO] Set local IP {local_ip} as default db server.")
 
         # 如果有端口在 PGHOST 中定义
         if ":" in pg_host:
@@ -81,7 +83,7 @@ def get_hosts(group_id):
 def get_hosts_likely(group_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT hostname FROM t_host WHERE group_id ~ %s", (group_id,))
+    cur.execute("SELECT hostname, ip_addr, parameters FROM t_host WHERE group_id ~ %s", (group_id,))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
@@ -154,7 +156,101 @@ def create_job_slots(job_id, host, num_slots):
 def get_host_by_ip(ip):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT hostname FROM t_host WHERE ip_addr = %s", (ip))
+    cur.execute("SELECT hostname FROM t_host WHERE ip_addr = %s", (ip,))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
+
+# 更新t_host表中,ip_addr在传入的ip_list中的记录的group_id为group_id
+def update_host_group_id(ip_list, group_id):
+    if not ip_list:
+        return  # 空列表时不做任何操作
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # 构建 SQL 占位符
+    placeholders = ','.join(['%s'] * len(ip_list))
+    sql = f"UPDATE t_host SET group_id = %s WHERE ip_addr IN ({placeholders})"
+    params = [group_id] + ip_list
+
+    cur.execute(sql, params)
+    conn.commit()
+    put_connection(conn)
+
+
+# 更新t_host表中,ip_addr在传入的ip_list中的记录的hostname为指定格式
+def update_host_hostname(ip_list, hostname_prefix, cluster):
+    if not ip_list:
+        return
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # 构建 IP → 新 hostname 映射（按 IP 排序后编号）
+    sorted_ips = sorted(ip_list)
+    ip_hostname_pairs = [
+        (ip, f"{hostname_prefix}-{i:04d}.{cluster}") for i, ip in enumerate(sorted_ips)
+    ]
+
+    # 构造临时表值（VALUES 语法）
+    values_clause = ', '.join(["(%s, %s)"] * len(ip_hostname_pairs))
+    flat_params = []
+    for ip, hostname in ip_hostname_pairs:
+        flat_params.extend([ip, hostname])
+
+    sql = f"""
+    UPDATE t_host AS t
+    SET hostname = v.hostname
+    FROM (VALUES {values_clause}) AS v(ip_addr, hostname)
+    WHERE t.ip_addr = v.ip_addr
+    """
+
+    cur.execute(sql, flat_params)
+    conn.commit()
+    put_connection(conn)
+
+def update_grouped_hosts(ip_list, prefix, cluster, group_size=24):
+    if not ip_list:
+        return
+
+    conn = get_connection()
+    cur = conn.cursor()
+
+    sorted_ips = sorted(ip_list)
+
+    # 分组并构造更新映射
+    all_rows = []
+    total_groups = int(len(sorted_ips) / group_size)
+
+    for group_idx in range(total_groups):
+        group_ips = sorted_ips[group_idx * group_size : (group_idx + 1) * group_size]
+        new_group_id = f"{prefix}{group_idx:03d}"
+        if group_size <= 24:
+            for i, ip in enumerate(group_ips):
+                letter = string.ascii_lowercase[i]  # a-z
+                hostname = f"{new_group_id}-{letter}.{cluster}"
+                all_rows.append((ip, hostname, new_group_id))
+        else:
+            # 使用四位数字编号
+            for i, ip in enumerate(group_ips):
+                hostname = f"{new_group_id}-{i:04d}.{cluster}"
+                all_rows.append((ip, hostname, new_group_id))
+
+    # 构造批量 UPDATE SQL
+    values_clause = ', '.join(['(%s, %s, %s)'] * len(all_rows))
+    flat_params = []
+    for ip, hostname, gid in all_rows:
+        flat_params.extend([ip, hostname, gid])
+
+    sql = f"""
+    UPDATE t_host AS t
+    SET hostname = v.hostname,
+        group_id = v.group_id
+    FROM (VALUES {values_clause}) AS v(ip_addr, hostname, group_id)
+    WHERE t.ip_addr = v.ip_addr
+    """
+
+    cur.execute(sql, flat_params)
+    conn.commit()
+    put_connection(conn)

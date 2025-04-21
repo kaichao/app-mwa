@@ -37,6 +37,7 @@ do
     [ -f "${zst_file}" ] && pv -L $BW_LIMIT ${zst_file} | zstd -d -f -o ${fits_name} && touch -a -m ${fits_name}
 
     [[ ! -f $fits_name ]] && echo "[ERROR] In checking file exits:$fits_name, ret-code:$code" >&2 && exit 10
+    [ "$KEEP_SOURCE_FILE" == "no" ] && rm $zst_file
 done
 echo '"after decompress, list all files:' >> ${WORK_DIR}/custom-out.txt
 ls -l ${full_dir} >> ${WORK_DIR}/custom-out.txt
