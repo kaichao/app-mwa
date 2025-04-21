@@ -14,12 +14,12 @@ echo "message in default: $m0"
 # now check the input format.
 if [[ $m0 =~ ^([^/]+)/p([0-9]+)_([0-9]+)$ ]]; then
     # first format
-    ${code_dir}/shared_pointings.sh $m0
-elif [[ $m0 =~ ^([^/]+)/p([0-9]+)/t([0-9]+)_([0-9]+)$ ]]; then
+    ${code_dir}/shared_pointings.sh $m0 $headers
+elif [[ $m0 =~ ^([^/]+)/p([0-9]+)$ ]]; then
     # second format
     # execute to_fits-merge.sh
-    ${code_dir}/to-fits-merge.sh $m0 $headers
-elif [[ $m0 =~ ^Command:([A-Za-z0-9]+)$ ]]; then
+    ${code_dir}/single_pointing.sh $m0 $headers
+elif [[ $m0 =~ ^Command:(.+)$ ]]; then
     # third format
     m=${BASH_REMATCH[1]}
     # execute interact.sh

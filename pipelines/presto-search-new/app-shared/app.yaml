@@ -1,6 +1,6 @@
 name: presto-shared.test
 label: 消色散
-cluster: dcu
+cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: message-router-presto-shared
@@ -9,10 +9,6 @@ jobs:
   rfi-find:
     label: rfi-find-test
     base_image: ${PRESTO_SEARCH}
-    command: docker run -d --rm
-        --tmpfs /work 
-        --network=host 
-        {{ENVS}} {{VOLUMES}} {{IMAGE}}
     arguments:
       max_sleep_count: ${NODE_MAX_SLEEP_COUNT}
       task_timeout_seconds: 43200
@@ -23,7 +19,8 @@ jobs:
     environments:
       - COMPRESSED_INPUT=yes
       - COMPRESS_OUTFITS=no
-      - RFIARGS=${RFIARGS}
+      - LOCAL_INPUT_ROOT=${SHARED_ROOT}
+      # - RFIARGS=${RFIARGS}
     parameters:
       # 1257010784/p00001
       key_group_regex: ^([^/]+)/p([0-9]+)$
@@ -56,10 +53,11 @@ jobs:
       - LINEMODE=1
       - NSUB=${NSUB}
       - NCPUS=${NCPUS}
-      - SEARCHARGS=${SEARCHARGS}
-      - DEDISPARGS=${DEDISPARGS}
+      # - SEARCHARGS=${SEARCHARGS}
+      # - DEDISPARGS=${DEDISPARGS}
       - PLAN_FILE=${PLAN_FILE}
       - DIR_RFI=${DIR_RFI}
+      - LOCAL_INPUT_ROOT=${SHARED_ROOT}
 
     parameters:
       # task_dist_mode: ${TASK_DIST_MODE}
@@ -71,7 +69,7 @@ jobs:
       repeatable: yes
       # pod_id: 1
     hosts:
-      - ${NODES}:2
+      - ${NODES}:4
 
   fold:
     label: presto-search-fold-test
@@ -88,7 +86,7 @@ jobs:
       
     environments:
       - KEEP_SOURCE_FILE=no
-      - SEARCHARGS=${SEARCHARGS}
+      # - SEARCHARGS=${SEARCHARGS}
     parameters:
       # task_dist_mode: ${TASK_DIST_MODE}
       # 1257010784/1257010786_1257010795/00001
@@ -109,7 +107,7 @@ jobs:
       bulk_message_size: 40
       # task_dist_mode: SLOT-BOUND
     arguments:
-      code_path: ${CODE_BASE}/pipelines/presto-search-new/app-shared/message-router/code
+      code_path: ${CODE_BASE_HEAD}/pipelines/presto-search-new/app-shared/message-router/code
       slot_options: tmpfs_workdir
       # reserved_on_exit: yes
       task_timeout_seconds: 1800

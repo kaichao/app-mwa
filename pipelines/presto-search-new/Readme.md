@@ -2,54 +2,49 @@
 
     节点分配应该在message-router完成，但数据存放在共享存储时无法实现动态任务分配。不能直接在message-router上设置流控，因此需要一个入口模块作为v_task机制流控限制的对象。
 
-    mr产生任务---->vhead---->mr分配任务---->local-copy-unpack/（视情况解压到共享存储或本地）---->后续
-
-    入口模块可以承担一些任务？
-
-    同时local-copy-unpack也需要作为后续单节点上的v_task入口完成流控。
+    mr产生任务---->local-wait-queue---->mr分配任务---->local-copy-unpack---->后续
 
     mr分配任务时遍历所有节点，选择有剩余资源或等待任务最少的并分配。
 
     两流水线并行时如何解决？
 
-    beam-maker---->down-sampler---->fits-redist;
-
-    fits-merger---->(remote-fits-push)---->(local-copy-unpack)---->rfi-find---->后续
-
-    重要：本地资源有空余时，优先通知波束合成流水线向本地推送数据，而非
+    重要：本地资源有空余时,如何设计机制平衡从不同数据源获取数据？
 
     我需要在这里写一个设计文档。
 
 # Presto搜索流水线设计
 
-考虑需求，需要支持增加fits-merger与不加fits-merger两种情况，并支持使用共享存储/本地计算的方案。
+考虑需求，需要支持使用共享存储/本地计算的方案。
 
 ## 基于共享存储的流水线
 
-在这种情况下，不需要支持fits-merger：在前半流水线完成此功能是可以接受的。
-
-
+在这种情况下，流水线直接从共享存储上读写数据，并完成计算。
 
 ## 基于节点本地计算的流水线
 
-这种情况需要支持fits-merger。
+这种情况需要根据数据存放的位置分类处理。
 
-具体而言，有两种情况：其一是与波束合成流水线分别运行的情况，此时数据存放在共享存储上，且已经过波束合成。
-此时运行流程为local-copy-unpack-->dedisp-search-->后续，local-wait-queue在local-copy-unpack前，输入消息为
-$dataset/$PB_$PE格式。
+1.数据存放在共享存储上，此时需要先将数据拉取到本地，再完成计算。
 
-需要与波束合成流水线共同运行时，设置变量run_cached_pointings为no，从波束合成流水线接收消息后启动对应节点上的
-fits-merge，之后顺序执行dedisp-search等模块。接到存放在共享存储的指向时将其加入local-wait-queue等待、
+2.数据存放在本地节点。此时只需要解压后即可完成后续计算。（或许本地数据无需压缩？）
 
-波束合成完成后发送消息，将run_cached_pointings改为yes，开始执行local-wait-queue中的指向。
+3.数据存放在远端存储设备。同样需要先将数据传输到本地。
 
+这三种情况可以通过消息的header区分。同时，为了测试流水线的功能，应该能同时使用多种来源的数据进行计算。
+
+对于情况1,3，收到消息后加入local-wait-queue等待。对于情况2，则直接发消息给dedisp-search启动计算。
+
+这三种情况均使用同一模块，依据不同的header决定分支。
+
+在一个指向计算完成时，对于一个存储资源足够多的节点，使用一个随机数决定接下来处理来自共享存储的数据，或是给
+redis发消息。
 
 ## 功能模块表
 
 - message-router
 - shared-wait-queue：所有共享存储上指向的等待队列。
-- fits-merge: 将输入的pointing对应的单通道fits合并为24通道fits文件，合并结果存放到本地。
 - local-copy: 从共享存储拉取数据到计算节点。
+- local-unpack: 解压本地的计算数据。
 - rfi-find: 对输入的指向进行解压缩、消干扰。按目前预期，这个模块只用于共享存储上的数据，大规模处理时对同一观测使用预先生成的rfi文件。
 - dedisp-search：对指定的DM范围进行消色散与信号搜索
 - fold:对指定的DM范围的候选体进行折叠与绘图。
@@ -76,10 +71,23 @@ fits-merge，之后顺序执行dedisp-search等模块。接到存放在共享存
 | pointing-ready | pointing-ready:p00001 | $NUM_FILES | 初值为每个指向的文件数量 |
 | pointing-finished | pointing-finished:p00001 | $NUM_GROUPS | 启动dedisp_search的次数 |
 | dm-group-ready | dm-group-ready:p00001/dm1 | $calls/$ncall | 取决于消色散配置 |
-| host-spare | host-spare:10.11.16.80 | $INIT_SLOTS | 取决于本地存储大小 |
 
 ## 共享变量
 
 | category     | var_name              | value                            |
-| ------------ | --------------------- |  ------------------------------- |
-|              | run_cached_pointings  |  yes/no                          |
+| -------------------- | ------------------------------ |  -------------- |
+| run_cached_pointings | run_cached_pointings:hostname  |  yes/no         |
+| local_pointing       | local_pointing:$pointing       |  yes/no         |
+
+
+## 特殊消息
+
+这里规定一些以Command开头的消息为特殊消息，向message-router发送这些消息用于初始化流水线、将新增节点加入计算、恢复失败的vtask等操作。
+
+| message                     | function                                              |
+| --------------------------- | ----------------------------------------------------- |
+| Command:init                | 启动消息                                               |
+| Command:update-hosts        | 根据节点本地存储大小进行筛选并修改节点名                  |
+| Command:add:n-0001          | 为指定节点补充创建信号量与slot，使其能获取信息开始数据处理 |
+| Command:stop:n-0001         | 停止向指定节点分发消息，从队列中移除对应信息，准备释放节点 |
+| Command:retry:$dataset/$pointing | 重置指定pointing的处理状态并重新运行               |

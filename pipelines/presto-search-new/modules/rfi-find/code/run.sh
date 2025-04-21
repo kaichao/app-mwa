@@ -17,6 +17,8 @@ else
     DIR_RFI=/cluster_data_root/mwa/rfi
 fi
 
+source /app/bin/module.env
+
 m=$1
 # f_dir=${m}.fits
 full_dir="$DIR_FITS/${m}"
