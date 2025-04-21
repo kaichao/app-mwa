@@ -27,6 +27,15 @@ else
     from_ip=""
 fi
 
+pattern='"source_url":"([^"]+)"'
+if [[ $headers =~ $pattern ]]; then
+    source_url="${BASH_REMATCH[1]}"
+    echo "source_url: $source_url"
+else
+    # no from_job in json 
+    source_url=""
+fi
+
 case $from_job in
     # "rfi-find")
     #     ${code_dir}/from-rfi-find.sh "$1" "$from_ip"
@@ -35,18 +44,19 @@ case $from_job in
         ${code_dir}/from-local-copy-unpack.sh "$1" "$from_ip"
         ;;
     "local-wait-queue")
-        ${code_dir}/alloc-node.sh "$1"
-    ;;
-    "fits-merge")
-        ${code_dir}/from-fits-merge.sh "$1" "$from_ip"
+        ${code_dir}/alloc-node.sh "$1" "$source_url"
     ;;
     "dedisp-search")
         ${code_dir}/from-dedisp-search.sh "$1" "$from_ip"
         ;;
-    "fold")
+    # "fold")
+    #     echo "dm $1 completed."
+    #     # ${code_dir}/from-fold.sh "$1" "$from_ip"
+    #     exit 0
+    #     ;;
+    "remote-push")
         echo "dm $1 completed."
-        # ${code_dir}/from-fold.sh "$1" "$from_ip"
-        exit 0
+        exit 100
         ;;
     *)  # default
         ${code_dir}/default.sh "$1" "$headers"

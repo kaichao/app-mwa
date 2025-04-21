@@ -4,8 +4,8 @@
 # RESULT_DIR=astro@10.100.1.30:10022/data2/mydata/mwa/png
 # LOCAL_RESULT_DIR="/data2/mydata/mwa/png/1301240224-240926"
 
-LOCAL_RESULT_DIR=/cluster_data_root/mwa/png
-echo $LOCAL_RESULT_DIR > $WORK_DIR/custom-out.txt
+# LOCAL_RESULT_DIR=/cluster_data_root/mwa/png
+# echo $LOCAL_RESULT_DIR > $WORK_DIR/custom-out.txt
 tmp_file="tmppoint.txt"
 
 dataset=$1
@@ -21,8 +21,9 @@ PE=$4
 if [[ "$FIX_MISSING" == "yes" ]]; then
 
     # 获取实际存在的子目录名并存储在数组中
-    ls -d ${LOCAL_RESULT_DIR}/${dataset}/p* > $WORK_DIR/custom-out.txt
-    existing_dirs=($(ls -d ${LOCAL_RESULT_DIR}/${dataset}/p* 2>/dev/null | xargs -n 1 basename))
+    echo "/local/${LOCAL_RESULT_DIR}/${dataset}"
+    ls -d /local/${LOCAL_RESULT_DIR}/${dataset}/p* > $WORK_DIR/custom-out.txt
+    existing_dirs=($(ls -d /local/${LOCAL_RESULT_DIR}/${dataset}/p* 2>/dev/null | xargs -n 1 basename))
 
     # echo $existing_dirs
     # 循环检查 PB 至 PE 之间的目录是否存在
@@ -36,8 +37,8 @@ if [[ "$FIX_MISSING" == "yes" ]]; then
     # 遍历目录下的所有子目录
     for dir in ${existing_dirs[@]}; do
         # 统计子目录中的文件数量（包括隐藏文件）
-        file_count=$(find "${LOCAL_RESULT_DIR}/${dataset}/${dir}" -type f | wc -l)
-        small_files=$(find "${LOCAL_RESULT_DIR}/${dataset}/${dir}" -type f -size -100000c)
+        file_count=$(find "/local/${LOCAL_RESULT_DIR}/${dataset}/${dir}" -type f | wc -l)
+        small_files=$(find "/local/${LOCAL_RESULT_DIR}/${dataset}/${dir}" -type f -size -100000c)
         # 如果文件数量小于7，输出子目录名称到文件
         if [[ "$file_count" -lt $MAX_LINENUM ]]; then
             echo "$(basename "$dir")" >> "${WORK_DIR}/${tmp_file}"

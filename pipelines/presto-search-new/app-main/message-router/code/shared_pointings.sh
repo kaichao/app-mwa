@@ -2,6 +2,7 @@
 
 #1257010784/p00001_00048
 m=$1
+headers=$2
 
 # set the file paths. We'll need this later.
 if [ $PLAN_FILE ]; then
@@ -9,6 +10,14 @@ if [ $PLAN_FILE ]; then
 else
     echo "[ERROR] Search plan not set!" >&2 && exit 10
 fi
+
+source_url=$SOURCE_URL
+pattern='"source_url":"([^"]+)"'
+if [[ $headers =~ $pattern ]]; then
+    source_url="${BASH_REMATCH[1]}"
+    echo "source_url: $source_url"
+fi
+
 
 # parse the input message
 dataset="${m%%/*}"
@@ -42,7 +51,8 @@ for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
             NCALLS=$(echo $line | awk '{print $9}')
             j=$((i - 1))
             # echo "line $j: $calls"
-            sema="dm-group-ready:$dataset/$pointing/dm$j"
+            dmi=$(printf "%02d" "$j")
+            sema="dm-group-ready:$dataset/$pointing/dm$dmi"
             # echo "$sema"
             scalebox semaphore create $sema $(($calls/$NCALLS))
         done
@@ -51,7 +61,8 @@ for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
         echo "$sema2"
         scalebox semaphore create $sema2 $NUM_GROUPS
         date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
-        scalebox task add --sink-job=local-wait-queue $dataset/$pointing
+        echo "scalebox task add --sink-job=local-wait-queue -h source_url=$source_url"
+        scalebox task add --sink-job=local-wait-queue -h source_url=$source_url $dataset/$pointing
     done
 else
     echo "DDplan file not found: $file_path"

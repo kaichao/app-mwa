@@ -33,6 +33,8 @@ else
     echo "[ERROR] Search plan not set!" >&2 && exit 10
 fi
 
+source /app/bin/module.env
+
 m0=$1
 m=${m0%/*}
 msgidx=${m0##*/}
@@ -102,7 +104,7 @@ if [ $LINEMODE -eq 0 ]; then
         NCALLS=$(echo $line | awk '{print $9}')
         calls=$(echo $line | awk '{print $8}')
         # if msgidx < cnt + calls/Ncalls, We find the line number
-        if [ $msgidx -lt $(($cnt + $calls/$NCALLS)) ]; then
+        if [ $msgidx -le $(($cnt + $calls/$NCALLS)) ]; then
             echo $cnt
             LINENUM=$i
             # set the subgroup number
@@ -129,7 +131,7 @@ downsamp=$(echo $line | awk '{print $4}')
 dsubdm=$(echo $line | awk '{print $5}')
 dmpercall=$(echo $line | awk '{print $7}')
 # update the correct lodm using subgroup number and dsubdm
-lodm=$(echo $lodm $dsubdm $SUBGRPNUM | awk '{print $1 + $2 * ($3 - 1)}')
+lodm=$(echo $lodm $dsubdm $SUBGRPNUM $NCALLS | awk '{print $1 + $2 * $4 * ($3 - 1)}')
 
 # get the correct rfi mask path
 if [ $DIR_RFI ]; then
@@ -145,6 +147,7 @@ else
     RFIARGS="-mask $RFI_DIR/RFIfile_rfifind.mask"
 fi
 
+LINENUM=$(printf "%02d" "$LINENUM")
 mkdir -p ${DIR_DEDISP}/${bname}/dm${LINENUM}/group${msgidx}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] In mkdir:dm${LINENUM}/group${msgidx}, ret-code:$code" >&2 && exit 11
