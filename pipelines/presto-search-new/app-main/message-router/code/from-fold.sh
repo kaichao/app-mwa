@@ -13,4 +13,4 @@ echo $from_ip
 # m="${LOCAL_SHM_ROOT}/mwa/png~${m0}~${RESULT_DIR}"
 m=$m0
 
-scalebox task add --sink-job result-push -h to-ip=$from_ip ${m}
+scalebox task add --sink-job result-push -h to_ip=$from_ip ${m}

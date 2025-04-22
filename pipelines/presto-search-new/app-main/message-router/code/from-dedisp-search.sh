@@ -36,7 +36,7 @@ if [ "$n1" -eq 0 ]; then
     if [ "$local_pointing" = 'yes' ]; then
         # we can send a message to redis server.
         # the message is in the format of "host:timestamp", with priority $n3
-        redis-cli -h $REDIS_HOST -p $REDIS_PORT ZADD QUEUE_HOST 1 "$from_ip:$(date +%s)"
+        redis-cli -h $REDIS_HOST -p $REDIS_PORT ZADD $REDIS_QUEUE 1 "$from_ip:$(date +%s%3N)"
 
     else
         sema2="global_vtask_size:local-wait-queue"
@@ -73,5 +73,5 @@ if [ "$n" -eq 0 ]; then
         code=$?
         [ $code -ne 0 ] && echo "[ERROR] scalebox semaphore $sema4 increment! " >&2 && exit $code 
     fi
-    scalebox task add --sink-job fold -h to-ip=$from_ip ${m}
+    scalebox task add --sink-job fold -h to_ip=$from_ip ${m}
 fi

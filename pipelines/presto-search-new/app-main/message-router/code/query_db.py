@@ -210,23 +210,25 @@ def update_host_hostname(ip_list, hostname_prefix, cluster):
     conn.commit()
     put_connection(conn)
 
-def update_grouped_hosts(ip_list, prefix, cluster, group_size=24):
-    if not ip_list:
-        return
+def update_grouped_hosts(sorted_ips, prefix, cluster, group_size=24, mode="a"):
+    if not sorted_ips:
+        return []
 
-    conn = get_connection()
-    cur = conn.cursor()
-
-    sorted_ips = sorted(ip_list)
+    total_groups = int(len(sorted_ips) / group_size)
+    usable_count = total_groups * group_size
+    if usable_count == 0:
+        return sorted_ips
+    
+    usable_ips = sorted_ips[:usable_count]
+    unused_ips = sorted_ips[usable_count:]
 
     # 分组并构造更新映射
     all_rows = []
-    total_groups = int(len(sorted_ips) / group_size)
-
+    cnt = 0
     for group_idx in range(total_groups):
-        group_ips = sorted_ips[group_idx * group_size : (group_idx + 1) * group_size]
+        group_ips = usable_ips[group_idx * group_size : (group_idx + 1) * group_size]
         new_group_id = f"{prefix}{group_idx:03d}"
-        if group_size <= 24:
+        if mode == "a":
             for i, ip in enumerate(group_ips):
                 letter = string.ascii_lowercase[i]  # a-z
                 hostname = f"{new_group_id}-{letter}.{cluster}"
@@ -234,8 +236,9 @@ def update_grouped_hosts(ip_list, prefix, cluster, group_size=24):
         else:
             # 使用四位数字编号
             for i, ip in enumerate(group_ips):
-                hostname = f"{new_group_id}-{i:04d}.{cluster}"
+                hostname = f"{prefix}-{cnt:04d}.{cluster}"
                 all_rows.append((ip, hostname, new_group_id))
+                cnt += 1
 
     # 构造批量 UPDATE SQL
     values_clause = ', '.join(['(%s, %s, %s)'] * len(all_rows))
@@ -243,6 +246,9 @@ def update_grouped_hosts(ip_list, prefix, cluster, group_size=24):
     for ip, hostname, gid in all_rows:
         flat_params.extend([ip, hostname, gid])
 
+    conn = get_connection()
+    cur = conn.cursor()
+    
     sql = f"""
     UPDATE t_host AS t
     SET hostname = v.hostname,
@@ -254,3 +260,4 @@ def update_grouped_hosts(ip_list, prefix, cluster, group_size=24):
     cur.execute(sql, flat_params)
     conn.commit()
     put_connection(conn)
+    return unused_ips

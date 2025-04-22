@@ -9,7 +9,7 @@ echo "total lines: ${MAX_LINENUM}"
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
-# scalebox task add --sink-job dedisp-search -h to-ip=$from_ip ${m}
+# scalebox task add --sink-job dedisp-search -h to_ip=$from_ip ${m}
 for i in $( seq 1 ${MAX_LINENUM} )
 do
     j=$( printf "%03d" "$i" )
