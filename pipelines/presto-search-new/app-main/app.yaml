@@ -43,7 +43,7 @@ jobs:
       code_path: ${CODE_BASE_HEAD}/pipelines/presto-search-new/modules/local-wait-queue/code
       slot_options: slot_on_head
     parameters:
-      global_vtask_size: 100
+      global_vtask_size: 50
     hosts:
       - h0:1
 
@@ -264,8 +264,11 @@ jobs:
       - INIT_SLOTS=${INIT_SLOTS}
       - SOURCE_URL=${SOURCE_URL}
       - REDIS_QUEUE=${REDIS_QUEUE}
+      - VOLUME_LOW=${VOLUME_LOW}
+      - VOLUME_MID=${VOLUME_MID}
+      - VOLUME_HIGH=${VOLUME_HIGH}
     hosts:
-      - h0:1
+      - h0:2
     sink_jobs:
       - local-copy
       - local-unpack
