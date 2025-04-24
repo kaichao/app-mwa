@@ -6,7 +6,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/kaichao/gopkg/dbcache v0.0.0-20250419081303-185e694fba6b
 	github.com/kaichao/gopkg/exec v0.0.0-20250408223243-678aae88d2cc
-	github.com/kaichao/scalebox v0.0.0-20250419143804-8f08df40d94a
+	github.com/kaichao/scalebox v0.0.0-20250420054804-7a8f008e968e
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v2 v2.4.0
 )

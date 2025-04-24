@@ -13,8 +13,8 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat~17
-      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat~120
+      dir_free_gb: /tmp/scalebox/mydata/mwa/dat:17
+      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat:120
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
@@ -23,7 +23,7 @@ jobs:
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
-      - BW_LIMIT=100m
+      # - BW_LIMIT=100m
     hosts:
       - ${NODES}    
 
@@ -33,13 +33,13 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
-      task_progress_diff: 6
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
       dir_free_gb: ${BEAM_MAKE_DIR_FREE_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
+      task_progress_group_diff: 6
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       max_tasks_per_minute: 3
@@ -139,6 +139,7 @@ jobs:
       - SOURCE_URL=${LOCAL_SHM_ROOT}
       - TARGET_URL=
       - TARGET_JUMP_SERVERS=${TARGET_JUMP}
+      - KEEP_SOURCE_FILE=no
     hosts:
       - ${NODES}
 
@@ -157,5 +158,6 @@ jobs:
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
       - REDISCLI_HOST=
+      - PRESTO_APP_ID=${PRESTO_APP_ID}
     hosts:
       - h0:2

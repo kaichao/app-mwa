@@ -9,7 +9,6 @@ import (
 	"beamform/internal/pkg/semaphore"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"regexp"
@@ -53,7 +52,10 @@ func defaultFunc(msg string, headers map[string]string) int {
 	messages := message.GetMessagesForPullUnpack(msg, true)
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	// 1266932744/p00001_00960/1266933866_1266933905_ch112.dat.tar.zst
-	if code := task.AddTasks("pull-unpack", messages, "", 600); code > 0 {
+
+	os.Setenv("SINK_JOB", "pull-unpack")
+	os.Setenv("TIMEOUT_SECONDS", "600")
+	if code := task.AddTasks(messages, "{}"); code > 0 {
 		return code
 	}
 	sema := message.GetSemaphores(msg)
@@ -99,7 +101,10 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 			obsID, ps[k], ps[k+1], t0, t1, ch)
 		messages = append(messages, body)
 	}
-	return task.AddTasks("beam-make", messages, "", 600)
+
+	os.Setenv("SINK_JOB", "beam-make")
+	os.Setenv("TIMEOUT_SECONDS", "600")
+	return task.AddTasks(messages, "{}")
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
@@ -170,7 +175,9 @@ func fromBeamMake(m string, headers map[string]string) int {
 			return code
 		}
 	}
-	return task.Add("down-sample", m, "")
+
+	os.Setenv("SINK_JOB", "down-sample")
+	return task.Add(m, "{}")
 }
 
 func fromDownSample(m string, headers map[string]string) int {
@@ -190,7 +197,7 @@ func fromDownSample(m string, headers map[string]string) int {
 	// 1. 读取共享变量表 pointing-data-root。
 	varValues := []string{}
 	for p := p0; p <= p1; p++ {
-		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", dataset, p)
 		if v, err := variable.Get(varName, appID); err != nil {
 			logrus.Errorf("variable-get %s, err-info:%v\n", varName, err)
 			varValues = append(varValues, "")
@@ -215,7 +222,7 @@ func fromDownSample(m string, headers map[string]string) int {
 
 		for p := p0; p <= p1; p++ {
 			i := p - p0
-			varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+			varName := fmt.Sprintf("pointing-data-root:%s/p%05d", dataset, p)
 			var varValue, ip string
 			if i < len(prestoIPs) {
 				// 类型1，非组内IP地址
@@ -223,7 +230,7 @@ func fromDownSample(m string, headers map[string]string) int {
 				varValue = prestoIPs[i]
 			} else {
 				// 类型2、类型3，组内地址
-				varValue = weightedTarget()
+				varValue = weightedTargetSimple()
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {
@@ -251,10 +258,13 @@ func fromDownSample(m string, headers map[string]string) int {
 
 	// 3. 完成target_hosts的数据采集，向fits-redist发送task对应消息
 	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(toIPs, ","))
-	code := task.Add("fits-redist", m, hs)
+
+	os.Setenv("SINK_JOB", "fits-redist")
+	code := task.Add(m, hs)
 	return code
 }
 
+/*
 func weightedTarget() string {
 	jsonFile := fmt.Sprintf("/%s-target.json", os.Getenv("CLUSTER"))
 	data, _ := os.ReadFile(jsonFile)
@@ -281,6 +291,46 @@ func weightedTarget() string {
 
 	// fallback: 返回权重最大项
 	return maxKey
+}
+*/
+// 包级变量
+var (
+	theoryPercent map[string]float64
+	historyCounts map[string]int
+	totalCount    int
+)
+
+func init() {
+	jsonFile := fmt.Sprintf("/%s-target.json", os.Getenv("CLUSTER"))
+	data, _ := os.ReadFile(jsonFile)
+	weights := map[string]float64{}
+	json.Unmarshal(data, &weights)
+
+	theoryPercent = make(map[string]float64)
+	historyCounts = make(map[string]int)
+	totalWeight := 0.0
+	for _, w := range weights {
+		totalWeight += w
+	}
+	for key, w := range weights {
+		theoryPercent[key] = w / totalWeight
+		historyCounts[key] = 0
+	}
+}
+
+func weightedTargetSimple() string {
+	var firstKey string
+	for key := range theoryPercent {
+		firstKey = key
+		if totalCount == 0 || float64(historyCounts[key])/float64(totalCount) < theoryPercent[key] {
+			historyCounts[key]++
+			totalCount++
+			return key
+		}
+	}
+	historyCounts[firstKey]++
+	totalCount++
+	return firstKey
 }
 
 func fromFitsRedist(m string, headers map[string]string) int {
@@ -311,7 +361,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
 	for p := p0; p <= p1; p++ {
-		varName := fmt.Sprintf("pointing-data-root:p%05d", p)
+		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", ds, p)
 		varValue, err := variable.Get(varName, appID)
 		if err != nil {
 			logrus.Errorf("variable-get, var-name:%s, err-info:%v\n", varName, err)
@@ -324,7 +374,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 			// IPv4地址（类型1）， 设置"to_ip"头
 			headers = common.SetJSONAttribute(headers, "to_ip", varValue)
 			headers = common.SetJSONAttribute(headers,
-				"output_root", "/dev/shm/scalebox/mydata")
+				"output_root", "/tmp/scalebox/mydata")
 		} else if strings.Contains(varValue, "@") {
 			// 远端存储（类型3）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
@@ -343,7 +393,10 @@ func fromFitsRedist(m string, headers map[string]string) int {
 			varValue, toHost, headers, m)
 		messages = append(messages, m)
 	}
-	return task.AddTasks("fits-merge", messages, "", 600)
+
+	os.Setenv("SINK_JOB", "fits-merge")
+	os.Setenv("TIMEOUT_SECONDS", "600")
+	return task.AddTasks(messages, "{}")
 }
 
 func fromFitsMerge(m string, headers map[string]string) int {
@@ -351,14 +404,14 @@ func fromFitsMerge(m string, headers map[string]string) int {
 	appID := cache.GetAppIDByJobID(jobID)
 
 	// 1257010784/p00001/t1257010786_1257010965
-	re := regexp.MustCompile(`^([0-9]+/p([0-9]+))(/t[0-9]+_[0-9]+)$`)
+	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
 	ss := re.FindStringSubmatch(m)
 	if ss == nil {
 		logrus.Errorf("Invalid format, message:%s\n", m)
 		return 1
 	}
 
-	varName := fmt.Sprintf("pointing-data-root:p%s", ss[2])
+	varName := fmt.Sprintf("pointing-data-root:%s", ss[1])
 	varValue, err := variable.Get(varName, appID)
 	if err != nil {
 		logrus.Errorf("variable-get, err-info:%v\n", err)
@@ -370,10 +423,11 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		headers := common.SetJSONAttribute("{}", "target_url", varValue)
 		// headers = common.SetJSONAttribute("{}", "target_jump_servers", "root@10.200.1.100")
 
-		return task.AddTasks("fits-push", []string{msg}, headers, 10)
+		os.Setenv("SINK_JOB", "fits-push")
+		return task.Add(msg, headers)
 	}
 
-	return doCrossAdd(ss[1])
+	return doCrossTaskAdd(ss[1])
 }
 
 func fromFitsPush(m string, headers map[string]string) int {
@@ -384,10 +438,10 @@ func fromFitsPush(m string, headers map[string]string) int {
 		logrus.Errorf("Invalid format, message:%s\n", m)
 		return 1
 	}
-	return doCrossAdd(ss[1])
+	return doCrossTaskAdd(ss[1])
 }
 
-func doCrossAdd(pointing string) int {
+func doCrossTaskAdd(pointing string) int {
 	// 信号量pointing-done的操作
 	// semaphore: pointing-done:1257010784/p00001
 	sema := "pointing-done:" + pointing
@@ -402,9 +456,25 @@ func doCrossAdd(pointing string) int {
 		return 0
 	}
 
+	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
+	appID := cache.GetAppIDByJobID(jobID)
+	varName := "pointing-data-root:" + pointing
+	varValue, err := variable.Get(varName, appID)
+	if err != nil {
+		logrus.Errorf("variable-get, err-info:%v\n", err)
+		return 11
+	}
+
+	prestoAppID, err := strconv.Atoi(os.Getenv("PRESTO_APP_ID"))
+	if err != nil {
+		logrus.Errorln("no valid PRESTO_APP_ID")
+		return 12
+	}
+	// IPv4地址（类型1）， 设置"to_ip"头
+	headers := common.SetJSONAttribute("{}", "source_url", varValue)
 	// 给presto-search流水线发消息
-	// message = ss[1],source_url=
-
-	return 0
-
+	os.Setenv("SINK_JOB", "message-router-presto")
+	os.Setenv("JOB_ID", "")
+	os.Setenv("APP_ID", fmt.Sprintf("%d", prestoAppID))
+	return task.Add(pointing, headers)
 }

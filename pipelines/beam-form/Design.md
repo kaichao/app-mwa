@@ -99,9 +99,9 @@
 | capacity-presto-search | capacity-presto-search:h0000                   |  |计算节点上presto-search的vtask数 |
 
 变量表
-| category      | var_name        | value                            |
-| ------------- | --------------- | ------------------------------- |
-| pointing_data_root | pointing_data_root:p00001  | 10.2.3.4 (计算节点) <br/>  /local_root(本地共享存储) <br/>   remote_user@remote_ip:port/remote-root     |
+| category           | var_name                             | value                           |
+| ------------------ | ------------------------------------ | ------------------------------- |
+| pointing_data_root | pointing_data_root:1257010784/p00001 | 10.2.3.4 (计算节点) <br/>  /local_root(本地共享存储) <br/>   remote_user@remote_ip:port/remote-root     |
 
 
 ### tar-ready
