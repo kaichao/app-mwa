@@ -22,7 +22,9 @@ flowchart TD
 - 全数据集拷贝
 
 ```sh
-TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1255803168 scalebox app create
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp \
+SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1255803168 \
+scalebox app create
 ```
 ### dcu集群
 
@@ -48,8 +50,8 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 
 - 生产测试
 ```sh
-  START_MESSAGE=1255803168/p03121_03600 \
-  NODES="n-00[01][0-9]|n-002[0-3]" \
+  START_MESSAGE=1255803168/p03601_04080 \
+  PRESTO_APP_ID=29 \
   scalebox app create -e p419.env
 ```
 

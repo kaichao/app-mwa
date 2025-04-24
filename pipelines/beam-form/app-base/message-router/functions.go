@@ -4,6 +4,7 @@ import (
 	"beamform/internal/pkg/message"
 	"beamform/internal/pkg/semaphore"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 
@@ -34,7 +35,9 @@ func defaultFunc(msg string, headers map[string]string) int {
 	messages := message.GetMessagesForBeamMake(msg)
 	common.AppendToFile("custom-out.txt",
 		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
-	return task.AddTasks("beam-make", messages, "", 1800)
+	os.Setenv("SINK_JOB", "beam-make")
+	os.Setenv("TIMEOUT_SECONDS", "1800")
+	return task.AddTasks(messages, "")
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
@@ -72,7 +75,8 @@ func fromDownSample(message string, headers map[string]string) int {
 		m := fmt.Sprintf("%s/p%05d/%s", ds, p, t)
 		messages = append(messages, m)
 	}
-	return task.AddTasks("fits-merge", messages, "", 120)
+	os.Setenv("SINK_JOB", "fits-merge")
+	return task.AddTasks(messages, "")
 }
 
 func fromFitsMerge(message string, headers map[string]string) int {
