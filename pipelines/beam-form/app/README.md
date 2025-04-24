@@ -111,5 +111,13 @@ scalebox app create
   scalebox app create
 ```
 
+## 新增一个队列原始
+
+```sh
+docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 10.11.16.79:9876543210
+
+docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 10.11.16.79:9876543211
+```
+
 - 数据位于本地共享存储
 
