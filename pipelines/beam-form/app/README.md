@@ -22,7 +22,9 @@ flowchart TD
 - 全数据集拷贝
 
 ```sh
-TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1255803168 scalebox app create
+TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp \
+SOURCE_URL=/data2/mydata/mwa/tar DIR_NAME=1255803168 \
+scalebox app create
 ```
 ### dcu集群
 
@@ -48,8 +50,8 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
 
 - 生产测试
 ```sh
-  START_MESSAGE=1255803168/p03121_03600 \
-  NODES="n-00[01][0-9]|n-002[0-3]" \
+  START_MESSAGE=1255803168/p03601_04080 \
+  PRESTO_APP_ID=29 \
   scalebox app create -e p419.env
 ```
 
@@ -107,6 +109,14 @@ TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/tmp SOURCE_URL=/data2/myd
   TIME_STEP=80 \
   NODES=n-0[123] \
   scalebox app create
+```
+
+## 新增一个队列原始
+
+```sh
+docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 10.11.16.79:9876543210
+
+docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 10.11.16.79:9876543211
 ```
 
 - 数据位于本地共享存储
