@@ -38,22 +38,24 @@ source_url=$(get_header "$2" "source_url")
 source_mode=$(get_mode "$source_url")
 source_dir=$(get_data_root "$source_url")
 
+bw_limit=$(get_header "$2" "bw_limit")
+
 # BW_LIMIT  "500k"/"1m"
 # 设置--touch，将文件更新时间更新为当前时间，以免在/tmp中被删除
-if [ -n "$BW_LIMIT" ]; then
+if [ -n "$bw_limit" ]; then
     # 已设置
-    cmd_part="pv -q -L ${BW_LIMIT}|zstd -d | tar --touch -xvf -"
+    cmd_part="pv -q -L ${bw_limit}|zstd -d | tar --touch -xvf -"
 else
     cmd_part="zstd -d | tar --touch -xvf -"
 fi
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
     source_dir=$(get_host_path $source_dir)
-    cmd="cat ${source_dir}/$1 | ${cmd_part}"
+    cmd="cat ${source_dir}/mwa/tar/$dataset/$file_name | ${cmd_part}"
 else
     # SSH
     ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump_servers")
-    cmd="$ssh_cmd \"cat ${source_dir}/$dataset/$file_name\" - | ${cmd_part}"
+    cmd="$ssh_cmd \"cat ${source_dir}/mwa/tar/$dataset/$file_name\" - | ${cmd_part}"
 fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt

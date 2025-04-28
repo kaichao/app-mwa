@@ -18,12 +18,13 @@ jobs:
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
+      key_group_regex: ^([0-9]+)
     environments:
       - SOURCE_URL=${SOURCE_URL}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
-      # - BW_LIMIT=100m
+      - BW_LIMIT=30m
     hosts:
       - ${NODES}    
 
@@ -146,7 +147,7 @@ jobs:
   mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app
     parameters:
-      key_group_regex: ^([0-9]+)$
+      key_group_regex: ^([0-9]+)
       start_message: ${START_MESSAGE}
       task_dist_mode: SLOT-BOUND
       bulk_message_size: 10

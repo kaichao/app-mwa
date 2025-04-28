@@ -7,12 +7,13 @@
 ```sql
 
 WITH vtable AS (
-    SELECT matches[1] AS t,(matches[2]::integer)-109 AS ch,status_code
+    SELECT matches[2] AS t,(matches[3]::integer)-109 AS ch,status_code
     FROM (
-        SELECT regexp_matches(body, '\d{5}(\d{5})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
+        SELECT regexp_matches(body, 'p(\d{5})_\d{5}/\d{5}(\d{5})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
         FROM t_task
-        WHERE job=11
+        WHERE job=220
     ) tt0
+    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
     SELECT t
     FROM (
@@ -77,8 +78,9 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d{5})_\d{5}/t\d{5}(\d{5})_\d{10}/ch(\d{3})', 'g') matches, status_code
         FROM t_task
-        WHERE job=1414
+        WHERE job=221
     ) tt
+    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
     SELECT t,p
     FROM (
@@ -147,8 +149,9 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{5}(\d{5})_\d{10}', 'g') matches, status_code
         FROM t_task
-        WHERE job=882
+        WHERE job=224
     ) tt
+    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
     SELECT p
     FROM (
@@ -191,7 +194,7 @@ SELECT p,
     SUM(status_code) FILTER (WHERE t = 22) AS t22,
     SUM(status_code) FILTER (WHERE t = 23) AS t23
 FROM vtable
-WHERE p NOT IN (SELECT p FROM finished)
+-- WHERE p NOT IN (SELECT p FROM finished)
 GROUP BY 1
 ORDER BY 1;
 ```

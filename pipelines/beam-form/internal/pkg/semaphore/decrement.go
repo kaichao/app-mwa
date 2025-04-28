@@ -1,15 +1,6 @@
 package semaphore
 
-import (
-	"fmt"
-	"math"
-	"strconv"
-	"strings"
-
-	"github.com/kaichao/gopkg/exec"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 // Decrement ...
 func Decrement(sema string) (int, error) {
 	cmd := "scalebox semaphore decrement " + sema
@@ -29,3 +20,4 @@ func Decrement(sema string) (int, error) {
 	}
 	return v, nil
 }
+*/

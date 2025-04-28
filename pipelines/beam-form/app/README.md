@@ -50,8 +50,8 @@ scalebox app create
 
 - 生产测试
 ```sh
-  START_MESSAGE=1255803168/p03601_04080 \
-  PRESTO_APP_ID=29 \
+  START_MESSAGE=1255803168/p04081_04320 \
+  PRESTO_APP_ID=44 \
   scalebox app create -e p419.env
 ```
 
@@ -76,6 +76,15 @@ scalebox app create
 
 - 数据位于共享存储
 
+- p419-target.json
+
+```json
+{
+    "astro@10.100.1.30:10022/data1/mydata": 0.05,
+    "/work1/cstu0036/mydata": 1.0,
+    "/work2/cstu0036/mydata": 1.0
+}
+```
 ## dcu集群
 
 - 数据位于远端共享存储

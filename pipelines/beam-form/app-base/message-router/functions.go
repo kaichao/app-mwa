@@ -2,13 +2,13 @@ package main
 
 import (
 	"beamform/internal/pkg/message"
-	"beamform/internal/pkg/semaphore"
+	// "beamform/internal/pkg/semaphore"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 
 	"github.com/kaichao/scalebox/pkg/common"
+	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
@@ -23,10 +23,9 @@ func defaultFunc(msg string, headers map[string]string) int {
 	// 	1257010784/p00001_00960
 	// 	1257010784/p00001_00960/t1257012766_1257012965
 	// messages, semas := message.ParseForBeamMake(msg)
-	semas := message.GetSemaphores(msg)
-	if err := semaphore.Create(semas); err != nil {
-		logrus.Errorf("semaphore-create,errInfo:%v\n", err)
-		logrus.Errorf("semaphore:\n%s\n", semas)
+	common.AppendToFile("my-semas.txt", message.GetSemaphores(msg))
+	if err := semaphore.CreateFileSemaphores("", appID, 100); err != nil {
+		logrus.Errorf("semaphore-create,err-info:%v\n", err)
 		return 1
 	}
 	common.AddTimeStamp("after-semaphores")
@@ -34,10 +33,13 @@ func defaultFunc(msg string, headers map[string]string) int {
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	messages := message.GetMessagesForBeamMake(msg)
 	common.AppendToFile("custom-out.txt",
-		fmt.Sprintf("n_messages:%d,num-of-semas:%d\n", len(messages), len(semas)))
-	os.Setenv("SINK_JOB", "beam-make")
-	os.Setenv("TIMEOUT_SECONDS", "1800")
-	return task.AddTasks(messages, "")
+		fmt.Sprintf("n_messages:%d\n", len(messages)))
+
+	envVars := map[string]string{
+		"SINK_JOB":        "beam-make",
+		"TIMEOUT_SECONDS": "1800",
+	}
+	return task.AddTasks(messages, "", envVars)
 }
 
 func fromMessageRouter(message string, headers map[string]string) int {
@@ -59,11 +61,13 @@ func fromDownSample(message string, headers map[string]string) int {
 
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	sema := "fits-done:" + ss[1]
-	semaValue, err := semaphore.Decrement(sema)
+	v, err := semaphore.AddValue(sema, appID, -1)
+	// semaValue, err := semaphore.Decrement(sema)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2
 	}
+	semaValue, _ := strconv.Atoi(v)
 	if semaValue > 0 {
 		// 24ch not done.
 		return 0
@@ -75,8 +79,11 @@ func fromDownSample(message string, headers map[string]string) int {
 		m := fmt.Sprintf("%s/p%05d/%s", ds, p, t)
 		messages = append(messages, m)
 	}
-	os.Setenv("SINK_JOB", "fits-merge")
-	return task.AddTasks(messages, "")
+
+	envVars := map[string]string{
+		"SINK_JOB": "fits-merge",
+	}
+	return task.AddTasks(messages, "", envVars)
 }
 
 func fromFitsMerge(message string, headers map[string]string) int {
@@ -90,11 +97,13 @@ func fromFitsMerge(message string, headers map[string]string) int {
 
 	// semaphore: pointing-done:1257010784/p00001
 	sema := "pointing-done:" + ss[1]
-	semaValue, err := semaphore.Decrement(sema)
+	v, err := semaphore.AddValue(sema, appID, -1)
+	// semaValue, err := semaphore.Decrement(sema)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2
 	}
+	semaValue, _ := strconv.Atoi(v)
 	if semaValue > 0 {
 		// 24ch not done.
 		return 0

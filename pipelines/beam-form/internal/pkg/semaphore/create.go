@@ -1,13 +1,6 @@
 package semaphore
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/kaichao/gopkg/exec"
-	"github.com/kaichao/scalebox/pkg/common"
-)
-
+/*
 // Create ...
 func Create(semaLines string) error {
 	common.AppendToFile("my-sema.txt", semaLines)
@@ -19,3 +12,4 @@ func Create(semaLines string) error {
 	}
 	return err
 }
+*/
