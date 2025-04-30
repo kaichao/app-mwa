@@ -32,7 +32,13 @@ scalebox app create
 
 ## p419集群
 
-- 数据位于管理服务器
+- 生产运行，source_url通过p419-soruce.json来指定
+```sh
+  START_MESSAGE=1255803168/p04681_04920 \
+  PRESTO_APP_ID=44 \
+  scalebox app create -e p419.env
+```
+
 
 ```sh
   START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
@@ -48,12 +54,6 @@ scalebox app create
   scalebox app create -e p419.env
 ```
 
-- 生产测试
-```sh
-  START_MESSAGE=1255803168/p04081_04320 \
-  PRESTO_APP_ID=44 \
-  scalebox app create -e p419.env
-```
 
 ```sh
   START_MESSAGE=1255803168/p03121_03600/t1255805770_1255807967 \
@@ -74,26 +74,16 @@ scalebox app create
   scalebox app create -e p419.env
 ```
 
-- 数据位于共享存储
 
-- p419-target.json
-
-```json
-{
-    "astro@10.100.1.30:10022/data1/mydata": 0.05,
-    "/work1/cstu0036/mydata": 1.0,
-    "/work2/cstu0036/mydata": 1.0
-}
-```
 ## dcu集群
 
-- 数据位于远端共享存储
+- source_url通过dcu-soruce.json来指定
 
 ```sh
-  START_MESSAGE=1257617424/p00001_00048 \
+  START_MESSAGE=1257617424/p00001_00096 \
   TIME_STEP=80 \
   TIME_END=1257617505 \
-  NODES=n-0[123] \
+  NODES=n-0[023] \
   TARGET_JUMP=root@10.200.1.100 \
   scalebox app create
 ```
@@ -106,20 +96,6 @@ scalebox app create
   scalebox app create
 ```
 
-```sh
-  START_MESSAGE=1257617424/p00001_00048 \
-  TIME_STEP=80 \
-  NODES=n-0[123] \
-  scalebox app create
-```
-
-```sh
-  START_MESSAGE=1257617424/p00001_00048/t1257618626_1257622223 \
-  TIME_STEP=80 \
-  NODES=n-0[123] \
-  scalebox app create
-```
-
 ## 新增一个队列原始
 
 ```sh
@@ -127,6 +103,3 @@ docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 1
 
 docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 10.11.16.79:9876543211
 ```
-
-- 数据位于本地共享存储
-

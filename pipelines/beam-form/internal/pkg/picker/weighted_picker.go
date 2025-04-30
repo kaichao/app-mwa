@@ -20,6 +20,13 @@ func NewWeightedPicker(obj string) *WeightedPicker {
 	weights := map[string]float64{}
 	json.Unmarshal(data, &weights)
 
+	// 删除value为0的项
+	for key, value := range weights {
+		if value == 0 {
+			delete(weights, key)
+		}
+	}
+
 	theoryPercent := make(map[string]float64)
 	historyCounts := make(map[string]int)
 	totalWeight := 0.0

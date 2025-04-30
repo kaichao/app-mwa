@@ -45,7 +45,16 @@ cd ${WORK_DIR} && mv -f all*.fits ${filename}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] rename fits file "  >> ${WORK_DIR}/custom-out.txt && exit $code
 
-mkdir -p ${output_dir} && cd ${output_dir} && zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst
+bw_limit=$(get_header "$2" "bw_limit")
+# BW_LIMIT  "500k"/"1m"
+if [ -n "$bw_limit" ]; then
+    # 已设置
+    zstd_cmd="zstd -c --rm ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}.zst"
+else
+    zstd_cmd="zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst"
+fi
+mkdir -p ${output_dir} && cd ${output_dir} && eval $zstd_cmd
+# mkdir -p ${output_dir} && cd ${output_dir} && zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file "  >> ${WORK_DIR}/custom-out.txt && exit $code
 

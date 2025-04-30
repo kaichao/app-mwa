@@ -10,6 +10,7 @@ jobs:
 
   pull-unpack:
     base_image: ${FILE_COPY}
+    command: ${COMMAND_TEMPLATE}
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
@@ -24,7 +25,7 @@ jobs:
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
-      - BW_LIMIT=30m
+      - BW_LIMIT=40m
     hosts:
       - ${NODES}    
 
@@ -40,7 +41,7 @@ jobs:
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      task_progress_group_diff: 6
+      task_progress_group_diff: 8
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       max_tasks_per_minute: 3
@@ -57,7 +58,7 @@ jobs:
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
-    command: ${DOWN_SAMPLE_COMMAND}
+    command: ${COMMAND_TEMPLATE}
     arguments:
       code_path: ${CODE_BASE}/down-sample/code
       dir_free_gb: ${DOWN_SAMPLE_DIR_FREE_GB}
@@ -80,6 +81,7 @@ jobs:
 
   fits-redist:
     base_image: ${FILE_COPY}
+    command: ${COMMAND_TEMPLATE}
     arguments:
       code_path: ${CODE_BASE}/fits-redist/code
       # 20-min
@@ -107,6 +109,7 @@ jobs:
 
   fits-merge:
     label: 24通道fits合并
+    command: ${COMMAND_TEMPLATE}
     base_image: ${MWA_VCSTOOLS}
     arguments:
       code_path: ${CODE_BASE}/fits-merge/code
@@ -123,13 +126,14 @@ jobs:
       - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
       # "500k"/"1m"/...
-      - BW_LIMIT=
+      - BW_LIMIT=20m
     hosts:
       - ${NODES}
       - ${PRESTO_NODES}
 
   fits-push:
     base_image: ${FILE_COPY}
+    command: ${COMMAND_TEMPLATE}
     arguments:
       slot_options: tmpfs_workdir
     parameters:
@@ -159,6 +163,12 @@ jobs:
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
       - REDISCLI_HOST=
+      #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量
+      - INTERLEAVED_DAT=yes
+      # 首次加载更高限速，以支持快速加载
+      - FIRST_BW_LIMIT=80m
+      # 波束合成的指向优先，用于全数据集合成
+      - POINTING_FIRST=yes
       - PRESTO_APP_ID=${PRESTO_APP_ID}
     hosts:
       - h0:2

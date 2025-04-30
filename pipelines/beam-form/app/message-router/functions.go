@@ -109,12 +109,16 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	ps := cube.GetPointingRangesByInterval(p0, p1)
 	messages := []string{}
 	for k := 0; k < len(ps); k += 2 {
-		body := fmt.Sprintf("%s/p%05d_%05d/t%d_%d/%s",
+		body := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d/%s`,
 			obsID, ps[k], ps[k+1], t0, t1, ch)
 		// 加上排序标签
+		if os.Getenv("POINTING_FIRST") == "yes" {
+			body = fmt.Sprintf(`%s,{"sorted_tag":"p%05d:t%d"}`,
+				body, ps[k], t0)
+		}
 		messages = append(messages, body)
 	}
-
+	fmt.Println("messages in fromPullUnpack():", messages)
 	envVars := map[string]string{
 		"SINK_JOB":        "beam-make",
 		"TIMEOUT_SECONDS": "600",
@@ -122,9 +126,6 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	return task.AddTasks(messages, "{}", envVars)
 }
 
-func fromMessageRouter(message string, headers map[string]string) int {
-	return 0
-}
 func fromBeamMake(m string, headers map[string]string) int {
 	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109

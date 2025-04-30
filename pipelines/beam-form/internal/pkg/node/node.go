@@ -5,12 +5,14 @@ import (
 )
 
 // GetNodeNameByTimeChannel ...
+// - 用于toBeamMake
 func GetNodeNameByTimeChannel(cube *datacube.DataCube, t int, ch int) string {
 	index := cube.GetTimeChannelIndex(t, ch, len(NodeNames))
 	return NodeNames[index]
 }
 
 // GetIPAddrListByTime ...
+// - 用于toRedist
 func GetIPAddrListByTime(cube *datacube.DataCube, t int) []string {
 	ips := []string{}
 	for ch := 109; ch < 133; ch++ {

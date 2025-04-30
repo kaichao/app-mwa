@@ -26,17 +26,3 @@ dist-singularity-images:
 	scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 	make -C ~/app-mwa/dockerfiles/mwa-vcstools dist-singularity
 	make -C ~/app-mwa/dockerfiles/down-sampler dist-singularity
-
-build-all-images:
-	make -C ~/WORK/workspace/scalebox/dockerfiles/files/dir-list
-	docker-dist p419 hub.cstcloud.cn/scalebox/dir-listx
-	make -C ~/WORK/workspace/scalebox/dockerfiles/files/file-copy
-	docker-dist p419 hub.cstcloud.cn/scalebox/file-copy
-	make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/cluster-head dist
-	make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/node-agent dist
-	make -C ../../dockerfiles/mwa-vcstools dist-p419
-	make -C ../../dockerfiles/down-sampler dist-p419
-
-mwa-images: build-all-images
-	ssh p419-scalebox 'make -C ~/app-mwa/pipelines/main dist-singularity-images'
-

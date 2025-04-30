@@ -47,13 +47,12 @@ func main() {
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":               defaultFunc,
-		"message-router": fromMessageRouter,
-		"pull-unpack":    fromPullUnpack,
-		"beam-make":      fromBeamMake,
-		"down-sample":    fromDownSample,
-		"fits-redist":    fromFitsRedist,
-		"fits-merge":     fromFitsMerge,
-		"fits-push":      fromFitsPush,
+		"":            defaultFunc,
+		"pull-unpack": fromPullUnpack,
+		"beam-make":   fromBeamMake,
+		"down-sample": fromDownSample,
+		"fits-redist": fromFitsRedist,
+		"fits-merge":  fromFitsMerge,
+		"fits-push":   fromFitsPush,
 	}
 )

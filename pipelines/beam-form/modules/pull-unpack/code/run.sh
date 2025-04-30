@@ -39,7 +39,6 @@ source_mode=$(get_mode "$source_url")
 source_dir=$(get_data_root "$source_url")
 
 bw_limit=$(get_header "$2" "bw_limit")
-
 # BW_LIMIT  "500k"/"1m"
 # 设置--touch，将文件更新时间更新为当前时间，以免在/tmp中被删除
 if [ -n "$bw_limit" ]; then
