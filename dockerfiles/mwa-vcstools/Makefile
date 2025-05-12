@@ -17,7 +17,6 @@ dist-dcu: build
 	# mv -f ~/singularity/app-mwa/mwa-vcstools.sif $(SINGULARITY_DIR)/app-mwa/
 	@ date
 
-
 singularity:
 	mkdir -p ~/singularity/app-mwa/
 	date
@@ -27,7 +26,6 @@ singularity:
 dist-singularity: singularity
 	ssh login1 mkdir -p singularity/app-mwa/
 	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:singularity/app-mwa/
-
 
 push:
 	docker push $(IMAGE_NAME)

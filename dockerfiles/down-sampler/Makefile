@@ -27,7 +27,6 @@ dist-singularity: singularity
 	ssh login1 mkdir -p singularity/app-mwa/
 	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
 
-
 push:
 	docker push $(IMAGE_NAME)
 

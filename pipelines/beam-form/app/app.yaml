@@ -14,18 +14,19 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat:17
-      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat:120
+      dir_free_gb: /tmp/scalebox/mydata/mwa/dat:15
+      dir_limit_gb: ${PULL_UNPACK_DIR_LIMIT_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
+      message_router_index: 2
       key_group_regex: ^([0-9]+)
     environments:
       - SOURCE_URL=${SOURCE_URL}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
-      - BW_LIMIT=40m
+      - BW_LIMIT=30m
     hosts:
       - ${NODES}    
 
@@ -35,6 +36,7 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
+      sleep_interval_seconds: 60
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
       dir_free_gb: ${BEAM_MAKE_DIR_FREE_GB}
@@ -43,7 +45,7 @@ jobs:
       pod_id: by_channel
       task_progress_group_diff: 8
       key_group_regex: ^([0-9]+)
-      retry_rules: "['*']"
+      retry_rules: "['*','134:9','139:9']"
       max_tasks_per_minute: 3
       message_router_index: 1
       task_cache_expired_minutes: 65
@@ -154,7 +156,8 @@ jobs:
       key_group_regex: ^([0-9]+)
       start_message: ${START_MESSAGE}
       task_dist_mode: SLOT-BOUND
-      bulk_message_size: 10
+      bulk_message_size: 2
+      slot_options: reserved_on_exit
     environments:
       - TIME_STEP=${TIME_STEP}
       - TIME_END=${TIME_END}
@@ -166,9 +169,13 @@ jobs:
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量
       - INTERLEAVED_DAT=yes
       # 首次加载更高限速，以支持快速加载
-      - FIRST_BW_LIMIT=80m
+      - FIRST_BW_LIMIT=60m
       # 波束合成的指向优先，用于全数据集合成
-      - POINTING_FIRST=yes
+      - POINTING_FIRST=${POINTING_FIRST}
+      # 隐含着 POINTING_FIRST=yes
+      - RUN_MODE=full_parallel
+      # 通过命令行指定24ch数据的位置（缺省通过*-target.json指定）
+      - TARGET_24CH_ROOT=${TARGET_24CH_ROOT}
       - PRESTO_APP_ID=${PRESTO_APP_ID}
     hosts:
-      - h0:2
+      - h0:3

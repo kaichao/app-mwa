@@ -36,9 +36,17 @@ dist-dcu:
 	make -C mwa-vcstools dist-dcu
 	make -C down-sampler dist-dcu
 
+dist-singularity-images:
+	singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
+	singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
+	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
+	scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
+	make -C mwa-vcstools dist-singularity
+	make -C down-sampler dist-singularity
+
 build-all-images:
-	make -C ~/WORK/workspace/scalebox/dockerfiles/files/dir-list
-	docker-dist p419 hub.cstcloud.cn/scalebox/dir-listx
+	# make -C ~/WORK/workspace/scalebox/dockerfiles/files/dir-list
+	# docker-dist p419 hub.cstcloud.cn/scalebox/dir-listx
 	make -C ~/WORK/workspace/scalebox/dockerfiles/files/file-copy
 	docker-dist p419 hub.cstcloud.cn/scalebox/file-copy
 	make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/cluster-head dist
@@ -48,4 +56,4 @@ build-all-images:
 
 # In MacOS
 dist-p419: build-all-images
-	ssh p419-scalebox 'make -C ~/app-mwa/pipelines/main dist-singularity-images'
+	ssh p419-scalebox 'make -C ~/app-mwa/dockerfiles dist-singularity-images'

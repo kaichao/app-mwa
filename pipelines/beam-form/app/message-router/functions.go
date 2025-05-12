@@ -78,6 +78,10 @@ func defaultFunc(msg string, headers map[string]string) int {
 }
 
 func fromPullUnpack(msg string, headers map[string]string) int {
+	defer func() {
+		common.AddTimeStamp("leave-fromPullUnpack()")
+	}()
+	common.AddTimeStamp("enter-fromPullUnpack()")
 	// input message: 1257617424/p00001_00096/1257617426_1257617465_ch112.dat.tar.zst
 	// - target_dir:1257617424/t1257617426_1257617505/ch111
 	// semaphore: dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109
@@ -106,6 +110,7 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	if semaVal > 0 {
 		return 0
 	}
+	common.AddTimeStamp("prepare-messages")
 	ps := cube.GetPointingRangesByInterval(p0, p1)
 	messages := []string{}
 	for k := 0; k < len(ps); k += 2 {
@@ -118,7 +123,8 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 		}
 		messages = append(messages, body)
 	}
-	fmt.Println("messages in fromPullUnpack():", messages)
+	fmt.Printf("num-of-messages in fromPullUnpack():%d\n", len(messages))
+	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_JOB":        "beam-make",
 		"TIMEOUT_SECONDS": "600",
@@ -127,6 +133,9 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 }
 
 func fromBeamMake(m string, headers map[string]string) int {
+	defer func() {
+		common.AddTimeStamp("leave-fromBeamMake()")
+	}()
 	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
 	obsID, p0, _, t0, t1, ch, err := message.ParseParts(m)
@@ -193,6 +202,7 @@ func fromBeamMake(m string, headers map[string]string) int {
 		}
 	}
 
+	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_JOB": "down-sample",
 	}
@@ -200,6 +210,9 @@ func fromBeamMake(m string, headers map[string]string) int {
 }
 
 func fromDownSample(m string, headers map[string]string) int {
+	defer func() {
+		common.AddTimeStamp("leave-fromDownSample()")
+	}()
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	dataset, p0, p1, t0, _, _, err := message.ParseParts(m)
 	if err != nil {
@@ -247,8 +260,10 @@ func fromDownSample(m string, headers map[string]string) int {
 				varValue = prestoIPs[i]
 			} else {
 				// 类型2、类型3，组内地址
-				varValue = targetPicker.GetNext()
-				// varValue = weightedTargetSimple()
+				varValue = os.Getenv("TARGET_24CH_ROOT")
+				if varValue == "" {
+					varValue = targetPicker.GetNext()
+				}
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {
@@ -280,82 +295,15 @@ func fromDownSample(m string, headers map[string]string) int {
 	envVars := map[string]string{
 		"SINK_JOB": "fits-redist",
 	}
+	common.AddTimeStamp("before-send-messages")
 	code := task.Add(m, hs, envVars)
 	return code
 }
 
-/*
-func weightedTarget() string {
-	jsonFile := fmt.Sprintf("/%s-target.json", os.Getenv("CLUSTER"))
-	data, _ := os.ReadFile(jsonFile)
-	m := map[string]float64{}
-	json.Unmarshal(data, &m)
-
-	var total, maxWeight float64
-	var maxKey string
-	for _, w := range m {
-		total += w
-	}
-
-	r := rand.Float64() * total
-	for k, w := range m {
-		if w > maxWeight {
-			maxWeight = w
-			maxKey = k
-		}
-		if r < w {
-			return k
-		}
-		r -= w
-	}
-
-	// fallback: 返回权重最大项
-	return maxKey
-}
-*/
-// 包级变量
-/*
-var (
-	theoryPercent map[string]float64
-	historyCounts map[string]int
-	totalCount    int
-)
-
-func init() {
-	jsonFile := fmt.Sprintf("/%s-target.json", os.Getenv("CLUSTER"))
-	data, _ := os.ReadFile(jsonFile)
-	weights := map[string]float64{}
-	json.Unmarshal(data, &weights)
-
-	theoryPercent = make(map[string]float64)
-	historyCounts = make(map[string]int)
-	totalWeight := 0.0
-	for _, w := range weights {
-		totalWeight += w
-	}
-	for key, w := range weights {
-		theoryPercent[key] = w / totalWeight
-		historyCounts[key] = 0
-	}
-}
-
-func weightedTargetSimple() string {
-	var firstKey string
-	for key := range theoryPercent {
-		firstKey = key
-		if totalCount == 0 || float64(historyCounts[key])/float64(totalCount) < theoryPercent[key] {
-			historyCounts[key]++
-			totalCount++
-			return key
-		}
-	}
-	historyCounts[firstKey]++
-	totalCount++
-	return firstKey
-}
-*/
-
 func fromFitsRedist(m string, headers map[string]string) int {
+	defer func() {
+		common.AddTimeStamp("leave-fromFitsRedist()")
+	}()
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	ds, p0, p1, t0, t1, _, err := message.ParseParts(m)
 	if err != nil {
@@ -414,6 +362,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		messages = append(messages, m)
 	}
 
+	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_JOB":        "fits-merge",
 		"TIMEOUT_SECONDS": "600",
@@ -422,6 +371,9 @@ func fromFitsRedist(m string, headers map[string]string) int {
 }
 
 func fromFitsMerge(m string, headers map[string]string) int {
+	defer func() {
+		common.AddTimeStamp("leave-fromFitsMerge()")
+	}()
 	// 1257010784/p00001/t1257010786_1257010965
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
 	ss := re.FindStringSubmatch(m)
@@ -448,6 +400,7 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		return task.Add(msg, headers, envVars)
 	}
 
+	common.AddTimeStamp("before-send-messages")
 	return doCrossAppTaskAdd(ss[1])
 }
 

@@ -32,10 +32,38 @@ scalebox app create
 
 ## p419集群
 
-- 生产运行，source_url通过p419-soruce.json来指定
+- 1440指向
+```sh
+  START_MESSAGE=1255803168/p05161_06600 \
+  PRESTO_APP_ID=102 \
+  POINTING_FIRST=yes \
+  PRESTO_NODES=a-.+ \
+  scalebox app create -e p419.env
+```
+
+- 240指向测试
+```sh
+  START_MESSAGE=1255803168/p05161_05400 \
+  PRESTO_APP_ID=93 \
+  TIME_STEP=160 \
+  PULL_UNPACK_DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa/dat:90 \
+  TARGET_24CH_ROOT=astro@10.100.1.30:10022/data1/mydata \
+  NODES=d.+ \
+  scalebox app create -e p419.env
+```
+
+- 4800指向
+```sh
+  START_MESSAGE=1255803168/p04921_09320 \
+  PRESTO_APP_ID=68 \
+  NODES="c-1[23]" \
+  scalebox app create -e p419.env
+```
+
+- 生产测试，source_url通过p419-soruce.json来指定
 ```sh
   START_MESSAGE=1255803168/p04681_04920 \
-  PRESTO_APP_ID=44 \
+  PRESTO_APP_ID=61 \
   scalebox app create -e p419.env
 ```
 
@@ -48,29 +76,8 @@ scalebox app create
 ```
 
 ```sh
-  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
-  TIME_STEP=80 \
-  NODES="n-00[01][0-9]|n-002[0-3]" \
-  scalebox app create -e p419.env
-```
-
-
-```sh
   START_MESSAGE=1255803168/p03121_03600/t1255805770_1255807967 \
   NODES="n-00[01][0-9]|n-002[0-3]" \
-  scalebox app create -e p419.env
-```
-- 多组测试
-```sh
-  START_MESSAGE=1255803168/p03601_04080 \
-  NODES="n-00[0-6][0-9]|n-007[01]" \
-  scalebox app create -e p419.env
-```
-
-```sh
-  START_MESSAGE=1255803168/p03601_04080 \
-  TIME_STEP=80 \
-  NODES="n-00[0-3][0-9]|n-004[0-7]" \
   scalebox app create -e p419.env
 ```
 
