@@ -170,6 +170,8 @@ jobs:
       - INTERLEAVED_DAT=yes
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=60m
+      # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
+      - SOURCE_TAR_ROOT=
       # 波束合成的指向优先，用于全数据集合成
       - POINTING_FIRST=${POINTING_FIRST}
       # 隐含着 POINTING_FIRST=yes

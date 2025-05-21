@@ -2,7 +2,20 @@ FROM golang:1.24.1
 
 LABEL maintainer="kaichao"
 
-ARG GOPROXY=https://goproxy.io
+ARG http_proxy
+ARG https_proxy
+ARG GOPROXY=direct
+
+ENV HTTP_PROXY=$http_proxy
+ENV HTTPS_PROXY=$https_proxy
+ENV GOPROXY=$GOPROXY
+
+# ARG GOPROXY=https://goproxy.io
+RUN \
+    apt update \
+    && apt-get install -y git \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /go/src
 COPY go.* /go/src/
@@ -22,8 +35,11 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM debian:12-slim
 
+ENV HTTP_PROXY=
+ENV HTTPS_PROXY=
+
 # install the newest version, rsync 3.2.7, openssh 9.3p1
-RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 
+RUN echo "deb https://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 
     && apt-get update \
     && apt-get install -y openssh-client zstd \
     && apt-get clean autoclean \

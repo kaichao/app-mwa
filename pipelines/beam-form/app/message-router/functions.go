@@ -50,7 +50,14 @@ func defaultFunc(msg string, headers map[string]string) int {
 	messages := []string{}
 	for _, m := range message.GetMessagesForPullUnpack(msg, true) {
 		parts := strings.SplitN(m, ",", 2)
-		hs := common.SetJSONAttribute(parts[1], "source_url", sourcePicker.GetNext())
+		url := os.Getenv("SOURCE_TAR_ROOT")
+		if url == "" {
+			url = sourcePicker.GetNext()
+		}
+
+		fmt.Printf("message=%s,source_url=%s\n", m, url)
+
+		hs := common.SetJSONAttribute(parts[1], "source_url", url)
 		// 交叉分布、首组限速
 		messages = append(messages, fmt.Sprintf(`%s,%s`, parts[0], hs))
 	}

@@ -41,14 +41,26 @@ scalebox app create
   scalebox app create -e p419.env
 ```
 
-- 240指向测试
+- 480指向
 ```sh
-  START_MESSAGE=1255803168/p05161_05400 \
-  PRESTO_APP_ID=93 \
+  START_MESSAGE=1255803168/p05161_05640 \
+  PRESTO_APP_ID=102 \
+  NODES=d-.+ \
   TIME_STEP=160 \
   PULL_UNPACK_DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa/dat:90 \
+  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
+  scalebox app create -e p419.env
+```
+
+- 240指向测试
+```sh
+  START_MESSAGE=1267459328/p00001_00240 \
+  PRESTO_APP_ID=102 \
+  TIME_STEP=160 \
+  PULL_UNPACK_DIR_LIMIT_GB=/tmp/scalebox/mydata/mwa/dat:90 \
+  SOURCE_URL=astro@10.100.1.30:10022/data2/mydata \
   TARGET_24CH_ROOT=astro@10.100.1.30:10022/data1/mydata \
-  NODES=d.+ \
+  NODES=d-00.+ \
   scalebox app create -e p419.env
 ```
 
