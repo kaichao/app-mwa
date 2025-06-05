@@ -125,7 +125,7 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 			obsID, ps[k], ps[k+1], t0, t1, ch)
 		// 加上排序标签
 		if os.Getenv("POINTING_FIRST") == "yes" {
-			body = fmt.Sprintf(`%s,{"sorted_tag":"p%05d:t%d"}`,
+			body = fmt.Sprintf(`%s,{"sort_tag":"p%05d:t%d"}`,
 				body, ps[k], t0)
 		}
 		messages = append(messages, body)
@@ -174,7 +174,8 @@ func fromBeamMake(m string, headers map[string]string) int {
 		}
 	}
 	if ps0 == "" {
-		logrus.Errorln("dataset not found in variable datasets")
+		logrus.Errorf("m=%s,datasets=%s, dataset not found in variable datasets\n", m, val)
+
 		return 2
 	}
 	// 用obsID，但可能有边界对齐问题？
@@ -344,6 +345,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		}
 
 		headers := ""
+		// BUG: 节点数量少，补充数据时，pointing计数不对齐，toHost不准确
 		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
 			// IPv4地址（类型1）， 设置"to_ip"头

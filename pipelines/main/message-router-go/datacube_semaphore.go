@@ -159,7 +159,7 @@ func getSemaFits24chReadyName(cube *datacube.DataCube, p, t int) string {
 }
 
 // 三维datacube中，给定顺序号，用于pull-unpack/cluster-dist运行过程中的的排序
-func getSortedTagForDataPull(cube *datacube.DataCube, time int, ch int) string {
+func getSortTagForDataPull(cube *datacube.DataCube, time int, ch int) string {
 	batchIndex := getSemaPointingBatchIndex(cube, time, ch)
 	// p := cube.getPointingBatchIndex(pointing)
 	ch -= cube.ChannelBegin
@@ -174,7 +174,7 @@ func getSortedTagForDataPull(cube *datacube.DataCube, time int, ch int) string {
 }
 
 // 三维datacube中，给定顺序号，用于beam-form运行过程中的的排序
-func getSortedTagForBeamForm(cube *datacube.DataCube, time int, p int, ch int) string {
+func getSortTagForBeamForm(cube *datacube.DataCube, time int, p int, ch int) string {
 	batchIndex := getSemaPointingBatchIndex(cube, time, ch)
 	ch -= cube.ChannelBegin
 	tm := (time - cube.TimeBegin) / cube.TimeUnit

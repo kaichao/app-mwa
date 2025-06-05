@@ -40,7 +40,7 @@
 
 - 输出消息：1257010784/p00001_00960/t1257012766_1257012965
 - task分发排序(定制排序)
-  - sorted_tag: {pointing}
+  - sort_tag: {pointing}
   - group_regex: ^([0-9]+)/p([0-9]+)_[0-9]+/t([0-9]+)
   - group_index: 1,2,3
 - 流控参数：
@@ -60,7 +60,7 @@
 - 输出目录：
 
 - task分发排序(定制排序)
-  - sorted_tag: {pointing}
+  - sort_tag: {pointing}
   - group_regex: ^([0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+)
   - group_index: 1,2,3
 - 流控参数：

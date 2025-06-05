@@ -109,7 +109,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     # 输出消息 
     echo $dest_file_r >> ${WORK_DIR}/task-body.txt
     
-    # scalebox task add --headers '{"sorted_tag":"1111"}' $dest_file_r; code=$?
+    # scalebox task add --headers '{"sort_tag":"1111"}' $dest_file_r; code=$?
     # [[ $code -ne 0 ]] && echo "[ERROR] send-message, msg-body:$dest_file_r, error_code:$code" >&2 && exit $code
 
     # 统计输出文件的字节数

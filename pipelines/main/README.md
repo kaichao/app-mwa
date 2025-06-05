@@ -91,7 +91,7 @@ ${DIR_24CH}
 
 ## message-router的消息排序
 
-message-router消息多，容易被堵塞。若没有有效排序，会导致流式处理不顺畅。通过设置sorted_tag，使得消息路由按照一定优先级处理消息。
+message-router消息多，容易被堵塞。若没有有效排序，会导致流式处理不顺畅。通过设置sort_tag，使得消息路由按照一定优先级处理消息。
 
 按以下优先顺序设置：
 1. local-tar-pull: 对unpack消息设置最高优先级（'0000'），unpack消息数量较少，尽快从内存cache中将原始数据解包到本地SSD；

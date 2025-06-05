@@ -118,8 +118,8 @@ func toPullUnpack(message string, headers map[string]string) int {
 	// modified := strings.Replace(prefix, "/", ":/", 1)
 	// h["source_url"] = modified
 
-	// 通过headers中的sorted_tag，设定显式排序
-	headers["sorted_tag"] = getSortedTagForDataPull(cube, t0, ch)
+	// 通过headers中的sort_tag，设定显式排序
+	headers["sort_tag"] = getSortTagForDataPull(cube, t0, ch)
 
 	// add batch-index to message body.
 	// batchIndex := getSemaPointingBatchIndex(cube, t0, ch)
@@ -193,10 +193,10 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		p1 := arr[i+1]
 
 		m := fmt.Sprintf("%s/%d_%d/%s/%05d_%05d", ss[1], tb, te, ss[3], p0, p1)
-		// 通过headers中的sorted_tag，设定显式排序
-		line := fmt.Sprintf(`%s,{"sorted_tag":"%s"}`, m, getSortedTagForBeamForm(cube, tb, p0, ch))
+		// 通过headers中的sort_tag，设定显式排序
+		line := fmt.Sprintf(`%s,{"sort_tag":"%s"}`, m, getSortTagForBeamForm(cube, tb, p0, ch))
 		common.AppendToFile(fileName, line)
-		// h := map[string]string{"sorted_tag": getSortedTagForBeamForm(cube, tb, p0, ch)}
+		// h := map[string]string{"sort_tag": getSortTagForBeamForm(cube, tb, p0, ch)}
 		// ret := sendJobRefMessage(m, h, "beam-maker")
 		// if ret != 0 {
 		// 	return ret

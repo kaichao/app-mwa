@@ -63,7 +63,7 @@ for f in *.fits; do
     [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f "  >> ${WORK_DIR}/custom-out.txt && exit $code
 
     # rename file to normalized
-    mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f} && zstd --long -T8 --rm ${dir_1chx}/${f}
+    mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f} && zstd --long -T2 --rm ${dir_1chx}/${f}
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
 

@@ -101,7 +101,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
 
     # BUG：压缩参数开启会导致post_check检查出错 ！
     if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
-        zstd -T8 --rm ${orig_file}
+        zstd -T4 --rm ${orig_file}
         orig_file="${orig_file}.zst"
         dest_file="${dest_file}.zst"
     fi

@@ -15,7 +15,7 @@ jobs:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
       dir_free_gb: /tmp/scalebox/mydata/mwa/dat:15
-      dir_limit_gb: ${PULL_UNPACK_DIR_LIMIT_GB}
+      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
@@ -39,11 +39,11 @@ jobs:
       sleep_interval_seconds: 60
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
-      dir_free_gb: ${BEAM_MAKE_DIR_FREE_GB}
+      dir_free_gb: /dev/shm/scalebox/mydata:${BEAM_MAKE_FREE_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      task_progress_group_diff: 8
+      task_progress_group_diff: 6
       key_group_regex: ^([0-9]+)
       retry_rules: "['*','134:9','139:9']"
       max_tasks_per_minute: 3
@@ -63,7 +63,7 @@ jobs:
     command: ${COMMAND_TEMPLATE}
     arguments:
       code_path: ${CODE_BASE}/down-sample/code
-      dir_free_gb: ${DOWN_SAMPLE_DIR_FREE_GB}
+      # dir_free_gb: /dev/shm/scalebox/mydata/mwa:${DOWN_SAMPLE_FREE_GB}
       # 20-min
       max_sleep_count: 200
       # 避免工作目录放在 /tmp下，被定期删除

@@ -66,9 +66,9 @@ func fromBeamMaker(message string, headers map[string]string) int {
 	AddTimeStamp("after-reset-sema-dat-ready")
 
 	//	reset local-tar-pull消息（以TimeUnit为单位）
-	sortedTag := getSortedTagForDataPull(cube, tb, ch)
+	sortTag := getSortTagForDataPull(cube, tb, ch)
 
-	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortedTag:%s\n", tb, ch, sortedTag)
+	fmt.Printf("In fromBeamMaker(),tb=%d,ch=%d,sortTag:%s\n", tb, ch, sortTag)
 
 	tarr := cube.GetTimeUnitsWithinInterval(tb, te)
 	for i := 0; i < len(tarr); i += 2 {
