@@ -8,10 +8,7 @@ build:
 dist-p419: build
 	@ docker save $(IMAGE_NAME) | zstdmt | pv | ssh p419 'zstd -d | docker load'
 
-dist-dcu: build
-	@ docker save $(IMAGE_NAME) | zstdmt | pv | ssh dcu 'zstd -d | docker load'
-
-dist-dcu-inner:
+dist-dcu:
 	@ date
 	docker save $(IMAGE_NAME) | zstd -T4 > /raid0/tmp/my.img.zst
 	pdsh -w node[1-4] -l root 'zstd -dc /raid0/tmp/my.img.zst | docker load' | dshbak -c

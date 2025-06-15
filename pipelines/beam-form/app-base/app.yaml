@@ -23,7 +23,7 @@ jobs:
       - POINTING_FILE=
       # - POINTING_FILE=pointing-250313.txt
       - POINTING_RANGE=${POINTING_RANGE}
-    hosts:
+    slots:
       - ${NODES}:3
     sink_jobs:
       - down-sample
@@ -43,7 +43,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
-    hosts:
+    slots:
       - ${NODES}
 
   fits-merge:
@@ -59,7 +59,7 @@ jobs:
       - INPUT_ROOT=
       - OUTPUT_ROOT=${OUTPUT_ROOT_24CH}
       - KEEP_SOURCE_FILE=no
-    hosts:
+    slots:
       - ${NODES}
 
   mr-beam-form:
@@ -70,5 +70,5 @@ jobs:
     environments:
       - TIME_STEP=${TIME_STEP}
       - WITH_POINTING_PATH=no
-    hosts:
+    slots:
       - h0:1
