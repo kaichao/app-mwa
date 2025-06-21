@@ -6,4 +6,4 @@ tmp/
 cal/**
 !cal/
 !cal/**/
-!cal/**/pointings.txt
+!cal/**/pointings*.txt

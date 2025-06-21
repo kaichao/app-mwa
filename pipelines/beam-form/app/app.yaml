@@ -3,6 +3,7 @@ cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: mr-beam-form
+  slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
 
 jobs:
   wait-queue:
@@ -56,6 +57,7 @@ jobs:
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
       - ZSTD_TARGET_FILE=no
+      - POINTING_FILE=${POINTING_FILE}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
 

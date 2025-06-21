@@ -12,13 +12,13 @@ flowchart TD
   end
 ```
 
-## 一、数据准备
+## 一、数据拷贝
 
 ### p419集群
 
 在scalebox/dockerfiles/files/app-dir-copy目录下
 
-#### 预拷贝文件到共享存储
+#### 预拷贝tar文件到共享存储
 - 全数据集拷贝
 
 ```sh
@@ -39,7 +39,20 @@ find 1267459328 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/f
 ```
 
 
+#### 结果文件拷贝
+```sh
+
+export SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch
+export TARGET_URL=/data1/mydata/mwa/24ch
+export 
+ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1255803168-250605 -type f' | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
+
+```
+
+
 ### dcu集群
+
+
 
 ## 二、波束合成计算
 
@@ -72,21 +85,32 @@ find 1267459328 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/f
 
 ### p419集群流式并行
 
-START_MESSAGE=1267459328/p01441_02400/t1267459330_1267464129
+```sh
+START_MESSAGE=1255803168/p00001_00960 \
+  PRESTO_APP_ID=102 \
+  POINTING_FILE=pointings-250618.txt \
+  NODES=d-0[01].+ \
+  PRESTO_NODES= \
+  TIME_STEP=160 \
+  PULL_UNPACK_LIMIT_GB=90 \
+  BEAM_MAKE_FREE_GB='{~n*5+11~}' \
+  SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work2/cstu0036/mydata \
+  scalebox app create -e p419.env
+```
 
-以下出错：
-START_MESSAGE=1267459328/p02401_03360/t1267459330_1267464129 \
+START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129
 
 ```sh
-START_MESSAGE=1267459328/p02401_03360/t1267459330_1267464129 \
+START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129 \
   PRESTO_APP_ID=102 \
-  NODES=d-0[0].+ \
+  NODES=d-0[01].+ \
   PRESTO_NODES= \
-  TIME_STEP=200 \
-  PULL_UNPACK_LIMIT_GB=120 \
-  BEAM_MAKE_FREE_GB='{~n*7+14~}' \
+  TIME_STEP=160 \
+  PULL_UNPACK_LIMIT_GB=90 \
+  BEAM_MAKE_FREE_GB='{~n*5+11~}' \
   SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work2/cstu0036/mydata \
   scalebox app create -e p419.env
 ```
 
@@ -123,7 +147,7 @@ START_MESSAGE=1267459328/p02401_03360/t1267459330_1267464129 \
 ```sh
   START_MESSAGE=1267459328/p00001_00096/t1267459330_1267459409 \
   TIME_STEP=80 \
-  NODES=n-0[023] \
+  NODES=n-0[012] \
   NUM_BEAM_MAKE=2 \
   TARGET_JUMP=root@10.200.1.100 \
   scalebox app create
