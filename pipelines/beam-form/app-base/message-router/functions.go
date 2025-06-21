@@ -1,8 +1,7 @@
 package main
 
 import (
-	"beamform/internal/pkg/message"
-	// "beamform/internal/pkg/semaphore"
+	"beamform/internal/message"
 	"fmt"
 	"regexp"
 	"strconv"

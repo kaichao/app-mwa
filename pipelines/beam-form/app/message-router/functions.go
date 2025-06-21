@@ -1,10 +1,10 @@
 package main
 
 import (
-	"beamform/internal/pkg/datacube"
-	"beamform/internal/pkg/message"
-	"beamform/internal/pkg/node"
-	"beamform/internal/pkg/queue"
+	"beamform/internal/datacube"
+	"beamform/internal/message"
+	"beamform/internal/node"
+	"beamform/internal/queue"
 	"fmt"
 	"net"
 	"os"

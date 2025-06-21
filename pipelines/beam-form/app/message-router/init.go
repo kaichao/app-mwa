@@ -1,8 +1,8 @@
 package main
 
 import (
-	"beamform/internal/pkg/cache"
-	"beamform/internal/pkg/picker"
+	"beamform/internal/cache"
+	"beamform/internal/picker"
 	"os"
 	"strconv"
 )

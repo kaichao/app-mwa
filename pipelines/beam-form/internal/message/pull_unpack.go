@@ -1,8 +1,8 @@
 package message
 
 import (
-	"beamform/internal/pkg/datacube"
-	"beamform/internal/pkg/node"
+	"beamform/internal/datacube"
+	"beamform/internal/node"
 	"fmt"
 	"os"
 

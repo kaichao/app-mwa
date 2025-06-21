@@ -1,7 +1,7 @@
 package main
 
 import (
-	"beamform/internal/pkg/message"
+	"beamform/internal/message"
 	"encoding/json"
 	"fmt"
 	"os"

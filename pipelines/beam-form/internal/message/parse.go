@@ -1,7 +1,7 @@
 package message
 
 import (
-	"beamform/internal/pkg/datacube"
+	"beamform/internal/datacube"
 	"errors"
 	"regexp"
 	"strconv"

@@ -1,7 +1,7 @@
 package node
 
 import (
-	"beamform/internal/pkg/datacube"
+	"beamform/internal/datacube"
 )
 
 // GetNodeNameByTimeChannel ...

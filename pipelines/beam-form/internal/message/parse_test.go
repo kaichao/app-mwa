@@ -1,7 +1,7 @@
 package message_test
 
 import (
-	"beamform/internal/pkg/message"
+	"beamform/internal/message"
 	"os"
 	"testing"
 )

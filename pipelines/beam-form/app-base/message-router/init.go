@@ -1,7 +1,7 @@
 package main
 
 import (
-	"beamform/internal/pkg/cache"
+	"beamform/internal/cache"
 	"os"
 	"strconv"
 )
