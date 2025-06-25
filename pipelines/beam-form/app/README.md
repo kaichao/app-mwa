@@ -29,12 +29,12 @@ scalebox app create
 
 ```sh
 export SOURCE_URL=/data2/mydata/mwa/tar
-export TARGET_URL=cstu0036@10.100.1.104:65010/work2/cstu0036/mydata/mwa/tar
+export TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar
 
 scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
 
 cd /data2/mydata/mwa/tar
-find 1267459328 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
+find 1265983624 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
 
 ```
 
@@ -42,10 +42,11 @@ find 1267459328 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/f
 #### 结果文件拷贝
 ```sh
 
-export SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch
+/work2/cstu0036/mydata/mwa/24ch/1255803168-250620 
+
+export SOURCE_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/24ch
 export TARGET_URL=/data1/mydata/mwa/24ch
-export 
-ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1255803168-250605 -type f' | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
+ssh login1 'cd /work2/cstu0036/mydata/mwa/24ch && find 1255803168-250620 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
 
 ```
 
@@ -102,18 +103,17 @@ START_MESSAGE=1255803168/p00001_00960 \
 START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129
 
 ```sh
-START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129 \
+START_MESSAGE=1267459328/p06241_07680/t1267462850_1267464129 \
   PRESTO_APP_ID=102 \
-  NODES=d-0[01].+ \
+  NODES=d-0[1].+ \
   PRESTO_NODES= \
   TIME_STEP=160 \
   PULL_UNPACK_LIMIT_GB=90 \
   BEAM_MAKE_FREE_GB='{~n*5+11~}' \
   SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work2/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
   scalebox app create -e p419.env
 ```
-
 
 - 单次200秒数据处理
 
@@ -151,6 +151,16 @@ START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129 \
   NUM_BEAM_MAKE=2 \
   TARGET_JUMP=root@10.200.1.100 \
   scalebox app create
+```
+
+- singularity
+```sh
+  START_MESSAGE=1267459328/p00001_00096/t1267459330_1267459409 \
+  TIME_STEP=80 \
+  NODES=n-0[012] \
+  NUM_BEAM_MAKE=2 \
+  TARGET_JUMP=root@10.200.1.100 \
+  scalebox app create -e dcu.env
 ```
 
 

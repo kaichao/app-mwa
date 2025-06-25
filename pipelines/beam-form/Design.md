@@ -3,14 +3,19 @@
 
 ## 一、功能模块表
 
-- message-router
-- wait-queue：实现group_vtasks的流控模块，每节点组的最大并行数作为流控机制，按顺序释放消息，管理后续所有HOST-BOUND模块。
-- pull-unpack：按通道，将远端存储/本地共享存储将数据拉取到计算节点的本地存储，并解包。（标准模块+定制脚本）
-- beam-make：按通道的波束合成。
-- down-sample：波束合成结果fits文件做1/4下采样，降低数据量
-- fits-redist：下采样后fits文件，按pointing再分发，以便按指向合并；
-- fits-merge：按Pointing归并，合并结果：1.存放到共享存储；2.存放到本地（供presto-search流水线拉取；通知presto-search流水线来拉取）
-- fits-push：按需，将结果数据拷贝到外部共享存储
+| 模块名      | 说明                                                          |
+| ---------- | ------------------------------------------------------------ |
+| tar-load   | tar文件从外部存储加载到HPC存储, 1257010784/p00001_00960/t1257012766_1257012965/ch109     |
+| wait-queue | 实现group_vtasks流控，限制每节点组的最大vtask数量，按顺序释放消息，管理后续所有HOST-BOUND模块 |
+| pull-unpack | 1. 将远端存储/HPC存储的数据拉取到计算节点本地并解包。2. I/O节点将HPC存储的数据解包（标准模块+定制脚本） |
+| beam-make   | 按通道的波束合成 |
+| down-sample  | 波束合成结果fits文件做1/4下采样，降低数据量 |
+| fits-redist  | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
+| fits-merge  | 按Pointing归并，合并结果：1.存放到HPC存储；2.存放到本地（供presto-search流水线拉取；通知presto-search流水线来拉取）|
+| fits-save  | 按需，将结果数据拷贝到HPC共享存储 |
+| fits-unload | 按需，将结果数据拷贝到外部共享存储 |
+| message-router  |  |
+
 
 ## 二、模块设计
 

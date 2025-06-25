@@ -14,19 +14,23 @@ dist-dcu:
 	pdsh -w node[1-4] -l root 'zstd -dc /raid0/tmp/my.img.zst | docker load' | dshbak -c
 	@ date
 
+
 build-singularity:
 	mkdir -p ~/singularity/app-mwa/
 	@date
-	singularity build -F ~/singularity/app-mwa/down-sampler.sif docker-daemon://$(IMAGE_NAME)
+	docker save $(IMAGE_NAME) -o down-sampler.tar
+	singularity build -F ~/singularity/app-mwa/down-sampler.sif docker-archive://down-sampler.tar
+	rm -f down-sampler.tar
+	# singularity build -F ~/singularity/app-mwa/down-sampler.sif docker-daemon://$(IMAGE_NAME)
 	@date
 
-dist-singularity-p419: build-singularity
-	ssh login1 mkdir -p singularity/app-mwa/
-	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
+# dist-singularity-p419: build-singularity
+# 	ssh login1 mkdir -p singularity/app-mwa/
+# 	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
 
-dist-singularity-dcu: build-singularity
-	mkdir -p $(SINGULARITY_DIR)/app-mwa/
-	mv  ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
+# dist-singularity-dcu: build-singularity
+# 	mkdir -p $(SINGULARITY_DIR)/app-mwa/
+# 	mv  ~/singularity/app-mwa/down-sampler.sif $(SINGULARITY_DIR)/app-mwa/
 
 clean:
 	docker rmi $(IMAGE_NAME)

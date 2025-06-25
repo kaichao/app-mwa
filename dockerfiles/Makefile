@@ -41,35 +41,45 @@ clean:
 	done
 
 build-images:
-	# make -C $(SCALEBOX_DIR)/scalebox/dockerfiles/files/dir-list
-	# docker-dist p419 hub.cstcloud.cn/scalebox/dir-listx
-	# make -C $(SCALEBOX_DIR)/dockerfiles/files/file-copy
-	# make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/cluster-head dist
-	# make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/node-agent dist
+	make -C $(SCALEBOX_DIR)/dockerfiles/files/file-copy
 	make -C mwa-vcstools
 	make -C down-sampler
+	# make -C $(SCALEBOX_DIR)/scalebox/dockerfiles/files/dir-list
+	# make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/cluster-head dist
+	# make -C ~/WORK/workspace/scalebox-private/apps/cluster-admin/node-agent dist
+
+build-singularity-images:
+	make -C $(SCALEBOX_DIR)/dockerfiles/files/file-copy build-singularity
+	make -C mwa-vcstools build-singularity
+	make -C down-sampler build-singularity
 
 dist-dcu: build-images
-	make -C $(SCALEBOX_DIR)/dockerfiles/files/file-copy
 	for i in {1..4};do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
 	make -C mwa-vcstools dist-dcu
 	make -C down-sampler dist-dcu
 
+dist-singularity-dcu: build-singularity-images
+	mkdir -p /raid0/root/singularity/{scalebox,app-mwa}/
+	cp ~/singularity/scalebox/file-copy.sif /raid0/root/singularity/scalebox/
+	cp ~/singularity/app-mwa/mwa-vcstools.sif /raid0/root/singularity/app-mwa/
+	cp ~/singularity/app-mwa/down-sampler.sif /raid0/root/singularity/app-mwa/
+
+dist-singularity-p419: build-singularity-images
+	ssh login1 'mkdir -p ~/singularity/{scalebox,app-mwa}/'
+	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:singularity/app-mwa/
+	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
+	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
+	# scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
+
 dist-p419: build-images
 	docker-dist p419 hub.cstcloud.cn/scalebox/file-copy
-	make -C mwa-vcstools dist-p419
-	make -C down-sampler dist-p419
-
-dist-singularity-p419:
-	singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
-	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
-	# singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
-	# scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
-	make -C mwa-vcstools dist-singularity-p419
-	make -C down-sampler dist-singularity-p419
+	docker-dist p419 app-mwa/mwa-vcstools:rocm-4.0.1
+	docker-dist p419 app-mwa/down-sampler:latest
 
 # In MacOS/h12
 dist-all-p419: dist-p419
-	ssh p419 'make -C ~/app-mwa/dockerfiles dist-singularity-p419'
+	ssh p419 'make -C ~/app-mwa/dockerfiles dist-singularity-p419 HOST=p419'
 
 # make dist-all-p419 HOST=h12
+
+

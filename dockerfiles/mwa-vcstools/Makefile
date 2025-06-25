@@ -18,16 +18,19 @@ dist-dcu:
 build-singularity:
 	mkdir -p ~/singularity/app-mwa/
 	date
-	singularity build -F ~/singularity/app-mwa/mwa-vcstools.sif docker-daemon://$(IMAGE_NAME)
+	docker save $(IMAGE_NAME) -o mwa-vcstools.tar
+	singularity build -F ~/singularity/app-mwa/mwa-vcstools.sif docker-archive://mwa-vcstools.tar
+	rm -f mwa-vcstools.tar
+	# singularity build -F ~/singularity/app-mwa/mwa-vcstools.sif docker-daemon://$(IMAGE_NAME)
 	date
 
-dist-singularity-p419: build-singularity
-	ssh login1 mkdir -p singularity/app-mwa/
-	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:singularity/app-mwa/
+# dist-singularity-p419: build-singularity
+# 	ssh login1 mkdir -p singularity/app-mwa/
+# 	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:singularity/app-mwa/
 
-dist-singularity-dcu: build-singularity
-	mkdir -p $(SINGULARITY_DIR)/app-mwa/
-	mv  ~/singularity/app-mwa/mwa-vcstools.sif $(SINGULARITY_DIR)/app-mwa/
+# dist-singularity-dcu: build-singularity
+# 	mkdir -p $(SINGULARITY_DIR)/app-mwa/
+# 	mv  ~/singularity/app-mwa/mwa-vcstools.sif $(SINGULARITY_DIR)/app-mwa/
 
 clean:
 	docker rmi $(IMAGE_NAME)

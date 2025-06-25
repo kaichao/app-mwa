@@ -1,7 +1,7 @@
 package datacube_test
 
 import (
-	"beamform/internal/pkg/datacube"
+	"beamform/internal/datacube"
 	"os"
 	"testing"
 )

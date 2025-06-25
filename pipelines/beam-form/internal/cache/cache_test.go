@@ -1,7 +1,7 @@
 package cache_test
 
 import (
-	"beamform/internal/pkg/cache"
+	"beamform/internal/cache"
 	"fmt"
 	"os"
 	"testing"

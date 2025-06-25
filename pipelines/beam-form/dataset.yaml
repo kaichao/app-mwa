@@ -1,6 +1,35 @@
 datasets:
+  1302106648:
+    # t: 1265983626 .. 1265988429, 4804
+    # pointings.txt里，1-107:费米源，108-503:已知脉冲星，504-9280:盲搜格点
+
+    # channel dimension
+    channelBegin: 109
+
+    # time dimenstion
+    timeBegin: 
+    timeEnd: 
+
+    # pointing dimension
+    pointingEnd: 9280
+
+  1265983624:
+    # t: 1265983626 .. 1265988429, 4804
+
+    # channel dimension
+    channelBegin: 109
+
+    # time dimenstion
+    timeBegin: 1265983626
+    timeEnd: 1265988429
+
+    # pointing dimension
+    pointingEnd: 9016
+
   1267459328:
-    # 1267459330 ~ 1267464129, 4800
+    # t: 1267459330 .. 1267464129, 4800
+    # p: 1 .. 9016
+    # finished: ?
 
     # channel dimension
     channelBegin: 109
@@ -9,32 +38,32 @@ datasets:
     # time dimenstion
     timeBegin: 1267459330
     timeEnd: 1267464129
-    # numOfSeconds: 4798
     # timeUnit: 40
     # timeStep: 200
 
     # pointing dimension
-    # pointingBegin: 1
     pointingEnd: 9016
     # pointingStep: 24
 
   1255803168:
-    # t: 1255803170 ~ 1255807967, 4798
-    # p: 10093
+    # t: 1255803170 .. 1255807967, 4798
+    # p: 1 .. 10093
+    # finished: 250624
 
     # channel dimension
     channelBegin: 109
 
     # time dimenstion
     timeBegin: 1255803170
-    # numOfSeconds: 4798
     timeEnd: 1255807967
 
     # pointing dimension
     pointingEnd: 10093
 
   1257010784:
-    # 1257010786 ~ 1257015583, 4798, done
+    # t: 1257010786 ~ 1257015583, 4798
+    # p: 1 .. 12985
+    # finished
 
     # channel dimension
     channelBegin: 109
@@ -43,7 +72,6 @@ datasets:
     # time dimenstion
     timeBegin: 1257010786
     timeEnd: 1257015583
-    # numOfSeconds: 4798
     # timeUnit: 40
     # timeStep: 200
 
@@ -53,7 +81,9 @@ datasets:
     # pointingStep: 24
 
   1301240224:
-    # 1301240225 ~ 1301245022, 4798
+    # t: 1301240225 .. 1301245022, 4798
+    # finished
+
     # channel dimension
     channelBegin: 109
 
@@ -65,21 +95,22 @@ datasets:
     pointingEnd: 10060
 
   1266932744:
-    # t: 1266932746 ~ 1266937543, 4798
-
+    # t: 1266932746 .. 1266937543, 4798
+    # finished
+  
     # channel dimension
     channelBegin: 109
 
     # time dimenstion
     timeBegin: 1266932746
-    # numOfSeconds: 4798
     timeEnd: 1266937543
 
     # pointing dimension
     pointingEnd: 11582
 
   1266329600:
-    # 1266329602 ~ 1266334399, 4798, done
+    # t: 1266329602 ~ 1266334399, 4798
+    # finished
     # channel dimension
     channelBegin: 109
 
@@ -91,7 +122,9 @@ datasets:
     pointingEnd: 9740
 
   1257617424:
-    # 1257617426 ~ 1257622223, 4798
+    # t: 1257617426 ~ 1257622223, 4798
+    # p: 1 .. 8798
+    # finished
 
     # channel dimension
     channelBegin: 109

@@ -1,7 +1,7 @@
 package queue_test
 
 import (
-	"beamform/internal/pkg/queue"
+	"beamform/internal/queue"
 	"fmt"
 	"os"
 	"testing"
