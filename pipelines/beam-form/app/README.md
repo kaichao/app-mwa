@@ -3,7 +3,7 @@
 ```mermaid
 flowchart TD
   subgraph beam-form
-    A([wait-queue]) --> B([pull-unpack])
+    A([cube-vtask]) --> B([pull-unpack])
     B --> C[beam-make]
     C --> D[down-sample]
     D --> E([fits-redist])
@@ -18,7 +18,7 @@ flowchart TD
 
 在scalebox/dockerfiles/files/app-dir-copy目录下
 
-#### 预拷贝tar文件到共享存储
+#### 预拷贝tar文件到HPC存储
 - 全数据集拷贝
 
 ```sh
@@ -34,7 +34,7 @@ export TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar
 scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
 
 cd /data2/mydata/mwa/tar
-find 1265983624 -type f|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
+find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
 
 ```
 
@@ -100,12 +100,17 @@ START_MESSAGE=1255803168/p00001_00960 \
   scalebox app create -e p419.env
 ```
 
-START_MESSAGE=1267459328/p04801_05760/t1267459330_1267464129
+START_MESSAGE=1267459328/p07681_09016/t1267459330_1267464129
+
+START_MESSAGE=1265983624/p00001_00720/t1265983626_1265988429 \
+
+START_MESSAGE=1302106648/p00001_00720/t1302106649_1302111446 \
 
 ```sh
-START_MESSAGE=1267459328/p06241_07680/t1267462850_1267464129 \
+START_MESSAGE=1265983624/p00001_00720/t1265983626_1265988429 \
   PRESTO_APP_ID=102 \
-  NODES=d-0[1].+ \
+  PRELOAD_MODE=none \
+  NODES=d-00.+ \
   PRESTO_NODES= \
   TIME_STEP=160 \
   PULL_UNPACK_LIMIT_GB=90 \
@@ -146,6 +151,8 @@ START_MESSAGE=1267459328/p06241_07680/t1267462850_1267464129 \
 
 ```sh
   START_MESSAGE=1267459328/p00001_00096/t1267459330_1267459409 \
+  SOURCE_TAR_ROOT=scalebox@159.226.237.136:10022/raid0/tmp \
+  PRELOAD_MODE=none \
   TIME_STEP=80 \
   NODES=n-0[012] \
   NUM_BEAM_MAKE=2 \

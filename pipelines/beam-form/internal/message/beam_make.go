@@ -2,6 +2,7 @@ package message
 
 import (
 	"beamform/internal/datacube"
+	"beamform/internal/strparse"
 	"fmt"
 	"os"
 
@@ -10,7 +11,7 @@ import (
 
 // GetMessagesForBeamMake ...
 func GetMessagesForBeamMake(m string) []string {
-	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
 	if err != nil {
 		return []string{}
 	}

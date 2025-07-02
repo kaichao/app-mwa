@@ -1,6 +1,7 @@
 package datacube
 
 import (
+	"beamform/internal/strparse"
 	"fmt"
 	"os"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 //	Pointing Demension: PointingRange, PointingBatch
 type DataCube struct {
 	DatasetID string
+	ObsID     string
 
 	ChannelBegin  int `yaml:"channelBegin"`
 	NumOfChannels int `yaml:"numOfChannels"`
@@ -43,8 +45,32 @@ var (
 	GetDataCube = GetDataCubeFromFile
 )
 
+// NewDataCube ...
+func NewDataCube(datasetID string) *DataCube {
+	obsID, p0, p1, t0, t1, _, err := strparse.ParseParts(datasetID)
+	if err != nil {
+		logrus.Errorf("New dataset, err-info:%v\n", err)
+		return nil
+	}
+	cube := GetDataCubeFromFile(obsID)
+	if p0 > 0 {
+		cube.PointingBegin = p0
+	}
+	if p1 > 0 {
+		cube.PointingEnd = p1
+	}
+	if t0 > 0 {
+		cube.TimeBegin = t0
+	}
+	if t1 > 0 {
+		cube.TimeEnd = t1
+	}
+	cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
+	return cube
+}
+
 // GetDataCubeFromFile ...
-func GetDataCubeFromFile(datasetID string) *DataCube {
+func GetDataCubeFromFile(obsID string) *DataCube {
 	// 获取当前工作目录
 	dir, err := os.Getwd()
 	if err != nil {
@@ -64,25 +90,22 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 	}
 
 	if err = yaml.Unmarshal(yamlFile, &config); err != nil {
-		logrus.Errorf("Error parsing yaml file %s, err:%v", datacubeFile, err)
+		logrus.Fatalf("Error parsing yaml file %s, err:%v", datacubeFile, err)
 	}
 
 	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?$`)
-	ss := re.FindStringSubmatch(datasetID)
+	ss := re.FindStringSubmatch(obsID)
 
 	if len(ss) == 0 {
-		logrus.Errorf("Invalid format, datasetID=%s\n", datasetID)
+		logrus.Errorf("Invalid format, obsID=%s\n", obsID)
 		return nil
 	}
-	datasetID = ss[1]
+	obsID = ss[1]
 	p0, _ := strconv.Atoi(ss[3])
 	p1, _ := strconv.Atoi(ss[4])
 
-	cube := config["datasets"][datasetID]
-	cube.DatasetID = datasetID
-	if cube.NumOfSeconds == 0 {
-		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
-	}
+	cube := config["datasets"][obsID]
+	cube.ObsID = obsID
 
 	if cube.NumOfChannels == 0 {
 		cube.NumOfChannels = 24
@@ -120,6 +143,10 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 		cube.PointingEnd = v
 	}
 
+	if cube.NumOfSeconds == 0 {
+		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
+	}
+
 	if p0 > 0 {
 		cube.PointingBegin = p0
 		cube.PointingEnd = p1
@@ -131,9 +158,9 @@ func GetDataCubeFromFile(datasetID string) *DataCube {
 // ToCubeString ...
 func (cube *DataCube) ToCubeString() string {
 	return fmt.Sprintf(`
-			cube: 
-				t0=%d,t1=%d, tstep=%d
-				p0=%d,p1=%d, pstep=%d \n
+		cube: 
+			t0=%d,t1=%d, tstep=%d
+			p0=%d,p1=%d, pstep=%d \n
 		`,
 		cube.TimeBegin, cube.TimeEnd, cube.TimeStep,
 		cube.PointingBegin, cube.PointingEnd, cube.PointingStep)

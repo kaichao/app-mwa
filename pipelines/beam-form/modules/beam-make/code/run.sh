@@ -88,6 +88,9 @@ fi
 code=$?
 [[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 
+echo "files in WORK_DIR"
+ls -l ${WORK_DIR}
+
 fits_dir=${DIR_1CH}/${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}
 # 将生成的fits文件转移到规范目录下
 declare -i i=0

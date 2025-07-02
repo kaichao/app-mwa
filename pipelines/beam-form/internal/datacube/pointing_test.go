@@ -6,8 +6,7 @@ import (
 )
 
 func TestGetPointingRanges(t *testing.T) {
-	datacube := getMyDataCube()
-	ps := datacube.GetPointingRangesByInterval(1, 960)
+	ps := cube.GetPointingRangesByInterval(1, 960)
 	fmt.Println(ps)
 	// num of ranges: 541
 	if len(ps) != 1082 {

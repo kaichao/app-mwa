@@ -16,6 +16,13 @@ var (
 	nodeIPs   []string
 )
 
+// Node ...
+type Node struct {
+	ID     int
+	Name   string
+	IPAddr string
+}
+
 func init() {
 	if IsInTest() {
 		return
@@ -42,7 +49,7 @@ func loadNodeNames() {
 	sqlText := `
 		SELECT hostname,ip_addr 
 		FROM t_host
-		WHERE cluster=$1
+		WHERE cluster=$1 AND status='ON'
 			AND hostname ~ $2
 		ORDER BY 1
 	`
@@ -59,10 +66,23 @@ func loadNodeNames() {
 		NodeNames = append(NodeNames, hostname)
 		nodeIPs = append(nodeIPs, ipAddr)
 	}
-
 	fmt.Printf("regex:%s,nodes:%v\n", nodesRegex, NodeNames)
 	// 检查 rows 是否有错误
 	if err := rows.Err(); err != nil {
 		logrus.Errorf("Query Resultset, err-info:%v\n", err)
 	}
+
+	if !isFactorOrMultipleOf24(len(NodeNames)) {
+		logrus.Errorf("node-regex=%s, the number of compute nodes is %d, which is not a multiple or a divisor of 24.\n",
+			nodesRegex, len(NodeNames))
+		os.Exit(1)
+	}
+}
+
+// isFactorOrMultipleOf24 判断 n 是否是 24 的约数或倍数
+func isFactorOrMultipleOf24(n int) bool {
+	if n == 0 {
+		return false // 0 既不是倍数也不是约数
+	}
+	return 24%n == 0 || n%24 == 0
 }

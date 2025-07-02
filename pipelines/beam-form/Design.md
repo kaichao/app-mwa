@@ -1,19 +1,35 @@
 # beam-form流水线
 
 
+```mermaid
+flowchart TD
+  subgraph cluster
+    tar-load --> pull-unpack-g
+    pull-unpack-g --> cube-vtask
+    wait-queue --> pull-unpack
+    pull-unpack --> beam-make
+    beam-make --> down-sample
+    down-sample --> fits-redist
+    fits-redist --> fits-merge
+    fits-merge --> fits24ch-save
+    fits24ch-save --> fits24ch-unload
+  end
+```
+
+
 ## 一、功能模块表
 
 | 模块名      | 说明                                                          |
 | ---------- | ------------------------------------------------------------ |
 | tar-load   | tar文件从外部存储加载到HPC存储, 1257010784/p00001_00960/t1257012766_1257012965/ch109     |
-| wait-queue | 实现group_vtasks流控，限制每节点组的最大vtask数量，按顺序释放消息，管理后续所有HOST-BOUND模块 |
-| pull-unpack | 1. 将远端存储/HPC存储的数据拉取到计算节点本地并解包。2. I/O节点将HPC存储的数据解包（标准模块+定制脚本） |
+| cube-vtask | 实现group_vtasks流控，限制每节点组的最大vtask数量，按顺序释放消息，管理后续所有HOST-BOUND模块 |
+| pull-unpack | 1. 将外部存储/HPC存储的数据拉取到计算节点本地并解包。2. I/O节点将HPC存储的数据解包（标准模块+定制脚本） |
 | beam-make   | 按通道的波束合成 |
-| down-sample  | 波束合成结果fits文件做1/4下采样，降低数据量 |
-| fits-redist  | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
+| down-sample | 波束合成结果fits文件做1/4下采样，降低数据量 |
+| fits-redist | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
 | fits-merge  | 按Pointing归并，合并结果：1.存放到HPC存储；2.存放到本地（供presto-search流水线拉取；通知presto-search流水线来拉取）|
-| fits-save  | 按需，将结果数据拷贝到HPC共享存储 |
-| fits-unload | 按需，将结果数据拷贝到外部共享存储 |
+| fits24ch-copy  | 按需，将结果数据拷贝到HPC共享存储或presto计算节点存储 |
+| fits24ch-unload | 按需，将结果数据从HPC存储拷贝到外部存储 |
 | message-router  |  |
 
 
@@ -21,13 +37,15 @@
 
 | num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
-| 1 | wait_queue | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
-| 2 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
-| 3 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
-| 4 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chy/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
-| 5 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
-| 6 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No    | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
-| 7 | fits_push | scalebox/ file-copy | Ye   | No    | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
+| 1 | tar_load | scalebox/file-copy | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
+| 2 | cube_vtask | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
+| 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
+| 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
+| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chy/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
+| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
+| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No  | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
+| 8 | fits24ch_copy | scalebox/ file-copy | Ye  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
+| 9 | fits24ch_unload | scalebox/ file-copy | Yes  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
 
 
 ### 2.1 wait-queue
@@ -94,7 +112,7 @@
 
 信号量表
 | category      | sema_name                                                  | initial value    |  comment |
-| ------------- | ---------------------------------------------------------- |  --------------- | -------- |
+| ------------- | ---------------------------------------------------------- | ---------------- | -------- |
 | tar-ready     | tar-ready:1257010784/p00001_00960/t1257010786_1257010985   |                  |          |
 | dat-ready | dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109 | tar.zst打包文件数 |          |
 | dat-done   | dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109 | 指向组处理次数     |          |

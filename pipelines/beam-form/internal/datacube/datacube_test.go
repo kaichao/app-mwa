@@ -7,7 +7,6 @@ import (
 )
 
 func TestGetDataCubeFromFile(t *testing.T) {
-	cube := datacube.GetDataCubeFromFile("1257010784")
 	fmt.Println(cube)
 }
 

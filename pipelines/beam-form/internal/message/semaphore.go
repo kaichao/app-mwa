@@ -2,6 +2,7 @@ package message
 
 import (
 	"beamform/internal/datacube"
+	"beamform/internal/strparse"
 	"fmt"
 )
 
@@ -20,7 +21,7 @@ import (
 // 环境变量：
 //   - []string: 计算出的商
 func GetSemaphores(m string) string {
-	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
 	if err != nil {
 		return ""
 	}

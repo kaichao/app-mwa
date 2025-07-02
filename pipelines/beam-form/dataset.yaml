@@ -1,21 +1,21 @@
 datasets:
   1302106648:
-    # t: 1265983626 .. 1265988429, 4804
+    # t: 1302106649 .. 1302111446, 4798
     # pointings.txt里，1-107:费米源，108-503:已知脉冲星，504-9280:盲搜格点
 
     # channel dimension
     channelBegin: 109
 
     # time dimenstion
-    timeBegin: 
-    timeEnd: 
+    timeBegin: 1302106649
+    timeEnd: 1302111446
 
     # pointing dimension
     pointingEnd: 9280
 
   1265983624:
     # t: 1265983626 .. 1265988429, 4804
-
+    # pointings.txt里，1-87:费米源，88-162:已知脉冲星，163-11502:盲搜格点
     # channel dimension
     channelBegin: 109
 
@@ -24,12 +24,12 @@ datasets:
     timeEnd: 1265988429
 
     # pointing dimension
-    pointingEnd: 9016
+    pointingEnd: 11502
 
   1267459328:
     # t: 1267459330 .. 1267464129, 4800
     # p: 1 .. 9016
-    # finished: ?
+    # finished: ?；已完成7860
 
     # channel dimension
     channelBegin: 109

@@ -47,12 +47,15 @@ func main() {
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":            defaultFunc,
-		"pull-unpack": fromPullUnpack,
-		"beam-make":   fromBeamMake,
-		"down-sample": fromDownSample,
-		"fits-redist": fromFitsRedist,
-		"fits-merge":  fromFitsMerge,
-		"fits-push":   fromFitsPush,
+		"":                fromNull,
+		"tar-load":        fromTarLoad,
+		"cube-vtask":      fromCubeVtask,
+		"pull-unpack":     fromPullUnpack,
+		"beam-make":       fromBeamMake,
+		"down-sample":     fromDownSample,
+		"fits-redist":     fromFitsRedist,
+		"fits-merge":      fromFitsMerge,
+		"fits24ch-copy":   fromFits24chCopy,
+		"fits24ch-unload": fromFits24chUnload,
 	}
 )

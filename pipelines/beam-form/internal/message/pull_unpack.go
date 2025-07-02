@@ -3,6 +3,7 @@ package message
 import (
 	"beamform/internal/datacube"
 	"beamform/internal/node"
+	"beamform/internal/strparse"
 	"fmt"
 	"os"
 
@@ -11,7 +12,7 @@ import (
 
 // GetMessagesForPullUnpack ...
 func GetMessagesForPullUnpack(m string, hostBound bool) []string {
-	dataset, pBegin, pEnd, tBegin, tEnd, _, err := ParseParts(m)
+	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
 	if err != nil {
 		return []string{}
 	}

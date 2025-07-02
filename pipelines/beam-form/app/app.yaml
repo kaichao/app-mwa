@@ -6,8 +6,17 @@ parameters:
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
 
 jobs:
-  wait-queue:
+  tar-load:
+    base_image: hub.cstcloud.cn/scalebox/file-copy
+    slots: 
+      - h0:3
+
+  cube-vtask:
     base_image: hub.cstcloud.cn/scalebox/agent
+    arguments:
+      slot_options: slot_on_head
+    parameters:
+      global_vtask_size: 2
 
   pull-unpack:
     base_image: ${FILE_COPY}
@@ -23,11 +32,12 @@ jobs:
       message_router_index: 2
       key_group_regex: ^([0-9]+)
     environments:
-      - SOURCE_URL=${SOURCE_URL}
+      - SOURCE_URL=${SOURCE_TAR_ROOT}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
       - BW_LIMIT=30m
+      - KEEP_SOURCE_FILE=yes
     slots:
       - ${NODES}    
 
@@ -57,6 +67,7 @@ jobs:
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
       - ZSTD_TARGET_FILE=no
+      # 精搜的指向文件名
       - POINTING_FILE=${POINTING_FILE}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
@@ -162,6 +173,11 @@ jobs:
       bulk_message_size: 2
       slot_options: reserved_on_exit
     environments:
+      # 'none' / 'multi-account-relay' / 'single-account-relay'
+      - PRELOAD_MODE=${PRELOAD_MODE}
+      # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
+      - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
+
       - TIME_STEP=${TIME_STEP}
       - TIME_END=${TIME_END}
       - NODES=${NODES}
@@ -173,8 +189,6 @@ jobs:
       - INTERLEAVED_DAT=yes
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=60m
-      # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
-      - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
       # 波束合成的指向优先，用于全数据集合成
       - POINTING_FIRST=${POINTING_FIRST}
       # 隐含着 POINTING_FIRST=yes

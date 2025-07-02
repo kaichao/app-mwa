@@ -1,15 +1,10 @@
 package datacube_test
 
 import (
-	"beamform/internal/datacube"
-	"os"
 	"testing"
 )
 
 func TestGetTimeChannelIndex(t *testing.T) {
-	os.Setenv("DATACUBE_FILE", "../../../dataset.yaml")
-	cube := datacube.GetDataCube("1257010784")
-
 	testCases := []struct {
 		t     int
 		ch    int
@@ -34,9 +29,6 @@ func TestGetTimeChannelIndex(t *testing.T) {
 }
 
 func TestGetTimePointingIndex(t *testing.T) {
-	os.Setenv("DATACUBE_FILE", "../../../dataset.yaml")
-	cube := datacube.GetDataCube("1257010784")
-
 	testCases := []struct {
 		t     int
 		p     int
@@ -58,5 +50,4 @@ func TestGetTimePointingIndex(t *testing.T) {
 				tc.t, tc.p, tc.len, index, tc.index)
 		}
 	}
-
 }

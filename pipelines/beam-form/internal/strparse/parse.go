@@ -1,7 +1,6 @@
-package message
+package strparse
 
 import (
-	"beamform/internal/datacube"
 	"errors"
 	"regexp"
 	"strconv"
@@ -18,7 +17,7 @@ import (
 //     1257010784/p00001_00960/t1257012766_1257012965/ch109
 //
 // 返回值：
-//   - dataset, p0, p1, t0, t1, ch, err
+//   - obsid, p0, p1, t0, t1, ch, err
 //
 // 环境变量：
 //
@@ -30,27 +29,15 @@ func ParseParts(m string) (string, int, int, int, int, int, error) {
 		return "", 0, 0, 0, 0, 0, errors.New("invalid message format")
 	}
 	dataset := ss[1]
-	cube := datacube.GetDataCube(dataset)
+	// cube := datacube.GetDataCube(dataset)
 
 	var (
-		p0, p1 int
-		t0, t1 int
-		ch     int
+		ch int
 	)
-	if ss[3] == "" {
-		p0 = cube.PointingBegin
-		p1 = cube.PointingEnd
-	} else {
-		p0, _ = strconv.Atoi(ss[3])
-		p1, _ = strconv.Atoi(ss[4])
-	}
-	if ss[6] == "" {
-		t0 = cube.TimeBegin
-		t1 = cube.TimeEnd
-	} else {
-		t0, _ = strconv.Atoi(ss[6])
-		t1, _ = strconv.Atoi(ss[7])
-	}
+	p0, _ := strconv.Atoi(ss[3])
+	p1, _ := strconv.Atoi(ss[4])
+	t0, _ := strconv.Atoi(ss[6])
+	t1, _ := strconv.Atoi(ss[7])
 	if ss[9] == "" {
 		ch = -1
 	} else {
