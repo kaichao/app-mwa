@@ -7,7 +7,7 @@ import (
 
 func init() {
 	os.Setenv("DATACUBE_FILE", "../../dataset.yaml")
-	cube = datacube.GetDataCube("1257010784")
+	cube = datacube.NewDataCube("1257010784")
 }
 
 var cube *datacube.DataCube

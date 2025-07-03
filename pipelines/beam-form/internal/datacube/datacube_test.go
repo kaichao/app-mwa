@@ -6,6 +6,29 @@ import (
 	"testing"
 )
 
+func TestNewDataCube(t *testing.T) {
+	cube := datacube.NewDataCube("1265983624")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p00001_00960")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p_00960")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p00961_")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p00001_00960/t1265983626_1265988429")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p00001_00960/t1265983826_")
+	fmt.Println(cube.ToCubeString())
+
+	cube = datacube.NewDataCube("1265983624/p00001_00960/t_1265983825")
+	fmt.Println(cube.ToCubeString())
+}
+
 func TestGetDataCubeFromFile(t *testing.T) {
 	fmt.Println(cube)
 }

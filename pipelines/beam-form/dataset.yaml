@@ -26,6 +26,8 @@ datasets:
     # pointing dimension
     pointingEnd: 11502
 
+    timeTailMerge: true
+
   1267459328:
     # t: 1267459330 .. 1267464129, 4800
     # p: 1 .. 9016

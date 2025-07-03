@@ -16,7 +16,7 @@ func GetMessagesForPullUnpack(m string, hostBound bool) []string {
 	if err != nil {
 		return []string{}
 	}
-	cube := datacube.GetDataCube(dataset)
+	cube := datacube.NewDataCube(dataset)
 	ts := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
 	messages := []string{}
 	withPointingPath := os.Getenv("WITH_POINTING_PATH") == "yes"

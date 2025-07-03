@@ -57,7 +57,7 @@ func toFitsMerge(m string) int {
 		return 1
 	}
 
-	cube := datacube.GetDataCube(ds)
+	cube := datacube.NewDataCube(ds)
 	// output message: 1257010784/p00023/t1257010786_1257010965
 	messages := []string{}
 	for p := p0; p <= p1; p++ {

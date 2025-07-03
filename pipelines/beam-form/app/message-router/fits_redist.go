@@ -55,7 +55,7 @@ func toFitsRedist(m string, headers map[string]string) int {
 		return 1
 	}
 
-	cube := datacube.GetDataCube(dataset)
+	cube := datacube.NewDataCube(dataset)
 	ips := node.GetIPAddrListByTime(cube, t0)
 	fromIP := headers["from_ip"]
 

@@ -36,7 +36,7 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	prefix := ss[1]
 	t, _ := strconv.Atoi(ss[2])
 	ch, _ := strconv.Atoi(ss[3])
-	cube := datacube.GetDataCube(prefix)
+	cube := datacube.NewDataCube(prefix)
 	t0, t1 := cube.GetTimeRange(t)
 
 	cubeID := fmt.Sprintf("%s/t%d_%d", prefix, t0, t1)

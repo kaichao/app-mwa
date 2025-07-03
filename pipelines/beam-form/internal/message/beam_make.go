@@ -15,7 +15,7 @@ func GetMessagesForBeamMake(m string) []string {
 	if err != nil {
 		return []string{}
 	}
-	cube := datacube.GetDataCube(dataset)
+	cube := datacube.NewDataCube(dataset)
 
 	tRanges := cube.GetTimeRangesWithinInterval(tBegin, tEnd)
 	pRanges := cube.GetPointingRangesByInterval(pBegin, pEnd)

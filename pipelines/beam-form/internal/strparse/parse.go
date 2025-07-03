@@ -23,7 +23,7 @@ import (
 //
 //	-
 func ParseParts(m string) (string, int, int, int, int, int, error) {
-	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?(/t([0-9]+)_([0-9]+))?(/ch([0-9]+))?$`)
+	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)?_([0-9]+)?)?(/t([0-9]+)?_([0-9]+)?)?(/ch([0-9]+))?$`)
 	ss := re.FindStringSubmatch(m)
 	if len(ss) == 0 {
 		return "", 0, 0, 0, 0, 0, errors.New("invalid message format")
