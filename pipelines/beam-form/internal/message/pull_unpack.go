@@ -1,15 +1,6 @@
 package message
 
-import (
-	"beamform/internal/datacube"
-	"beamform/internal/node"
-	"beamform/internal/strparse"
-	"fmt"
-	"os"
-
-	"github.com/kaichao/scalebox/pkg/common"
-)
-
+/*
 // GetMessagesForPullUnpack ...
 func GetMessagesForPullUnpack(m string, hostBound bool) []string {
 	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
@@ -49,3 +40,4 @@ func GetMessagesForPullUnpack(m string, hostBound bool) []string {
 	}
 	return messages
 }
+*/

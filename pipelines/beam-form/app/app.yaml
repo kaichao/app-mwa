@@ -147,7 +147,7 @@ jobs:
       - ${NODES}
       - ${PRESTO_NODES}
 
-  fits-push:
+  fits24ch-copy:
     base_image: ${FILE_COPY}
     command: ${COMMAND_TEMPLATE}
     arguments:
@@ -163,6 +163,9 @@ jobs:
       - KEEP_SOURCE_FILE=no
     slots:
       - ${NODES}
+
+  fits24ch-unload:
+    base_image: ${FILE_COPY}
 
   mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app

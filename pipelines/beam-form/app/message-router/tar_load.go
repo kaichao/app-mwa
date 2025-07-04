@@ -60,7 +60,11 @@ func fromTarLoad(body string, headers map[string]string) int {
 // datasetID
 // - 1257010784
 // - 1257010784/p00001_00960
+// - 1257010784/p_00960
+// - 1257010784/p00001_
 // - 1257010784/p00001_00960/t1257012766_1257012965
+// - 1257010784/p00001_00960/t1257012766_
+// - 1257010784/p00001_00960/t_1257012965
 func toTarLoad(datasetID string) int {
 	// 按顺序产生file-copy消息
 	cube := datacube.NewDataCube(datasetID)

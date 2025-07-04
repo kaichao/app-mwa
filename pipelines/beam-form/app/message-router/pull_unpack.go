@@ -54,7 +54,7 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	return toBeamMake(cubeID, ch)
 }
 
-func toPullUnpack(body string) int {
+func toPullUnpack(body string, fromHeaders map[string]string) int {
 	cube := datacube.NewDataCube(body)
 	fmt.Println(cube.ToCubeString())
 	trs := cube.GetTimeRanges()
@@ -68,7 +68,7 @@ func toPullUnpack(body string) int {
 	// if withPointingPath {
 	// }
 	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
-	numGroups := len(node.NodeNames) / 24
+	numGroups := len(node.Nodes) / 24
 
 	trBegin := trs[0]
 	trEnd := trs[1]
@@ -91,14 +91,18 @@ func toPullUnpack(body string) int {
 		semaPair = fmt.Sprintf(`"dat-done:%s":%d`, id, nPRanges)
 		semaDatDone += semaPair + "\n"
 
-		toHost := node.GetNodeNameByTimeChannel(cube, trBegin, ch)
-		fmt.Printf("t:%d,ch:%d,to-host:%s\n", trBegin, ch, toHost)
 		targetSubDir := fmt.Sprintf("%s/t%d_%d/ch%d", cube.ObsID, trBegin, trEnd, ch)
-		headers := fmt.Sprintf(`{"target_subdir":"%s","to_host":"%s"}`, targetSubDir, toHost)
-		if numGroups > 0 && j < 2*numGroups {
-			// > 24节点，首次加载设置更高的带宽
-			headers = common.SetJSONAttribute(headers, "bw_limit", os.Getenv("FIRST_BW_LIMIT"))
+		headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
+		cubeIndex, err := strconv.Atoi(fromHeaders["_cube_index"])
+		if err == nil {
+			cubeIndex--
+			if cubeIndex < numGroups {
+				// > 24节点，首次加载设置更高的带宽
+				headers = common.SetJSONAttribute(headers, "bw_limit", os.Getenv("FIRST_BW_LIMIT"))
+			}
 		}
+		toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
+		headers = common.SetJSONAttribute(headers, "to_host", toHost)
 
 		if os.Getenv("PRELOAD_MODE") == "multi-account-relay" {
 			varName := `cube-stor-index:` + id
@@ -125,15 +129,6 @@ func toPullUnpack(body string) int {
 		semaPair := fmt.Sprintf(`"fits-done:%s":%d`, id, 24)
 		semaFitsDone += semaPair + "\n"
 	}
-
-	// TODO：放到fromNull (?)
-	// semaPointingDone := ""
-	// // pointing-done:1257010784/p00001
-	// for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
-	// 	semaPair := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`,
-	// 		cube.ObsID, p, 1)
-	// 	semaPointingDone += semaPair + "\n"
-	// }
 
 	semaphores := semaDatReady + semaDatDone + semaFitsDone
 	common.AppendToFile("my-sema.txt", semaphores)
