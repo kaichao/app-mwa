@@ -1,15 +1,7 @@
 package message
 
-import (
-	"beamform/internal/datacube"
-	"beamform/internal/strparse"
-	"fmt"
-	"os"
-
-	"github.com/kaichao/scalebox/pkg/common"
-)
-
 // GetMessagesForBeamMake ...
+/*
 func GetMessagesForBeamMake(m string) []string {
 	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
 	if err != nil {
@@ -42,3 +34,4 @@ func GetMessagesForBeamMake(m string) []string {
 	}
 	return messages
 }
+*/

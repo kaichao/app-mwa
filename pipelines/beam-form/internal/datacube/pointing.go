@@ -2,8 +2,8 @@ package datacube
 
 import "fmt"
 
-// 获得全部指向的指向区间(not used)
-func (cube *DataCube) getPointingRanges() []int {
+// GetPointingRanges  获得全部指向的指向区间
+func (cube *DataCube) GetPointingRanges() []int {
 	return cube.GetPointingRangesByInterval(cube.PointingBegin, cube.PointingEnd)
 }
 

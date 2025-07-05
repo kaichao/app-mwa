@@ -47,9 +47,9 @@ func main() {
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":               defaultFunc,
-		"message-router": fromMessageRouter,
-		"down-sample":    fromDownSample,
-		"fits-merge":     fromFitsMerge,
+		"": defaultFunc,
+		// "message-router": fromMessageRouter,
+		"down-sample": fromDownSample,
+		"fits-merge":  fromFitsMerge,
 	}
 )

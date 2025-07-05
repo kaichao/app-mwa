@@ -1,11 +1,5 @@
 package message
 
-import (
-	"beamform/internal/datacube"
-	"beamform/internal/strparse"
-	"fmt"
-)
-
 // GetSemaphores 获取消息对应的信号量列表
 //
 // 参数：
@@ -20,6 +14,7 @@ import (
 //
 // 环境变量：
 //   - []string: 计算出的商
+/*
 func GetSemaphores(m string) string {
 	dataset, pBegin, pEnd, tBegin, tEnd, _, err := strparse.ParseParts(m)
 	if err != nil {
@@ -69,3 +64,4 @@ func GetSemaphores(m string) string {
 
 	return semaphores
 }
+*/
