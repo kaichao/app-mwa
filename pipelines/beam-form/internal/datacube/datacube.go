@@ -14,7 +14,7 @@ import (
 //
 //	Time Dimension: TimeUnit, TimeRange
 //
-//	Pointing Demension: PointingRange, PointingBatch
+//	Pointing Demension: PointingRange
 type DataCube struct {
 	DatasetID string
 	ObsID     string
@@ -33,7 +33,7 @@ type DataCube struct {
 
 	PointingBegin int `yaml:"pointingBegin"`
 	PointingEnd   int `yaml:"pointingEnd"`
-	// 单次beam-maker处理的指向数，通常取24的倍数
+	// 单次beam-maker处理的指向数，通常为24（或倍数）
 	PointingStep int `yaml:"pointingStep"`
 
 	TimeTailMerge bool `yaml:"timeTailMerge"`
@@ -51,7 +51,7 @@ func NewDataCube(datasetID string) *DataCube {
 		return nil
 	}
 
-	// 获取当前工作目录
+	// Current Work dir
 	dir, err := os.Getwd()
 	if err != nil {
 		logrus.Errorln("Error:", err)
@@ -140,94 +140,14 @@ func NewDataCube(datasetID string) *DataCube {
 	return &cube
 }
 
-// // GetDataCubeFromFile ...
-// func GetDataCubeFromFile(obsID string) *DataCube {
-// 	// 获取当前工作目录
-// 	dir, err := os.Getwd()
-// 	if err != nil {
-// 		logrus.Errorln("Error:", err)
-// 	}
-// 	fmt.Println("Current Directory:", dir)
-
-// 	config := map[string]map[string]DataCube{}
-
-// 	if f := os.Getenv("DATACUBE_FILE"); f != "" {
-// 		datacubeFile = f
-// 	}
-// 	fmt.Printf("datacube-file:%s\n", datacubeFile)
-// 	yamlFile, err := os.ReadFile(datacubeFile)
-// 	if err != nil {
-// 		logrus.Fatalf("Read yaml file %s, err:%v", datacubeFile, err)
-// 	}
-
-// 	if err = yaml.Unmarshal(yamlFile, &config); err != nil {
-// 		logrus.Fatalf("Error parsing yaml file %s, err:%v", datacubeFile, err)
-// 	}
-
-// 	re := regexp.MustCompile(`^([0-9]+)(/p([0-9]+)_([0-9]+))?$`)
-// 	ss := re.FindStringSubmatch(obsID)
-
-// 	if len(ss) == 0 {
-// 		logrus.Errorf("Invalid format, obsID=%s\n", obsID)
-// 		return nil
-// 	}
-// 	obsID = ss[1]
-// 	p0, _ := strconv.Atoi(ss[3])
-// 	p1, _ := strconv.Atoi(ss[4])
-
-// 	cube := config["datasets"][obsID]
-// 	cube.ObsID = obsID
-
-// 	if cube.NumOfChannels == 0 {
-// 		cube.NumOfChannels = 24
-// 	}
-// 	if cube.TimeUnit == 0 {
-// 		cube.TimeUnit = 40
-// 	}
-// 	if cube.TimeStep == 0 {
-// 		cube.TimeStep = 200
-// 	}
-// 	if cube.TimeEnd == 0 {
-// 		cube.TimeEnd = cube.TimeBegin + cube.NumOfSeconds - 1
-// 	}
-// 	if cube.PointingBegin == 0 {
-// 		cube.PointingBegin = 1
-// 	}
-// 	if cube.PointingStep == 0 {
-// 		cube.PointingStep = 24
-// 	}
-// 	// 设定定制的time_step，用于测试
-// 	if v, _ := strconv.Atoi(os.Getenv("TIME_STEP")); v > 0 {
-// 		cube.TimeStep = v
-// 	}
-// 	// 设定定制的time_begin，用于测试
-// 	if v, _ := strconv.Atoi(os.Getenv("TIME_BEGIN")); v > 0 {
-// 		cube.TimeBegin = v
-// 	}
-// 	// 设定定制的time_end，用于测试
-// 	if v, _ := strconv.Atoi(os.Getenv("TIME_END")); v > 0 {
-// 		cube.TimeEnd = v
-// 	}
-// 	// 设定定制的pointing_begin
-// 	if v, _ := strconv.Atoi(os.Getenv("POINTING_BEGIN")); v > 0 {
-// 		cube.PointingBegin = v
-// 	}
-// 	// 设定定制的pointing_end
-// 	if v, _ := strconv.Atoi(os.Getenv("POINTING_ENG")); v > 0 {
-// 		cube.PointingEnd = v
-// 	}
-
-// 	if cube.NumOfSeconds == 0 {
-// 		cube.NumOfSeconds = cube.TimeEnd - cube.TimeBegin + 1
-// 	}
-
-// 	if p0 > 0 {
-// 		cube.PointingBegin = p0
-// 		cube.PointingEnd = p1
-// 	}
-
-// 	return &cube
-// }
+// GetCubeID ...
+func (cube *DataCube) GetCubeID() string {
+	return fmt.Sprintf("%s/p%05d_%05d/t%d_%d",
+		cube.ObsID,
+		cube.PointingBegin, cube.PointingEnd,
+		cube.TimeBegin, cube.TimeEnd,
+	)
+}
 
 // ToCubeString ...
 func (cube *DataCube) ToCubeString() string {

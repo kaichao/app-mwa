@@ -51,8 +51,8 @@ func fromNull(body string, headers map[string]string) int {
 	return 0
 }
 
-// toCrossApp()
-func doCrossAppTaskAdd(pointing string) int {
+// toCrossAppPresto()
+func toCrossAppPresto(pointing string) int {
 	// 信号量pointing-done的操作
 	// semaphore: pointing-done:1257010784/p00001
 	sema := "pointing-done:" + pointing
@@ -71,24 +71,26 @@ func doCrossAppTaskAdd(pointing string) int {
 	varName := "pointing-data-root:" + pointing
 	varValue, err := variable.Get(varName, appID)
 	if err != nil {
-		logrus.Errorf("variable-get, err-info:%v\n", err)
+		logrus.Errorf("variable-get,name:%s, err-info:%v\n", varName, err)
 		return 11
 	}
 
 	prestoAppID, err := strconv.Atoi(os.Getenv("PRESTO_APP_ID"))
 	if err != nil {
-		logrus.Errorln("no valid PRESTO_APP_ID")
+		logrus.Errorln("No valid PRESTO_APP_ID")
 		return 12
 	}
 	// IPv4地址（类型1）， 设置"to_ip"头
-	headers := common.SetJSONAttribute("{}", "source_url", varValue)
+	headers := map[string]string{
+		"source_url": varValue,
+	}
 	// 给presto-search流水线发消息
 	envVars := map[string]string{
 		"SINK_JOB": "message-router-presto",
 		"JOB_ID":   "",
 		"APP_ID":   fmt.Sprintf("%d", prestoAppID),
 	}
-	fmt.Printf("In doCrossAppTaskAdd(), env:APP_ID=%s, JOB_ID=%s, SINK_JOB=%s,GRPC_SERVER=%s\n",
+	fmt.Printf("In toCrossAppPresto(), env:APP_ID=%s, JOB_ID=%s, SINK_JOB=%s,GRPC_SERVER=%s\n",
 		envVars["APP_ID"], envVars["JOB_ID"], envVars["SINK_JOB"], os.Getenv("GRPC_SERVER"))
-	return task.Add(pointing, headers, envVars)
+	return task.AddWithMapHeaders(pointing, headers, envVars)
 }

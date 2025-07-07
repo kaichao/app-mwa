@@ -1,7 +1,6 @@
 package main
 
 import (
-	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"beamform/internal/queue"
 	"beamform/internal/strparse"
@@ -24,15 +23,14 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		common.AddTimeStamp("leave-fromFitsRedist()")
 	}()
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(m)
-	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
+	idx := strings.LastIndex(m, "/ch")
+	if idx == -1 {
+		logrus.Errorf("invalid message format from fits-redist, message=%s\n", m)
 		return 1
 	}
-
+	cubeID := m[:idx]
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
-	semaName := fmt.Sprintf("fits-done:%s/p%05d_%05d/t%d_%d",
-		ds, p0, p1, t0, t1)
+	semaName := fmt.Sprintf("fits-done:%s", cubeID)
 	v, err := semaphore.AddValue(semaName, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
@@ -47,22 +45,26 @@ func fromFitsRedist(m string, headers map[string]string) int {
 	return toFitsMerge(m)
 }
 
-func toFitsRedist(m string, headers map[string]string) int {
+func toFitsRedist(m string, fromHeaders map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	dataset, p0, p1, t0, _, _, err := strparse.ParseParts(m)
+	obsID, p0, p1, _, _, _, err := strparse.ParseParts(m)
 	if err != nil {
 		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
 
-	cube := datacube.NewDataCube(dataset)
-	ips := node.GetIPAddrListByTime(cube, t0)
-	fromIP := headers["from_ip"]
+	// cube := datacube.NewDataCube(obsID)
+	cubeIndex, _ := strconv.Atoi(fromHeaders["_cube_index"])
+	cubeIndex--
+	fmt.Printf("cube-index=%d\n", cubeIndex)
+	ips := node.GetIPAddrListByCubeIndex(cubeIndex)
+	// ips := node.GetIPAddrListByTime(cube, t0)
+	fromIP := fromHeaders["from_ip"]
 
 	// 1. 读取共享变量表 pointing-data-root。
 	varValues := []string{}
 	for p := p0; p <= p1; p++ {
-		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", dataset, p)
+		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", obsID, p)
 		if v, err := variable.Get(varName, appID); err != nil {
 			logrus.Errorf("variable-get %s, err-info:%v\n", varName, err)
 			varValues = append(varValues, "")
@@ -87,7 +89,7 @@ func toFitsRedist(m string, headers map[string]string) int {
 
 		for p := p0; p <= p1; p++ {
 			i := p - p0
-			varName := fmt.Sprintf("pointing-data-root:%s/p%05d", dataset, p)
+			varName := fmt.Sprintf("pointing-data-root:%s/p%05d", obsID, p)
 			var varValue, ip string
 			if i < len(prestoIPs) {
 				// 类型1，非组内IP地址

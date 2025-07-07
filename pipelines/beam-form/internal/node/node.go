@@ -6,8 +6,26 @@ import (
 	"os"
 )
 
+// GetIPAddrListByCubeIndex ...
+// - 用于toRedist中本组分发
+func GetIPAddrListByCubeIndex(cubeIndex int) []string {
+	var ret []string
+	if len(Nodes) <= 24 {
+		for i := 0; i < 24; i++ {
+			ret = append(ret, Nodes[i%len(Nodes)].IPAddr)
+		}
+	} else {
+		// >= 48 nodes
+		numGroup := len(Nodes) / 24
+		start := (cubeIndex % numGroup) * 24
+		for i := 0; i < 24; i++ {
+			ret = append(ret, Nodes[i+start].IPAddr)
+		}
+	}
+	return ret
+}
+
 // GetNodeNameByIndexChannel ...
-// - 用于toBeamMake
 func GetNodeNameByIndexChannel(cube *datacube.DataCube, indexGroup int, ch int) string {
 	var index int
 	if len(Nodes) < 24 {
@@ -32,7 +50,7 @@ func GetNodeNameByTimeChannel(cube *datacube.DataCube, t int, ch int) string {
 // - 用于toRedist
 func GetIPAddrListByTime(cube *datacube.DataCube, t int) []string {
 	ips := []string{}
-	for ch := 109; ch < 133; ch++ {
+	for ch := cube.ChannelBegin; ch < cube.ChannelBegin+cube.NumOfChannels; ch++ {
 		index := cube.GetTimeChannelIndex(t, ch, len(Nodes))
 		ips = append(ips, Nodes[index].IPAddr)
 	}

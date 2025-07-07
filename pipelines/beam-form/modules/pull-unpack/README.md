@@ -125,10 +125,17 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
 ```
 
 - p419-singularity
-```sh
     START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
+```sh
+    START_MESSAGE=1302106648/p00001_00960 \
     scalebox app create -e p419.env
 ```
+
+```sh
+ssh login1 'cd /work2/cstu0036/mydata/mwa/tar && find 1302106648/ -type f' | sort \
+| scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy: --code-path=
+```
+
 
 ### dcu集群
 ```sh

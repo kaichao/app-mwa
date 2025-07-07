@@ -15,7 +15,6 @@
 package main
 
 import (
-	"beamform/internal/node"
 	"fmt"
 	"os"
 
@@ -35,17 +34,17 @@ func fromCubeVtask(body string, headers map[string]string) int {
 
 func toCubeVtask(cubeID string) int {
 	headers := map[string]string{}
-	if len(node.Nodes) >= 24 {
-		semaName := "counter:cube-vtask"
-		os.Setenv("SEMAPHORE_AUTO_CREATE", "yes")
-		v, err := semaphore.AddValue(semaName, appID, 1)
-		if err != nil {
-			logrus.Errorf("In toCubeVtask(), err-info:%v\n", err)
-		} else {
-			headers["_cube_index"] = v
-		}
-		os.Unsetenv("SEMAPHORE_AUTO_CREATE")
+	// if len(node.Nodes) >= 24 {
+	semaName := "counter:cube-vtask"
+	os.Setenv("SEMAPHORE_AUTO_CREATE", "yes")
+	v, err := semaphore.AddValue(semaName, appID, 1)
+	if err != nil {
+		logrus.Errorf("In toCubeVtask(), err-info:%v\n", err)
+	} else {
+		headers["_cube_index"] = v
 	}
+	os.Unsetenv("SEMAPHORE_AUTO_CREATE")
+	// }
 	envs := map[string]string{
 		"SINK_JOB": "cube-vtask",
 	}

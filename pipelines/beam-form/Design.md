@@ -1,12 +1,10 @@
 # beam-form流水线
 
-
 ```mermaid
 flowchart TD
-  subgraph cluster
-    tar-load --> pull-unpack-g
-    pull-unpack-g --> cube-vtask
-    wait-queue --> pull-unpack
+  subgraph beam-form
+    tar-load --> cube-vtask
+    cube-vtask --> pull-unpack
     pull-unpack --> beam-make
     beam-make --> down-sample
     down-sample --> fits-redist
@@ -15,7 +13,6 @@ flowchart TD
     fits24ch-save --> fits24ch-unload
   end
 ```
-
 
 ## 一、功能模块表
 
@@ -27,10 +24,10 @@ flowchart TD
 | beam-make   | 按通道的波束合成 |
 | down-sample | 波束合成结果fits文件做1/4下采样，降低数据量 |
 | fits-redist | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
-| fits-merge  | 按Pointing归并，合并结果：1.存放到HPC存储；2.存放到本地（供presto-search流水线拉取；通知presto-search流水线来拉取）|
+| fits-merge  | 按Pointing合并。合并结果：1.存放到HPC存储；2.存放到本地，通过fits24ch-copy传输到HPC存储或计算节点存储 |
 | fits24ch-copy  | 按需，将结果数据拷贝到HPC共享存储或presto计算节点存储 |
 | fits24ch-unload | 按需，将结果数据从HPC存储拷贝到外部存储 |
-| message-router  |  |
+| message-router  |                  |
 
 
 ## 二、模块设计
@@ -48,7 +45,7 @@ flowchart TD
 | 9 | fits24ch_unload | scalebox/ file-copy | Yes  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
 
 
-### 2.1 wait-queue
+### 2.1 cube-vtask
 
 流水处理的vtask流控。
 
@@ -98,9 +95,6 @@ flowchart TD
 ### 2.3 beam-make
 
 ### 2.4 down-sample
-
-- 主要环境变量
-  - LOCAL_COMPUTE: 本地计算模式，取值'yes'。若为非本地计算模式，需对最终输出的fits文件的目录结构做调整。
 
 ### 2.5 fits-redist
 

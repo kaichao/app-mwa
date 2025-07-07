@@ -51,7 +51,7 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 		return 0
 	}
 	common.AddTimeStamp("prepare-messages")
-	return toBeamMake(cubeID, ch)
+	return toBeamMake(cubeID, ch, headers)
 }
 
 func toPullUnpack(body string, fromHeaders map[string]string) int {
@@ -141,7 +141,8 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", cube.ObsID,
 		cube.PointingBegin, cube.PointingEnd, cube.TimeBegin, cube.TimeEnd)
 	headers := map[string]string{
-		"_cube_id": cubeID,
+		"_cube_id":    cubeID,
+		"_cube_index": fromHeaders["_cube_index"],
 	}
 	envs := map[string]string{
 		"SINK_JOB": "pull-unpack",

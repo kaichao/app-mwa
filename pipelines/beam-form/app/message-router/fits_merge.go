@@ -46,7 +46,7 @@ func fromFitsMerge(m string, headers map[string]string) int {
 	}
 
 	common.AddTimeStamp("before-send-messages")
-	return doCrossAppTaskAdd(ss[1])
+	return toCrossAppPresto(ss[1])
 }
 
 func toFitsMerge(m string) int {

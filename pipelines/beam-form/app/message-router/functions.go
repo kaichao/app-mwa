@@ -78,5 +78,5 @@ func fromFitsPush(m string, headers map[string]string) int {
 		logrus.Errorf("Invalid format, message:%s\n", m)
 		return 1
 	}
-	return doCrossAppTaskAdd(ss[1])
+	return toCrossAppPresto(ss[1])
 }

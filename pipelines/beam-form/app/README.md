@@ -60,6 +60,21 @@ ssh login1 'cd /work2/cstu0036/mydata/mwa/24ch && find 1255803168-250620 -type f
 ### p419集群全并行
 
 - 1440指向(全并行处理)
+
+```sh
+START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
+  PRESTO_APP_ID=102 \
+  PRELOAD_MODE=none \
+  NODES=d-0[01].+ \
+  PRESTO_NODES= \
+  TIME_STEP=200 \
+  PULL_UNPACK_LIMIT_GB=120 \
+  BEAM_MAKE_FREE_GB='{~n*7+14~}' \
+  SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
+  scalebox app create -e p419.env
+```
+
 ```sh
   START_MESSAGE=1255803168/p05161_06600 \
   PRESTO_APP_ID=102 \
@@ -75,6 +90,8 @@ ssh login1 'cd /work2/cstu0036/mydata/mwa/24ch && find 1255803168-250620 -type f
   NODES="n-000[0-9]|n-001[01]" \
   scalebox app create -e p419.env
 ```
+
+
 
 - 生产测试，source_url通过p419-soruce.json来指定
 ```sh

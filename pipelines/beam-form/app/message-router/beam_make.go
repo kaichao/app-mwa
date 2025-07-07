@@ -49,9 +49,9 @@ func fromBeamMake(m string, headers map[string]string) int {
 		}
 		cmd := fmt.Sprintf(`ssh -p %s %s@%s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
 			sshPort, sshUser, ipAddr, obsID, suffix)
-		fmt.Printf("cmd:%s\n", cmd)
 		code, err := exec.RunReturnExitCode(cmd, 60)
 		if err != nil {
+			logrus.Errorf("Remove dat dir, cmd=%s,err-info=%v\n", cmd, err)
 			return 125
 		}
 		if code != 0 {
@@ -60,10 +60,10 @@ func fromBeamMake(m string, headers map[string]string) int {
 	}
 
 	common.AddTimeStamp("before-send-messages")
-	return toDownSample(m)
+	return toDownSample(m, headers)
 }
 
-func toBeamMake(cubeID string, ch int) int {
+func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 	cube := datacube.NewDataCube(cubeID)
 	ps := cube.GetPointingRangesByInterval(cube.PointingBegin, cube.PointingEnd)
 	messages := []string{}
@@ -85,6 +85,7 @@ func toBeamMake(cubeID string, ch int) int {
 		"SINK_JOB":        "beam-make",
 		"TIMEOUT_SECONDS": "600",
 	}
-	headers := fmt.Sprintf(`{"_cube_id":"%s"}`, cubeID)
+	headers := fmt.Sprintf(`{"_cube_id":"%s","_cube_index":"%s"}`,
+		cubeID, fromHeaders["_cube_index"])
 	return task.AddTasks(messages, headers, envVars)
 }
