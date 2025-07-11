@@ -364,11 +364,11 @@ FROM crosstab(
     -- 将 vtable 和 finished 的逻辑嵌入到 crosstab 的源查询中
     '
     WITH vtable AS (
-        SELECT matches[1] AS p, ((matches[2]::integer) - 3170) / 200 AS t, status_code
+        SELECT matches[1] AS p, ((matches[2]::integer) - 6649) / 200 AS t, status_code
         FROM (
             SELECT regexp_matches(body, ''p(\d+)/t\d{5}(\d{5})_\d{10}'', ''g'') matches, status_code
             FROM t_task
-            WHERE job = 435
+            WHERE job = 981
         ) tt
 --      WHERE (matches[1]::integer) between 4441 and 4800
     ), finished AS (
@@ -397,11 +397,11 @@ FROM crosstab(
     'SELECT generate_series(0, 29) AS t'
 ) AS ct (
     p text,
-    t00 integer, t01 integer, t02 integer, t03 integer, t04 integer, t05 integer, 
-    t06 integer, t07 integer, t08 integer, t09 integer, t10 integer, t11 integer, 
-    t12 integer, t13 integer, t14 integer, t15 integer, t16 integer, t17 integer, 
-    t18 integer, t19 integer, t20 integer, t21 integer, t22 integer, t23 integer,
-    t24 integer, t25 integer, t26 integer, t27 integer, t28 integer, t29 integer 
+      t00 integer, t01 integer, t02 integer, t03 integer, t04 integer, t05 integer
+    , t06 integer, t07 integer, t08 integer, t09 integer, t10 integer, t11 integer
+    , t12 integer, t13 integer, t14 integer, t15 integer, t16 integer, t17 integer
+    , t18 integer, t19 integer, t20 integer, t21 integer, t22 integer, t23 integer
+    , t24 integer, t25 integer, t26 integer, t27 integer, t28 integer, t29 integer 
 )
 ORDER BY p
 )

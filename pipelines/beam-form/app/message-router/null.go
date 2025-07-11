@@ -21,15 +21,15 @@ func fromNull(body string, headers map[string]string) int {
 	cube := datacube.NewDataCube(body)
 	cube0 := datacube.NewDataCube(cube.ObsID)
 	if reflect.DeepEqual(cube.GetTimeRanges(), cube0.GetTimeRanges()) {
-		// 输入数据集包含全时段，创建信号量pointing-ready
+		// 输入数据集包含全时段，创建信号量pointing-done
 		fileName := "my-sema.txt"
 		size := len(cube.GetTimeRanges()) / 2
 		for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
-			common.AppendToFile(fileName, fmt.Sprintf(`"pointing-ready:%s/p%05d",%d`, cube.ObsID, p, size)+"\n")
+			common.AppendToFile(fileName, fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size))
 		}
 		err := semaphore.CreateFileSemaphores(fileName, appID, 500)
 		if err != nil {
-			logrus.Errorf("create semaphore pointing-ready, err-info:%v", err)
+			logrus.Errorf("create semaphore pointing-done, err-info:%v", err)
 			return 1
 		}
 	}
@@ -53,21 +53,6 @@ func fromNull(body string, headers map[string]string) int {
 
 // toCrossAppPresto()
 func toCrossAppPresto(pointing string) int {
-	// 信号量pointing-done的操作
-	// semaphore: pointing-done:1257010784/p00001
-	sema := "pointing-done:" + pointing
-	v, err := semaphore.AddValue(sema, appID, -1)
-	if err != nil {
-		logrus.Errorf("error while decrement semaphore,sema=%s, err:%v\n",
-			sema, err)
-		return 1
-	}
-	semaVal, _ := strconv.Atoi(v)
-	if semaVal > 0 {
-		// 24ch not done.
-		return 0
-	}
-
 	varName := "pointing-data-root:" + pointing
 	varValue, err := variable.Get(varName, appID)
 	if err != nil {

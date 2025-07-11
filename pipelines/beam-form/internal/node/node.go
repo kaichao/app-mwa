@@ -2,7 +2,6 @@ package node
 
 import (
 	"beamform/internal/datacube"
-	"fmt"
 	"os"
 )
 
@@ -26,19 +25,25 @@ func GetIPAddrListByCubeIndex(cubeIndex int) []string {
 }
 
 // GetNodeNameByIndexChannel ...
+// - 用于pull-unpack
 func GetNodeNameByIndexChannel(cube *datacube.DataCube, indexGroup int, ch int) string {
+	ch -= cube.ChannelBegin
+	numGroups := len(Nodes) / 24
 	var index int
 	if len(Nodes) < 24 {
-		index = (ch - cube.ChannelBegin) % len(Nodes)
+		index = ch % len(Nodes)
 	} else {
-		numGroups := len(Nodes) / 24
-		index = (indexGroup%numGroups)*24 + ch - cube.ChannelBegin
+		if os.Getenv("INTERLEAVED_DAT") == "yes" && indexGroup%2 == 1 {
+			ch = 23 - ch
+		}
+		index = (indexGroup%numGroups)*24 + ch
 	}
 
-	fmt.Fprintf(os.Stderr, "len(nodes)=%d,index-group=%d,ch=%d\n", len(Nodes), indexGroup, ch)
+	// fmt.Fprintf(os.Stderr, "len(nodes)=%d,index-group=%d,ch=%d\n", len(Nodes), indexGroup, ch)
 	return Nodes[index].Name
 }
 
+/*
 // GetNodeNameByTimeChannel ...
 // - 用于toBeamMake
 func GetNodeNameByTimeChannel(cube *datacube.DataCube, t int, ch int) string {
@@ -56,8 +61,9 @@ func GetIPAddrListByTime(cube *datacube.DataCube, t int) []string {
 	}
 	return ips
 }
-
+*/
 // GetNodeNameByPointingTime ...
+// - 用于fits-merge
 func GetNodeNameByPointingTime(cube *datacube.DataCube, p int, t int) string {
 	index := cube.GetTimePointingIndex(t, p, len(Nodes))
 	return Nodes[index].Name

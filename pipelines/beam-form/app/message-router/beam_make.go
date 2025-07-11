@@ -2,6 +2,7 @@ package main
 
 import (
 	"beamform/internal/datacube"
+	"beamform/internal/node"
 	"beamform/internal/strparse"
 	"fmt"
 	"os"
@@ -71,15 +72,20 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 		body := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d/ch%d`,
 			cube.ObsID, ps[k], ps[k+1], cube.TimeBegin, cube.TimeEnd, ch)
 		// 加上排序标签
-		/*
-			if os.Getenv("POINTING_FIRST") == "yes" {
-				body = fmt.Sprintf(`%s,{"sort_tag":"p%05d:t%d"}`,
-					body, ps[k], t0)
-			}
-		*/
-		messages = append(messages, body)
+		var sortTag string
+		if os.Getenv("RUN_MODE") == "full_parallel" {
+			sortTag = fmt.Sprintf("p%05d:t%d", ps[k], cube.TimeBegin)
+		} else if len(node.Nodes) >= 24 {
+			sortTag = fmt.Sprintf("t%d:p%05d", cube.TimeBegin, ps[k])
+		} else {
+			// 多个channel用单个节点计算
+			sortTag = fmt.Sprintf("ch%d:t%d:p%05d", ch, cube.TimeBegin, ps[k])
+		}
+		line := fmt.Sprintf(`%s,{"sort_tag":"%s","_sort_tag":"%s"}`,
+			body, sortTag, sortTag)
+		messages = append(messages, line)
 	}
-	fmt.Printf("num-of-messages in fromPullUnpack():%d\n", len(messages))
+	fmt.Printf("num-of-messages in toBeamMake():%d\n", len(messages))
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_JOB":        "beam-make",

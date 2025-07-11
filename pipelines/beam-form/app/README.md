@@ -42,11 +42,9 @@ find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scale
 #### 结果文件拷贝
 ```sh
 
-/work2/cstu0036/mydata/mwa/24ch/1255803168-250620 
-
-export SOURCE_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/24ch
+export SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch
 export TARGET_URL=/data1/mydata/mwa/24ch
-ssh login1 'cd /work2/cstu0036/mydata/mwa/24ch && find 1255803168-250620 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
+ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250703 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
 
 ```
 
@@ -62,23 +60,20 @@ ssh login1 'cd /work2/cstu0036/mydata/mwa/24ch && find 1255803168-250620 -type f
 - 1440指向(全并行处理)
 
 ```sh
-START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
-  PRESTO_APP_ID=102 \
+START_MESSAGE=1302106648/p01321_01800/t1302106649_1302111446 \
+  PRESTO_APP_ID=139 \
   PRELOAD_MODE=none \
   NODES=d-0[01].+ \
-  PRESTO_NODES= \
+  PRESTO_NODES=c.+ \
   TIME_STEP=200 \
   PULL_UNPACK_LIMIT_GB=120 \
   BEAM_MAKE_FREE_GB='{~n*7+14~}' \
-  SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
   scalebox app create -e p419.env
 ```
 
 ```sh
   START_MESSAGE=1255803168/p05161_06600 \
   PRESTO_APP_ID=102 \
-  POINTING_FIRST=yes \
   PRESTO_NODES=a-.+ \
   scalebox app create -e p419.env
 ```
@@ -90,7 +85,6 @@ START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
   NODES="n-000[0-9]|n-001[01]" \
   scalebox app create -e p419.env
 ```
-
 
 
 - 生产测试，source_url通过p419-soruce.json来指定
@@ -121,7 +115,7 @@ START_MESSAGE=1267459328/p07681_09016/t1267459330_1267464129 \
 
 START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
 
-START_MESSAGE=1302106648/p00001_00720/t1302106649_1302111446 \
+START_MESSAGE=1302106648/p00001_00480/t1302106649_1302111446 \
 
 ```sh
 START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
@@ -130,7 +124,7 @@ START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
   NODES=d-0[01].+ \
   PRESTO_NODES= \
   TIME_STEP=160 \
-  PULL_UNPACK_LIMIT_GB=90 \
+  PULL_UNPACK_LIMIT_GB=95 \
   BEAM_MAKE_FREE_GB='{~n*5+11~}' \
   SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
   TARGET_24CH_ROOT=/work1/cstu0036/mydata \
@@ -191,7 +185,6 @@ START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
 ```sh
   START_MESSAGE=1257617424/p00001_00096 \
   TIME_STEP=80 \
-  TIME_END=1257617505 \
   NODES=n-0[023] \
   NUM_BEAM_MAKE=3 \
   TARGET_JUMP=root@10.200.1.100 \

@@ -127,7 +127,8 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 	}
 
 	// 3. 完成target_hosts的数据采集，向fits-redist发送task对应消息
-	hs := fmt.Sprintf(`{"target_hosts":"%s"}`, strings.Join(toIPs, ","))
+	hs := fmt.Sprintf(`{"target_hosts":"%s","sort_tag":"%s"}`,
+		strings.Join(toIPs, ","), fromHeaders["_sort_tag"])
 
 	envVars := map[string]string{
 		"SINK_JOB": "fits-redist",

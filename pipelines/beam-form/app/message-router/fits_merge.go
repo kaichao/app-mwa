@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/kaichao/scalebox/pkg/common"
+	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
@@ -40,9 +42,24 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		// headers = common.SetJSONAttribute("{}", "target_jump_servers", "root@10.200.1.100")
 
 		envVars := map[string]string{
-			"SINK_JOB": "fits-push",
+			"SINK_JOB": "fits24ch-copy",
 		}
 		return task.Add(msg, headers, envVars)
+	}
+
+	// 信号量pointing-done的操作
+	// semaphore: pointing-done:1257010784/p00001
+	sema := "pointing-done:" + ss[1]
+	v, err := semaphore.AddValue(sema, appID, -1)
+	if err != nil {
+		logrus.Errorf("error while decrement semaphore,sema=%s, err:%v\n",
+			sema, err)
+		return 1
+	}
+	semaVal, _ := strconv.Atoi(v)
+	if semaVal > 0 {
+		// 24ch not done.
+		return 0
 	}
 
 	common.AddTimeStamp("before-send-messages")

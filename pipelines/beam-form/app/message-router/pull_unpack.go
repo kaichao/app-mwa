@@ -114,6 +114,12 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 			sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s/mydata",
 				storIndex, storIndex)
 			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+		} else {
+			sourceURL := os.Getenv("SOURCE_TAR_ROOT")
+			if sourceURL == "" {
+				sourceURL = sourcePicker.GetNext()
+			}
+			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
 		}
 
 		for k := 0; k < len(tus); k += 2 {
