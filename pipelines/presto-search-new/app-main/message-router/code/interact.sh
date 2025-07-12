@@ -28,14 +28,14 @@ if [[ $m = "update-hosts" ]]; then
         volume_high=$VOLUME_HIGH
     fi
 
-    pattern='"group_size":"([^"]+)"'
+    pattern='"node_group":"([^"]+)"'
     if [[ $headers =~ $pattern ]]; then
-        group_size="${BASH_REMATCH[1]}"
+        node_group="${BASH_REMATCH[1]}"
     else
-        group_size=24
+        node_group="n"
     fi
 
-    /app/bin/update-hosts.py c $group_size $volume_low $volume_mid $volume_high
+    /app/bin/update-hosts.py $node_group $volume_low $volume_mid $volume_high
 
 elif [[ $m = "init" ]]; then
     ${code_dir}/init.sh

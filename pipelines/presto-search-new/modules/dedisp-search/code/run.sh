@@ -16,13 +16,13 @@
 # source /root/.bashrc
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"
+    DIR_FITS="/local_data_root${LOCAL_INPUT_ROOT}/mwa/24ch"
 else
     DIR_FITS=/cluster_data_root/mwa/24ch
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_DEDISP="/local${LOCAL_OUTPUT_ROOT}/mwa/dedisp"
+    DIR_DEDISP="/local_data_root${LOCAL_OUTPUT_ROOT}/mwa/dedisp"
 else
     DIR_DEDISP=/cluster_data_root/mwa/dedisp
 fi
@@ -159,15 +159,16 @@ for ((i=0; i<$NCALLS; i++)); do
     dm=$(echo $lodm $dsubdm $i | awk '{print $1 + $2 * $3}')
     echo "dm:$dm"
     # run the program
-    echo "dedisp_search -cuda 0 -ncpus $NCPUS -nsub $NSUB -lodm $dm -dmstep $dmstep -noclip -zerodm \
+    echo "dedisp_search -cuda 0 -ncpus $NCPUS -nsub $NSUB -lodm $dm -dmstep $dmstep -zerodm \
         -numdms $dmpercall -downsamp $downsamp $RFIARGS -o $pointing $DEDISPARGS $SEARCHARGS $full_dir/*.fits"
-    dedisp_search -cuda 0 -ncpus $NCPUS -nsub $NSUB -lodm $dm -dmstep $dmstep -noclip -zerodm \
+    dedisp_search -cuda 0 -ncpus $NCPUS -nsub $NSUB -lodm $dm -dmstep $dmstep -zerodm \
         -numdms $dmpercall -downsamp $downsamp $RFIARGS -o $pointing $DEDISPARGS $SEARCHARGS $full_dir/*.fits
 
     code=$?
     echo "dedisp-search ret-code:$code"
     if [ $code -ne 0 ]; then
         echo "[ERROR] In running dedisp-search, ret-code:$code" >&2
+        rm -r $DIR_DEDISP/$bname/dm${LINENUM}/group${msgidx}
         exit 10
     fi
 done

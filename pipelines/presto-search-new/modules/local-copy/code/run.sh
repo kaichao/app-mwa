@@ -9,7 +9,7 @@ source functions.sh
 source /app/share/bin/functions.sh
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_FITS="/local${LOCAL_OUTPUT_ROOT}/mwa/24ch"
+    DIR_FITS="/local_data_root${LOCAL_OUTPUT_ROOT}/mwa/24ch"
 else
     DIR_FITS=/cluster_data_root/mwa/24ch
 fi
@@ -37,7 +37,7 @@ source_dir=$(get_data_root "$source_url")
 
 # if the mode is LOCAL, set the variable $INPUT_ROOT
 if [ "$source_mode" == "LOCAL" ]; then
-    INPUT_ROOT="/local${source_dir}"
+    INPUT_ROOT="/local_data_root${source_dir}"
 else
     echo $source_mode
     INPUT_ROOT="${source_dir}"
@@ -52,6 +52,10 @@ input_dir="$INPUT_ROOT/${m}"
 # the target dir maybe existing, so make the dir and copy each file to the target dir
 # try to use pv to set the bandwidth
 if [ "$source_mode" == "LOCAL" ]; then
+    # first check if the input dir exists
+    if [ ! -d "${input_dir}" ]; then
+        echo "[ERROR] Input directory ${input_dir} does not exist" >&2 && exit 11
+    fi
     mkdir -p ${target_dir}
     # if $BW_LIMIT is set, generate a new variable to use in pv; else set it to empty string
     if [ -n "$BW_LIMIT" ]; then

@@ -10,12 +10,12 @@
 # source /root/.bashrc
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_DEDISP="/local${LOCAL_INPUT_ROOT}/mwa/dedisp"
+    DIR_DEDISP="/local_data_root${LOCAL_INPUT_ROOT}/mwa/dedisp"
 else
     DIR_DEDISP=/cluster_data_root/mwa/dedisp
 fi
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_PNG="/local${LOCAL_OUTPUT_ROOT}/mwa/png"
+    DIR_PNG="/local_data_root${LOCAL_OUTPUT_ROOT}/mwa/png"
 else
     DIR_PNG=/cluster_data_root/mwa/png
 fi

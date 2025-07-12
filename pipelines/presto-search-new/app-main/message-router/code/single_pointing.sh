@@ -58,7 +58,7 @@ if [ -f $file_path ]; then
     # if the source is an ip, send to local-copy-unpack
     if [[ $source_url =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         scalebox variable set local_pointing:$dataset/$pointing yes
-        scalebox task add --sink-job=local-copy-unpack --to-ip=$source_url $dataset/$pointing
+        scalebox task add --sink-job=local-copy-unpack -h to_ip=$source_url $dataset/$pointing
     else
         scalebox variable set local_pointing:$dataset/$pointing no
         scalebox task add --sink-job=local-wait-queue -h source_url=$source_url/mwa/24ch $dataset/$pointing
