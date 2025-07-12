@@ -14,16 +14,18 @@ echo from_ip:$from_ip
 
 # in case we are testing, do not remove the raw files.
 sema1="pointing-finished:$p"
-n1=$(scalebox semaphore decrement "$sema1")
 echo $sema1
+n1=$(scalebox semaphore decrement "$sema1")
 code=$?
 [ $code -ne 0 ] && echo "[ERROR] scalebox semaphore decrement! " >&2 && exit $code 
+
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
 host=$(/app/bin/get_hostname.py $from_ip)
 host=${host%%.*}
 echo $host
 
+echo $n1
 # Checking if the semaphore is 0
 if [ "$n1" -eq 0 ]; then
     # echo "clean-up,$p" >> $WORK_DIR/messages.txt
@@ -32,26 +34,26 @@ if [ "$n1" -eq 0 ]; then
     # ssh -p ${SSH_PORT} ${DEFAULT_USER}@${from_ip} rm -rf ${LOCAL_FITS_ROOT}/mwa/24ch/${p} ${SHARED_ROOT}/mwa/24ch/${p} ${LOCAL_SHM_ROOT}/mwa/dedisp/${p}/RFIfile*
     ssh -p ${SSH_PORT} ${DEFAULT_USER}@${from_ip} rm -rf ${LOCAL_FITS_ROOT}/mwa/24ch/${p}
 
-    local_pointing=$(scalebox variable get local_pointing:$p)
-    if [ "$local_pointing" = 'yes' ]; then
+    check the waiting tasks from db
+    check_result=$(python /app/bin/check_tasks.py ${from_ip})
+    code=$?
+    [ $code -ne 0 ] && echo "[ERROR] in check_task_queue.py! " >&2 && exit $code
+    echo "The check_tasks result: $check_result"
+    if [ "$check_result" -eq 0 ]; then
         # we can send a message to redis server.
         # the message is in the format of "host:timestamp", with priority $n3
         redis-cli -h $REDIS_HOST -p $REDIS_PORT ZADD $REDIS_QUEUE 1 "$from_ip:$(date +%s%3N)"
-
     else
+        sema3="host_vtask_size:local-copy:$host"
+        n3=$(scalebox semaphore increment $sema3)
+        code=$?
+        [ $code -ne 0 ] && echo "[ERROR] scalebox semaphore $sema3 increment! " >&2 && exit $code 
+        
         sema2="global_vtask_size:local-wait-queue"
         n2=$(scalebox semaphore increment $sema2)
         code=$?
         [ $code -ne 0 ] && echo "[ERROR] scalebox semaphore $sema2 increment! " >&2 && exit $code
-
-        sema3="host_vtask_size:local-copy:$host"
-        n3=$(scalebox semaphore increment $sema3)
-        echo $sema3
-        code=$?
-        [ $code -ne 0 ] && echo "[ERROR] scalebox semaphore $sema3 increment! " >&2 && exit $code 
-    fi
-
-
+    # fi
 fi
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 sema="dm-group-ready:$m"

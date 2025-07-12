@@ -75,7 +75,7 @@ def close_connection():
 def get_hosts(group_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT hostname FROM t_host WHERE group_id = %s", (group_id,))
+    cur.execute("SELECT id, hostname FROM t_host WHERE group_id = %s AND status = 'ON'", (group_id,))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
@@ -83,34 +83,36 @@ def get_hosts(group_id):
 def get_hosts_likely(group_id):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT hostname, ip_addr, parameters FROM t_host WHERE group_id ~ %s", (group_id,))
+    cur.execute("SELECT id, hostname, ip_addr, parameters FROM t_host WHERE group_id ~ %s AND status = 'ON'", (group_id,))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
 
-def get_hosts_likely_ordered(rfi_id, unpack_id, dedisp_id, group_id):
+def get_hosts_likely_ordered(copy_id, unpack_id, dedisp_id, group_id):
     sql = """
     SELECT 
+    h.id AS id,
     h.hostname AS host_name,
-    COALESCE(SUM(CASE WHEN t.job = %s THEN 1 ELSE 0 END), 0) AS rfi_alloc,
+    COALESCE(SUM(CASE WHEN t.job = %s THEN 1 ELSE 0 END), 0) AS copy_alloc,
     COALESCE(SUM(CASE WHEN t.job = %s THEN 1 ELSE 0 END), 0) AS unpack_alloc,
     COALESCE(SUM(CASE WHEN t.job = %s THEN 1 ELSE 0 END), 0) AS dedisp_alloc
     FROM 
         t_host h
     LEFT JOIN 
-        t_task t ON h.hostname = t.to_host
+        t_task t ON h.id = t.to_host
     AND 
         t.status_code in (-1, -2, -3)
     WHERE 
         h.group_id ~ %s
+        AND h.status = 'ON'
     GROUP BY 
-        h.hostname
+        h.hostname, h.id
     ORDER BY 
-        unpack_alloc, rfi_alloc, dedisp_alloc, host_name;
+        copy_alloc, unpack_alloc, dedisp_alloc, host_name;
     """
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute(sql, (rfi_id, unpack_id, dedisp_id, group_id))
+    cur.execute(sql, (copy_id, unpack_id, dedisp_id, group_id))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
@@ -144,120 +146,81 @@ def get_job_slot(job_id, host):
     put_connection(conn)
     return rows
 
-# 为指定job在指定host上创建若干slot，初始状态为READY
-def create_job_slots(job_id, host, num_slots):
-    conn = get_connection()
-    cur = conn.cursor()
-    for i in range(num_slots):
-        cur.execute("INSERT INTO t_slot (host, serial_num, status, job) VALUES (%s, %s, %s, %s)", (host, i, "READY", job_id))
-    conn.commit()
-    put_connection(conn)
-
 def get_host_by_ip(ip):
     conn = get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT hostname FROM t_host WHERE ip_addr = %s", (ip,))
+    cur.execute("SELECT id, hostname FROM t_host WHERE ip_addr = %s AND status = 'ON'", (ip,))
     rows = cur.fetchall()
     put_connection(conn)
     return rows
 
-# 更新t_host表中,ip_addr在传入的ip_list中的记录的group_id为group_id
-def update_host_group_id(ip_list, group_id):
-    if not ip_list:
-        return  # 空列表时不做任何操作
-
+def get_host_slots(host):
+    # 从t_slot表中获取当前host每个job的slot数量
     conn = get_connection()
     cur = conn.cursor()
-
-    # 构建 SQL 占位符
-    placeholders = ','.join(['%s'] * len(ip_list))
-    sql = f"UPDATE t_host SET group_id = %s WHERE ip_addr IN ({placeholders})"
-    params = [group_id] + ip_list
-
-    cur.execute(sql, params)
-    conn.commit()
+    cur.execute("SELECT job, COUNT(*) FROM t_slot WHERE host = %s GROUP BY job ORDER BY job", (host,))
+    rows = cur.fetchall()
     put_connection(conn)
+    # 将结果转换为字典
+    host_slots = {}
+    for row in rows:
+        host_slots[row[0]] = row[1]
+    return host_slots
 
-
-# 更新t_host表中,ip_addr在传入的ip_list中的记录的hostname为指定格式
-def update_host_hostname(ip_list, hostname_prefix, cluster):
-    if not ip_list:
-        return
-
+# 从t_task中查询job为job_id,status_code为status_code，to_host为host的记录数量
+# to_host可能为None,表示不限制
+def get_task_by_job(job_id, status_code, host=None):
     conn = get_connection()
     cur = conn.cursor()
+    if host is None:
+        cur.execute("SELECT COUNT(*) FROM t_task WHERE job = %s AND status_code = %s", (job_id, status_code))
+    else:
+        cur.execute("SELECT COUNT(*) FROM t_task WHERE job = %s AND status_code = %s AND to_host = %s", (job_id, status_code, host))
+    rows = cur.fetchall()
+    put_connection(conn)
+    return rows
 
-    # 构建 IP → 新 hostname 映射（按 IP 排序后编号）
-    sorted_ips = sorted(ip_list)
-    ip_hostname_pairs = [
-        (ip, f"{hostname_prefix}-{i:04d}.{cluster}") for i, ip in enumerate(sorted_ips)
-    ]
+def get_pointing_hosts(pointing, jobId):
+    conn = get_connection()
+    cur = conn.cursor()
+    # get the host of the job local-copy of the given app with the body pointing
+    sql = """
+        SELECT t_host.id, t_host.ip_addr, t_host.hostname, t_host.status
+        FROM t_host, t_task
+        WHERE t_task.job = %s
+        AND t_task.body = %s
+        AND t_host.id = t_task.to_host
+        """
+    cur.execute(sql, (jobId, pointing))
 
-    # 构造临时表值（VALUES 语法）
-    values_clause = ', '.join(["(%s, %s)"] * len(ip_hostname_pairs))
-    flat_params = []
-    for ip, hostname in ip_hostname_pairs:
-        flat_params.extend([ip, hostname])
+    rows = cur.fetchall()
+    put_connection(conn)
+    # return only 1 row
+    return rows
 
-    sql = f"""
-    UPDATE t_host AS t
-    SET hostname = v.hostname
-    FROM (VALUES {values_clause}) AS v(ip_addr, hostname)
-    WHERE t.ip_addr = v.ip_addr
-    """
 
-    cur.execute(sql, flat_params)
+def reset_semaphores(name, app):
+    sql = """
+        UPDATE t_semaphore
+        SET value = value0
+        WHERE name ~ %s
+        AND app = %s
+        """
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute(sql, (name, app))
     conn.commit()
     put_connection(conn)
-
-def update_grouped_hosts(sorted_ips, prefix, cluster, group_size=24, mode="a"):
-    if not sorted_ips:
-        return []
-
-    total_groups = int(len(sorted_ips) / group_size)
-    usable_count = total_groups * group_size
-    if usable_count == 0:
-        return sorted_ips
     
-    usable_ips = sorted_ips[:usable_count]
-    unused_ips = sorted_ips[usable_count:]
-
-    # 分组并构造更新映射
-    all_rows = []
-    cnt = 0
-    for group_idx in range(total_groups):
-        group_ips = usable_ips[group_idx * group_size : (group_idx + 1) * group_size]
-        new_group_id = f"{prefix}{group_idx:03d}"
-        if mode == "a":
-            for i, ip in enumerate(group_ips):
-                letter = string.ascii_lowercase[i]  # a-z
-                hostname = f"{new_group_id}-{letter}.{cluster}"
-                all_rows.append((ip, hostname, new_group_id))
-        else:
-            # 使用四位数字编号
-            for i, ip in enumerate(group_ips):
-                hostname = f"{prefix}-{cnt:04d}.{cluster}"
-                all_rows.append((ip, hostname, new_group_id))
-                cnt += 1
-
-    # 构造批量 UPDATE SQL
-    values_clause = ', '.join(['(%s, %s, %s)'] * len(all_rows))
-    flat_params = []
-    for ip, hostname, gid in all_rows:
-        flat_params.extend([ip, hostname, gid])
-
+def reset_semaphore(name, app):
+    sql = """
+        UPDATE t_semaphore
+        SET value = value0
+        WHERE name = %s
+        AND app = %s
+        """
     conn = get_connection()
     cur = conn.cursor()
-    
-    sql = f"""
-    UPDATE t_host AS t
-    SET hostname = v.hostname,
-        group_id = v.group_id
-    FROM (VALUES {values_clause}) AS v(ip_addr, hostname, group_id)
-    WHERE t.ip_addr = v.ip_addr
-    """
-
-    cur.execute(sql, flat_params)
+    cur.execute(sql, (name, app))
     conn.commit()
     put_connection(conn)
-    return unused_ips

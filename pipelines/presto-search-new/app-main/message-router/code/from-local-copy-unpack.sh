@@ -18,6 +18,6 @@ do
 done
 
 scalebox task add --sink-job dedisp-search -h to_ip=$from_ip --task-file ${WORK_DIR}/task-body.txt
-
+# scalebox task add --sink-job rfi-find -h to_ip=$from_ip $m
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt

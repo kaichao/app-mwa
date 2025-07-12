@@ -41,7 +41,7 @@ if [ -f $file_path ]; then
     date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
     /app/bin/list_missing.sh $dataset pointings.txt $PB $PE
 
-for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
+    for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
         # pi=$(printf "%05d" "$p")
 
     # the first line is the header, skip it
@@ -61,9 +61,13 @@ for pointing in $( cat ${WORK_DIR}/pointings.txt ); do
         echo "$sema2"
         scalebox semaphore create $sema2 $NUM_GROUPS
         date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
-        echo "scalebox task add --sink-job=local-wait-queue -h source_url=$source_url"
-        scalebox task add --sink-job=local-wait-queue -h source_url=$source_url $dataset/$pointing
+        echo $dataset/$pointing >>${WORK_DIR}/task-body.txt
+        # echo "scalebox task add --sink-job=local-wait-queue -h source_url=$source_url/mwa/24ch"
+        # scalebox task add --sink-job=local-wait-queue -h source_url=$source_url/mwa/24ch $dataset/$pointing
     done
+    cat ${WORK_DIR}/task-body.txt >> ${WORK_DIR}/custom-out.txt
+    echo "scalebox task add --sink-job=local-wait-queue -h source_url=$source_url/mwa/24ch"
+    scalebox task add --sink-job=local-wait-queue -h source_url=$source_url/mwa/24ch --task-file ${WORK_DIR}/task-body.txt
 else
     echo "DDplan file not found: $file_path"
     exit 2

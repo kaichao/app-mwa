@@ -24,6 +24,10 @@ elif [[ $m0 =~ ^Command:(.+)$ ]]; then
     m=${BASH_REMATCH[1]}
     # execute interact.sh
     ${code_dir}/interact.sh $m $headers
+elif [[ $m0 =~ ^recover:([^/]+)/p([0-9]+)$ ]]; then
+    dataset=${BASH_REMATCH[1]}
+    pointing=${BASH_REMATCH[2]}
+    ${code_dir}/recover_pointing.py ${dataset}/${pointing}
 else
     echo "[ERROR] In checking input format:$m0" >&2 && exit 1
 fi

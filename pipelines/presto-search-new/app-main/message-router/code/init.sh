@@ -5,6 +5,8 @@
 # set the variable
 scalebox variable set run_cached_pointings ${START_MODE}
 
+redis-cli -h $REDIS_HOST -p $REDIS_PORT DEL $REDIS_QUEUE
+
 # read the host names from host_list.txt and run the command on each host.
 # while read -r host; do
 #     # create the semaphore

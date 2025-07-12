@@ -37,9 +37,10 @@ else
 fi
 
 case $from_job in
-    # "rfi-find")
-    #     ${code_dir}/from-rfi-find.sh "$1" "$from_ip"
-    #     ;;
+    "rfi-find")
+        echo "rfi $1 completed."
+        exit 50
+        ;;
     "local-copy-unpack")
         ${code_dir}/from-local-copy-unpack.sh "$1" "$from_ip"
         ;;

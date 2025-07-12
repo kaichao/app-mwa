@@ -6,13 +6,13 @@
 # source /root/.bashrc
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 if [ $LOCAL_INPUT_ROOT ]; then
-    DIR_FITS="/local${LOCAL_INPUT_ROOT}/mwa/24ch"
+    DIR_FITS="/local_data_root${LOCAL_INPUT_ROOT}/mwa/24ch"
 else
     DIR_FITS=/cluster_data_root/mwa/24ch
 fi
 
 if [ $LOCAL_OUTPUT_ROOT ]; then
-    DIR_RFI="/local${LOCAL_OUTPUT_ROOT}/mwa/rfi"
+    DIR_RFI="/local_data_root${LOCAL_OUTPUT_ROOT}/mwa/rfi"
 else
     DIR_RFI=/cluster_data_root/mwa/rfi
 fi
