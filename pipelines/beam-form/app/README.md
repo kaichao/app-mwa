@@ -44,7 +44,7 @@ find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scale
 
 export SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch
 export TARGET_URL=/data1/mydata/mwa/24ch
-ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250703 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
+ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250707 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:6
 
 ```
 
@@ -58,39 +58,29 @@ ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250703 -type f
 ### p419集群全并行
 
 - 1440指向(全并行处理)
-
 ```sh
-START_MESSAGE=1302106648/p01321_01800/t1302106649_1302111446 \
-  PRESTO_APP_ID=139 \
+START_MESSAGE=1302106648/p02041_03480/t1302106649_1302111446 \
+  PRESTO_APP_ID=175 \
+  PRESTO_NODES=a.+ \
   PRELOAD_MODE=none \
-  NODES=d-0[01].+ \
-  PRESTO_NODES=c.+ \
+  NODES=d.+ \
+  RUN_MODE=full_parallel \
   TIME_STEP=200 \
   PULL_UNPACK_LIMIT_GB=120 \
   BEAM_MAKE_FREE_GB='{~n*7+14~}' \
   scalebox app create -e p419.env
 ```
 
+- 生成并行
 ```sh
-  START_MESSAGE=1255803168/p05161_06600 \
-  PRESTO_APP_ID=102 \
-  PRESTO_NODES=a-.+ \
-  scalebox app create -e p419.env
-```
-
-
-```sh
-  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
-  TIME_STEP=80 \
-  NODES="n-000[0-9]|n-001[01]" \
-  scalebox app create -e p419.env
-```
-
-
-- 生产测试，source_url通过p419-soruce.json来指定
-```sh
-  START_MESSAGE=1255803168/p04681_04920 \
-  PRESTO_APP_ID=61 \
+START_MESSAGE=1302106648/p01801_02040/t1302106649_1302111446 \
+  PRESTO_APP_ID= \
+  PRELOAD_MODE=none \
+  NODES=d.+ \
+  PRESTO_NODES=a.+ \
+  TIME_STEP=200 \
+  PULL_UNPACK_LIMIT_GB=120 \
+  BEAM_MAKE_FREE_GB='{~n*7+14~}' \
   scalebox app create -e p419.env
 ```
 
@@ -113,21 +103,23 @@ START_MESSAGE=1255803168/p00001_00960 \
 
 START_MESSAGE=1267459328/p07681_09016/t1267459330_1267464129 \
 
-START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
+START_MESSAGE=1265983624/p03121_03480/t1265983626_1265988429 \
 
-START_MESSAGE=1302106648/p00001_00480/t1302106649_1302111446 \
+START_MESSAGE=1302106648/p00001_01800/t1302106649_1302111446 \
+
 
 ```sh
-START_MESSAGE=1265983624/p01201_01680/t1265983626_1265988429 \
-  PRESTO_APP_ID=102 \
+START_MESSAGE=1267459328/p00001_00816 \
+  PRESTO_APP_ID= \
+  PRESTO_NODES= \
   PRELOAD_MODE=none \
   NODES=d-0[01].+ \
-  PRESTO_NODES= \
+  POINTING_FILE=pointings-250717.txt \
   TIME_STEP=160 \
   PULL_UNPACK_LIMIT_GB=95 \
   BEAM_MAKE_FREE_GB='{~n*5+11~}' \
   SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work2/cstu0036/mydata \
   scalebox app create -e p419.env
 ```
 

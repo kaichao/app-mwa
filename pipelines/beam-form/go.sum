@@ -11,8 +11,8 @@ github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/kaichao/gopkg/dbcache v0.0.0-20250622141727-ea6b44dc4112 h1:rjlvmHMdfYiulFbdrRTkVAW+city3LXxQK2w90fraYE=
 github.com/kaichao/gopkg/dbcache v0.0.0-20250622141727-ea6b44dc4112/go.mod h1:aN4S8YIevinHbL/qqcshGb4adr3F16eWfeeRiLQRB3Y=
-github.com/kaichao/gopkg/exec v0.0.0-20250408223243-678aae88d2cc h1:RXvuN9jBbeecxFCb2HkmEx1MGTAYuBX/1VaU3yZj9sc=
-github.com/kaichao/gopkg/exec v0.0.0-20250408223243-678aae88d2cc/go.mod h1:re4Vhy+6FHExQxUDrpgl0SjLlCkeHZiIoxQsEmQe7wI=
+github.com/kaichao/gopkg/exec v0.0.0-20250622141727-ea6b44dc4112 h1:2LfnjT29ieOpib5XDxXBwbTJH2d6aEySlaTSSM9UoHY=
+github.com/kaichao/gopkg/exec v0.0.0-20250622141727-ea6b44dc4112/go.mod h1:re4Vhy+6FHExQxUDrpgl0SjLlCkeHZiIoxQsEmQe7wI=
 github.com/kaichao/scalebox v0.0.0-20250626091337-cecb428adbe0 h1:9+vaufABcv0cHBcYrahI90enOmzVSM6oBnkXdUjVWp4=
 github.com/kaichao/scalebox v0.0.0-20250626091337-cecb428adbe0/go.mod h1:9M45iXgxC1B3B6+PaYtdizrjWpr1eYcGIiLJ+sAmbO4=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=

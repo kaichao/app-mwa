@@ -193,7 +193,7 @@ jobs:
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量，仅针对24个节点以上有效
       - INTERLEAVED_DAT=yes
       # 全并行的波束合成(full_parallel)，隐含着指向优先的排序 POINTING_FIRST=yes
-      - RUN_MODE=
+      - RUN_MODE=${RUN_MODE}
       - PRESTO_APP_ID=${PRESTO_APP_ID}
     slots:
       - h0:3
