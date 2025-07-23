@@ -17,7 +17,7 @@ datasets:
   1265983624:
     # t: 1265983626 .. 1265988429, 4804
     # pointings.txt里，1-87:费米源，88-162:已知脉冲星，163-11502:盲搜格点
-    # finished: 3480
+    # finished: 5280
     
     # channel dimension
     channelBegin: 109
@@ -34,7 +34,7 @@ datasets:
   1267459328:
     # t: 1267459330 .. 1267464129, 4800
     # p: 1 .. 9016
-    # finished: 250706
+    # finished: 250706/250721
 
     # channel dimension
     channelBegin: 109

@@ -173,10 +173,10 @@ WITH vtable AS (
     SELECT body_s[2] AS t,body_s[1] AS p,(to_host_s[1]::integer) AS ch,status_code
     FROM (
         SELECT regexp_matches(body, 'p(\d{5})_\d{5}/t\d{5}(\d{5})_\d{10}/ch(\d{3})', 'g') body_s, 
-        regexp_matches(headers->>'to_host', '-\d{2}(\d{2})\.', 'g') to_host_s, 
+        regexp_matches(headers->>'to_host', '\d{2}-(\d+)\.', 'g') to_host_s, 
         status_code
         FROM t_task
-        WHERE job=649
+        WHERE job=17
     ) tt
 --    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (

@@ -36,7 +36,7 @@ jobs:
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=${TARGET_URL}
-      - BW_LIMIT=30m
+      - BW_LIMIT=${BW_LIMIT}
       - KEEP_SOURCE_FILE=yes
     slots:
       - ${NODES}    
@@ -48,6 +48,7 @@ jobs:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
       sleep_interval_seconds: 60
+      task_min_seconds: 30
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
       dir_free_gb: /dev/shm/scalebox/mydata:${BEAM_MAKE_FREE_GB}
@@ -189,7 +190,7 @@ jobs:
       - SSH_PORT=${TARGET_PORT}
       - REDISCLI_HOST=
       # 首次加载更高限速，以支持快速加载
-      - FIRST_BW_LIMIT=60m
+      - FIRST_BW_LIMIT=${FIRST_BW_LIMIT}
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量，仅针对24个节点以上有效
       - INTERLEAVED_DAT=yes
       # 全并行的波束合成(full_parallel)，隐含着指向优先的排序 POINTING_FIRST=yes
