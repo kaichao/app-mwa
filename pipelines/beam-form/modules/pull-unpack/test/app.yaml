@@ -17,7 +17,7 @@ jobs:
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=
       - TARGET_URL=
-    hosts:
+    slots:
       - ${NODES}:2
 
   message-router:
@@ -31,5 +31,5 @@ jobs:
       - WITH_POINTING_PATH=${WITH_POINTING_PATH}
       - TIME_STEP=${TIME_STEP}
       - NODES=${NODES}
-    hosts:
+    slots:
       - h0:1

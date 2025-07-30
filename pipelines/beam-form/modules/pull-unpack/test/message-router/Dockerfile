@@ -1,4 +1,4 @@
-FROM golang:1.24.1
+FROM golang:1.24.5
 
 LABEL maintainer="kaichao"
 

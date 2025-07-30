@@ -3,7 +3,7 @@
 source functions.sh
 
 # DOWN_SAMPLER_ENABLED
-env >> ${WORK_DIR}/custom-out.txt
+# env >> ${WORK_DIR}/custom-out.txt
 
 input_root=$(get_header "$2" "input_root")
 if [ $input_root ]; then
@@ -18,13 +18,15 @@ if [ $output_root ]; then
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi
-echo "DIR_1CHY:${DIR_1CHY}, DIR_24CH:${DIR_24CH}"
+echo "DIR_1CHY:${DIR_1CHY}, DIR_24CH:${DIR_24CH}" >> ${WORK_DIR}/custom-out.txt
+echo "work_sub_dir:${DIR_1CHY}/$1" >> ${WORK_DIR}/custom-out.txt
 
 # 应该是 ${单通道目录根}/${观测号}/指向号/${起始时间戳}_${结尾时间戳}
 # m="1257010784/p00001/t1257010986_1257011185"
 cd "${DIR_1CHY}/$1" && zstd -d --rm *.zst
 
 input_files=$(ls *.fits)
+echo "current_dir:${PWD}" >> ${WORK_DIR}/custom-out.txt
 echo input_files:${input_files} >> ${WORK_DIR}/custom-out.txt
 splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]exit after splice_psrfits, error_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code

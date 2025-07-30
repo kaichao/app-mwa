@@ -1,4 +1,19 @@
 datasets:
+  1266680784:
+      # t: 1266680787 .. 1266685583, 4797
+    # pointings.txt里，1-72:已知脉冲星，73-11412:盲搜格点
+    # finished: 0
+
+    # channel dimension
+    channelBegin: 109
+
+    # time dimenstion
+    timeBegin: 1266680787
+    timeEnd: 1266685583
+
+    # pointing dimension
+    pointingEnd: 11412
+
   1302106648:
     # t: 1302106649 .. 1302111446, 4798
     # pointings.txt里，1-107:费米源，108-503:已知脉冲星，504-9280:盲搜格点
@@ -34,6 +49,7 @@ datasets:
   1267459328:
     # t: 1267459330 .. 1267464129, 4800
     # p: 1 .. 9016
+    # p2: 816
     # finished: 250706/250721
 
     # channel dimension
@@ -47,12 +63,14 @@ datasets:
     # timeStep: 200
 
     # pointing dimension
+    # pointingBegin: 1
     pointingEnd: 9016
     # pointingStep: 24
 
   1255803168:
     # t: 1255803170 .. 1255807967, 4798
     # p: 1 .. 10093
+    # p2: 960
     # finished: 250624
 
     # channel dimension
@@ -72,18 +90,13 @@ datasets:
 
     # channel dimension
     channelBegin: 109
-    # numOfChannels: 24
 
     # time dimenstion
     timeBegin: 1257010786
     timeEnd: 1257015583
-    # timeUnit: 40
-    # timeStep: 200
 
     # pointing dimension
-    # pointingBegin: 1
     pointingEnd: 12985
-    # pointingStep: 24
 
   1301240224:
     # t: 1301240225 .. 1301245022, 4798
@@ -144,6 +157,7 @@ datasets:
   1206977296:
     # 1206977303 ~ 1206981016, 3714
     # channel dimension
+    # not started
     channelBegin: 133
 
     # time dimenstion
