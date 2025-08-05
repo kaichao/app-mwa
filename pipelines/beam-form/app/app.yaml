@@ -89,6 +89,7 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
+      retry_rules: "['*:2']"
     environments:
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
       - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
@@ -112,8 +113,7 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      retry_rules: "['*']"
-      # initial_task_status: INITIAL
+      retry_rules: "['*:2']"
     environments:
       # 1chx
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
@@ -142,6 +142,7 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_pointing
+      retry_rules: "['*:2']"
     environments:
       - INPUT_ROOT=${LOCAL_SHM_ROOT}
       - OUTPUT_ROOT=

@@ -23,10 +23,30 @@ echo "work_sub_dir:${DIR_1CHY}/$1" >> ${WORK_DIR}/custom-out.txt
 
 # 应该是 ${单通道目录根}/${观测号}/指向号/${起始时间戳}_${结尾时间戳}
 # m="1257010784/p00001/t1257010986_1257011185"
-cd "${DIR_1CHY}/$1" && zstd -d --rm *.zst
+
+# Check if directory exists
+if [ ! -d "${DIR_1CHY}/$1" ]; then
+    echo "[ERROR] Directory ${DIR_1CHY}/$1 does not exist" >> ${WORK_DIR}/custom-out.txt
+    exit 101
+fi
+
+cd "${DIR_1CHY}/$1"
+pwd >> ${WORK_DIR}/custom-out.txt
+ls -l >> ${WORK_DIR}/custom-out.txt
+
+# Only decompress if zst files exist
+if ls *.zst 1> /dev/null 2>&1; then
+    ls -l *.zst >> ${WORK_DIR}/custom-out.txt
+    zstd -d --rm *.zst
+fi
+
+# Check if fits files exist
+if ! ls *.fits 1> /dev/null 2>&1; then
+    echo "[ERROR] No fits files found in directory" >> ${WORK_DIR}/custom-out.txt
+    exit 102
+fi
 
 input_files=$(ls *.fits)
-echo "current_dir:${PWD}" >> ${WORK_DIR}/custom-out.txt
 echo input_files:${input_files} >> ${WORK_DIR}/custom-out.txt
 splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
 [[ $code -ne 0 ]] && echo "[ERROR]exit after splice_psrfits, error_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code

@@ -13,12 +13,12 @@ jobs:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
     environments:
-      - SOURCE_URL=
+      - SOURCE_URL=${SOURCE_URL}
       - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
       - TARGET_SUBDIR=
-      - TARGET_URL=
+      - TARGET_URL=${TARGET_URL}
     slots:
-      - ${NODES}:2
+      - ${NODES}:1
 
   message-router:
     base_image: app-mwa/message-router-pull-unpack-test

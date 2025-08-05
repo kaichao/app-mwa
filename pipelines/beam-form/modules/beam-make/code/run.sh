@@ -84,7 +84,6 @@ else
         -J ${DIR_CAL}/${OBSID}/DI_JonesMatrices_node0${i}.dat \
         -B ${DIR_CAL}/${OBSID}/BandpassCalibration_node0${i}.dat
 fi
-
 code=$?
 [[ $code -ne 0 ]] && echo exit after make_beam, error_code:$code >&2 && exit $code
 
@@ -100,11 +99,11 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     # dest_file_r=${OBSID}/p${PTHEAD}_${PTTAIL}/t${BEG}_${END}/ch${ch}/p${pi}.fits
     # dest_file=${DIR_1CH}/${dest_file_r}
     dest_file=${fits_dir}/p${pi}.fits
-    orig_file=${WORK_DIR}/${point_arr[${i}]}/*.fits
+    orig_file="${WORK_DIR}/${point_arr[${i}]}/*.fits"
 
     # BUG：压缩参数开启会导致post_check检查出错 ！
     if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
-        zstd -T4 --rm ${orig_file}
+        zstd -T4 --rm "${orig_file}"
         orig_file="${orig_file}.zst"
         dest_file="${dest_file}.zst"
     fi

@@ -51,11 +51,13 @@ fi
 
 cd ${dir_1ch}
 
+# Check if any .fits files exist
+if ! ls *.fits &> /dev/null; then
+    echo "No .fits files found in the current directory."  >> ${WORK_DIR}/custom-out.txt
+    exit 101
+fi
+
 for f in *.fits; do
-    if [ ! -e "$f" ]; then
-        echo "No .fits files found in the current directory."  >> ${WORK_DIR}/custom-out.txt
-        break
-    fi
     echo "filename:$f"
     # 3. run the programs to downsample the files
     psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${dir_1chx}/$f ${dir_1ch}/$f

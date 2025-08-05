@@ -1,10 +1,14 @@
 package main
 
 import (
+	"beamform/internal/datacube"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/kaichao/scalebox/pkg/common"
+	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,27 +30,42 @@ func main() {
 		os.Exit(0)
 	}
 
-	// host-bound==false
-	/*
-		messages := message.GetMessagesForPullUnpack(os.Args[1], false)
-		for _, m := range messages {
-			common.AppendToFile("my-messages.txt", m)
-		}
+	code := toPullUnpack(os.Args[1], headers)
 
-		var headerOption string
-		if v := os.Getenv("SOURCE_URL"); v != "" {
-			headerOption = fmt.Sprintf("%s -h source_url=%s", headerOption, v)
-		}
-		if v := os.Getenv("TARGET_URL"); v != "" {
-			headerOption = fmt.Sprintf("%s -h target_url=%s", headerOption, v)
-		}
-		cmd := fmt.Sprintf(`scalebox task add --sink-job=pull-unpack %s --task-file my-messages.txt`,
-			headerOption)
-		code, err := exec.RunReturnExitCode(cmd, 300)
-		if err != nil {
-			os.Exit(126)
-		}
+	os.Exit(code)
+}
 
-		os.Exit(code)
-	*/
+func toPullUnpack(body string, fromHeaders map[string]string) int {
+	cube := datacube.NewDataCube(body)
+	fmt.Println(cube.ToCubeString())
+	trs := cube.GetTimeRanges()
+	fmt.Printf("len(trs)=%d,trs=%v\n", len(trs), trs)
+
+	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
+
+	messages := []string{}
+
+	for j := 0; j < cube.NumOfChannels; j++ {
+		ch := cube.ChannelBegin + j
+		for i := 0; i < len(trs); i += 2 {
+
+			targetSubDir := fmt.Sprintf("%s/t%d_%d/ch%d", cube.ObsID, trs[i], trs[i+1], ch)
+			headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
+
+			sourceURL := os.Getenv("SOURCE_TAR_ROOT")
+			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+			tus := cube.GetTimeUnitsWithinInterval(trs[i], trs[i+1])
+
+			for k := 0; k < len(tus); k += 2 {
+				m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
+				messages = append(messages, m+","+headers)
+			}
+		}
+	}
+
+	envs := map[string]string{
+		"SINK_JOB": "pull-unpack",
+	}
+
+	return task.AddTasks(messages, "{}", envs)
 }

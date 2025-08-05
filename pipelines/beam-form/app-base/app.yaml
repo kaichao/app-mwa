@@ -11,20 +11,25 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
       task_timeout_seconds: 3600
+      # slot容错
+      task_min_seconds: 30
     parameters:
+      task_dist_mode: ${TASK_DIST_MODE}
+      pod_id: ${POD_ID}
       key_group_regex: ^([0-9]+)
       retry_rules: "['*']"
       max_tasks_per_minute: 3
       task_cache_expired_minutes: 65
     environments:
       - INPUT_ROOT=
-      - OUTPUT_ROOT=
+      - OUTPUT_ROOT=${FITS_ROOT}
       - KEEP_TARGET_FILE=yes
       - POINTING_FILE=
       # - POINTING_FILE=pointing-250313.txt
-      - POINTING_RANGE=${POINTING_RANGE}
+      - POINTING_RANGE=
+      - ZSTD_TARGET_FILE=no
     slots:
-      - ${NODES}:3
+      - ${NODES}:4
     sink_jobs:
       - down-sample
 
@@ -38,7 +43,7 @@ jobs:
     parameters:
       key_group_regex: ^([0-9]+)
     environments:
-      - INPUT_ROOT=
+      - INPUT_ROOT=${FITS_ROOT}
       - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=

@@ -53,7 +53,3 @@ func defaultFunc(msg string, headers map[string]string) int {
 
 	return toBeamMake(msg)
 }
-
-// func fromMessageRouter(message string, headers map[string]string) int {
-// 	return 0
-// }
