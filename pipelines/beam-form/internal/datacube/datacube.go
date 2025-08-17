@@ -47,7 +47,7 @@ var (
 func NewDataCube(datasetID string) *DataCube {
 	obsID, p0, p1, t0, t1, _, err := strparse.ParseParts(datasetID)
 	if err != nil {
-		logrus.Errorf("New dataset, err-info:%v\n", err)
+		logrus.Errorf("New dataset, dataset-id:%s,err-info:%v\n", datasetID, err)
 		return nil
 	}
 

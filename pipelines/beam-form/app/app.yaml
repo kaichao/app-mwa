@@ -60,7 +60,8 @@ jobs:
       retry_rules: "['*:2','134:9','139:9']"
       slot_timeout_minutes: 30
       slot_recoverable: yes
-      max_tasks_per_minute: 3
+      # deprecated
+      # max_tasks_per_minute: 3
       message_router_index: 1
       task_cache_expired_minutes: 65
     environments:
@@ -73,7 +74,7 @@ jobs:
       - POINTING_FILE=${POINTING_FILE}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
-#      - c00-00:4:d0[01]
+      - ${GROUP_NODES}:2:d00
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
@@ -98,7 +99,7 @@ jobs:
       - ENABLE_LOCAL_COMPUTE=yes
     slots:
       - ${NODES}
-#      - c00-00:4
+      - ${GROUP_NODES}
 
   fits-redist:
     base_image: ${FILE_COPY}
@@ -126,7 +127,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
     slots:
       - ${NODES}
-#      - c00-00:4
+      - ${GROUP_NODES}
 
   fits-merge:
     label: 24通道fits合并

@@ -128,7 +128,7 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
     START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
 ```sh
     START_MESSAGE=1302106648/p00001_00960 \
-    NODES=n0 \
+    NODES=n0:4 \
     scalebox app create -e p419.env
 ```
 
@@ -137,7 +137,7 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
 export SOURCE_URL=/work2/cstu0036/mydata
 export TARGET_URL=/work2/cstu0036/mydata
 ssh login1 'cd /work2/cstu0036/mydata/mwa/tar && find 1302106648/ -type f' | sort |head -1 \
-| scalebox app run --image-name=/public/home/cstu0036/singularity/scalebox/file-copy.sif --code-path=/public/home/cstu0036/app-mwa/pipelines/beam-form/modules/pull-unpack/code --cluster=p419 --slot-regex=n0
+| scalebox app run --image-name=/public/home/cstu0036/singularity/scalebox/file-copy.sif --code-path=/public/home/cstu0036/app-mwa/pipelines/beam-form/modules/pull-unpack/code --cluster=p419 --slot-regex=n0:4
 ```
 
 

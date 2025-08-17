@@ -3,6 +3,8 @@
 source functions.sh
 source $(dirname $0)/functions.sh
 
+echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/custom-out.txt
+
 # env | sort > ${WORK_DIR}/custom-out.txt
 
 # OBSID/p{PTHEAD}_{PTTAIL}/t{BEG}_{END}/ch{ch}/
@@ -22,6 +24,13 @@ if [ $INPUT_ROOT ]; then
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
+
+if [ "$SLOT_ROLE" = "group" ]; then
+    # 用全局dat目录
+    DIR_DAT=/cluster_data_root/mwa/dat
+fi
+
+
 if [ $OUTPUT_ROOT ]; then
     DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/mwa/1ch")
 else

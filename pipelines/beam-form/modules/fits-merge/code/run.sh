@@ -60,7 +60,7 @@ output_dir=$(dirname ${output_file})
 filename=$(basename ${output_file})
 
 echo "new feature for local-copy" >> ${WORK_DIR}/custom-out.txt
-echo "output_dir:$output_dir" >> ${WORK_DIR}/custom-out.txt
+echo "output_dir:$output_dir" >> ${WORK_DIR}/-out.txtcustom
 
 cd ${WORK_DIR} && mv -f all*.fits ${filename} 
 # mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
@@ -70,12 +70,19 @@ code=$?
 bw_limit=$(get_header "$2" "bw_limit")
 # BW_LIMIT  "500k"/"1m"
 if [ -n "$bw_limit" ]; then
-    # 已设置
-    zstd_cmd="zstd -c --rm ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}.zst"
+    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+        cmd="cat ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}; rm -f ${WORK_DIR}/${filename}"
+    else
+        cmd="zstd -c --rm ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}.zst"
+    fi
 else
-    zstd_cmd="zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst"
+    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+        cmd="mv -f ${WORK_DIR}/${filename} ."
+    else
+        cmd="zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst"
+    fi
 fi
-mkdir -p ${output_dir} && cd ${output_dir} && eval $zstd_cmd
+mkdir -p "${output_dir}" && cd "${output_dir}" && eval $cmd
 # mkdir -p ${output_dir} && cd ${output_dir} && zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file "  >> ${WORK_DIR}/custom-out.txt && exit $code

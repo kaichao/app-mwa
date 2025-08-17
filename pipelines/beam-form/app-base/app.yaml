@@ -17,8 +17,8 @@ jobs:
       task_dist_mode: ${TASK_DIST_MODE}
       pod_id: ${POD_ID}
       key_group_regex: ^([0-9]+)
-      retry_rules: "['*']"
-      max_tasks_per_minute: 3
+      retry_rules: "['*:2','134:9','139:9']"
+      # max_tasks_per_minute: 3
       task_cache_expired_minutes: 65
     environments:
       - INPUT_ROOT=
@@ -42,12 +42,16 @@ jobs:
       code_path: ${CODE_BASE}/down-sample/code
     parameters:
       key_group_regex: ^([0-9]+)
+      retry_rules: "['*:2']"
+      task_dist_mode: ${TASK_DIST_MODE}
+      pod_id: ${POD_ID}
     environments:
       - INPUT_ROOT=${FITS_ROOT}
       - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
+      - ZSTD_TARGET_FILE=no
     slots:
       - ${NODES}
 
@@ -60,10 +64,12 @@ jobs:
       code_path: ${CODE_BASE}/fits-merge/code
     parameters:
       key_group_regex: ^([0-9]+)
+      retry_rules: "['*:2']"
     environments:
       - INPUT_ROOT=
       - OUTPUT_ROOT=${OUTPUT_ROOT_24CH}
       - KEEP_SOURCE_FILE=no
+      - ZSTD_TARGET_FILE=no
     slots:
       - ${NODES}
 

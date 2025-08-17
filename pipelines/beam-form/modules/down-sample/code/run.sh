@@ -65,29 +65,53 @@ for f in *.fits; do
     [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f "  >> ${WORK_DIR}/custom-out.txt && exit $code
 
     # rename file to normalized
-    mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f} && zstd --long -T2 --rm ${dir_1chx}/${f}
+    mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f}
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] rename fits file and zstd compress " >&2 && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR] rename fits file:${dir_1chx}/${f}" >&2 && exit $code
+
+    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+        target_file="${dir_1chx}/${f}"
+    else
+        zstd --long -T2 --rm ${dir_1chx}/${f}
+        code=$?
+        [[ $code -ne 0 ]] && echo "[ERROR] rename zstd compress file:${dir_1chx}/${f}" >&2 && exit $code
+        target_file="${dir_1chx}/${f}.zst"
+    fi
 
     # 检查输入、输出文件的大小比例是否合理？
-    post_check "${dir_1ch}/${f}" "${dir_1chx}/${f}.zst"
+    post_check "${dir_1ch}/${f}" "${target_file}"
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/custom-out.txt && exit $code
 
-    # 下采样后文件
-    f0="${dir_1chx}/${f}.zst"
-    # 按pointing再分发后文件
-    f1="${dir_1chy}/${f}.zst"
+cat <<EOF >> ${WORK_DIR}/custom-out.txt
+filenames:
+psrfits_subband output:${dir_1chx}/${f}_0001.fits
+normalized:${dir_1chx}/${f}
+target_file:$target_file
+EOF
+
+
+    if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
+        # 下采样后文件
+        f0="${dir_1chx}/${f}.zst"
+        # 按pointing再分发后文件
+        f1="${dir_1chy}/${f}.zst"
+    else
+        # 下采样后文件
+        f0="${dir_1chx}/${f}"
+        # 按pointing再分发后文件
+        f1="${dir_1chy}/${f}"
+    fi
     if [ "$ENABLE_LOCAL_COMPUTE" != "yes" ]; then
         # 非本地计算，对fits.zst文件按pointing直接做分发
-        regex='^(.+)/(p[0-9]+_[0-9]+)/(t[0-9]+_[0-9]+)/(ch[0-9]+)/(p[0-9]+).fits.zst$'
+        regex='^(.+)/(p[0-9]+_[0-9]+)/(t[0-9]+_[0-9]+)/(ch[0-9]+)/(p[0-9]+).fits(.zst)?$'
         if [[ $f1 =~ $regex ]]; then
             # echo "${BASH_REMATCH[1]}"  # mwa/1chx/1257617424
             # echo "${BASH_REMATCH[2]}"  # p00001_00024
             # echo "${BASH_REMATCH[3]}"  # t1257617426_1257617505
             # echo "${BASH_REMATCH[4]}"  # ch109
             # echo "${BASH_REMATCH[5]}"  # p00001
-            f1="${BASH_REMATCH[1]}/${BASH_REMATCH[5]}/${BASH_REMATCH[3]}/${BASH_REMATCH[4]}.fits.zst"
+            f1="${BASH_REMATCH[1]}/${BASH_REMATCH[5]}/${BASH_REMATCH[3]}/${BASH_REMATCH[4]}.fits"
             mkdir -p "$(dirname $f1)" && mv -f $f0 $f1
             code=$?
             [[ $code -ne 0 ]] && echo "[ERROR] rename ${f0} " >> ${WORK_DIR}/custom-out.txt && exit $code
@@ -101,6 +125,7 @@ for f in *.fits; do
         echo $f0 >> ${WORK_DIR}/output-files.txt
     fi
     echo "${dir_1ch}/${f}" >> ${WORK_DIR}/input-files.txt
+
 done
 
 [ "$KEEP_SOURCE_FILE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt
