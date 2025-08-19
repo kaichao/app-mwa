@@ -12,7 +12,7 @@ jobs:
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
     arguments:
-      task_timeout_seconds:
+      task_max_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/beam-maker/code
       # output_text_size: 1048576
     parameters:
@@ -50,7 +50,7 @@ jobs:
     label: 24通道fits合并
     base_image: ${MWA_VCSTOOLS}
     arguments:
-      task_timeout_seconds:
+      task_max_seconds:
       code_path: ${CODE_BASE}/dockerfiles/mwa-vcstools/fits-merger/code
     parameters:
       # 1257010784/p00097/t1257010786_1257010845

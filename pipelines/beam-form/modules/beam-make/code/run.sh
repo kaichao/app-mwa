@@ -73,6 +73,7 @@ PTLIST=${DIR_CAL}/${OBSID}/${pointing_file}
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 
 cd ${WORK_DIR}
+echo "WORK_DIR:${WORK_DIR}, current_dir:${PWD}" >> ${WORK_DIR}/custom-out.txt
 if [ "$RUNNING_MODE" = "1" ]; then
     make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \

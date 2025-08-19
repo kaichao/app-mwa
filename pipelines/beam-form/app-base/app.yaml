@@ -10,9 +10,10 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
-      task_timeout_seconds: 3600
+      task_max_seconds: 3600
       # slot容错
       task_min_seconds: 30
+      slot_options: tmpfs_workdir
     parameters:
       task_dist_mode: ${TASK_DIST_MODE}
       pod_id: ${POD_ID}
@@ -28,6 +29,8 @@ jobs:
       # - POINTING_FILE=pointing-250313.txt
       - POINTING_RANGE=
       - ZSTD_TARGET_FILE=no
+      # 设置临时目录下的文件所属组
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}:4
     sink_jobs:
@@ -40,6 +43,7 @@ jobs:
       # 20-min
       max_sleep_count: 200
       code_path: ${CODE_BASE}/down-sample/code
+      slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       retry_rules: "['*:2']"
@@ -52,6 +56,7 @@ jobs:
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
       - ZSTD_TARGET_FILE=no
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}
 
@@ -62,6 +67,7 @@ jobs:
     # 1 hour
       max_sleep_count: 720
       code_path: ${CODE_BASE}/fits-merge/code
+      slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
       retry_rules: "['*:2']"
@@ -70,6 +76,7 @@ jobs:
       - OUTPUT_ROOT=${OUTPUT_ROOT_24CH}
       - KEEP_SOURCE_FILE=no
       - ZSTD_TARGET_FILE=no
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}
 

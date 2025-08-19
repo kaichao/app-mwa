@@ -21,7 +21,7 @@ flowchart TD
 cd pipelines/beam-form/modules/pull-unpack/test
 
 
-START_MESSAGE=1255803168 \
+START_MESSAGE=1302106648 \
 scalebox app create -e p419.env
 
 ```
@@ -40,11 +40,33 @@ scalebox app create -e p419.env
 
 ## 二、流水线测试
 
+
 ### p419
+- 全共享方式
+
+NODES='d00-(0[8-9]|1[0-9]|2[0-3])' \
+
+
+START_MESSAGE=1302106648/p02281_02760 \
+
+
 ```sh
-START_MESSAGE=1255803168/p00505_00528 \
+START_MESSAGE=1302106648/p04825_05040 \
+OUTPUT_ROOT_24CH=/work2/cstu0036/mydata \
+NODES='^d00.+' \
+scalebox app create -e p419.env
+```
+
+
+- 半共享方式
+```sh
+START_MESSAGE=1302106648/p03241_03264 \
 OUTPUT_ROOT_24CH=/work1/cstu0036/mydata \
-NODES=n-00.+ \
+TIME_STEP=160 \
+NODES='a01.+' \
+TASK_DIST_MODE=HOST-BOUND \
+POD_ID=by_channel \
+FITS_ROOT= \
 scalebox app create -e p419.env
 
 ```

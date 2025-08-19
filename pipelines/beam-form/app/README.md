@@ -28,13 +28,13 @@ scalebox app create
 ```
 
 ```sh
-export SOURCE_URL=/data2/mydata/mwa/tar
+export SOURCE_URL=/data1/mydata/mwa/tar
 export TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar
 
 scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
 
-cd /data2/mydata/mwa/tar
-find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:4
+cd $SOURCE_URL
+find 1253991112 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
 
 ```
 
@@ -105,15 +105,17 @@ START_MESSAGE=1267459328/p07681_09016/t1267459330_1267464129 \
 
 START_MESSAGE=1265983624/p09361_11502/t1265983626_1265988429 \
 
-START_MESSAGE=1302106648/p00001_02040/t1302106649_1302111446 \
+START_MESSAGE=1302106648/p02281_02760/t1302106649_1302111446 \
 
+1253991112/p00001_00120
 
 ```sh
-START_MESSAGE=1265983624/p10081_10104/t1265983626_1265988429 \
+START_MESSAGE=1302106648/p04824_05160 \
   PRESTO_APP_ID= \
   PRESTO_NODES= \
   PRELOAD_MODE=none \
-  NODES=^d0.+ \
+  NODES=^d00.+ \
+  GROUP_NODES=e00-00 \
   POINTING_FILE= \
   FIRST_BW_LIMIT=100m \
   BW_LIMIT=40m \
@@ -121,24 +123,24 @@ START_MESSAGE=1265983624/p10081_10104/t1265983626_1265988429 \
   PULL_UNPACK_LIMIT_GB=95 \
   BEAM_MAKE_FREE_GB='{~n*5+11~}' \
   SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work2/cstu0036/mydata \
+  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
   scalebox app create -e p419.env
 ```
 
-
+- 每组观测起始指向处理
 ```sh
-START_MESSAGE=1266680784/p00001_00096 \
+START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
   PRESTO_APP_ID= \
   PRESTO_NODES= \
   PRELOAD_MODE=none \
-  NODES=^c0.+ \
+  NODES='d00.+' \
   POINTING_FILE= \
-  FIRST_BW_LIMIT=300m \
-  BW_LIMIT=200m \
+  FIRST_BW_LIMIT=70m \
+  BW_LIMIT=60m \
   TIME_STEP=120 \
   PULL_UNPACK_LIMIT_GB=65 \
   BEAM_MAKE_FREE_GB='{~n*4+9~}' \
-  SOURCE_TAR_ROOT=astro@10.100.1.30:10022/data2/mydata \
+  SOURCE_TAR_ROOT=astro@10.100.1.30:10022/data1/mydata \
   TARGET_24CH_ROOT=/work2/cstu0036/mydata \
   scalebox app create -e p419.env
 ```

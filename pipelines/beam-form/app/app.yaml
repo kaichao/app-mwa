@@ -38,6 +38,7 @@ jobs:
       - TARGET_URL=${TARGET_URL}
       - BW_LIMIT=${BW_LIMIT}
       - KEEP_SOURCE_FILE=yes
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}    
 
@@ -46,7 +47,7 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
-      task_timeout_seconds: 3600
+      task_max_seconds: 3600
       sleep_interval_seconds: 60
       task_min_seconds: 30
       # 避免工作目录放在 /tmp下，被定期删除
@@ -72,6 +73,7 @@ jobs:
       - ZSTD_TARGET_FILE=no
       # 精搜的指向文件名
       - POINTING_FILE=${POINTING_FILE}
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
       - ${GROUP_NODES}:2:d00
@@ -97,6 +99,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=yes
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}
       - ${GROUP_NODES}
@@ -125,6 +128,7 @@ jobs:
       - TARGET_USER=${TARGET_USER}
       - TARGET_PORT=${TARGET_PORT}
       - KEEP_SOURCE_FILE=no
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}
       - ${GROUP_NODES}
@@ -150,6 +154,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       # "500k"/"1m"/...
       - BW_LIMIT=20m
+      - TMPDIR_GROUP=39
     slots:
       - ${NODES}
       - ${PRESTO_NODES}
