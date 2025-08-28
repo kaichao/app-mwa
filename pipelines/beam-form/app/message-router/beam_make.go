@@ -55,7 +55,7 @@ func fromBeamMake(m string, headers map[string]string) int {
 			Port:       sshPort,
 			Background: true,
 		}
-		cmd := fmt.Sprintf(`rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`, obsID, suffix)
+		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s/%s`, os.Getenv("LOCAL_TMPDIR"), obsID, suffix)
 		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
 		if err != nil {
 			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",

@@ -4,15 +4,15 @@ source functions.sh
 # source $(dirname $0)/functions.sh
 
 if [ $INPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_path "${INPUT_ROOT}/mwa/1chx")
+    dir_1chx=$(get_host_path "${INPUT_ROOT}/mydata/mwa/1chx")
 else
-    DIR_1CHX=/cluster_data_root/mwa/1chx
+    dir_1chx=/cluster_data_root/mwa/1chx
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CHY=$(get_host_path "${OUTPUT_ROOT}/mwa/1chy")
+    dir_1chy=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1chy")
 else
-    DIR_1CHY=/cluster_data_root/mwa/1chy
+    dir_1chy=/cluster_data_root/mwa/1chy
 fi
 
 # if [ $OUTPUT_ROOT ]; then
@@ -40,7 +40,7 @@ target_hosts=$(get_header "$2" "target_hosts")
 # 设置 IFS 为逗号
 IFS=',' read -r -a arr_hosts <<< "$target_hosts"
 
-cd "${DIR_1CHX}/$1"
+cd "${dir_1chx}/$1"
 echo pwd:$PWD >> ${WORK_DIR}/custom-out.txt
 # 使用 mapfile 将当前目录下所有文件名读取到数组中
 mapfile -t arr_files < <(ls -p | grep -v /)
@@ -53,8 +53,7 @@ if [ ${#arr_files[@]} -ne ${#arr_hosts[@]} ]; then
     exit 1
 fi
 
-#export SOURCE_URL=${DIR_1CHY}
-export SOURCE_URL=/dev/shm/scalebox
+export SOURCE_URL=${LOCAL_SHMDIR}
 
 target_user=${TARGET_USER:-root}
 target_port=${TARGET_PORT:-22}
@@ -68,7 +67,7 @@ for i in "${!arr_files[@]}"; do
     f=${arr_files[i]}
     p="${f%%.fits.zst}"
     fn="${ds}/${p}/${t_label}/${ch}.fits.zst"
-    file_1chy="${DIR_1CHY}/$fn"
+    file_1chy="${dir_1chy}/$fn"
     mkdir -p "$(dirname $file_1chy)"
     if [ "$KEEP_SOURCE_FILE" == "yes" ]; then
         cp -f $f $file_1chy
@@ -81,7 +80,7 @@ for i in "${!arr_files[@]}"; do
         continue
     fi
 #    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${target_dir}
-    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}/dev/shm/scalebox
+    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${LOCAL_SHMDIR}
     # 循环调用/app/share/bin/run.sh，分发文件
     m="mydata/mwa/1chy/$fn"
     eval "/app/share/bin/run.sh '$m' '$2'"

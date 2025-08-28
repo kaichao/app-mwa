@@ -1,9 +1,16 @@
 datasets:
+
+  1258221008:
+    # pointings.txt 的1-20行是已知脉冲星，21-11360是盲搜格点
+  1301412552:
+    # pointings.txt 的1-59行是已知脉冲星，60-11399是盲搜格点
+  1302282040:
+    # pointings.txt 的1-231行是已知脉冲星，232-11571是盲搜格点
   1253991112:
     # R04
     # t: 1253991114 .. 1253995911, 4798
     # pointings.txt里，1-12:已知脉冲星，13-11352:盲搜格点
-    # finished: 120
+    # finished: 960
 
     # channel dimension
     channelBegin: 109
@@ -45,7 +52,8 @@ datasets:
   1265983624:
     # t: 1265983626 .. 1265988429, 4804
     # pointings.txt里，1-87:费米源，88-162:已知脉冲星，163-11502:盲搜格点
-    # finished: 250801
+    # 613(r2)
+    # finished: 250801 / 250823(r2)
     
     # channel dimension
     channelBegin: 109

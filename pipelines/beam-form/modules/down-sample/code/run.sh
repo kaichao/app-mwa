@@ -16,19 +16,19 @@ source $(dirname $0)/functions.sh
 
 # 1. set the input / output directory
 if [ $INPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${INPUT_ROOT}/mwa/1ch")
+    DIR_1CH=$(get_host_path "${INPUT_ROOT}/mydata/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_path "${OUTPUT_ROOT}/mwa/1chx")
+    DIR_1CHX=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1chx")
 else
     DIR_1CHX=/cluster_data_root/mwa/1chx
 fi
 # 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CHY=$(get_host_path "${OUTPUT_ROOT}/mwa/1chy")
+    DIR_1CHY=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1chy")
 else
     DIR_1CHY=/cluster_data_root/mwa/1chy
 fi

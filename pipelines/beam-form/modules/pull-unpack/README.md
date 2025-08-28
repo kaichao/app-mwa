@@ -8,13 +8,13 @@ p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst
 
 ### 1.2 消息头/环境变量
 
-| 消息头               | 环境变量          | 说明                                 |
-| ------------------- | ---------------  | ----------------------------------- |
-| source_url          | SOURCE_URL       | 本地 或 rsync-over-ssh               |
-| target_url          | TARGET_URL       | 本地目录                             |
-| source_jump_servers | SOURCE_JUMP_SERVERS | ssh的jump_servers                   |
-|                     | BW_LIMIT         | 读取数据的最大带宽，10k/10m/10g        |
-|                     | KEEP_SOURCE_FILE | 拉取数据后，是否保留原始文件，'yes'/'no' |
+| 消息头       | 环境变量          | 说明                                 |
+| ----------- | ---------------  | ----------------------------------- |
+| source_url  | SOURCE_URL       | 本地 或 rsync-over-ssh               |
+| target_url  | TARGET_URL       | 本地目录                             |
+| source_jump | SOURCE_JUMP      | ssh的jump servers                   |
+|             | BW_LIMIT         | 读取数据的最大带宽，10k/10m/10g        |
+|             | KEEP_SOURCE_FILE | 拉取数据后，是否保留原始文件，'yes'/'no' |
 
 
 
@@ -127,8 +127,8 @@ SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
 - p419-singularity
     START_MESSAGE=1257617424/p00001_00120/t1257617426_1257617505 \
 ```sh
-    START_MESSAGE=1302106648/p00001_00960 \
-    NODES=n0:4 \
+    START_MESSAGE=1253991112/p00001_00960 \
+    NODES=n0 \
     scalebox app create -e p419.env
 ```
 

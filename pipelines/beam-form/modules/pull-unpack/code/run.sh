@@ -32,7 +32,12 @@ echo "pointing_path=$pointing_path"
 # target_url is local-dir
 target_url=$(get_header "$2" "target_url")
 target_subdir=$(get_header "$2" "target_subdir")
-target_dir=$(get_host_path "${target_url}/${target_subdir}")
+if [[ "$target_url" == /* ]]; then
+    target_dir="${target_url}/${target_subdir}"
+else
+    target_dir="${LOCAL_TMPDIR}/${target_url}/${target_subdir}"
+fi
+#target_dir=$(get_host_path "${target_url}/${target_subdir}")
 
 source_url=$(get_header "$2" "source_url")
 source_mode=$(get_mode "$source_url")
@@ -50,11 +55,11 @@ fi
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
     source_dir=$(get_host_path $source_dir)
-    cmd="cat ${source_dir}/mwa/tar/$dataset/$file_name | ${cmd_part}"
+    cmd="cat ${source_dir}/mydata/mwa/tar/$dataset/$file_name | ${cmd_part}"
 else
     # SSH
-    ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump_servers")
-    cmd="$ssh_cmd \"cat ${source_dir}/mwa/tar/$dataset/$file_name\" - | ${cmd_part}"
+    ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump")
+    cmd="$ssh_cmd \"cat ${source_dir}/mydata/mwa/tar/$dataset/$file_name\" - | ${cmd_part}"
 fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt

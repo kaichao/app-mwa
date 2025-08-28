@@ -111,7 +111,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 				logrus.Errorf("variable get, var-name:%s, err-info:%v\n", varName, err)
 				return 2
 			}
-			sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s/mydata",
+			sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s",
 				storIndex, storIndex)
 			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
 		} else {

@@ -3,6 +3,7 @@
 source functions.sh
 source $(dirname $0)/functions.sh
 
+echo "WORK_DIR:$WORK_DIR."
 echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/custom-out.txt
 
 # env | sort > ${WORK_DIR}/custom-out.txt
@@ -20,7 +21,8 @@ else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $INPUT_ROOT ]; then
-    DIR_DAT=$(get_host_path "${INPUT_ROOT}/mwa/dat")
+    DIR_DAT=$(get_host_path "${INPUT_ROOT}/mydata/mwa/dat")
+    # DIR_DAT="${LOCAL_TMPDIR}/mydata/mwa/dat"
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
@@ -30,9 +32,9 @@ if [ "$SLOT_ROLE" = "group" ]; then
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 
-
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/mwa/1ch")
+    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1ch")
+    # DIR_1CH=$(get_host_path "${LOCAL_TMPFSDIR}/mydata/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi

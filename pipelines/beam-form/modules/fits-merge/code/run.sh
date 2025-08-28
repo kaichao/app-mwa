@@ -7,14 +7,14 @@ source functions.sh
 
 input_root=$(get_header "$2" "input_root")
 if [ $input_root ]; then
-    DIR_1CHY=$(get_host_path "${input_root}/mwa/1chy")
+    DIR_1CHY=$(get_host_path "${input_root}/mydata/mwa/1chy")
 else
     DIR_1CHY=/cluster_data_root/mwa/1chy
 fi
 
 output_root=$(get_header "$2" "output_root")
 if [ $output_root ]; then
-    DIR_24CH=$(get_host_path "${output_root}/mwa/24ch")
+    DIR_24CH=$(get_host_path "${output_root}/mydata/mwa/24ch")
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi

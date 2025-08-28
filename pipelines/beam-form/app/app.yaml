@@ -24,8 +24,8 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      dir_free_gb: /tmp/scalebox/mydata/mwa/dat:15
-      dir_limit_gb: /tmp/scalebox/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
+      dir_free_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:15
+      dir_limit_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
@@ -33,12 +33,14 @@ jobs:
       key_group_regex: ^([0-9]+)
     environments:
       - SOURCE_URL=${SOURCE_TAR_ROOT}
-      - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
+      - SOURCE_JUMP=${SOURCE_JUMP}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
-      - TARGET_URL=${TARGET_URL}
+      - TARGET_URL=mydata/mwa/dat
       - BW_LIMIT=${BW_LIMIT}
       - KEEP_SOURCE_FILE=yes
       - TMPDIR_GROUP=39
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}    
 
@@ -47,18 +49,18 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
-      task_max_seconds: 3600
+      task_max_seconds: 2400
       sleep_interval_seconds: 60
       task_min_seconds: 30
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
-      dir_free_gb: /dev/shm/scalebox/mydata:${BEAM_MAKE_FREE_GB}
+      dir_free_gb: ${LOCAL_SHMDIR}/mydata:${BEAM_MAKE_FREE_GB}
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
       task_progress_group_diff: 6
       key_group_regex: ^([0-9]+)
-      retry_rules: "['*:2','134:9','139:9']"
+      retry_rules: "['*:3','134:9','135:9','139:9']"
       slot_timeout_minutes: 30
       slot_recoverable: yes
       # deprecated
@@ -66,14 +68,16 @@ jobs:
       message_router_index: 1
       task_cache_expired_minutes: 65
     environments:
-      - INPUT_ROOT=${LOCAL_TMP_ROOT}
-      - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_TMPDIR}
+      - OUTPUT_ROOT=${LOCAL_SHMDIR}
       - KEEP_TARGET_FILE=yes
       - POINTING_RANGE=${POINTING_RANGE}
       - ZSTD_TARGET_FILE=no
       # 精搜的指向文件名
       - POINTING_FILE=${POINTING_FILE}
       - TMPDIR_GROUP=39
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
       - ${GROUP_NODES}:2:d00
@@ -92,14 +96,16 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      retry_rules: "['*:2']"
+      retry_rules: "['*:3']"
     environments:
-      - INPUT_ROOT=${LOCAL_SHM_ROOT}
-      - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_SHMDIR}
+      - OUTPUT_ROOT=${LOCAL_SHMDIR}
       - KEEP_SOURCE_FILE=no
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=yes
       - TMPDIR_GROUP=39
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}
       - ${GROUP_NODES}
@@ -117,18 +123,19 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      retry_rules: "['*:2']"
+      retry_rules: "['*:3']"
     environments:
       # 1chx
-      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_SHMDIR}
       # 1chy
-      - OUTPUT_ROOT=${LOCAL_SHM_ROOT}
-      # 1chz
-      - TARGET_ROOT=${LOCAL_SHM_ROOT}
+      - OUTPUT_ROOT=${LOCAL_SHMDIR}
+      - TARGET_ROOT=${LOCAL_SHMDIR}
       - TARGET_USER=${TARGET_USER}
       - TARGET_PORT=${TARGET_PORT}
       - KEEP_SOURCE_FILE=no
       - TMPDIR_GROUP=39
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}
       - ${GROUP_NODES}
@@ -147,14 +154,16 @@ jobs:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
       pod_id: by_pointing
-      retry_rules: "['*:2']"
+      retry_rules: "['*:3']"
     environments:
-      - INPUT_ROOT=${LOCAL_SHM_ROOT}
+      - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=
       - KEEP_SOURCE_FILE=no
       # "500k"/"1m"/...
       - BW_LIMIT=20m
       - TMPDIR_GROUP=39
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}
       - ${PRESTO_NODES}
@@ -171,7 +180,7 @@ jobs:
     environments:
       - SOURCE_URL=${LOCAL_SHM_ROOT}
       - TARGET_URL=
-      - TARGET_JUMP_SERVERS=${TARGET_JUMP}
+      - TARGET_JUMP=${TARGET_JUMP}
       - KEEP_SOURCE_FILE=no
     slots:
       - ${NODES}
@@ -199,6 +208,7 @@ jobs:
       # 用于删除 dat 文件
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
+      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - REDISCLI_HOST=
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=${FIRST_BW_LIMIT}

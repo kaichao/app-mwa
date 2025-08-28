@@ -6,6 +6,7 @@ import (
 	"beamform/internal/strparse"
 	"fmt"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -97,7 +98,7 @@ func toFitsMerge(m string) int {
 			// 远端存储（类型3）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
 			headers = common.SetJSONAttribute(headers,
-				"output_root", "/dev/shm/scalebox/mydata")
+				"output_root", os.Getenv("LOCAL_SHMDIR"))
 			// 24ch存放在/dev/shm
 		} else {
 			// 共享存储（类型2）
