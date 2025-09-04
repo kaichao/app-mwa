@@ -1,0 +1,60 @@
+origin:
+# 原始打包数据（*.tar）
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 0.5
+      capacity_gb: 20480
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+
+preload:
+# 中间预加载（*.tar/*.dat）
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: "/public/home/cstu0030/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 480
+    - path: "/work2/cstu0030/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: COMBINED_PATH
+      weight: 1.0
+  combined_path:
+    - start_index: 32
+      end_index: 35
+      capacity_gb: 480
+    - start_index: 37
+      end_index: 40
+      capacity_gb: 480
+
+staging:
+# 24-channel beam-form
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: "/work1/cstu0036/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: COMBINED_PATH
+      weight: 1.0
+  combined_path:
+    - start_index: 41
+      end_index: 80
+      capacity_gb: 480
+
+final:
+# 最终结果
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 1.0
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+    - path: "/public/home/cstu0030/scalebox/mydata"
+      weight: 0.0

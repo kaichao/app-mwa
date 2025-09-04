@@ -7,9 +7,11 @@ parameters:
 
 jobs:
   tar-load:
-    base_image: hub.cstcloud.cn/scalebox/file-copy
-    slots: 
-      - h0:3
+    base_image: ${FILE_COPY}
+    arguments:
+      dir_limit_gb: /public/home/cstu0032/scalebox:480,/public/home/cstu0033/scalebox:480,/public/home/cstu0034/scalebox:480,/public/home/cstu0035/scalebox:480,/public/home/cstu0037/scalebox:480,/public/home/cstu0038/scalebox:480,/public/home/cstu0039/scalebox:480,/public/home/cstu0040/scalebox:480
+    slots:
+      - n0:3
 
   cube-vtask:
     base_image: hub.cstcloud.cn/scalebox/agent
@@ -32,12 +34,12 @@ jobs:
       message_router_index: 2
       key_group_regex: ^([0-9]+)
     environments:
-      - SOURCE_URL=${SOURCE_TAR_ROOT}
+      - SOURCE_URL=
       - SOURCE_JUMP=${SOURCE_JUMP}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
-      - TARGET_URL=mydata/mwa/dat
+      - TARGET_URL=
       - BW_LIMIT=${BW_LIMIT}
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=no
       - TMPDIR_GROUP=39
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}
@@ -203,6 +205,12 @@ jobs:
       - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
       # 通过命令行指定24ch数据的位置（缺省通过*-target.json指定）
       - TARGET_24CH_ROOT=${TARGET_24CH_ROOT}
+
+      - ORIGIN_ROOT=${ORIGIN_ROOT}
+      - PRELOAD_ROOT=${PRELOAD_ROOT}
+      - STAGING_ROOT=${STAGING_ROOT}
+      - FINAL_ROOT=${FINAL_ROOT}
+
       - TIME_STEP=${TIME_STEP}
       - NODES=${NODES}
       # 用于删除 dat 文件

@@ -2,14 +2,13 @@ package main
 
 import (
 	"beamform/internal/cache"
-	"beamform/internal/picker"
 	"os"
 	"strconv"
 )
 
 var (
-	targetPicker = picker.NewWeightedPicker("target")
-	sourcePicker = picker.NewWeightedPicker("source")
+	// targetPicker = picker.NewWeightedPickerByFile("target")
+	// sourcePicker = picker.NewWeightedPickerByFile("source")
 
 	appID int
 )

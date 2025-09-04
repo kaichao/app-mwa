@@ -6,7 +6,6 @@ import (
 	"beamform/internal/strparse"
 	"fmt"
 	"net"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -97,10 +96,11 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 				varValue = prestoIPs[i]
 			} else {
 				// 类型2、类型3，组内地址
-				varValue = os.Getenv("TARGET_24CH_ROOT")
-				if varValue == "" {
-					varValue = targetPicker.GetNext()
-				}
+				// varValue = os.Getenv("TARGET_24CH_ROOT")
+				// if varValue == "" {
+				// 	varValue = targetPicker.GetNext()
+				// }
+				varValue = getStagingRoot(p)
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {

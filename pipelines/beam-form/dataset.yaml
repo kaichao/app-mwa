@@ -10,7 +10,7 @@ datasets:
     # R04
     # t: 1253991114 .. 1253995911, 4798
     # pointings.txt里，1-12:已知脉冲星，13-11352:盲搜格点
-    # finished: 960
+    # finished: 1320
 
     # channel dimension
     channelBegin: 109
@@ -23,7 +23,7 @@ datasets:
   1266680784:
     # t: 1266680787 .. 1266685583, 4797
     # pointings.txt里，1-72:已知脉冲星，73-11412:盲搜格点
-    # finished: 96
+    # finished: 0
 
     # channel dimension
     channelBegin: 109
@@ -38,6 +38,8 @@ datasets:
     # t: 1302106649 .. 1302111446, 4798
     # pointings.txt里，1-107:费米源，108-503:已知脉冲星，504-9280:盲搜格点
     # finished: 4800
+
+    # 2761~3240，3721~3864
 
     # channel dimension
     channelBegin: 109

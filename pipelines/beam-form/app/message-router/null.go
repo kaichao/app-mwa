@@ -34,7 +34,7 @@ func fromNull(body string, headers map[string]string) int {
 		}
 	}
 
-	if os.Getenv("PRELOAD_MODE") != "none" {
+	if isPreloadMode() {
 		return toTarLoad(body)
 	}
 

@@ -13,8 +13,8 @@ github.com/kaichao/gopkg/dbcache v0.0.0-20250622141727-ea6b44dc4112 h1:rjlvmHMdf
 github.com/kaichao/gopkg/dbcache v0.0.0-20250622141727-ea6b44dc4112/go.mod h1:aN4S8YIevinHbL/qqcshGb4adr3F16eWfeeRiLQRB3Y=
 github.com/kaichao/gopkg/exec v0.0.0-20250622141727-ea6b44dc4112 h1:2LfnjT29ieOpib5XDxXBwbTJH2d6aEySlaTSSM9UoHY=
 github.com/kaichao/gopkg/exec v0.0.0-20250622141727-ea6b44dc4112/go.mod h1:re4Vhy+6FHExQxUDrpgl0SjLlCkeHZiIoxQsEmQe7wI=
-github.com/kaichao/scalebox v0.0.0-20250626091337-cecb428adbe0 h1:9+vaufABcv0cHBcYrahI90enOmzVSM6oBnkXdUjVWp4=
-github.com/kaichao/scalebox v0.0.0-20250626091337-cecb428adbe0/go.mod h1:9M45iXgxC1B3B6+PaYtdizrjWpr1eYcGIiLJ+sAmbO4=
+github.com/kaichao/scalebox v0.0.0-20250902080110-4b0971d3eda3 h1:9+L4Tw+9y7IOud4+9oKMnQOSbDs7QgRIsFyIkM7UZ/s=
+github.com/kaichao/scalebox v0.0.0-20250902080110-4b0971d3eda3/go.mod h1:2AW0scOPn8qAzlsdxQFN8R4ZltQF4XW1vkerrHBHqvQ=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
 github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NBk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=

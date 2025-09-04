@@ -12,14 +12,19 @@ type WeightedPicker struct {
 	TotalCount    int
 }
 
-func NewWeightedPicker(obj string) *WeightedPicker {
+// NewWeightedPickerByFile ...
+func NewWeightedPickerByFile(obj string) *WeightedPicker {
 	jsonFile := fmt.Sprintf("%s/%s-%s.json",
 		os.Getenv("DIR_PREFIX"), os.Getenv("CLUSTER"), obj)
 	fmt.Println("json-file:", jsonFile)
 	data, _ := os.ReadFile(jsonFile)
 	weights := map[string]float64{}
 	json.Unmarshal(data, &weights)
+	return NewWeightedPicker(weights)
+}
 
+// NewWeightedPicker ...
+func NewWeightedPicker(weights map[string]float64) *WeightedPicker {
 	// 删除value为0的项
 	for key, value := range weights {
 		if value == 0 {

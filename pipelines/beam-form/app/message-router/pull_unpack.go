@@ -15,7 +15,6 @@ import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -63,10 +62,6 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		return 1
 	}
 
-	// withPointingPath := os.Getenv("WITH_POINTING_PATH") == "yes"
-	// prefix := cube.ObsID
-	// if withPointingPath {
-	// }
 	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
 	numGroups := len(node.Nodes) / 24
 
@@ -104,23 +99,27 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
 		headers = common.SetJSONAttribute(headers, "to_host", toHost)
 
-		if os.Getenv("PRELOAD_MODE") == "multi-account-relay" {
-			varName := `cube-stor-index:` + id
-			storIndex, err := variable.Get(varName, appID)
-			if err != nil {
-				logrus.Errorf("variable get, var-name:%s, err-info:%v\n", varName, err)
-				return 2
-			}
-			sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s",
-				storIndex, storIndex)
-			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
-		} else {
-			sourceURL := os.Getenv("SOURCE_TAR_ROOT")
-			if sourceURL == "" {
-				sourceURL = sourcePicker.GetNext()
-			}
-			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+		if isPreloadMode() {
+			headers = common.SetJSONAttribute(headers, "source_url", getPreloadRoot(j))
 		}
+
+		// if os.Getenv("PRELOAD_MODE") == "multi-account-relay" {
+		// 	varName := `cube-stor-index:` + id
+		// 	storIndex, err := variable.Get(varName, appID)
+		// 	if err != nil {
+		// 		logrus.Errorf("variable get, var-name:%s, err-info:%v\n", varName, err)
+		// 		return 2
+		// 	}
+		// 	sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s",
+		// 		storIndex, storIndex)
+		// 	headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+		// } else {
+		// 	sourceURL := os.Getenv("SOURCE_TAR_ROOT")
+		// 	if sourceURL == "" {
+		// 		sourceURL = sourcePicker.GetNext()
+		// 	}
+		// 	headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+		// }
 
 		for k := 0; k < len(tus); k += 2 {
 			m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
@@ -146,9 +145,11 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	// 消息
 	cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", cube.ObsID,
 		cube.PointingBegin, cube.PointingEnd, cube.TimeBegin, cube.TimeEnd)
+	targetURL := fmt.Sprintf("%s/mydata/mwa/dat", os.Getenv("LOCAL_TMPDIR"))
 	headers := map[string]string{
 		"_cube_id":    cubeID,
 		"_cube_index": fromHeaders["_cube_index"],
+		"target_url":  targetURL,
 	}
 	envs := map[string]string{
 		"SINK_JOB": "pull-unpack",

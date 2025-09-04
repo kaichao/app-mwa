@@ -55,11 +55,12 @@ fi
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
     source_dir=$(get_host_path $source_dir)
-    cmd="cat ${source_dir}/mydata/mwa/tar/$dataset/$file_name | ${cmd_part}"
+    source_file="${source_dir}/mwa/tar/$dataset/$file_name"
+    cmd="cat $source_file | ${cmd_part}"
 else
     # SSH
     ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump")
-    cmd="$ssh_cmd \"cat ${source_dir}/mydata/mwa/tar/$dataset/$file_name\" - | ${cmd_part}"
+    cmd="$ssh_cmd \"cat ${source_dir}/mwa/tar/$dataset/$file_name\" - | ${cmd_part}"
 fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
@@ -90,9 +91,9 @@ done
 echo "$1" >> ${WORK_DIR}/messages.txt
 
 if [ "$source_mode" = "LOCAL" ]; then
-    echo "${source_dir}/$1" >> ${WORK_DIR}/output-files.txt
-    if [ "$KEEP_SOURCE_FILE" != "yes" ]; then
-        echo "${source_dir}/$1" > ${WORK_DIR}/removed-files.txt
+    echo "${source_file}" >> ${WORK_DIR}/input-files.txt
+    if [ "$KEEP_SOURCE_FILE" = "no" ]; then
+        echo "${source_file}" > ${WORK_DIR}/removed-files.txt
     fi
 fi
 

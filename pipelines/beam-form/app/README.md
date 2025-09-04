@@ -28,13 +28,13 @@ scalebox app create
 ```
 
 ```sh
-export SOURCE_URL=/data1/mydata/mwa/tar
+export SOURCE_URL=/data2/mydata/mwa/tar
 export TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar
 
 scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
 
 cd $SOURCE_URL
-find 1253991112 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:2
+find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:6
 
 ```
 
@@ -103,29 +103,30 @@ START_MESSAGE=1255803168/p00001_00960 \
 
 START_MESSAGE=1267459328/p07681_09016/t1267459330_1267464129 \
 
-START_MESSAGE=1265983624/p09361_11502/t1265983626_1265988429 \
+START_MESSAGE=1265983624/p00001_00613 \
 
 START_MESSAGE=1302106648/p02281_02760/t1302106649_1302111446 \
 
-1253991112/p00001_00120
+START_MESSAGE=1253991112/p00121_00360/t1253991443_ \
+
+
 
 ```sh
-START_MESSAGE=1302106648/p04824_05160 \
-  PRESTO_APP_ID= \
-  PRESTO_NODES= \
-  PRELOAD_MODE=none \
-  NODES=^d00.+ \
-  GROUP_NODES=e00-00 \
-  POINTING_FILE= \
-  FIRST_BW_LIMIT=100m \
-  BW_LIMIT=40m \
-  TIME_STEP=160 \
-  PULL_UNPACK_LIMIT_GB=95 \
-  BEAM_MAKE_FREE_GB='{~n*5+11~}' \
-  SOURCE_TAR_ROOT=/work2/cstu0036/mydata \
-  TARGET_24CH_ROOT=/work1/cstu0036/mydata \
-  scalebox app create -e p419.env
+
+echo '1302106648/p02761_03240' | \
+PRELOAD_MODE=yes \
+NODES=^d0[01].+ \
+GROUP_NODES= \
+FIRST_BW_LIMIT=100m \
+BW_LIMIT=40m \
+ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
+PRESTO_APP_ID= \
+PRESTO_NODES= \
+scalebox app run -e p419.env
+
 ```
+~
+TARGET_24CH_ROOT=astro@10.100.1.30:10022/data1/mydata \
 
 - 每组观测起始指向处理
 ```sh
@@ -234,6 +235,13 @@ find . -type f -exec ls -l {} + | sort -k 5 -nr
 
 ```sh
 find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}'
+```
+
+```sh
+for i in {41..76}; do
+cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1253991112;
+find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}';
+done
 ```
 
 

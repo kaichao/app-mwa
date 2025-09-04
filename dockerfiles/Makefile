@@ -73,14 +73,11 @@ dist-singularity-dcu:
 
 dist-singularity-p419:
 	make build-singularity-images
-	ssh login1 'mkdir -p ~/singularity/{scalebox,app-mwa}/'
-	ssh login1 'mkdir -p /work2/cstu0036/singularity/{scalebox,app-mwa}/'
-# 	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:singularity/app-mwa/
-# 	scp  ~/singularity/app-mwa/down-sampler.sif login1:singularity/app-mwa/
-# 	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
-	scp  ~/singularity/app-mwa/mwa-vcstools.sif login1:/work2/cstu0036/singularity/app-mwa/
-	scp  ~/singularity/app-mwa/down-sampler.sif login1:/work2/cstu0036/singularity/app-mwa/
-	scp  ~/singularity/scalebox/file-copy.sif login1:/work2/cstu0036/singularity/scalebox/
+	ssh login2 'mkdir -p ~/singularity/{scalebox,app-mwa}/'
+
+	scp  ~/singularity/app-mwa/mwa-vcstools.sif login2:singularity/app-mwa/
+	scp  ~/singularity/app-mwa/down-sampler.sif login2:singularity/app-mwa/
+	scp  ~/singularity/scalebox/file-copy.sif login2:singularity/scalebox/
 	# scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 
 # In MacOS/h12

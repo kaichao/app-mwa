@@ -63,7 +63,8 @@ COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 COPY --from=0 /go/src/app/message-router/message-router /app/bin/
 
 COPY dataset.yaml /
-COPY app/*.json /
+COPY app/io-path.yaml /
+# COPY app/*.json /
 
 ENV \
     WORK_DIR= \
