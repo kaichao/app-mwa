@@ -110,15 +110,14 @@ START_MESSAGE=1302106648/p02281_02760/t1302106649_1302111446 \
 START_MESSAGE=1253991112/p00121_00360/t1253991443_ \
 
 
-
 ```sh
 
-echo '1302106648/p02761_03240' | \
+echo '1302106648/p05401_06000' | \
 PRELOAD_MODE=yes \
-NODES=^d0[01].+ \
+NODES='^d.*' \
 GROUP_NODES= \
-FIRST_BW_LIMIT=100m \
-BW_LIMIT=40m \
+FIRST_BW_LIMIT=120m \
+BW_LIMIT=60m \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
@@ -238,10 +237,10 @@ find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": 
 ```
 
 ```sh
-for i in {41..76}; do
-cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1253991112;
+for i in {41..80}; do
+cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1302106648;
 find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}';
-done
+done | sort
 ```
 
 

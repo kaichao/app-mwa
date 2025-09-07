@@ -9,7 +9,7 @@ jobs:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:
-      dir_limit_gb: /public/home/cstu0032/scalebox:480,/public/home/cstu0033/scalebox:480,/public/home/cstu0034/scalebox:480,/public/home/cstu0035/scalebox:480,/public/home/cstu0037/scalebox:480,/public/home/cstu0038/scalebox:480,/public/home/cstu0039/scalebox:480,/public/home/cstu0040/scalebox:480
+      dir_limit_gb: /public/home/cstu0032/scalebox:460,/public/home/cstu0033/scalebox:460,/public/home/cstu0034/scalebox:460,/public/home/cstu0035/scalebox:460,/public/home/cstu0037/scalebox:460,/public/home/cstu0038/scalebox:460,/public/home/cstu0039/scalebox:460,/public/home/cstu0040/scalebox:460
     slots:
       - n0:3
 
@@ -51,9 +51,9 @@ jobs:
     command: ${ROCM_COMMAND}
     arguments:
       code_path: ${CODE_BASE}/beam-make/code
-      task_max_seconds: 2400
-      sleep_interval_seconds: 60
+      task_max_seconds: 1200
       task_min_seconds: 30
+      sleep_interval_seconds: 60
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
       dir_free_gb: ${LOCAL_SHMDIR}/mydata:${BEAM_MAKE_FREE_GB}
@@ -199,7 +199,7 @@ jobs:
       bulk_message_size: 2
       slot_options: reserved_on_exit
     environments:
-      # 'none' / 'multi-account-relay' / 'single-account-relay'
+      # '' / 'yes' / 'preload-only'
       - PRELOAD_MODE=${PRELOAD_MODE}
       # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
       - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}

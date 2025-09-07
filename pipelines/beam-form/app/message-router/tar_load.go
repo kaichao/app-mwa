@@ -21,6 +21,7 @@ package main
 import (
 	"beamform/internal/datacube"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/kaichao/scalebox/pkg/semaphore"
@@ -32,6 +33,9 @@ import (
 // headers:
 //   - _cube_id: 1257010784/p00001_00960/t1257012766_1257012965
 func fromTarLoad(body string, headers map[string]string) int {
+	if os.Getenv("PRELOAD_MODE") == "preload-only" {
+		return 0
+	}
 	cubeID := headers["_cube_id"]
 	semaName := "tar-ready:" + cubeID
 	v, err := semaphore.AddValue(semaName, appID, -1)

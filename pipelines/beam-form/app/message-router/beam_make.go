@@ -93,7 +93,7 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 			sortTag = fmt.Sprintf("t%d:p%05d", cube.TimeBegin, ps[k])
 		} else {
 			// 多个channel用单个节点计算
-			sortTag = fmt.Sprintf("ch%d:t%d:p%05d", ch, cube.TimeBegin, ps[k])
+			sortTag = fmt.Sprintf("t%d:ch%d:p%05d", cube.TimeBegin, ch, ps[k])
 		}
 		line := fmt.Sprintf(`%s,{"sort_tag":"%s","_sort_tag":"%s"}`,
 			body, sortTag, sortTag)

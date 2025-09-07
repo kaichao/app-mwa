@@ -9,8 +9,7 @@ import (
 )
 
 func isPreloadMode() bool {
-	v := os.Getenv("PRELOAD_MODE")
-	return v != "none" && v != ""
+	return os.Getenv("PRELOAD_MODE") != ""
 }
 func getOriginRoot() string {
 	if v := os.Getenv("ORIGIN_ROOT"); v != "" {
@@ -49,14 +48,14 @@ func getPreloadRoot(ch int) string {
 }
 
 // 24ch文件
-func getStagingRoot(p int) string {
+func getStagingRoot(pt int) string {
 	if v := os.Getenv("STAGING_ROOT"); v != "" {
 		return v
 	}
 
 	m := map[string]float64{}
-	for _, p := range config.Staging.WeightedPaths {
-		m[p.Path] = p.Weight
+	for _, wp := range config.Staging.WeightedPaths {
+		m[wp.Path] = wp.Weight
 	}
 
 	path := picker.NewWeightedPicker(m).GetNext()
@@ -64,7 +63,7 @@ func getStagingRoot(p int) string {
 		return path
 	}
 
-	i := p % len(config.Staging.indexes)
+	i := pt % len(config.Staging.indexes)
 	path = fmt.Sprintf("/public/home/cstu00%02d/scalebox/mydata",
 		config.Staging.indexes[i])
 
