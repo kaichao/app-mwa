@@ -13,7 +13,6 @@ import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -64,7 +63,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 	varValues := []string{}
 	for p := p0; p <= p1; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", obsID, p)
-		if v, err := variable.Get(varName, appID); err != nil {
+		if v, err := getPointingVariable(varName, appID); err != nil {
 			logrus.Errorf("variable-get %s, err-info:%v\n", varName, err)
 			varValues = append(varValues, "")
 		} else {
@@ -107,7 +106,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 					ip = ips[i]
 				}
 			}
-			variable.Set(varName, varValue, appID)
+			setPointingVariable(varName, varValue, appID)
 			toIPs = append(toIPs, ip)
 		}
 	} else {

@@ -13,7 +13,6 @@ import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -54,7 +53,7 @@ func fromNull(body string, headers map[string]string) int {
 // toCrossAppPresto()
 func toCrossAppPresto(pointing string) int {
 	varName := "pointing-data-root:" + pointing
-	varValue, err := variable.Get(varName, appID)
+	varValue, err := getPointingVariable(varName, appID)
 	if err != nil {
 		logrus.Errorf("variable-get,name:%s, err-info:%v\n", varName, err)
 		return 11

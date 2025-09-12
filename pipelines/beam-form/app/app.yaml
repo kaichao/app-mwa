@@ -9,7 +9,14 @@ jobs:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:
-      dir_limit_gb: /public/home/cstu0032/scalebox:460,/public/home/cstu0033/scalebox:460,/public/home/cstu0034/scalebox:460,/public/home/cstu0035/scalebox:460,/public/home/cstu0037/scalebox:460,/public/home/cstu0038/scalebox:460,/public/home/cstu0039/scalebox:460,/public/home/cstu0040/scalebox:460
+      # dir_limit_gb: /public/home/cstu0030/scalebox:440,/public/home/cstu0032/scalebox:440,/public/home/cstu0033/scalebox:440,/public/home/cstu0034/scalebox:440,/public/home/cstu0035/scalebox:440,/public/home/cstu0037/scalebox:440
+      dir_quota_gb: 
+        '{"/public/home/cstu0030/scalebox":440,
+          "/public/home/cstu0032/scalebox":440,
+          "/public/home/cstu0033/scalebox":440,
+          "/public/home/cstu0034/scalebox":440,
+          "/public/home/cstu0035/scalebox":440,
+          "/public/home/cstu0037/scalebox":440}'
     slots:
       - n0:3
 
@@ -26,8 +33,10 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      dir_free_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:15
-      dir_limit_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
+      # dir_free_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:15
+      free_space_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":15}'
+      # dir_limit_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
+      dir_quota_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":${PULL_UNPACK_LIMIT_GB}}'
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
@@ -56,17 +65,20 @@ jobs:
       sleep_interval_seconds: 60
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
-      dir_free_gb: ${LOCAL_SHMDIR}/mydata:${BEAM_MAKE_FREE_GB}
+      # dir_free_gb: ${LOCAL_SHMDIR}/mydata:${BEAM_MAKE_FREE_GB}
+      free_space_gb: '{"${LOCAL_SHMDIR}/mydata":${BEAM_MAKE_FREE_GB}}'
+      # free_space_gb: '{"${LOCAL_SHMDIR}/mydata":23}'
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
-      task_progress_group_diff: 6
+      # task_progress_group_diff: 6
+      # 组内不超过4，全局不超过8
+      # node_progress_gap: '{"[a-z][0-9][0-9]":4,"[a-z]":8}'
+      node_progress_gap: '{"[a-z][0-9][0-9]":6}'
       key_group_regex: ^([0-9]+)
       retry_rules: "['*:3','134:9','135:9','139:9']"
       slot_timeout_minutes: 30
       slot_recoverable: yes
-      # deprecated
-      # max_tasks_per_minute: 3
       message_router_index: 1
       task_cache_expired_minutes: 65
     environments:
@@ -180,7 +192,7 @@ jobs:
       task_dist_mode: HOST-BOUND
       pod_id: by_pointing
     environments:
-      - SOURCE_URL=${LOCAL_SHM_ROOT}
+      - SOURCE_URL=${LOCAL_SHMDIR}/mydata
       - TARGET_URL=
       - TARGET_JUMP=${TARGET_JUMP}
       - KEEP_SOURCE_FILE=no
@@ -202,9 +214,9 @@ jobs:
       # '' / 'yes' / 'preload-only'
       - PRELOAD_MODE=${PRELOAD_MODE}
       # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
-      - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
+      # - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
       # 通过命令行指定24ch数据的位置（缺省通过*-target.json指定）
-      - TARGET_24CH_ROOT=${TARGET_24CH_ROOT}
+      # - TARGET_24CH_ROOT=${TARGET_24CH_ROOT}
 
       - ORIGIN_ROOT=${ORIGIN_ROOT}
       - PRELOAD_ROOT=${PRELOAD_ROOT}
@@ -217,7 +229,8 @@ jobs:
       - SSH_USER=${TARGET_USER}
       - SSH_PORT=${TARGET_PORT}
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
-      - REDISCLI_HOST=
+      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
+      # - REDISCLI_HOST=
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=${FIRST_BW_LIMIT}
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量，仅针对24个节点以上有效
@@ -225,5 +238,7 @@ jobs:
       # 全并行的波束合成(full_parallel)，隐含着指向优先的排序 POINTING_FIRST=yes
       - RUN_MODE=${RUN_MODE}
       - PRESTO_APP_ID=${PRESTO_APP_ID}
+      # 用global代替variable，更有效支持多应用共享
+      - USE_GLOBAL_POINTING=yes
     slots:
       - h0:3

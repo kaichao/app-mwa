@@ -92,7 +92,8 @@ echo "$1" >> ${WORK_DIR}/messages.txt
 
 if [ "$source_mode" = "LOCAL" ]; then
     echo "${source_file}" >> ${WORK_DIR}/input-files.txt
-    if [ "$KEEP_SOURCE_FILE" = "no" ]; then
+    keep_source_file=$(get_header "$2" "keep_source_file")
+    if [ "$keep_source_file" = "no" ]; then
         echo "${source_file}" > ${WORK_DIR}/removed-files.txt
     fi
 fi

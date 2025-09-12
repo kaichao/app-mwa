@@ -23,18 +23,21 @@ preload:
     - path: COMBINED_PATH
       weight: 1.0
   combined_path:
+    - start_index: 30
+      end_index: 30
+      capacity_gb: 420
     - start_index: 32
       end_index: 35
       capacity_gb: 480
     - start_index: 37
-      end_index: 40
+      end_index: 37
       capacity_gb: 480
 
 staging:
 # 24-channel beam-form
   weighted_paths:
     - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 0.0
+      weight: 2.0
       capacity_gb: 20480
     - path: "astro@10.100.1.30:10022/data2/mydata"
       weight: 0.0
@@ -43,9 +46,9 @@ staging:
       weight: 0.0
       capacity_gb: 20480
     - path: COMBINED_PATH
-      weight: 1.0
+      weight: 3.0
   combined_path:
-    - start_index: 41
+    - start_index: 38
       end_index: 80
       capacity_gb: 480
 

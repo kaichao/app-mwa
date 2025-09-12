@@ -14,7 +14,6 @@ import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,7 +30,7 @@ func fromFitsMerge(m string, headers map[string]string) int {
 	}
 
 	varName := fmt.Sprintf("pointing-data-root:%s", ss[1])
-	varValue, err := variable.Get(varName, appID)
+	varValue, err := getPointingVariable(varName, appID)
 	if err != nil {
 		logrus.Errorf("variable-get, err-info:%v\n", err)
 		return 11
@@ -40,7 +39,6 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		// 共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
 		msg := fmt.Sprintf("mwa/24ch/%s.fits.zst", m)
 		headers := common.SetJSONAttribute("{}", "target_url", varValue)
-		// headers = common.SetJSONAttribute("{}", "target_jump_servers", "root@10.200.1.100")
 
 		envVars := map[string]string{
 			"SINK_JOB": "fits24ch-copy",
@@ -80,7 +78,7 @@ func toFitsMerge(m string) int {
 	messages := []string{}
 	for p := p0; p <= p1; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", ds, p)
-		varValue, err := variable.Get(varName, appID)
+		varValue, err := getPointingVariable(varName, appID)
 		if err != nil {
 			logrus.Errorf("variable-get, var-name:%s, err-info:%v\n", varName, err)
 			return 11
@@ -89,29 +87,36 @@ func toFitsMerge(m string) int {
 		headers := ""
 		// BUG: 节点数量少，补充数据时，pointing计数不对齐，toHost不准确
 		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
+		fmt.Printf("In to FitesMerge(),00\n")
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
 			// IPv4地址（类型1）， 设置"to_ip"头
 			headers = common.SetJSONAttribute(headers, "to_ip", varValue)
 			headers = common.SetJSONAttribute(headers,
-				"output_root", "/tmp/scalebox/mydata")
+				"output_root", os.Getenv("LOCAL_TMPDIR")+"/mydata")
+			fmt.Printf("In to FitesMerge(),11\n")
 		} else if strings.Contains(varValue, "@") {
 			// 远端存储（类型3）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
 			headers = common.SetJSONAttribute(headers,
-				"output_root", os.Getenv("LOCAL_SHMDIR"))
+				"output_root", os.Getenv("LOCAL_SHMDIR")+"/mydata")
 			// 24ch存放在/dev/shm
+			fmt.Printf("In to FitesMerge(),12\n")
 		} else {
 			// 共享存储（类型2）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
 			// 24ch存放在共享存储
 			headers = common.SetJSONAttribute(headers,
 				"output_root", varValue)
+			fmt.Printf("In to FitesMerge(),13\n")
 		}
 		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
 		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
 			varValue, toHost, headers, m)
 		messages = append(messages, m)
+		fmt.Printf("In to FitesMerge(),20\n")
 	}
+
+	fmt.Println("In to FitesMerge(),30, messages:", messages)
 
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
