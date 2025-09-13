@@ -87,36 +87,23 @@ START_MESSAGE=1302106648/p01801_02040/t1302106649_1302111446 \
 
 ### p419集群流式并行
 
-```sh
-START_MESSAGE=1255803168/p00001_00960 \
-  PRESTO_APP_ID=102 \
-  POINTING_FILE=pointings-250618.txt \
-  NODES=d-0[01].+ \
-  PRESTO_NODES= \
-  TIME_STEP=160 \
-  PULL_UNPACK_LIMIT_GB=90 \
-  BEAM_MAKE_FREE_GB='{~n*5+11~}' \
-  scalebox app create -e p419.env
-```
-
-START_MESSAGE=1253991112/p00121_00360/t1253991443_ \
-
 #### preload
 ```sh
-echo '1302106648/p06001_06720/t_1302106968' | \
+echo '1302106648/p07681_08640/t_1302106968' | \
 PRELOAD_MODE=preload-only \
 ```
 
 #### 流水线运行
 ```sh
 
-echo '1302106648/p06721_07680' | \
+echo '1302106648/p07681_08640/t1302106649_1302106808' | \
 PRELOAD_MODE=yes \
-NODES='^d.*' \
+NODES='^d00.*' \
 GROUP_NODES= \
 FIRST_BW_LIMIT=120m \
 BW_LIMIT=60m \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
+STAGING_ROOT=astro@10.100.1.30:10022/data2/mydata \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox app run -e p419.env
@@ -164,8 +151,6 @@ START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
 ### dcu集群
 
 - source_url通过dcu-soruce.json来指定
-
-1302106648/p00001_00096/t1302106649_1302106888
 
 ```sh
   START_MESSAGE=1302106648/p00001_00096/t1302106649_1302106888 \
@@ -230,7 +215,7 @@ find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": 
 ```
 
 ```sh
-for i in {41..80}; do
+for i in {38..80}; do
 cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1302106648;
 find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}';
 done | sort
@@ -239,5 +224,5 @@ done | sort
 
 ## 重启server端daemon
 ```sh
-LOCAL_ADDR=10.100.1.30 docker compose up -d --no-deps --force-recreate actuator
+LOCAL_ADDR=10.100.1.30 docker compose up -d --no-deps --force-recreate controld
 ```

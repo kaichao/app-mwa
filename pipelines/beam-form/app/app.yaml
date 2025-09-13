@@ -33,9 +33,7 @@ jobs:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      # dir_free_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:15
       free_space_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":15}'
-      # dir_limit_gb: ${LOCAL_TMPDIR}/mydata/mwa/dat:${PULL_UNPACK_LIMIT_GB}
       dir_quota_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":${PULL_UNPACK_LIMIT_GB}}'
     parameters:
       task_dist_mode: HOST-BOUND
@@ -65,9 +63,7 @@ jobs:
       sleep_interval_seconds: 60
       # 避免工作目录放在 /tmp下，被定期删除
       slot_options: tmpfs_workdir
-      # dir_free_gb: ${LOCAL_SHMDIR}/mydata:${BEAM_MAKE_FREE_GB}
       free_space_gb: '{"${LOCAL_SHMDIR}/mydata":${BEAM_MAKE_FREE_GB}}'
-      # free_space_gb: '{"${LOCAL_SHMDIR}/mydata":23}'
     parameters:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
