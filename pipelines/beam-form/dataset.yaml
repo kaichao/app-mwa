@@ -47,7 +47,7 @@ datasets:
     timeEnd: 1302111446
 
     # pointing dimension
-    pointingEnd: 9280
+    pointingEnd: 9292
 
   1265983624:
     # t: 1265983626 .. 1265988429, 4804

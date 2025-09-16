@@ -24,6 +24,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 COPY internal /go/src/internal
 COPY app/message-router/*.go /go/src/app/message-router/
+COPY app/message-router/iopath/*.go /go/src/app/message-router/iopath/
 
 WORKDIR /go/src/app/message-router
 

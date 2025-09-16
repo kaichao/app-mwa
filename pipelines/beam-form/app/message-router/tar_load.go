@@ -19,6 +19,7 @@ tar-load从外部存储预加载原始打包tar文件到HPC存储
 package main
 
 import (
+	"beamform/app/message-router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
@@ -70,7 +71,7 @@ func fromTarLoad(body string, headers map[string]string) int {
 func toTarLoad(datasetID string) int {
 	// 按顺序产生file-copy消息
 	cube := datacube.NewDataCube(datasetID)
-	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", getOriginRoot(), cube.ObsID)
+	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
 	fmtTarZst := `%d_%d_ch%d.dat.tar.zst`
 	bodies := []string{}
 	semas := []*semaphore.Sema{}
@@ -97,7 +98,7 @@ func toTarLoad(datasetID string) int {
 				// 	storIndex, storIndex)
 				targetURL := fmt.Sprintf("%s/mwa/tar/%s",
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
-					getPreloadRoot(ch-cube.ChannelBegin), cube.ObsID)
+					iopath.GetPreloadRoot(ch-cube.ChannelBegin), cube.ObsID)
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
 				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_id":"%s"}`,
 					fileName, targetURL, cubeID)

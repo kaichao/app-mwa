@@ -1,4 +1,4 @@
-package main
+package iopath
 
 import (
 	"beamform/internal/picker"
@@ -8,13 +8,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func isPreloadMode() bool {
+func IsPreloadMode() bool {
 	return os.Getenv("PRELOAD_MODE") != ""
 }
-func getOriginRoot() string {
+
+func GetOriginRoot() string {
 	if v := os.Getenv("ORIGIN_ROOT"); v != "" {
 		return v
 	}
+
+	if config == nil {
+		if err := loadIOPathConfig(); err != nil {
+			println("Error loading YAML config:", err.Error())
+			return ""
+		}
+		println("YAML config loaded successfully")
+	}
+
 	m := map[string]float64{}
 	for _, p := range config.Origin.WeightedPaths {
 		m[p.Path] = p.Weight
@@ -25,9 +35,17 @@ func getOriginRoot() string {
 }
 
 // 波束合成的输入路径，包括打包文件(*.tar)、解包后文件（*。dat）
-func getPreloadRoot(ch int) string {
+func GetPreloadRoot(ch int) string {
 	if v := os.Getenv("PRELOAD_ROOT"); v != "" {
 		return v
+	}
+
+	if config == nil {
+		if err := loadIOPathConfig(); err != nil {
+			println("Error loading YAML config:", err.Error())
+			return ""
+		}
+		println("YAML config loaded successfully")
 	}
 
 	m := map[string]float64{}
@@ -48,27 +66,42 @@ func getPreloadRoot(ch int) string {
 }
 
 // 24ch文件
-func getStagingRoot(pt int) string {
+func GetStagingRoot(pt int) string {
 	if v := os.Getenv("STAGING_ROOT"); v != "" {
 		return v
 	}
 
-	m := map[string]float64{}
-	for _, wp := range config.Staging.WeightedPaths {
-		m[wp.Path] = wp.Weight
+	if config == nil {
+		if err := loadIOPathConfig(); err != nil {
+			println("Error loading YAML config:", err.Error())
+			return ""
+		}
+		println("YAML config loaded successfully")
 	}
 
-	path := picker.NewWeightedPicker(m).GetNext()
+	if wpStaging == nil {
+		m := map[string]float64{}
+		for _, wp := range config.Staging.WeightedPaths {
+			m[wp.Path] = wp.Weight
+		}
+		wpStaging = picker.NewWeightedPicker(m)
+	}
+
+	path := wpStaging.GetNext()
 	if path != "COMBINED_PATH" {
 		return path
 	}
 
-	i := pt % len(config.Staging.indexes)
+	// i := pt % len(config.Staging.indexes)
+	i := index % len(config.Staging.indexes)
+	index++
 	path = fmt.Sprintf("/public/home/cstu00%02d/scalebox/mydata",
 		config.Staging.indexes[i])
 
 	return path
 }
+
+var index int = 0
 
 // PathWeight 表示带权重的路径
 type PathWeight struct {
@@ -89,6 +122,7 @@ type IOPathConfig struct {
 	WeightedPaths []PathWeight `yaml:"weighted_paths"`
 	CombinedPath  []IndexRange `yaml:"combined_path"`
 	indexes       []int
+	weightPicker  *picker.WeightedPicker
 }
 
 // IOPath 表示整个YAML文件的结构
@@ -99,26 +133,32 @@ type IOPath struct {
 	Final   IOPathConfig `yaml:"final"`
 }
 
+func (ipc *IOPathConfig) GetRoot(n int) {
+
+}
+
 var (
-	config *IOPath
+	config    *IOPath
+	wpStaging *picker.WeightedPicker
 )
 
 // loadIOPathConfig 从YAML文件加载IO路径配置
-func loadIOPathConfig() (*IOPath, error) {
+func loadIOPathConfig() error {
 	iopathFile := os.Getenv("IOPATH_FILE")
 	if iopathFile == "" {
 		iopathFile = "/io-path.yaml"
 	}
+
+	fmt.Println("io-path file:", iopathFile)
 	// 尝试在当前目录查找
 	data, err := os.ReadFile(iopathFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var config IOPath
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, v := range config.Origin.CombinedPath {
@@ -142,28 +182,16 @@ func loadIOPathConfig() (*IOPath, error) {
 		}
 	}
 
-	return &config, nil
-}
-
-// 测试YAML读取功能
-func init() {
-	var err error
-	config, err = loadIOPathConfig()
-	if err != nil {
-		println("Error loading YAML config:", err.Error())
-		return
-	}
-
-	println("YAML config loaded successfully")
-
 	// 打印combined path信息，包括capacity_gb
-	println("Preload weighted paths:", len(config.Preload.WeightedPaths))
+	// println("Preload weighted paths:", len(config.Preload.WeightedPaths))
 	for i, path := range config.Preload.CombinedPath {
 		println("  ", i, ": start_index=", path.StartIndex, ", end_index=", path.EndIndex, ", capacity_gb=", path.CapacityGB)
 	}
 
-	println("Staging weighted paths:", len(config.Staging.WeightedPaths))
+	// println("Staging weighted paths:", len(config.Staging.WeightedPaths))
 	for i, path := range config.Staging.CombinedPath {
 		println("  ", i, ": start_index=", path.StartIndex, ", end_index=", path.EndIndex, ", capacity_gb=", path.CapacityGB)
 	}
+
+	return nil
 }

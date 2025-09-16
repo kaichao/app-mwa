@@ -4,6 +4,7 @@ fromNull是消息路由的首个执行模块，按PRELOAD_MODE指定的预加载
 package main
 
 import (
+	"beamform/app/message-router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
@@ -33,7 +34,13 @@ func fromNull(body string, headers map[string]string) int {
 		}
 	}
 
-	if isPreloadMode() {
+	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
+		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", cube.ObsID, p)
+		varValue := iopath.GetStagingRoot(p)
+		setPointingVariable(varName, varValue, appID)
+	}
+
+	if iopath.IsPreloadMode() {
 		return toTarLoad(body)
 	}
 

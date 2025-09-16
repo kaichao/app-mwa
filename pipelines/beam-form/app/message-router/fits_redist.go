@@ -1,6 +1,7 @@
 package main
 
 import (
+	"beamform/app/message-router/iopath"
 	"beamform/internal/node"
 	"beamform/internal/queue"
 	"beamform/internal/strparse"
@@ -99,7 +100,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 				// if varValue == "" {
 				// 	varValue = targetPicker.GetNext()
 				// }
-				varValue = getStagingRoot(p)
+				varValue = iopath.GetStagingRoot(p)
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {

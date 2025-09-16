@@ -5,6 +5,7 @@
 package main
 
 import (
+	"beamform/app/message-router/iopath"
 	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"fmt"
@@ -99,8 +100,8 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
 		headers = common.SetJSONAttribute(headers, "to_host", toHost)
 
-		if isPreloadMode() {
-			headers = common.SetJSONAttribute(headers, "source_url", getPreloadRoot(j))
+		if iopath.IsPreloadMode() {
+			headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(j))
 		}
 
 		// if os.Getenv("PRELOAD_MODE") == "multi-account-relay" {

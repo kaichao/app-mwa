@@ -5,7 +5,7 @@ parameters:
   message_router: mr-beam-form
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
 
-jobs:
+modules:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:

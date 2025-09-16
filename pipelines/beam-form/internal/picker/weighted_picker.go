@@ -47,7 +47,7 @@ func NewWeightedPicker(weights map[string]float64) *WeightedPicker {
 		HistoryCounts: historyCounts,
 		TotalCount:    0,
 	}
-	fmt.Println("wp", *wp)
+	// fmt.Println("wp", *wp)
 	return wp
 }
 
