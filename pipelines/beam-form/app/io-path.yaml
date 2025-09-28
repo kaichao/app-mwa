@@ -23,14 +23,14 @@ preload:
     - path: COMBINED_PATH
       weight: 1.0
   combined_path:
-    - start_index: 30
-      end_index: 30
-      capacity_gb: 420
+    # - start_index: 30
+    #   end_index: 30
+    #   capacity_gb: 420
     - start_index: 32
       end_index: 35
       capacity_gb: 480
     - start_index: 37
-      end_index: 37
+      end_index: 38
       capacity_gb: 480
 
 staging:
@@ -48,7 +48,7 @@ staging:
     - path: COMBINED_PATH
       weight: 3.0
   combined_path:
-    - start_index: 38
+    - start_index: 39
       end_index: 80
       capacity_gb: 480
 

@@ -29,7 +29,7 @@
 ```sh
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=fits-merge 1257617424/p00001/t1257617426_1257617505
+scalebox task add --app-id=${app_id} --sink-module=fits-merge 1257617424/p00001/t1257617426_1257617505
 ```
 
 
@@ -38,7 +38,7 @@ scalebox task add --app-id=${app_id} --sink-job=fits-merge 1257617424/p00001/t12
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
 for p in {00001..00024}; do
-scalebox task add --app-id=${app_id} --sink-job=fits-merge 1257617424/p${p}/t1257617426_1257617505
+scalebox task add --app-id=${app_id} --sink-module=fits-merge 1257617424/p${p}/t1257617426_1257617505
 done
 
 ```

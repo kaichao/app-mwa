@@ -110,7 +110,7 @@ func toTarLoad(datasetID string) int {
 		"source_url": sourceURL,
 	}
 	envs := map[string]string{
-		"SINK_JOB": "tar-load",
+		"SINK_MODULE": "tar-load",
 	}
 	// for _, line := range vars {
 	// 	ss := strings.Split(line, ",")

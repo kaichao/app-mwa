@@ -80,11 +80,11 @@ func toCrossAppPresto(pointing string) int {
 	}
 	// 给presto-search流水线发消息
 	envVars := map[string]string{
-		"SINK_JOB": "message-router-presto",
-		"JOB_ID":   "",
-		"APP_ID":   fmt.Sprintf("%d", prestoAppID),
+		"SINK_MODULE": "message-router-presto",
+		"MODULE_ID":   "",
+		"APP_ID":      fmt.Sprintf("%d", prestoAppID),
 	}
-	fmt.Printf("In toCrossAppPresto(), env:APP_ID=%s, JOB_ID=%s, SINK_JOB=%s,GRPC_SERVER=%s\n",
-		envVars["APP_ID"], envVars["JOB_ID"], envVars["SINK_JOB"], os.Getenv("GRPC_SERVER"))
+	fmt.Printf("In toCrossAppPresto(), env:APP_ID=%s, MODULE_ID=%s, SINK_MODULE=%s,GRPC_SERVER=%s\n",
+		envVars["APP_ID"], envVars["MODULE_ID"], envVars["SINK_MODULE"], os.Getenv("GRPC_SERVER"))
 	return task.AddWithMapHeaders(pointing, headers, envVars)
 }

@@ -19,8 +19,8 @@ var (
 func init() {
 	os.Setenv("REDIS_HOST", os.Getenv("GRPC_SERVER"))
 
-	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
-	appID = cache.GetAppIDByJobID(jobID)
+	moduleID, _ := strconv.Atoi(os.Getenv("MODULE_ID"))
+	appID = cache.GetAppIDByModuleID(moduleID)
 }
 
 func getPointingVariable(varName string, appID int) (string, error) {

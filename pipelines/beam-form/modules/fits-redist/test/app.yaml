@@ -4,7 +4,7 @@ cluster: dcu
 parameters:
   initial_status: RUNNING
 
-jobs:
+modules:
   fits-redist:
     label: 24通道fits再分发
     base_image: hub.cstcloud.cn/scalebox/file-copy
@@ -22,8 +22,8 @@ jobs:
       # - TARGET_ROOT=/tmp/scalebox/mydata
     hosts:
       - h0:1
-    sink_jobs:
-      - next-job
+    sink_modules:
+      - next-module
 
-  next-job:
+  next-module:
     base_image: hub.cstcloud.cn/scalebox/agent

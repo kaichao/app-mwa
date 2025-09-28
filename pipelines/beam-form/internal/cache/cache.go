@@ -15,18 +15,18 @@ var (
 func init() {
 	appIDCache = dbcache.New[int](
 		postgres.GetDB(), // *sql.DB connection
-		"SELECT app FROM t_job WHERE id = $1",
+		"SELECT app FROM t_module WHERE id = $1",
 		5*time.Minute,  // Cache expiration
 		10*time.Minute, // Cleanup interval
 		nil,            // Use default loader
 	)
 }
 
-// GetAppIDByJobID ...
-func GetAppIDByJobID(jobID int) int {
-	appID, err := appIDCache.Get(jobID)
+// GetAppIDByModuleID ...
+func GetAppIDByModuleID(moduleID int) int {
+	appID, err := appIDCache.Get(moduleID)
 	if err != nil {
-		logrus.Errorf("In GetAppIDByJobID(),err-info:%v\n", err)
+		logrus.Errorf("In GetAppIDByModuleID(),err-info:%v\n", err)
 		return -1
 	}
 	return appID

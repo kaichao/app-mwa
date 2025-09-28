@@ -41,7 +41,7 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		headers := common.SetJSONAttribute("{}", "target_url", varValue)
 
 		envVars := map[string]string{
-			"SINK_JOB": "fits24ch-copy",
+			"SINK_MODULE": "fits24ch-copy",
 		}
 		return task.Add(msg, headers, envVars)
 	}
@@ -120,7 +120,7 @@ func toFitsMerge(m string) int {
 
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
-		"SINK_JOB":        "fits-merge",
+		"SINK_MODULE":     "fits-merge",
 		"TIMEOUT_SECONDS": "600",
 	}
 	return task.AddTasks(messages, "{}", envVars)

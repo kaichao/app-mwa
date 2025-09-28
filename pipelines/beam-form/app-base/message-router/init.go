@@ -9,6 +9,6 @@ import (
 var appID int
 
 func init() {
-	jobID, _ := strconv.Atoi(os.Getenv("JOB_ID"))
-	appID = cache.GetAppIDByJobID(jobID)
+	moduleID, _ := strconv.Atoi(os.Getenv("MODULE_ID"))
+	appID = cache.GetAppIDByModuleID(moduleID)
 }

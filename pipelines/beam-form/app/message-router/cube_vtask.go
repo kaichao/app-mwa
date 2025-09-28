@@ -46,7 +46,7 @@ func toCubeVtask(cubeID string) int {
 	os.Unsetenv("SEMAPHORE_AUTO_CREATE")
 	// }
 	envs := map[string]string{
-		"SINK_JOB": "cube-vtask",
+		"SINK_MODULE": "cube-vtask",
 	}
 	return task.AddWithMapHeaders(cubeID, headers, envs)
 }

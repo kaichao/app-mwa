@@ -17,7 +17,7 @@ FROM (
 UPDATE t_task 
 SET status_code=-1, 
     headers = jsonb_set(COALESCE(headers, '{}'::jsonb), '{repeatable}', '"yes"', true)
-WHERE job=685 and status_code>0;
+WHERE module_id=685 and status_code>0;
 ```
 
 ## 目录拷贝
@@ -203,17 +203,17 @@ hostnamectl set-hostname scalebox-server
 ```sql
 UPDATE t_task 
 SET status_code=-1, headers=jsonb_set(COALESCE(headers, '{}'::jsonb), '{repeatable}', '"yes"', true)
-WHERE job=230 AND status_code=137;
+WHERE module_id=230 AND status_code=137;
 ```
 
-## 按job统计slot/host效率
+## 按module统计slot/host效率
 
 ```sql
 
 WITH task_exec AS (
   SELECT task, slot, t2, t3
   FROM t_task_exec
-  WHERE t3 IS NOT NULL AND job=584
+  WHERE t3 IS NOT NULL AND module_id=584
 ), exec_by_slot AS (
   SELECT slot, sum(t3-t2), avg(t3-t2),max(t3),min(t2)
   FROM task_exec

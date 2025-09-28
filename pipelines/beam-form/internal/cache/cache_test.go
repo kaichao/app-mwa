@@ -12,7 +12,7 @@ import (
 func init() {
 	os.Setenv("PGHOST", "10.0.6.100")
 }
-func TestGetAppIDByJobID(t *testing.T) {
-	appID := cache.GetAppIDByJobID(5)
+func TestGetAppIDByModuleID(t *testing.T) {
+	appID := cache.GetAppIDByModuleID(5)
 	fmt.Println("app-id:", appID)
 }

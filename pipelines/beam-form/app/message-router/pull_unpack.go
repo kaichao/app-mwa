@@ -135,7 +135,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		"target_url":  targetURL,
 	}
 	envs := map[string]string{
-		"SINK_JOB": "pull-unpack",
+		"SINK_MODULE": "pull-unpack",
 	}
 
 	return task.AddTasksWithMapHeaders(messages, headers, envs)

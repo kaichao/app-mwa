@@ -36,7 +36,7 @@ app_id=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1266932744 \
 TARGET_URL=/tmp/mydata/mwa/dat \
 scalebox app create | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
 ```
 #### SSH + jump-server 
 
@@ -49,7 +49,7 @@ HOSTS=n-00:1 \
 scalebox app create)
 app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack -h target_subdir=1266932744/p00001_00048/t1266937345_1266937543/ch132 1266932744/1266937506_1266937543_ch132.dat.tar.zst
 ```
 
 - 加上jump-server，会运行出错：
@@ -81,19 +81,19 @@ app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 ```
 ```sh
 for ch in {109..132}; do
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack \
     -h target_subdir=1257617424/p00001_00048/t1257617426_1257617505/ch${ch} \
     1257617424/1257617426_1257617465_ch${ch}.dat.tar.zst
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack \
     -h target_subdir=1257617424/p00001_00048/t1257617426_1257617505/ch${ch} \
     1257617424/1257617466_1257617505_ch${ch}.dat.tar.zst
 done
 
 for ch in {109..132}; do
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack \
     -h target_subdir=1257617424/p00001_00048/t1257617506_1257617585/ch${ch} \
     1257617424/1257617506_1257617545_ch${ch}.dat.tar.zst
-scalebox task add --app-id=${app_id} --sink-job=pull-unpack \
+scalebox task add --app-id=${app_id} --sink-module=pull-unpack \
     -h target_subdir=1257617424/p00001_00048/t1257617506_1257617585/ch${ch} \
     1257617424/1257617546_1257617585_ch${ch}.dat.tar.zst
 done

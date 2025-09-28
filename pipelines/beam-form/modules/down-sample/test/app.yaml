@@ -4,7 +4,7 @@ cluster: dcu
 parameters:
   initial_status: RUNNING
 
-jobs:
+modules:
   down-sample:
     base_image: app-mwa/down-sampler
     arguments:
@@ -22,7 +22,7 @@ jobs:
       - ENABLE_LOCAL_COMPUTE=
     hosts:
       - n-03:1
-    sink_jobs:
+    sink_modules:
       - next
 
   next:

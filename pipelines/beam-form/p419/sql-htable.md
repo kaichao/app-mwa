@@ -8,7 +8,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, '\d{6}(\d{4})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
         FROM t_task
-        WHERE job=11
+        WHERE module_id=11
     ) tt0
 ),finished AS (
     SELECT t
@@ -73,7 +73,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, '\d{6}(\d{4})_\d{10}/(\d{3})/(\d{5})_\d{5}', 'g') matches, status_code
         FROM t_task
-        WHERE job=12
+        WHERE module_id=12
     ) tt
 ),finished AS (
     SELECT t,p
@@ -133,7 +133,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{6}(\d{4})_\d{10}/ch(\d{3})', 'g') matches, status_code
         FROM t_task
-        WHERE job=13
+        WHERE module_id=13
     ) tt
 ),finished AS (
     SELECT t,p
@@ -196,7 +196,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{6}(\d{4})_\d{10}/ch(\d{3})', 'g') matches, status_code
         FROM t_task
-        WHERE job=26
+        WHERE module_id=26
     ) tt
 ),finished AS (
     SELECT t,p
@@ -264,7 +264,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{6}(\d{4})_\d{10}', 'g') matches, status_code
         FROM t_task
-        WHERE job=1668
+        WHERE module_id=1668
     ) tt
 )
 SELECT p,
@@ -302,9 +302,9 @@ ORDER BY 1
 - 按计算节点的横表
 ```sql
 WITH vtable AS (
-    SELECT host, t_slot.id AS sid, t_host.ip_addr, t_job.name, seq, t_slot.status
+    SELECT host, t_slot.id AS sid, t_host.ip_addr, t_module.name, seq, t_slot.status
     FROM t_slot 
-        JOIN t_job ON(t_slot.job=t_job.id)
+        JOIN t_module ON(t_slot.module_id=t_module.id)
         JOIN t_host ON(t_slot.host=t_host.hostname)
     WHERE t_slot.host LIKE 'c-%'
         AND app=188
@@ -323,14 +323,14 @@ ORDER BY 1;
 
 - 系统级slot列表
 ```sql
-WITH v_job AS (
+WITH v_module AS (
     SELECT id, name
-    FROM t_job
+    FROM t_module
     WHERE app=194
         AND name in ('message-router-main','dir-list','cluster-dist','fits-24ch-push')
 )
-SELECT v_job.id AS jid, v_job.name AS jname, t_slot.id AS sid, host,seq,t_slot.status
-FROM v_job JOIN t_slot ON (v_job.id=t_slot.job)
+SELECT v_module.id AS jid, v_module.name AS jname, t_slot.id AS sid, host,seq,t_slot.status
+FROM v_module JOIN t_slot ON (v_module.id=t_slot.module_id)
 ORDER BY 1,5;
 ```
 
@@ -347,7 +347,7 @@ WITH mapped AS (    -- label到索引号的映射
             'before-mr', 
             'before-sema-progress-counter', 
             'after-sema-progress-counter',
-            'before-sendJobRefMessage()',
+            'before-sendModuleRefMessage()',
             'before-leave-fromBeamMaker()',
             'before-exit'
         ]) WITH ORDINALITY AS name
@@ -359,8 +359,8 @@ expanded AS (
     WHERE task IN (
         SELECT id
         FROM t_task
-        WHERE job=263 
-            AND from_job='beam-maker' AND status_code=0
+        WHERE module_id=263 
+            AND from_module='beam-maker' AND status_code=0
         ORDER BY id
         OFFSET 130000
         LIMIT 500

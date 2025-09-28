@@ -20,7 +20,7 @@ func toDownSample(body string, fromHeaders map[string]string) int {
 		"sort_tag":    fromHeaders["_sort_tag"],
 	}
 	envVars := map[string]string{
-		"SINK_JOB": "down-sample",
+		"SINK_MODULE": "down-sample",
 	}
 	return task.AddWithMapHeaders(body, headers, envVars)
 }

@@ -4,7 +4,7 @@ cluster: dcu
 parameters:
   initial_status: RUNNING
 
-jobs:
+modules:
   beam-make:
     base_image: ${MWA_VCSTOOLS}
     command: ${ROCM_COMMAND}
@@ -19,7 +19,7 @@ jobs:
       - KEEP_TARGET_FILE=yes
     hosts:
       - n-00:${NUM_SLOTS}
-    sink_jobs:
+    sink_modules:
       - down-sample
 
   down-sample:
@@ -40,7 +40,7 @@ jobs:
       - ENABLE_LOCAL_COMPUTE=yes
     hosts:
       - n-00:1
-    sink_jobs:
+    sink_modules:
       - next
 
   next:

@@ -32,7 +32,7 @@
 ```sh
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617505/ch109
+scalebox task add --app-id=${app_id} --sink-module=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617505/ch109
 
 ```
 
@@ -42,7 +42,7 @@ scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p000
 ```sh
 ret=$(scalebox app create); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617465/ch109
+scalebox task add --app-id=${app_id} --sink-module=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617465/ch109
 
 ```
 
@@ -51,7 +51,7 @@ scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p000
 ret=$(scalebox app create combined.yaml); app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
 for ch in {109..132}; do
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00048 1257617424/p00001_00024/t1257617426_1257617505/ch${ch}
+scalebox task add --app-id=${app_id} --sink-module=beam-make -h pointing_range=p00001_00048 1257617424/p00001_00024/t1257617426_1257617505/ch${ch}
 done
 ```
 

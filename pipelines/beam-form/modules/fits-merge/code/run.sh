@@ -95,7 +95,7 @@ echo [DEBUG]full_path:$full_path
 [ "$KEEP_SOURCE_FILE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
 echo $full_path >> ${WORK_DIR}/input-files.txt
 
-echo "send-message to sink-job"
+echo "send-message to sink-module"
 echo $new_id > ${WORK_DIR}/messages.txt
 
 exit $code

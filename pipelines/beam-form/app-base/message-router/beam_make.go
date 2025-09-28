@@ -40,7 +40,7 @@ func toBeamMake(msg string) int {
 		fmt.Sprintf("n_messages:%d\n", len(messages)))
 
 	envVars := map[string]string{
-		"SINK_JOB":        "beam-make",
+		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "1800",
 	}
 	return task.AddTasks(messages, "", envVars)

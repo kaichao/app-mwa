@@ -4,7 +4,7 @@ cluster: dcu
 parameters:
   initial_status: RUNNING
 
-jobs:
+modules:
   beam-make:
     base_image: ${MWA_VCSTOOLS}
     # command: docker run -d --rm
@@ -26,7 +26,7 @@ jobs:
       - KEEP_TARGET_FILE=no
     hosts:
       - n-00:${NUM_SLOTS}
-    sink_jobs:
+    sink_modules:
       - next
 
   next:

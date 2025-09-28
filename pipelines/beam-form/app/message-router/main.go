@@ -28,10 +28,10 @@ func main() {
 
 	logrus.Infoln("02, after JSON format verification of headers")
 
-	doMessageRoute := fromFuncs[headers["from_job"]]
+	doMessageRoute := fromFuncs[headers["from_module"]]
 	if doMessageRoute == nil {
-		logrus.Warnf("from_job not set/not existed in message-router, from_job=%s ,message=%s\n",
-			headers["from_job"], os.Args[1])
+		logrus.Warnf("from_module not set/not existed in message-router, from_module=%s ,message=%s\n",
+			headers["from_module"], os.Args[1])
 		os.Exit(4)
 	}
 

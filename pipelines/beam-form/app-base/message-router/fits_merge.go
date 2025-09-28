@@ -47,7 +47,7 @@ func toFitsMerge(cubeID string) int {
 	}
 
 	envVars := map[string]string{
-		"SINK_JOB": "fits-merge",
+		"SINK_MODULE": "fits-merge",
 	}
 	return task.AddTasks(messages, "", envVars)
 }

@@ -131,7 +131,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 		strings.Join(toIPs, ","), fromHeaders["_sort_tag"])
 
 	envVars := map[string]string{
-		"SINK_JOB": "fits-redist",
+		"SINK_MODULE": "fits-redist",
 	}
 	common.AddTimeStamp("before-send-messages")
 	return task.Add(m, hs, envVars)

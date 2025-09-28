@@ -102,7 +102,7 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 	fmt.Printf("num-of-messages in toBeamMake():%d\n", len(messages))
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
-		"SINK_JOB":        "beam-make",
+		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "600",
 	}
 	headers := fmt.Sprintf(`{"_cube_id":"%s","_cube_index":"%s"}`,

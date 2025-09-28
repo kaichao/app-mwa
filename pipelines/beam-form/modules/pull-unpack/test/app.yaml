@@ -6,7 +6,7 @@ parameters:
   message_router: message-router
   default_sleep_count: 20
 
-jobs:
+modules:
   pull-unpack:
     base_image: ${FILE_COPY}
     arguments:

@@ -46,7 +46,7 @@ ret=$(SOURCE_URL=scalebox@159.226.237.136:10022/raid0/tmp/mwa/tar1257617424 \
 app_id=$(echo ${ret} | cut -d':' -f2 | tr -d '}')
 
 for f in $(head -n $n "tar-files.txt"); do
-    scalebox task add --app-id=${app_id} --sink-job=pull-unpack $f
+    scalebox task add --app-id=${app_id} --sink-module=pull-unpack $f
 done
 
 
@@ -69,7 +69,7 @@ app_id=$( NUM_SLOTS=1 scalebox app create | cut -d':' -f2 | tr -d '}' )
 
 - 添加单个消息
 ```sh
-scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617625/ch109
+scalebox task add --app-id=${app_id} --sink-module=beam-make -h pointing_range=p00001_00960 1257617424/p00001_00024/t1257617426_1257617625/ch109
 ```
 
 - 添加n个消息
@@ -82,7 +82,7 @@ for ((i=0; i<n; i++)); do
   start=$((i * 24 + 1))
   end=$((start + 23))
   s=$(printf "%05d_%05d" $start $end)
-  scalebox task add --app-id=${app_id} --sink-job=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617585/ch109
+  scalebox task add --app-id=${app_id} --sink-module=beam-make -h pointing_range=p00001_00960 1257617424/p${s}/t1257617426_1257617585/ch109
 done
 ```
 

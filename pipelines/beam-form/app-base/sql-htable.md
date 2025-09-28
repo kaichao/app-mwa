@@ -10,7 +10,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d{5})_\d{5}/t\d{5}(\d{5})_\d{10}/ch(\d{3})', 'g') matches, status_code
         FROM t_task
-        WHERE job=1414
+        WHERE module_id=1414
     ) tt
 ),finished AS (
     SELECT t,p
@@ -80,7 +80,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{5}(\d{5})_\d{10}', 'g') matches, status_code
         FROM t_task
-        WHERE job=466
+        WHERE module_id=466
     ) tt
 ),finished AS (
     SELECT p

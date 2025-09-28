@@ -25,7 +25,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	if headers["from_job"] == "pull-unpack" {
+	if headers["from_module"] == "pull-unpack" {
 		logrus.Printf("message from pull-unpack")
 		os.Exit(0)
 	}
@@ -64,7 +64,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	}
 
 	envs := map[string]string{
-		"SINK_JOB": "pull-unpack",
+		"SINK_MODULE": "pull-unpack",
 	}
 
 	return task.AddTasks(messages, "{}", envs)

@@ -4,7 +4,7 @@ cluster: dcu
 parameters:
   initial_status: RUNNING
 
-jobs:
+modules:
   fits-merge:
     label: 24通道fits合并
     base_image: app-mwa/mwa-vcstools:rocm-4.0.1
@@ -17,8 +17,8 @@ jobs:
       key_group_regex: ^(.+)$
     hosts:
       - h0:1
-    sink_jobs:
-      - next-job
+    sink_modules:
+      - next-module
 
-  next-job:
+  next-module:
     base_image: hub.cstcloud.cn/scalebox/agent
