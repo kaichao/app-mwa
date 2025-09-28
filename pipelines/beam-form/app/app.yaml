@@ -25,7 +25,7 @@ modules:
     arguments:
       slot_options: slot_on_head
     parameters:
-      # global_vtask_size: 2
+      # vtask_size: 2
 
   pull-unpack:
     base_image: ${FILE_COPY}

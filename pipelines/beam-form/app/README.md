@@ -89,19 +89,22 @@ START_MESSAGE=1302106648/p01801_02040/t1302106649_1302111446 \
 
 #### preload
 ```sh
-echo '1302106648/p07681_09280/t1302106969_1302107128' | \
+echo '1266680784/p01921_02880/t1266680787_1266681106' | \
 PRELOAD_MODE=preload-only \
+
+echo '1266680784/p_00960' | \
+PRELOAD_MODE=yes \
+
 ```
+
 
 #### 流水线运行
 ```sh
 
-echo '1302106648/p08521_' | \
-PRELOAD_MODE=yes \
+echo '1266680784/p01921_02880/t1266680787_1266681106' | \
+PRELOAD_MODE=preload-only \
 NODES='^d0.*' \
 GROUP_NODES= \
-FIRST_BW_LIMIT=120m \
-BW_LIMIT=60m \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
@@ -199,7 +202,7 @@ docker exec server_redis_1 redis-cli -h localhost -p 6379 ZADD QUEUE_HOSTS 1.0 1
 ```
 
 
-## 波束合成结果核对
+## 单目录波束合成结果核对
 
 - 文件按从大到小排列
 
@@ -213,9 +216,18 @@ find . -type f -exec ls -l {} + | sort -k 5 -nr
 find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}'
 ```
 
+
 ```sh
 for i in {38..80}; do
-cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1302106648;
+cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1266680784;
+find . -type f -exec ls -l {} + | sort -k 5 -nr;
+done | sort
+```
+
+
+```sh
+for i in {38..80}; do
+cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1266680784;
 find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}';
 done | sort
 ```
@@ -223,5 +235,17 @@ done | sort
 
 ## 重启server端daemon
 ```sh
-LOCAL_ADDR=10.100.1.30 docker compose up -d --no-deps --force-recreate controld
+LOCAL_ADDR=10.100.1.30 docker compose up -d --no-deps --force-recreate actuator
+```
+
+
+```sh
+
+export TARGET_URL=/data1/mydata/mwa/24ch
+export SOURCE_DIR=/public/home/cstu0038/scalebox/mydata/mwa/24ch
+export SOURCE_URL=cstu0030@60.245.128.14:65010${SOURCE_DIR}
+
+
+ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run --slot-regex='h0' --image-name=hub.cstcloud.cn/scalebox/file-copy
+
 ```

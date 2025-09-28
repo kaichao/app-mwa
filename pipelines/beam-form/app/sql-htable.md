@@ -461,10 +461,10 @@ WITH htable AS (
     $$
     WITH vtable AS (
       SELECT host_s[1] AS g, host_s[2]::integer AS h, 
-      STRING_AGG ( st, ' ' ORDER BY serial_num) s
+      STRING_AGG ( st, ' ' ORDER BY seq) s
       FROM (
         SELECT regexp_matches(host, '-(\d{2})(\d{2})', 'g') host_s, 
-            serial_num, 
+            seq, 
             CASE status
                 WHEN 'ON' THEN 'O'
                 WHEN 'READY' THEN 'R'
@@ -473,7 +473,7 @@ WITH htable AS (
             END AS st
         FROM t_slot
         WHERE job=608
-        ORDER BY host, serial_num
+        ORDER BY host, seq
       ) tt0
       GROUP BY 1,2
     )

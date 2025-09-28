@@ -104,24 +104,6 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 			headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(j))
 		}
 
-		// if os.Getenv("PRELOAD_MODE") == "multi-account-relay" {
-		// 	varName := `cube-stor-index:` + id
-		// 	storIndex, err := variable.Get(varName, appID)
-		// 	if err != nil {
-		// 		logrus.Errorf("variable get, var-name:%s, err-info:%v\n", varName, err)
-		// 		return 2
-		// 	}
-		// 	sourceURL := fmt.Sprintf("cstu00%s@10.100.1.104/public/home/cstu00%s",
-		// 		storIndex, storIndex)
-		// 	headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
-		// } else {
-		// 	sourceURL := os.Getenv("SOURCE_TAR_ROOT")
-		// 	if sourceURL == "" {
-		// 		sourceURL = sourcePicker.GetNext()
-		// 	}
-		// 	headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
-		// }
-
 		for k := 0; k < len(tus); k += 2 {
 			m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
 			messages = append(messages, m+","+headers)

@@ -219,7 +219,7 @@ WITH task_exec AS (
   FROM task_exec
   GROUP BY 1
 ), stat_exec_by_slot AS (
-  SELECT t_slot.host, t_slot.serial_num AS num, exec_by_slot.*, max-min AS duration,
+  SELECT t_slot.host, t_slot.seq AS num, exec_by_slot.*, max-min AS duration,
     ROUND(extract(epoch FROM exec_by_slot.sum) / 
       extract(epoch FROM exec_by_slot.max - exec_by_slot.min), 6) AS ratio
   FROM exec_by_slot JOIN t_slot ON (exec_by_slot.slot=t_slot.id) 

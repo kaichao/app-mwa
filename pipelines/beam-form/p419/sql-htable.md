@@ -302,7 +302,7 @@ ORDER BY 1
 - 按计算节点的横表
 ```sql
 WITH vtable AS (
-    SELECT host, t_slot.id AS sid, t_host.ip_addr, t_job.name, serial_num, t_slot.status
+    SELECT host, t_slot.id AS sid, t_host.ip_addr, t_job.name, seq, t_slot.status
     FROM t_slot 
         JOIN t_job ON(t_slot.job=t_job.id)
         JOIN t_host ON(t_slot.host=t_host.hostname)
@@ -329,7 +329,7 @@ WITH v_job AS (
     WHERE app=194
         AND name in ('message-router-main','dir-list','cluster-dist','fits-24ch-push')
 )
-SELECT v_job.id AS jid, v_job.name AS jname, t_slot.id AS sid, host,serial_num,t_slot.status
+SELECT v_job.id AS jid, v_job.name AS jname, t_slot.id AS sid, host,seq,t_slot.status
 FROM v_job JOIN t_slot ON (v_job.id=t_slot.job)
 ORDER BY 1,5;
 ```

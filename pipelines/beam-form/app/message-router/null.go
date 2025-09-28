@@ -36,8 +36,11 @@ func fromNull(body string, headers map[string]string) int {
 
 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", cube.ObsID, p)
-		varValue := iopath.GetStagingRoot(p)
-		setPointingVariable(varName, varValue, appID)
+		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
+			varValue := iopath.GetStagingRoot(p)
+			fmt.Printf("var-name:%s, var-value:%s\n", varName, varValue)
+			setPointingVariable(varName, varValue, appID)
+		}
 	}
 
 	if iopath.IsPreloadMode() {
