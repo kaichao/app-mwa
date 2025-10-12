@@ -43,7 +43,7 @@ func fromNull(body string, headers map[string]string) int {
 		}
 	}
 
-	if iopath.IsPreloadMode() {
+	if os.Getenv("PRELOAD_MODE") != "preloaded" {
 		return toTarLoad(body)
 	}
 

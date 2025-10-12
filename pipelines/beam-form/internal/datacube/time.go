@@ -105,3 +105,14 @@ func (cube *DataCube) GetTimeRangeIndex(t int) int {
 	}
 	return -1
 }
+
+// GetTimeUnitIndex ...
+func (cube *DataCube) GetTimeUnitIndex(t int) int {
+	ts := cube.GetTimeUnits()
+	for i := 0; i < len(ts); i += 2 {
+		if ts[i] <= t && t <= ts[i+1] {
+			return i / 2
+		}
+	}
+	return -1
+}

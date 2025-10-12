@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestGetTimeChannelIndex(t *testing.T) {
+func TestGetTimeChannelIndexEx(t *testing.T) {
 	testCases := []struct {
 		t     int
 		ch    int
@@ -20,7 +20,7 @@ func TestGetTimeChannelIndex(t *testing.T) {
 		{1257010986, 109, 48, 24},
 	}
 	for _, tc := range testCases {
-		index := cube.GetTimeChannelIndex(tc.t, tc.ch, tc.len)
+		index := cube.GetTimeChannelIndexEx(tc.t, tc.ch, tc.len)
 		if index != tc.index {
 			t.Errorf("cube.GetTimeChannelIndex(%d,%d,%d) ,result:%d , expected %d",
 				tc.t, tc.ch, tc.len, index, tc.index)
@@ -28,6 +28,28 @@ func TestGetTimeChannelIndex(t *testing.T) {
 	}
 }
 
+func TestGetTimeChannelIndex(t *testing.T) {
+	testCases := []struct {
+		t     int
+		ch    int
+		index int
+	}{
+		{1257010786, 109, 0},
+		// {1257010786, 112, 0},
+		// {1257010986, 112, 0},
+		// {1257010786, 109, 0},
+		// {1257010986, 109, 0},
+		// {1257010786, 109, 0},
+		{1257015583, 132, 2879},
+	}
+	for _, tc := range testCases {
+		index := cube.GetTimeChannelIndex(tc.t, tc.ch)
+		if index != tc.index {
+			t.Errorf("cube.GetTimeChannelIndex(%d,%d) ,result:%d , expected %d",
+				tc.t, tc.ch, index, tc.index)
+		}
+	}
+}
 func TestGetTimePointingIndex(t *testing.T) {
 	testCases := []struct {
 		t     int

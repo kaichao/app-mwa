@@ -53,10 +53,10 @@ func loadNodeData() {
 		ORDER BY 2
 	`
 	rows, err := postgres.GetDB().Query(sqlText, clusterName, nodesRegex)
-	defer rows.Close()
 	if err != nil {
 		logrus.Errorf("query t_cluster error in loadNodeData(), err: %v\n", err)
 	}
+	defer rows.Close()
 	for rows.Next() {
 		node := Node{}
 		if err := rows.Scan(&node.ID, &node.Name, &node.IPAddr, &node.Group); err != nil {
@@ -70,7 +70,7 @@ func loadNodeData() {
 		logrus.Errorf("Query Resultset, err-info:%v\n", err)
 	}
 
-	if !isFactorOrMultipleOf24(len(Nodes)) {
+	if os.Getenv("PRELOAD_MODE") != "preload-only" && !isFactorOrMultipleOf24(len(Nodes)) {
 		logrus.Errorf("node-regex=%s, the number of compute nodes is %d, which is not a multiple or a divisor of 24.\n",
 			nodesRegex, len(Nodes))
 		os.Exit(1)
@@ -78,48 +78,6 @@ func loadNodeData() {
 
 }
 
-/*
-func loadNodeNames() {
-	nodesRegex := os.Getenv("NODES")
-	// regex replace
-	nodesRegex = strings.ReplaceAll(nodesRegex, `\|`, `|`)
-	if nodesRegex == "" {
-		nodesRegex = "n.+"
-	}
-	clusterName := os.Getenv("CLUSTER")
-	sqlText := `
-		SELECT hostname,ip_addr
-		FROM t_host
-		WHERE cluster=$1 AND status='ON'
-			AND hostname ~ $2
-		ORDER BY 1
-	`
-	rows, err := postgres.GetDB().Query(sqlText, clusterName, nodesRegex)
-	defer rows.Close()
-	if err != nil {
-		logrus.Errorf("query t_app error: %v\n", err)
-	}
-	for rows.Next() {
-		var hostname, ipAddr string
-		if err := rows.Scan(&hostname, &ipAddr); err != nil {
-			logrus.Errorf("Scan hostname, err-info:%v\n", err)
-		}
-		NodeNames = append(NodeNames, hostname)
-		nodeIPs = append(nodeIPs, ipAddr)
-	}
-	fmt.Printf("regex:%s,nodes:%v\n", nodesRegex, NodeNames)
-	// 检查 rows 是否有错误
-	if err := rows.Err(); err != nil {
-		logrus.Errorf("Query Resultset, err-info:%v\n", err)
-	}
-
-	if !isFactorOrMultipleOf24(len(NodeNames)) {
-		logrus.Errorf("node-regex=%s, the number of compute nodes is %d, which is not a multiple or a divisor of 24.\n",
-			nodesRegex, len(NodeNames))
-		os.Exit(1)
-	}
-}
-*/
 // isFactorOrMultipleOf24 判断 n 是否是 24 的约数或倍数
 func isFactorOrMultipleOf24(n int) bool {
 	if n == 0 {

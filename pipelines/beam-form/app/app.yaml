@@ -11,14 +11,14 @@ modules:
     arguments:
       # dir_limit_gb: /public/home/cstu0030/scalebox:440,/public/home/cstu0032/scalebox:440,/public/home/cstu0033/scalebox:440,/public/home/cstu0034/scalebox:440,/public/home/cstu0035/scalebox:440,/public/home/cstu0037/scalebox:440
       dir_quota_gb: 
-        '{"/public/home/cstu0030/scalebox":440,
-          "/public/home/cstu0032/scalebox":440,
-          "/public/home/cstu0033/scalebox":440,
-          "/public/home/cstu0034/scalebox":440,
-          "/public/home/cstu0035/scalebox":440,
-          "/public/home/cstu0037/scalebox":440}'
+        # '{"/public/home/cstu0030/scalebox":440,
+        #   "/public/home/cstu0032/scalebox":440,
+        #   "/public/home/cstu0033/scalebox":440,
+        #   "/public/home/cstu0034/scalebox":440,
+        #   "/public/home/cstu0035/scalebox":440,
+        #   "/public/home/cstu0037/scalebox":440}'
     slots:
-      - n0:3
+      - n0:4
 
   cube-vtask:
     base_image: hub.cstcloud.cn/scalebox/agent
@@ -46,7 +46,7 @@ modules:
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=
       - BW_LIMIT=${BW_LIMIT}
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE_FILE=yes
       - TMPDIR_GROUP=39
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}
@@ -207,7 +207,7 @@ modules:
       bulk_message_size: 2
       slot_options: reserved_on_exit
     environments:
-      # '' / 'yes' / 'preload-only'
+      # '' / 'yes' / 'preload-only' / 'preloaded'
       - PRELOAD_MODE=${PRELOAD_MODE}
       # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
       # - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}

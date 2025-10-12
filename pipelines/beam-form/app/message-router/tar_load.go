@@ -75,7 +75,6 @@ func toTarLoad(datasetID string) int {
 	fmtTarZst := `%d_%d_ch%d.dat.tar.zst`
 	bodies := []string{}
 	semas := []*semaphore.Sema{}
-	// vars := []string{}
 
 	trs := cube.GetTimeRanges()
 	for i := 0; i < len(trs); i += 2 {
@@ -96,9 +95,10 @@ func toTarLoad(datasetID string) int {
 				// vars = append(vars, fmt.Sprintf(`cube-stor-index:%s/ch%03d,%d`, cubeID, ch, storIndex))
 				// cubeURL := fmt.Sprintf("cstu00%d@60.245.128.14:65010/public/home/cstu00%d/mydata/mwa/tar",
 				// 	storIndex, storIndex)
+				index := cube.GetTimeChannelIndex(tus[k], ch)
 				targetURL := fmt.Sprintf("%s/mwa/tar/%s",
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
-					iopath.GetPreloadRoot(ch-cube.ChannelBegin), cube.ObsID)
+					iopath.GetPreloadRoot(index), cube.ObsID)
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
 				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_id":"%s"}`,
 					fileName, targetURL, cubeID)
@@ -112,15 +112,6 @@ func toTarLoad(datasetID string) int {
 	envs := map[string]string{
 		"SINK_MODULE": "tar-load",
 	}
-	// for _, line := range vars {
-	// 	ss := strings.Split(line, ",")
-	// 	err := variable.Set(ss[0], ss[1], appID)
-	// 	if err != nil {
-	// 		logrus.Errorf("create variable, name=%s,value=%s,err-info:%v\n",
-	// 			ss[0], ss[1], err)
-	// 		return 2
-	// 	}
-	// }
 	if err := semaphore.CreateSemaphores(semas, appID, 100); err != nil {
 		logrus.Errorf("Create semaphore, err-info:%v\n", err)
 		return 1

@@ -9,9 +9,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// GetTimeChannelIndex ...
+// GetTimeChannelIndexEx ...
 // 用于to beam-make、redist
-func (cube *DataCube) GetTimeChannelIndex(t int, ch int, numHosts int) int {
+// 不再使用 ？
+func (cube *DataCube) GetTimeChannelIndexEx(t int, ch int, numHosts int) int {
 	if (numHosts < 2) || (numHosts%24 != 0 && 24%numHosts != 0) {
 		logrus.Warnf("The number of nodes is %d, should be a multiple or a divisor of 24\n", numHosts)
 		return -1
@@ -61,4 +62,12 @@ func (cube *DataCube) GetTimePointingIndex(t int, p int, numHosts int) int {
 	}
 	n := cube.GetTimeRangeIndex(t) % (numHosts / 24)
 	return n*24 + (p-cube.PointingBegin)%24
+}
+
+// GetTimeChannelIndex ...
+func (cube *DataCube) GetTimeChannelIndex(t int, ch int) int {
+	indexTime := cube.GetTimeUnitIndex(t)
+	indexCH := ch - cube.ChannelBegin
+
+	return indexTime*cube.NumOfChannels + indexCH
 }

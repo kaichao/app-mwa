@@ -35,7 +35,7 @@ func GetOriginRoot() string {
 }
 
 // 波束合成的输入路径，包括打包文件(*.tar)、解包后文件（*。dat）
-func GetPreloadRoot(ch int) string {
+func GetPreloadRoot(index int) string {
 	if v := os.Getenv("PRELOAD_ROOT"); v != "" {
 		return v
 	}
@@ -47,26 +47,11 @@ func GetPreloadRoot(ch int) string {
 		}
 		println("YAML config loaded successfully")
 	}
-
-	m := map[string]float64{}
-	for _, p := range config.Preload.WeightedPaths {
-		m[p.Path] = p.Weight
-	}
-
-	path := picker.NewWeightedPicker(m).GetNext()
-	if path != "COMBINED_PATH" {
-		return path
-	}
-
-	i := ch % len(config.Preload.indexes)
-	path = fmt.Sprintf("/public/home/cstu00%02d/scalebox/mydata",
-		config.Preload.indexes[i])
-
-	return path
+	return config.Preload.GetIndexedPath(index)
 }
 
 // 24ch文件
-func GetStagingRoot(pt int) string {
+func GetStagingRoot(index int) string {
 	if v := os.Getenv("STAGING_ROOT"); v != "" {
 		return v
 	}
@@ -78,30 +63,8 @@ func GetStagingRoot(pt int) string {
 		}
 		println("YAML config loaded successfully")
 	}
-
-	if wpStaging == nil {
-		m := map[string]float64{}
-		for _, wp := range config.Staging.WeightedPaths {
-			m[wp.Path] = wp.Weight
-		}
-		wpStaging = picker.NewWeightedPicker(m)
-	}
-
-	path := wpStaging.GetNext()
-	if path != "COMBINED_PATH" {
-		return path
-	}
-
-	// i := pt % len(config.Staging.indexes)
-	i := index % len(config.Staging.indexes)
-	index++
-	path = fmt.Sprintf("/public/home/cstu00%02d/scalebox/mydata",
-		config.Staging.indexes[i])
-
-	return path
+	return config.Staging.GetIndexedPath(index)
 }
-
-var index int = 0
 
 // PathWeight 表示带权重的路径
 type PathWeight struct {
@@ -121,8 +84,30 @@ type IndexRange struct {
 type IOPathConfig struct {
 	WeightedPaths []PathWeight `yaml:"weighted_paths"`
 	CombinedPath  []IndexRange `yaml:"combined_path"`
-	indexes       []int
-	weightPicker  *picker.WeightedPicker
+
+	indexes      []int
+	weightPicker *picker.WeightedPicker
+	currentIndex int
+}
+
+func (iopc *IOPathConfig) GetIndexedPath(index int) string {
+	m := map[string]float64{}
+	for _, p := range iopc.WeightedPaths {
+		m[p.Path] = p.Weight
+	}
+
+	path := picker.NewWeightedPicker(m).GetNext()
+	if path != "COMBINED_PATH" {
+		return path
+	}
+
+	i := index % len(iopc.indexes)
+	if index < 0 {
+		iopc.currentIndex++
+		i = iopc.currentIndex % len(iopc.indexes)
+	}
+	return fmt.Sprintf("/public/home/cstu0%03d/scalebox/mydata",
+		iopc.indexes[i])
 }
 
 // IOPath 表示整个YAML文件的结构
@@ -133,14 +118,7 @@ type IOPath struct {
 	Final   IOPathConfig `yaml:"final"`
 }
 
-func (ipc *IOPathConfig) GetRoot(n int) {
-
-}
-
-var (
-	config    *IOPath
-	wpStaging *picker.WeightedPicker
-)
+var config *IOPath
 
 // loadIOPathConfig 从YAML文件加载IO路径配置
 func loadIOPathConfig() error {
@@ -180,17 +158,6 @@ func loadIOPathConfig() error {
 		for i := v.StartIndex; i <= v.EndIndex; i++ {
 			config.Final.indexes = append(config.Final.indexes, i)
 		}
-	}
-
-	// 打印combined path信息，包括capacity_gb
-	// println("Preload weighted paths:", len(config.Preload.WeightedPaths))
-	for i, path := range config.Preload.CombinedPath {
-		println("  ", i, ": start_index=", path.StartIndex, ", end_index=", path.EndIndex, ", capacity_gb=", path.CapacityGB)
-	}
-
-	// println("Staging weighted paths:", len(config.Staging.WeightedPaths))
-	for i, path := range config.Staging.CombinedPath {
-		println("  ", i, ": start_index=", path.StartIndex, ", end_index=", path.EndIndex, ", capacity_gb=", path.CapacityGB)
 	}
 
 	return nil

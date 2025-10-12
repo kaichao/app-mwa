@@ -78,6 +78,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	semaDatReady := ""
 	semaDatDone := ""
 
+	cube0 := datacube.NewDataCube(cube.ObsID)
 	for j := 0; j < cube.NumOfChannels; j++ {
 		ch := cube.ChannelBegin + j
 		id := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, trBegin, trEnd, ch)
@@ -100,15 +101,16 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
 		headers = common.SetJSONAttribute(headers, "to_host", toHost)
 
-		if iopath.IsPreloadMode() {
-			headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(j))
-		}
-
 		for k := 0; k < len(tus); k += 2 {
+			if iopath.IsPreloadMode() {
+				index := cube0.GetTimeChannelIndex(tus[k], ch)
+				headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(index))
+			}
 			m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
 			messages = append(messages, m+","+headers)
 		}
 	}
+
 	// 信号量dat-ready、dat-done、fits-done、pointing-done
 	semaFitsDone := ""
 	// fits-done:1257010784/p00001/t1257010786_1257010985
