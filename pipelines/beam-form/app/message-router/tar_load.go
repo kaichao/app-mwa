@@ -85,6 +85,7 @@ func toTarLoad(datasetID string) int {
 		semaValue := len(tus) / 2 * cube.NumOfChannels
 		semas = append(semas, &semaphore.Sema{Name: semaName, Value: semaValue})
 
+		cube0 := datacube.NewDataCube(cube.ObsID)
 		for k := 0; k < len(tus); k += 2 {
 			for j := 0; j < cube.NumOfChannels; j++ {
 				ch := cube.ChannelBegin + j
@@ -95,7 +96,7 @@ func toTarLoad(datasetID string) int {
 				// vars = append(vars, fmt.Sprintf(`cube-stor-index:%s/ch%03d,%d`, cubeID, ch, storIndex))
 				// cubeURL := fmt.Sprintf("cstu00%d@60.245.128.14:65010/public/home/cstu00%d/mydata/mwa/tar",
 				// 	storIndex, storIndex)
-				index := cube.GetTimeChannelIndex(tus[k], ch)
+				index := cube0.GetTimeChannelIndex(tus[k], ch)
 				targetURL := fmt.Sprintf("%s/mwa/tar/%s",
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
 					iopath.GetPreloadRoot(index), cube.ObsID)

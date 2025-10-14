@@ -23,7 +23,7 @@ datasets:
   1266680784:
     # t: 1266680787 .. 1266685583, 4797
     # pointings.txt里，1-72:已知脉冲星，73-11412:盲搜格点
-    # finished: 0
+    # finished: 2880
 
     # channel dimension
     channelBegin: 109

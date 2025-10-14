@@ -10,7 +10,7 @@ import (
 func TestGetPreloadRoot(t *testing.T) {
 	os.Setenv("IOPATH_FILE", "../../io-path.yaml")
 
-	for p := 0; p < 100; p++ {
-		fmt.Println(iopath.GetPreloadRoot(p))
+	for p := 2881; p < 3001; p++ {
+		fmt.Println(iopath.GetStagingRoot(-1))
 	}
 }

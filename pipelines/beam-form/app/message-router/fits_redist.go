@@ -96,11 +96,8 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 				varValue = prestoIPs[i]
 			} else {
 				// 类型2、类型3，组内地址
-				// varValue = os.Getenv("TARGET_24CH_ROOT")
-				// if varValue == "" {
-				// 	varValue = targetPicker.GetNext()
-				// }
-				varValue = iopath.GetStagingRoot(p)
+				// 自增长的index
+				varValue = iopath.GetStagingRoot(-1)
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {

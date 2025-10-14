@@ -89,7 +89,7 @@ echo '1266680784/p01921_02760' | \
 #### 流水线运行
 ```sh
 
-echo '1266680784/p01921_02880' | \
+echo '1266680784/p02881_03840' | \
 PRELOAD_MODE=yes \
 NODES='^d0.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
@@ -205,17 +205,20 @@ find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": 
 
 
 ```sh
-for i in {38..80}; do
-cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1266680784;
+for i in {030..150}; do
+cd /public/home/cstu0${i}/scalebox/mydata/mwa/24ch/1266680784;
 find . -type f -exec ls -l {} + | sort -k 5 -nr;
 done | sort
 ```
 
 
 ```sh
-for i in {38..80}; do
-cd /public/home/cstu00${i}/scalebox/mydata/mwa/24ch/1266680784;
-find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}';
+for i in {030..150}; do
+  dir="/public/home/cstu0${i}/scalebox/mydata/mwa/24ch/1266680784"
+  if [ -d "$dir" ]; then
+    cd "$dir" || continue
+    find . -maxdepth 2 -type f | cut -d'/' -f2 | sort | uniq -c | awk '{print $2 ": " $1}'
+  fi
 done | sort
 ```
 

@@ -37,7 +37,7 @@ staging:
 # 24-channel beam-form
   weighted_paths:
     - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 2.0
+      weight: 1.0
       capacity_gb: 20480
     - path: "astro@10.100.1.30:10022/data2/mydata"
       weight: 0.0

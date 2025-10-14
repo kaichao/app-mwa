@@ -18,7 +18,7 @@ modules:
         #   "/public/home/cstu0035/scalebox":440,
         #   "/public/home/cstu0037/scalebox":440}'
     slots:
-      - n0:4
+      - n0:3
 
   cube-vtask:
     base_image: hub.cstcloud.cn/scalebox/agent
@@ -26,6 +26,7 @@ modules:
       slot_options: slot_on_head
     parameters:
       # vtask_size: 2
+      vtask_role: head
 
   pull-unpack:
     base_image: ${FILE_COPY}
@@ -40,6 +41,7 @@ modules:
       pod_id: by_channel
       message_router_index: 2
       key_group_regex: ^([0-9]+)
+      vtask_role: core
     environments:
       - SOURCE_URL=
       - SOURCE_JUMP=${SOURCE_JUMP}
@@ -77,6 +79,7 @@ modules:
       slot_recoverable: yes
       message_router_index: 1
       task_cache_expired_minutes: 65
+      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_TMPDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
@@ -107,6 +110,7 @@ modules:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
       retry_rules: "['*:3']"
+      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
@@ -134,6 +138,7 @@ modules:
       task_dist_mode: HOST-BOUND
       pod_id: by_channel
       retry_rules: "['*:3']"
+      vtask_role: core
     environments:
       # 1chx
       - INPUT_ROOT=${LOCAL_SHMDIR}
@@ -165,6 +170,7 @@ modules:
       task_dist_mode: HOST-BOUND
       pod_id: by_pointing
       retry_rules: "['*:3']"
+      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=
@@ -226,7 +232,6 @@ modules:
       - SSH_PORT=${TARGET_PORT}
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}
-      # - REDISCLI_HOST=
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=${FIRST_BW_LIMIT}
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量，仅针对24个节点以上有效

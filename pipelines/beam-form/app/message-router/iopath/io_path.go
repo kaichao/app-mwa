@@ -90,13 +90,21 @@ type IOPathConfig struct {
 	currentIndex int
 }
 
-func (iopc *IOPathConfig) GetIndexedPath(index int) string {
+func (iopc *IOPathConfig) setup() {
+	for _, v := range iopc.CombinedPath {
+		for i := v.StartIndex; i <= v.EndIndex; i++ {
+			iopc.indexes = append(iopc.indexes, i)
+		}
+	}
 	m := map[string]float64{}
 	for _, p := range iopc.WeightedPaths {
 		m[p.Path] = p.Weight
 	}
+	iopc.weightPicker = picker.NewWeightedPicker(m)
+}
 
-	path := picker.NewWeightedPicker(m).GetNext()
+func (iopc *IOPathConfig) GetIndexedPath(index int) string {
+	path := iopc.weightPicker.GetNext()
 	if path != "COMBINED_PATH" {
 		return path
 	}
@@ -139,26 +147,10 @@ func loadIOPathConfig() error {
 		return err
 	}
 
-	for _, v := range config.Origin.CombinedPath {
-		for i := v.StartIndex; i <= v.EndIndex; i++ {
-			config.Origin.indexes = append(config.Origin.indexes, i)
-		}
-	}
-	for _, v := range config.Preload.CombinedPath {
-		for i := v.StartIndex; i <= v.EndIndex; i++ {
-			config.Preload.indexes = append(config.Preload.indexes, i)
-		}
-	}
-	for _, v := range config.Staging.CombinedPath {
-		for i := v.StartIndex; i <= v.EndIndex; i++ {
-			config.Staging.indexes = append(config.Staging.indexes, i)
-		}
-	}
-	for _, v := range config.Final.CombinedPath {
-		for i := v.StartIndex; i <= v.EndIndex; i++ {
-			config.Final.indexes = append(config.Final.indexes, i)
-		}
-	}
+	config.Origin.setup()
+	config.Preload.setup()
+	config.Staging.setup()
+	config.Final.setup()
 
 	return nil
 }
