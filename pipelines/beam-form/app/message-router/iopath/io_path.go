@@ -120,10 +120,18 @@ func (iopc *IOPathConfig) GetIndexedPath(index int) string {
 
 // IOPath 表示整个YAML文件的结构
 type IOPath struct {
-	Origin  IOPathConfig `yaml:"origin"`
+	// 数据的全局输入
+	Origin IOPathConfig `yaml:"origin"`
+	// 计算的全局输入
 	Preload IOPathConfig `yaml:"preload"`
+	// 计算的本地输入
+
+	// 计算的本地输出
+
+	// 计算的全局输出
 	Staging IOPathConfig `yaml:"staging"`
-	Final   IOPathConfig `yaml:"final"`
+	// 数据的全局输出
+	Final IOPathConfig `yaml:"final"`
 }
 
 var config *IOPath

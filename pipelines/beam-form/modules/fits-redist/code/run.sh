@@ -104,6 +104,6 @@ if [[ $ret_code -ne 0 ]]; then
     exit $ret_code
 fi
 
-echo "$1" > ${WORK_DIR}/messages.txt
+echo "$1" > ${WORK_DIR}/sink-tasks.txt
 
 exit 0

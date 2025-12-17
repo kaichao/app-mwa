@@ -11,7 +11,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d{5})_\d{5}/\d{5}(\d{5})_\d{10}_ch(\d+)\.dat', 'g') matches, status_code
         FROM t_task
-        WHERE module_id=220
+        WHERE mod_id=220
     ) tt0
 --    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
@@ -81,7 +81,7 @@ WITH htable AS (
             regexp_matches(to_host, '-\d{2}(\d{2})\.', 'g') to_host_s, 
             status_code
         FROM t_task
-        WHERE module_id=471
+        WHERE mod_id=471
       ) tt0
     ),finished AS (
       SELECT t
@@ -134,7 +134,7 @@ WITH htable AS (
         substring(to_host FROM 'c-(\d{4})\.p419') AS to_host
       FROM t_task,
         regexp_matches(body, 'p(\d{5})_\d{5}/\d{5}(\d{5})_\d{10}_ch(\d+)\.dat', 'g') AS matches
-      WHERE module_id = 1959
+      WHERE mod_id = 1959
     )
     SELECT t, ch, to_host
     FROM vtable
@@ -176,7 +176,7 @@ WITH vtable AS (
         regexp_matches(headers->>'to_host', '\d{2}-(\d+)\.', 'g') to_host_s, 
         status_code
         FROM t_task
-        WHERE module_id=17
+        WHERE mod_id=17
     ) tt
 --    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
@@ -241,7 +241,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d{5})_\d{5}/t\d{5}(\d{5})_\d{10}/ch(\d{3})', 'g') matches, status_code
         FROM t_task
-        WHERE module_id=221
+        WHERE mod_id=221
     ) tt
 --    WHERE (matches[1]::integer) between 4441 and 4800
 ) ...
@@ -258,7 +258,7 @@ WITH vtable AS (
         regexp_matches(to_host, '-\d{2}(\d{2})\.', 'g') to_host_s, 
         status_code
         FROM t_task
-        WHERE module_id=354
+        WHERE mod_id=354
     ) tt
 --    WHERE (body_s[1]::integer) between 4441 and 4800
 ) ...
@@ -305,7 +305,7 @@ WITH vtable AS (
     FROM (
         SELECT regexp_matches(body, 'p(\d+)/t\d{5}(\d{5})_\d{10}', 'g') matches, status_code
         FROM t_task
-        WHERE module_id=243
+        WHERE mod_id=243
     ) tt
 --    WHERE (matches[1]::integer) between 4441 and 4800
 ),finished AS (
@@ -368,7 +368,7 @@ FROM crosstab(
         FROM (
             SELECT regexp_matches(body, ''p(\d+)/t\d{5}(\d{5})_\d{10}'', ''g'') matches, status_code
             FROM t_task
-            WHERE module_id = 981
+            WHERE mod_id = 981
         ) tt
 --      WHERE (matches[1]::integer) between 4441 and 4800
     ), finished AS (
@@ -472,7 +472,7 @@ WITH htable AS (
                 ELSE status -- 如果有其他值，保留原值
             END AS st
         FROM t_slot
-        WHERE module_id=608
+        WHERE mod_id=608
         ORDER BY host, seq
       ) tt0
       GROUP BY 1,2

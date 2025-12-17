@@ -104,7 +104,7 @@ flowchart TD
 
 ## 三、信号量/共享变量的设计
 
-信号量表
+### 信号量表
 | category      | sema_name                                                  | initial value    |  comment |
 | ------------- | ---------------------------------------------------------- | ---------------- | -------- |
 | tar-ready     | tar-ready:1257010784/p00001_00960/t1257010786_1257010985   |                  |          |
@@ -115,10 +115,27 @@ flowchart TD
 | task_progress | task_progress:beam-make:g01h00                             |                  |          |
 | capacity-presto-search | capacity-presto-search:h0000                   |  |计算节点上presto-search的vtask数 |
 
-变量表
+### 变量表
 | category           | var_name                             | value                           |
 | ------------------ | ------------------------------------ | ------------------------------- |
 | pointing_data_root | pointing_data_root:1257010784/p00001 | 10.2.3.4 (计算节点) <br/>  /local_root(本地共享存储) <br/>   remote_user@remote_ip:port/remote-root     |
+
+### 系统级头参数
+| 模块名          | 头参数                                          |
+| -------------- | ---------------------------------------------- | 
+| tar-load       | _cube_id,                                     |
+| cube-vtask     | _cube_index, _vtask_id,                       |
+| pull-unpack    | _cube_id,_cube_index, _vtask_id,             |
+| beam-make      | _cube_id,_cube_index, _sort_tag, _vtask_id,  |
+| down-sample    | _cube_index, _sort_tag, _vtask_id,           |
+| fits-redist    | _vtask_id,                                     |
+| fits-merge     | _vtask_id,                                     |
+
+_cube_index: 主要用于fits-redist的分组信息。
+_cube_index --> _cubic_gid: 分组号，标识fits-redist的节点组 或通过to_host直接提取？
+
+_cube_id: 标识信号量tar_ready (不连续的怎么表示？)
+
 
 
 ### tar-ready

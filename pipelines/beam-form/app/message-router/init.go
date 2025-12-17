@@ -10,9 +10,6 @@ import (
 )
 
 var (
-	// targetPicker = picker.NewWeightedPickerByFile("target")
-	// sourcePicker = picker.NewWeightedPickerByFile("source")
-
 	appID int
 )
 
@@ -35,4 +32,8 @@ func setPointingVariable(varName string, varValue string, appID int) error {
 		return global.Set(varName, varValue)
 	}
 	return variable.Set(varName, varValue, appID)
+}
+
+func addTasks(sinkModule string, bodies []string) error {
+	return nil
 }

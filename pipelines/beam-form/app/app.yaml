@@ -3,22 +3,55 @@ cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
   message_router: mr-beam-form
+  global_copier_size: 3
+  global_copier_env: '{}'
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
+
+vcluster:
+  parameters:
+    base_data_dir: /public/home/cstu0030/scalebox/mydata
+    uname: cstu0030
+    port: 50022
+    grpc_server: 10.100.1.30
+    grpc_remote_server: 60.245.128.60
+  hosts:
+    h0:
+      label: head-node
+      ip_addr: 10.100.1.30
+      role: head
+      uname: astro
+      port: 10022
+    n0:
+      label: I/O node 
+      ip_addr: 60.245.128.14
+      uname: cstu0030
+      port: 65010
+      parameters:
+        use_home_tmp: "yes"
+  backend_config:
+    type: slurm
+    user_name: cstu0030
+    partition: cstdemo
+    num_groups: 3
+    group_size: 24
+    group_prefix: d
 
 modules:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:
-      # dir_limit_gb: /public/home/cstu0030/scalebox:440,/public/home/cstu0032/scalebox:440,/public/home/cstu0033/scalebox:440,/public/home/cstu0034/scalebox:440,/public/home/cstu0035/scalebox:440,/public/home/cstu0037/scalebox:440
       dir_quota_gb: 
-        # '{"/public/home/cstu0030/scalebox":440,
-        #   "/public/home/cstu0032/scalebox":440,
-        #   "/public/home/cstu0033/scalebox":440,
-        #   "/public/home/cstu0034/scalebox":440,
-        #   "/public/home/cstu0035/scalebox":440,
-        #   "/public/home/cstu0037/scalebox":440}'
+        '{"/public/home/cstu0092/scalebox":440,
+          "/public/home/cstu0093/scalebox":440,
+          "/public/home/cstu0094/scalebox":440,
+          "/public/home/cstu0095/scalebox":440,
+          "/public/home/cstu0096/scalebox":440,
+          "/public/home/cstu0097/scalebox":440,
+          "/public/home/cstu0098/scalebox":440,
+          "/public/home/cstu0099/scalebox":440,
+          "/public/home/cstu0100/scalebox":440}'
     slots:
-      - n0:3
+      - n0:2
 
   cube-vtask:
     base_image: hub.cstcloud.cn/scalebox/agent
@@ -48,7 +81,7 @@ modules:
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=
       - BW_LIMIT=${BW_LIMIT}
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE_FILE=no
       - TMPDIR_GROUP=39
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}

@@ -2,10 +2,26 @@ datasets:
 
   1258221008:
     # pointings.txt 的1-20行是已知脉冲星，21-11360是盲搜格点
+    pointingEnd: 11360
+
   1301412552:
     # pointings.txt 的1-59行是已知脉冲星，60-11399是盲搜格点
+    pointingEnd: 11399
+
   1302282040:
-    # pointings.txt 的1-231行是已知脉冲星，232-11571是盲搜格点
+    # t: 1302282041 .. 1302286838, 4798
+    # pointings.txt 的1-230行是已知脉冲星，231-11571是盲搜格点
+    # finished: 960
+
+    # channel dimension
+    channelBegin: 109
+
+    timeBegin: 1302282041
+    timeEnd: 1302286838
+
+    # pointing dimension
+    pointingEnd: 11570
+  
   1253991112:
     # R04
     # t: 1253991114 .. 1253995911, 4798
@@ -23,21 +39,22 @@ datasets:
   1266680784:
     # t: 1266680787 .. 1266685583, 4797
     # pointings.txt里，1-72:已知脉冲星，73-11412:盲搜格点
-    # finished: 2880
+    # finished: 8160
 
     # channel dimension
     channelBegin: 109
-    # time dimenstion
+    # time dimension
     timeBegin: 1266680787
     timeEnd: 1266685583
 
     # pointing dimension
-    pointingEnd: 11412
+#    pointingEnd: 11412
+    pointingEnd: 11427
 
   1302106648:
     # t: 1302106649 .. 1302111446, 4798
     # pointings.txt里，1-107:费米源，108-503:已知脉冲星，504-9280:盲搜格点
-    # finished: 9280
+    # finished: 9280, 650(r2)
 
     # channel dimension
     channelBegin: 109
@@ -52,8 +69,8 @@ datasets:
   1265983624:
     # t: 1265983626 .. 1265988429, 4804
     # pointings.txt里，1-87:费米源，88-162:已知脉冲星，163-11502:盲搜格点
-    # 613(r2)
-    # finished: 250801 / 250823(r2)
+    # 
+    # finished: 250801 / 613(r2,250823)
     
     # channel dimension
     channelBegin: 109

@@ -89,13 +89,6 @@ func toTarLoad(datasetID string) int {
 		for k := 0; k < len(tus); k += 2 {
 			for j := 0; j < cube.NumOfChannels; j++ {
 				ch := cube.ChannelBegin + j
-				// 	storIndex++
-				// 	if storIndex > storEnd {
-				// 		storIndex = storBegin
-				// 	}
-				// vars = append(vars, fmt.Sprintf(`cube-stor-index:%s/ch%03d,%d`, cubeID, ch, storIndex))
-				// cubeURL := fmt.Sprintf("cstu00%d@60.245.128.14:65010/public/home/cstu00%d/mydata/mwa/tar",
-				// 	storIndex, storIndex)
 				index := cube0.GetTimeChannelIndex(tus[k], ch)
 				targetURL := fmt.Sprintf("%s/mwa/tar/%s",
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
@@ -118,6 +111,7 @@ func toTarLoad(datasetID string) int {
 		return 1
 	}
 
+	fmt.Printf("In toTarLoad(), len(bodies):%d, headers:%v, envs:%v\n", len(bodies), headers, envs)
 	return task.AddTasksWithMapHeaders(bodies, headers, envs)
 }
 
