@@ -101,7 +101,7 @@ func NewDataCube(datasetID string) *DataCube {
 		cube.TimeUnit = 40
 	}
 	if cube.TimeStep == 0 {
-		cube.TimeStep = 200
+		cube.TimeStep = 160
 	}
 	if cube.TimeEnd == 0 {
 		cube.TimeEnd = cube.TimeBegin + cube.NumOfSeconds - 1

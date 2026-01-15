@@ -1,12 +1,12 @@
 module beamform
 
-go 1.24.5
+go 1.25.2
 
 require (
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/kaichao/gopkg/dbcache v0.0.0-20250622141727-ea6b44dc4112
 	github.com/kaichao/gopkg/exec v0.0.0-20250924024259-a22001a2e392
-	github.com/kaichao/scalebox v0.0.0-20250902080110-4b0971d3eda3
+	github.com/kaichao/scalebox v0.0.0-20260113002852-3d4c5b4a1fa5
 	github.com/sirupsen/logrus v1.9.3
 	gopkg.in/yaml.v2 v2.4.0
 )

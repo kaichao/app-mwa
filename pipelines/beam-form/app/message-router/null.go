@@ -11,7 +11,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
@@ -20,20 +19,23 @@ import (
 func fromNull(body string, headers map[string]string) int {
 	cube := datacube.NewDataCube(body)
 	cube0 := datacube.NewDataCube(cube.ObsID)
-	if reflect.DeepEqual(cube.GetTimeRanges(), cube0.GetTimeRanges()) {
-		// 输入数据集包含全时段，创建信号量pointing-done
-		fileName := "my-sema.txt"
+	// 按需创建信号量pointing-done，用于标识pointing的完成
+	if true || reflect.DeepEqual(cube.GetTimeRanges(), cube0.GetTimeRanges()) {
+		// 输入数据集包含全时段
+		lines := []string{}
 		size := len(cube.GetTimeRanges()) / 2
 		for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
-			common.AppendToFile(fileName, fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size))
+			line := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size)
+			lines = append(lines, line)
 		}
-		err := semaphore.CreateFileSemaphores(fileName, appID, 500)
+		err := semaphore.CreateSemaphores(lines, appID, 500)
 		if err != nil {
 			logrus.Errorf("create semaphore pointing-done, err-info:%v", err)
 			return 1
 		}
 	}
 
+	// 生成每个指向数据的独立root目录路径
 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", cube.ObsID, p)
 		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
@@ -47,13 +49,13 @@ func fromNull(body string, headers map[string]string) int {
 		return toTarLoad(body)
 	}
 
-	// 产生所有cube
+	// 产生所有cube到wait-queue
 	fmtCubicID := "%s/p%05d_%05d/t%d_%d"
 	trs := cube.GetTimeRanges()
 	for i := 0; i < len(trs); i += 2 {
 		cubeID := fmt.Sprintf(fmtCubicID, cube.ObsID,
 			cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
-		if ret := toCubeVtask(cubeID); ret != 0 {
+		if ret := toWaitQueue(cubeID); ret != 0 {
 			return ret
 		}
 	}

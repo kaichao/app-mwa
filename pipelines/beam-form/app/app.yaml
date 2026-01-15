@@ -32,7 +32,7 @@ vcluster:
     type: slurm
     user_name: cstu0030
     partition: cstdemo
-    num_groups: 3
+    num_groups: ${NUM_GROUPS}
     group_size: 24
     group_prefix: d
 
@@ -40,26 +40,38 @@ modules:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:
-      dir_quota_gb: 
-        '{"/public/home/cstu0092/scalebox":440,
-          "/public/home/cstu0093/scalebox":440,
-          "/public/home/cstu0094/scalebox":440,
-          "/public/home/cstu0095/scalebox":440,
-          "/public/home/cstu0096/scalebox":440,
-          "/public/home/cstu0097/scalebox":440,
-          "/public/home/cstu0098/scalebox":440,
-          "/public/home/cstu0099/scalebox":440,
-          "/public/home/cstu0100/scalebox":440}'
+      dir_quota_gb: '{
+        "/public/home/cstu0092/scalebox":440,
+        "/public/home/cstu0093/scalebox":440,
+        "/public/home/cstu0094/scalebox":440,
+        "/public/home/cstu0095/scalebox":440,
+        "/public/home/cstu0096/scalebox":440,
+        "/public/home/cstu0097/scalebox":440,
+        "/public/home/cstu0098/scalebox":440,
+        "/public/home/cstu0099/scalebox":440
+        }'
     slots:
       - n0:2
 
-  cube-vtask:
-    base_image: hub.cstcloud.cn/scalebox/agent
+  # 开关功能，每次仅能通过一个
+  wait-queue:
+    base_image: hub.cstcloud.cn/scalebox/agent:latest
     arguments:
+      code_path: ${PWD}/../modules/wait-queue/code
       slot_options: slot_on_head
     parameters:
-      # vtask_size: 2
+      vtask_size: 1
+
+  vtask-head:
+    base_image: hub.cstcloud.cn/scalebox/agent:latest
+    parameters:
+      task_dist_mode: SLOT-BOUND
       vtask_role: head
+      vtask_size: 2
+      vtask_size_sema_copy: yes
+    slots:
+      # 最多分组为3
+      - h0:${NUM_GROUPS}
 
   pull-unpack:
     base_image: ${FILE_COPY}
@@ -71,17 +83,18 @@ modules:
       dir_quota_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":${PULL_UNPACK_LIMIT_GB}}'
     parameters:
       task_dist_mode: HOST-BOUND
+      vtask_role: core
       pod_id: by_channel
       message_router_index: 2
       key_group_regex: ^([0-9]+)
-      vtask_role: core
     environments:
       - SOURCE_URL=
       - SOURCE_JUMP=${SOURCE_JUMP}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=
       - BW_LIMIT=${BW_LIMIT}
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE_FILE=yes
+      # 解包后文件的group-id，确保计算完成后可删除。
       - TMPDIR_GROUP=39
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}
@@ -101,8 +114,8 @@ modules:
       free_space_gb: '{"${LOCAL_SHMDIR}/mydata":${BEAM_MAKE_FREE_GB}}'
     parameters:
       task_dist_mode: HOST-BOUND
+      vtask_role: core
       pod_id: by_channel
-      # task_progress_group_diff: 6
       # 组内不超过4，全局不超过8
       # node_progress_gap: '{"[a-z][0-9][0-9]":4,"[a-z]":8}'
       node_progress_gap: '{"[a-z][0-9][0-9]":6}'
@@ -112,7 +125,6 @@ modules:
       slot_recoverable: yes
       message_router_index: 1
       task_cache_expired_minutes: 65
-      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_TMPDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
@@ -141,9 +153,9 @@ modules:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
+      vtask_role: core
       pod_id: by_channel
       retry_rules: "['*:3']"
-      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
@@ -169,9 +181,9 @@ modules:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
+      vtask_role: core
       pod_id: by_channel
       retry_rules: "['*:3']"
-      vtask_role: core
     environments:
       # 1chx
       - INPUT_ROOT=${LOCAL_SHMDIR}
@@ -201,9 +213,9 @@ modules:
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: HOST-BOUND
+      vtask_role: core
       pod_id: by_pointing
       retry_rules: "['*:3']"
-      vtask_role: core
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=
@@ -224,18 +236,26 @@ modules:
       slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
-      task_dist_mode: HOST-BOUND
-      pod_id: by_pointing
+#      task_dist_mode: HOST-BOUND
+      vtask_role: core
+#      pod_id: by_pointing
     environments:
-      - SOURCE_URL=${LOCAL_SHMDIR}/mydata
+      - SOURCE_URL=/public/home/cstu0100/scalebox/mydata
+      # - SOURCE_URL=${LOCAL_SHMDIR}/mydata
       - TARGET_URL=
       - TARGET_JUMP=${TARGET_JUMP}
       - KEEP_SOURCE_FILE=no
     slots:
       - ${NODES}
 
-  fits24ch-unload:
-    base_image: ${FILE_COPY}
+  # fits24ch-unload:
+  #   base_image: ${FILE_COPY}
+  vtask-tail:
+    base_image: hub.cstcloud.cn/scalebox/agent:latest
+    arguments:
+      slot_options: slot_on_head
+    parameters:
+      vtask_role: tail
 
   mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app
@@ -243,7 +263,7 @@ modules:
       key_group_regex: ^([0-9]+)
       start_message: ${START_MESSAGE}
       task_dist_mode: SLOT-BOUND
-      bulk_message_size: 2
+      task_batch_size: 2
       slot_options: reserved_on_exit
     environments:
       # '' / 'yes' / 'preload-only' / 'preloaded'
@@ -272,7 +292,7 @@ modules:
       # 全并行的波束合成(full_parallel)，隐含着指向优先的排序 POINTING_FIRST=yes
       - RUN_MODE=${RUN_MODE}
       - PRESTO_APP_ID=${PRESTO_APP_ID}
-      # 用global代替variable，更有效支持多应用共享
+      # 用global代替variable，更有效地支持多应用共享
       - USE_GLOBAL_POINTING=yes
     slots:
       - h0:3

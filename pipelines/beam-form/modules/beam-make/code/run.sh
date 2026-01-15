@@ -73,6 +73,9 @@ echo "pointing_file:$pointing_file" >> ${WORK_DIR}/custom-out.txt
 
 PTLIST=${DIR_CAL}/${OBSID}/${pointing_file}
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
+# 增加对行首尾空字符的过滤
+#POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {gsub(/^[[:space:]]+|[[:space:]]+$/, \"\"); printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
+echo "POINTS:$POINTS" >> ${WORK_DIR}/custom-out.txt
 
 cd ${WORK_DIR}
 echo "WORK_DIR:${WORK_DIR}, current_dir:${PWD}" >> ${WORK_DIR}/custom-out.txt

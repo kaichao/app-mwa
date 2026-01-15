@@ -19,7 +19,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromPullUnpack(msg string, headers map[string]string) int {
+func fromPullUnpack(body string, headers map[string]string) int {
 	defer func() {
 		common.AddTimeStamp("leave-fromPullUnpack()")
 	}()
@@ -28,9 +28,9 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 	// - target_dir:1257617424/t1257617426_1257617505/ch111
 	// semaphore: dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+_[0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+).dat.tar.zst$`)
-	ss := re.FindStringSubmatch(msg)
+	ss := re.FindStringSubmatch(body)
 	if len(ss) == 0 {
-		logrus.Errorf("Invalid Message Format, body=%s\n", msg)
+		logrus.Errorf("Invalid Message Format, body=%s\n", body)
 		return 1
 	}
 	prefix := ss[1]
@@ -56,7 +56,6 @@ func fromPullUnpack(msg string, headers map[string]string) int {
 
 func toPullUnpack(body string, fromHeaders map[string]string) int {
 	cube := datacube.NewDataCube(body)
-	fmt.Println(cube.ToCubeString())
 	trs := cube.GetTimeRanges()
 	if len(trs) != 2 {
 		logrus.Errorf("Only one time-range allowed for cube-id:%s\n", body)
@@ -64,41 +63,50 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	}
 
 	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
-	numGroups := len(node.Nodes) / 24
+	// numGroups := len(node.Nodes) / 24
 
 	trBegin := trs[0]
 	trEnd := trs[1]
-	messages := []string{}
+	tasks := []string{}
 	tus := cube.GetTimeUnitsWithinInterval(trBegin, trEnd)
 	nTimeUnits := len(tus) / 2
 
 	prs := cube.GetPointingRangesByInterval(cube.PointingBegin, cube.PointingEnd)
 	nPRanges := len(prs) / 2
 
-	semaDatReady := ""
-	semaDatDone := ""
-
+	semaphores := []string{}
+	slotSeq, _ := strconv.Atoi(fromHeaders["_slot_seq"])
+	hostExpr := os.Getenv("NODES")
+	hostPrefix := hostExpr[0:1]
+	if hostPrefix == "^" {
+		hostPrefix = hostExpr[1:2]
+	}
 	cube0 := datacube.NewDataCube(cube.ObsID)
 	for j := 0; j < cube.NumOfChannels; j++ {
 		ch := cube.ChannelBegin + j
 		id := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, trBegin, trEnd, ch)
 		semaPair := fmt.Sprintf(`"dat-ready:%s":%d`, id, nTimeUnits)
-		semaDatReady += semaPair + "\n"
+		semaphores = append(semaphores, semaPair)
+		// semaDatReady += semaPair + "\n"
 
 		semaPair = fmt.Sprintf(`"dat-done:%s":%d`, id, nPRanges)
-		semaDatDone += semaPair + "\n"
+		semaphores = append(semaphores, semaPair)
+		// semaDatDone += semaPair + "\n"
 
 		targetSubDir := fmt.Sprintf("%s/t%d_%d/ch%d", cube.ObsID, trBegin, trEnd, ch)
 		headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
-		cubeIndex, err := strconv.Atoi(fromHeaders["_cube_index"])
-		if err == nil {
-			cubeIndex--
-			if cubeIndex < numGroups {
-				// > 24节点，首次加载设置更高的带宽
-				headers = common.SetJSONAttribute(headers, "bw_limit", os.Getenv("FIRST_BW_LIMIT"))
-			}
-		}
-		toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
+		// cubeIndex, err := strconv.Atoi(fromHeaders["_cube_index"])
+		// if err == nil {
+		// 	cubeIndex--
+		// 	if cubeIndex < numGroups {
+		// 		// > 24节点，首次加载设置更高的带宽
+		// 		headers = common.SetJSONAttribute(headers, "bw_limit", os.Getenv("FIRST_BW_LIMIT"))
+		// 	}
+		// }
+		// 如果节点数少于24，纠正index
+		index := j % len(node.Nodes)
+		toHost := fmt.Sprintf("%s%02d-%02d", hostPrefix, slotSeq, index)
+		// toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
 		headers = common.SetJSONAttribute(headers, "to_host", toHost)
 
 		for k := 0; k < len(tus); k += 2 {
@@ -107,38 +115,37 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 				headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(index))
 			}
 			m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
-			messages = append(messages, m+","+headers)
+			tasks = append(tasks, m+","+headers)
 		}
 	}
 
 	// 信号量dat-ready、dat-done、fits-done、pointing-done
-	semaFitsDone := ""
-	// fits-done:1257010784/p00001/t1257010786_1257010985
 	for k := 0; k < len(prs); k += 2 {
 		id := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d`, cube.ObsID, prs[k], prs[k+1], trBegin, trEnd)
+		// fits-done:1257010784/p00001/t1257010786_1257010985
 		semaPair := fmt.Sprintf(`"fits-done:%s":%d`, id, 24)
-		semaFitsDone += semaPair + "\n"
+		semaphores = append(semaphores, semaPair)
 	}
 
-	semaphores := semaDatReady + semaDatDone + semaFitsDone
-	common.AppendToFile("my-sema.txt", semaphores)
-	err := semaphore.CreateFileSemaphores("my-sema.txt", appID, 500)
+	// semaphores := semaDatReady + semaDatDone + semaFitsDone
+	// common.AppendToFile("my-sema.txt", semaphores)
+	err := semaphore.CreateSemaphores(semaphores, appID, 500)
 	if err != nil {
 		logrus.Errorf("create sema, err-info:%v\n", err)
 		return 1
 	}
 	// 消息
-	cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", cube.ObsID,
-		cube.PointingBegin, cube.PointingEnd, cube.TimeBegin, cube.TimeEnd)
+	// cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", cube.ObsID,
+	// 	cube.PointingBegin, cube.PointingEnd, cube.TimeBegin, cube.TimeEnd)
 	targetURL := fmt.Sprintf("%s/mydata/mwa/dat", os.Getenv("LOCAL_TMPDIR"))
 	headers := map[string]string{
-		"_cube_id":    cubeID,
-		"_cube_index": fromHeaders["_cube_index"],
-		"target_url":  targetURL,
+		// "_cube_id": cubeID,
+		// "_cube_index": fromHeaders["_cube_index"],
+		"target_url": targetURL,
 	}
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
 
-	return task.AddTasksWithMapHeaders(messages, headers, envs)
+	return task.AddTasksWithMapHeaders(tasks, headers, envs)
 }

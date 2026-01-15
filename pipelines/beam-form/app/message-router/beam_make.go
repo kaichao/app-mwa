@@ -15,23 +15,23 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromBeamMake(m string, headers map[string]string) int {
+func fromBeamMake(body string, headers map[string]string) int {
 	defer func() {
 		common.AddTimeStamp("leave-fromBeamMake()")
 	}()
 	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
-	obsID, _, _, t0, t1, ch, err := strparse.ParseParts(m)
+	obsID, _, _, t0, t1, ch, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
+		logrus.Errorf("Parse message, body=%s,err=%v\n", body, err)
 		return 1
 	}
 	suffix := fmt.Sprintf("t%d_%d/ch%d", t0, t1, ch)
 
 	// 用obsID，但可能有边界对齐问题？
 	// semaName := fmt.Sprintf("dat-done:%s/p%05d_%05d/t%d_%d/ch%d", obsID, ps0, ps1, suffix)
-	cubeID := headers["_cube_id"]
-	semaName := fmt.Sprintf("dat-done:%s/ch%d", cubeID, ch)
+	cubeName := headers["_vtask_cube_name"]
+	semaName := fmt.Sprintf("dat-done:%s/ch%d", cubeName, ch)
 	// 信号量操作
 	v, err := semaphore.AddValue(semaName, appID, -1)
 	if err != nil {
@@ -75,7 +75,7 @@ func fromBeamMake(m string, headers map[string]string) int {
 	}
 
 	common.AddTimeStamp("before-send-messages")
-	return toDownSample(m, headers)
+	return toDownSample(body, headers)
 }
 
 func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
@@ -105,7 +105,9 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "600",
 	}
-	headers := fmt.Sprintf(`{"_cube_id":"%s","_cube_index":"%s"}`,
-		cubeID, fromHeaders["_cube_index"])
+	// headers := fmt.Sprintf(`{"_cube_id":"%s","_cube_index":"%s"}`,
+	// 	cubeID, fromHeaders["_cube_index"])
+	// headers := fmt.Sprintf(`{"_cube_id":"%s"}`, cubeID)
+	headers := `{}`
 	return task.AddTasks(messages, headers, envVars)
 }

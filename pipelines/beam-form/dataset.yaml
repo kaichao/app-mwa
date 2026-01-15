@@ -17,7 +17,9 @@ datasets:
     channelBegin: 109
 
     timeBegin: 1302282041
-    timeEnd: 1302286838
+    timeStep: 80
+    timeEnd: 1302282360
+    # timeEnd: 1302286838
 
     # pointing dimension
     pointingEnd: 11570
@@ -39,7 +41,7 @@ datasets:
   1266680784:
     # t: 1266680787 .. 1266685583, 4797
     # pointings.txt里，1-72:已知脉冲星，73-11412:盲搜格点
-    # finished: 8160
+    # finished: 251230 / r2(763)
 
     # channel dimension
     channelBegin: 109
@@ -49,7 +51,7 @@ datasets:
 
     # pointing dimension
 #    pointingEnd: 11412
-    pointingEnd: 11427
+    pointingEnd: 763
 
   1302106648:
     # t: 1302106649 .. 1302111446, 4798

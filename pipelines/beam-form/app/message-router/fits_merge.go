@@ -8,7 +8,6 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/kaichao/scalebox/pkg/common"
@@ -17,15 +16,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromFitsMerge(m string, headers map[string]string) int {
+func fromFitsMerge(body string, headers map[string]string) int {
+	// body == 1257010784/p00001/t1257010786_1257010965
 	defer func() {
 		common.AddTimeStamp("leave-fromFitsMerge()")
 	}()
-	// 1257010784/p00001/t1257010786_1257010965
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
-	ss := re.FindStringSubmatch(m)
+	ss := re.FindStringSubmatch(body)
 	if ss == nil {
-		logrus.Errorf("Invalid format, message:%s\n", m)
+		logrus.Errorf("Invalid format, message:%s\n", body)
 		return 1
 	}
 
@@ -36,46 +35,52 @@ func fromFitsMerge(m string, headers map[string]string) int {
 		return 11
 	}
 	if strings.Contains(varValue, "@") {
-		// 共享变量pointing-data-root，若为类型3，给fits-push发消息，推送到远端ssh存储
-		msg := fmt.Sprintf("mwa/24ch/%s.fits.zst", m)
-		headers := common.SetJSONAttribute("{}", "target_url", varValue)
-
-		envVars := map[string]string{
-			"SINK_MODULE": "fits24ch-copy",
-		}
-		return task.Add(msg, headers, envVars)
+		// 共享变量pointing-data-root，若为类型3，给fits24-copy发消息，推送到远端ssh存储
+		fileName := fmt.Sprintf("mwa/24ch/%s.fits.zst", body)
+		return toFits24chCopy(fileName, varValue)
 	}
 
-	// 信号量pointing-done的操作
+	// 信号量pointing-done / vtask-cube-done的减1操作
+	semaPairs := map[string]int{}
 	// semaphore: pointing-done:1257010784/p00001
-	sema := "pointing-done:" + ss[1]
-	v, err := semaphore.AddValue(sema, appID, -1)
+	semaName0 := "pointing-done:" + ss[1]
+	semaPairs[semaName0] = -1
+	vtaskCubeName := headers["_vtask_cube_name"]
+	semaName1 := "cube-vtask-done:" + vtaskCubeName
+	semaPairs[semaName1] = -1
+
+	fmt.Printf("sema-pairs:%v\n", semaPairs)
+
+	m, err := semaphore.AddMultiValues(semaPairs, appID)
 	if err != nil {
-		logrus.Errorf("error while decrement semaphore,sema=%s, err:%v\n",
-			sema, err)
+		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
+			semaPairs, err)
 		return 1
 	}
-	semaVal, _ := strconv.Atoi(v)
+
+	semaVal := m[semaName1]
 	if semaVal > 0 {
-		// 24ch not done.
+		// cube not done.
 		return 0
 	}
 
-	common.AddTimeStamp("before-send-messages")
-	return toCrossAppPresto(ss[1])
+	return toVtaskTail(ss[1])
+
+	// common.AddTimeStamp("before-add-tasks")
+	// return toCrossAppPresto(ss[1])
 }
 
-func toFitsMerge(m string) int {
+func toFitsMerge(body string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(m)
+	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
+		logrus.Errorf("Parse message, body=%s,err=%v\n", body, err)
 		return 1
 	}
 
 	cube := datacube.NewDataCube(ds)
-	// output message: 1257010784/p00023/t1257010786_1257010965
-	messages := []string{}
+	// sink task: 1257010784/p00023/t1257010786_1257010965
+	tasks := []string{}
 	for p := p0; p <= p1; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", ds, p)
 		varValue, err := getPointingVariable(varName, appID)
@@ -93,11 +98,14 @@ func toFitsMerge(m string) int {
 			headers = common.SetJSONAttribute(headers,
 				"output_root", os.Getenv("LOCAL_TMPDIR")+"/mydata")
 		} else if strings.Contains(varValue, "@") {
-			// 远端存储（类型3）
+			// 远端存储（类型3，远端ssh存储）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
-			headers = common.SetJSONAttribute(headers,
-				"output_root", os.Getenv("LOCAL_SHMDIR")+"/mydata")
 			// 24ch存放在/dev/shm
+			// headers = common.SetJSONAttribute(headers,
+			// 	"output_root", os.Getenv("LOCAL_SHMDIR")+"/mydata")
+			// 24ch存放在共享存储
+			headers = common.SetJSONAttribute(headers,
+				"output_root", "/public/home/cstu0100/scalebox/mydata")
 		} else {
 			// 共享存储（类型2）
 			headers = common.SetJSONAttribute(headers, "to_host", toHost)
@@ -108,13 +116,13 @@ func toFitsMerge(m string) int {
 		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
 		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
 			varValue, toHost, headers, m)
-		messages = append(messages, m)
+		tasks = append(tasks, m)
 	}
 
-	common.AddTimeStamp("before-send-messages")
+	common.AddTimeStamp("before-add-tasks")
 	envVars := map[string]string{
 		"SINK_MODULE":     "fits-merge",
 		"TIMEOUT_SECONDS": "600",
 	}
-	return task.AddTasks(messages, "{}", envVars)
+	return task.AddTasks(tasks, "{}", envVars)
 }

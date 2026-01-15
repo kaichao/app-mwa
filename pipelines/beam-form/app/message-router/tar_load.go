@@ -32,13 +32,13 @@ import (
 
 // body: 1267459410_1267459449_ch109.dat.tar.zst
 // headers:
-//   - _cube_id: 1257010784/p00001_00960/t1257012766_1257012965
+//   - _cube_name: 1257010784/p00001_00960/t1257012766_1257012965
 func fromTarLoad(body string, headers map[string]string) int {
 	if os.Getenv("PRELOAD_MODE") == "preload-only" {
 		return 0
 	}
-	cubeID := headers["_cube_id"]
-	semaName := "tar-ready:" + cubeID
+	cubeName := headers["_cube_name"]
+	semaName := "tar-ready:" + cubeName
 	v, err := semaphore.AddValue(semaName, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
@@ -49,8 +49,8 @@ func fromTarLoad(body string, headers map[string]string) int {
 	}
 	if n <= 0 {
 		// 若支持分组级slot，则发给pull-unpack
-		// 否则发给cube-vtask
-		return toCubeVtask(cubeID)
+		// 否则发给wait-queue
+		return toWaitQueue(cubeName)
 	}
 	return 0
 }
@@ -74,16 +74,16 @@ func toTarLoad(datasetID string) int {
 	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
 	fmtTarZst := `%d_%d_ch%d.dat.tar.zst`
 	bodies := []string{}
-	semas := []*semaphore.Sema{}
+	lines := []string{}
 
 	trs := cube.GetTimeRanges()
 	for i := 0; i < len(trs); i += 2 {
 		tus := cube.GetTimeUnitsWithinInterval(trs[i], trs[i+1])
-		cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d",
+		cubeName := fmt.Sprintf("%s/p%05d_%05d/t%d_%d",
 			cube.ObsID, cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
-		semaName := "tar-ready:" + cubeID
+		semaName := "tar-ready:" + cubeName
 		semaValue := len(tus) / 2 * cube.NumOfChannels
-		semas = append(semas, &semaphore.Sema{Name: semaName, Value: semaValue})
+		lines = append(lines, fmt.Sprintf(`"%s":%d`, semaName, semaValue))
 
 		cube0 := datacube.NewDataCube(cube.ObsID)
 		for k := 0; k < len(tus); k += 2 {
@@ -94,8 +94,8 @@ func toTarLoad(datasetID string) int {
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
 					iopath.GetPreloadRoot(index), cube.ObsID)
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
-				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_id":"%s"}`,
-					fileName, targetURL, cubeID)
+				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_name":"%s"}`,
+					fileName, targetURL, cubeName)
 				bodies = append(bodies, body)
 			}
 		}
@@ -106,7 +106,7 @@ func toTarLoad(datasetID string) int {
 	envs := map[string]string{
 		"SINK_MODULE": "tar-load",
 	}
-	if err := semaphore.CreateSemaphores(semas, appID, 100); err != nil {
+	if err := semaphore.CreateSemaphores(lines, appID, 100); err != nil {
 		logrus.Errorf("Create semaphore, err-info:%v\n", err)
 		return 1
 	}

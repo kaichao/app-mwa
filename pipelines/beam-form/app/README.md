@@ -3,12 +3,14 @@
 ```mermaid
 flowchart TD
   subgraph beam-form
-    A([cube-vtask]) --> B([pull-unpack])
-    B --> C[beam-make]
-    C --> D[down-sample]
-    D --> E([fits-redist])
-    E --> F[fits-merge]
-    F --> G([fits-push])
+    A([wait-queue]) --> B([vtask-head])
+    B --> C([pull-unpack])
+    C --> D[beam-make]
+    D --> E[down-sample]
+    E --> F([fits-redist])
+    F --> G[fits-merge]
+    G --> H([fits24ch-copy])
+    H --> I([vtask-tail])
   end
 ```
 
@@ -82,17 +84,26 @@ PRELOAD_MODE=preload-only \
 echo '1266680784/p_00960' | \
 PRELOAD_MODE=yes \
 
-echo '1266680784/p01921_02760' | \
-
 ```
 
 #### 流水线运行
+
+echo '1253991112/p01321_02280' | \
+
+echo '1302282040/p00961_01920' | \
+
+
+echo '1266680784/p00001_00048/t1266680787_1266681586' | \
+TIME_STEP=80 \
+
 ```sh
 
-echo '1266680784/p02881_03840' | \
+echo '1266680784' | \
 PRELOAD_MODE=yes \
-NODES='^d0.+' \
+NUM_GROUPS=1 \
+NODES='^d.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
+POINTING_FILE=pointings-260108.txt \
 GROUP_NODES= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \

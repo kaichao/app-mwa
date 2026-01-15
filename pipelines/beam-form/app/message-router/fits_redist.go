@@ -17,17 +17,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromFitsRedist(m string, headers map[string]string) int {
+func fromFitsRedist(body string, headers map[string]string) int {
 	defer func() {
 		common.AddTimeStamp("leave-fromFitsRedist()")
 	}()
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	idx := strings.LastIndex(m, "/ch")
+	idx := strings.LastIndex(body, "/ch")
 	if idx == -1 {
-		logrus.Errorf("invalid message format from fits-redist, message=%s\n", m)
+		logrus.Errorf("invalid message format from fits-redist, message=%s\n", body)
 		return 1
 	}
-	cubeID := m[:idx]
+	cubeID := body[:idx]
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	semaName := fmt.Sprintf("fits-done:%s", cubeID)
 	v, err := semaphore.AddValue(semaName, appID, -1)
@@ -41,7 +41,7 @@ func fromFitsRedist(m string, headers map[string]string) int {
 		return 0
 	}
 
-	return toFitsMerge(m)
+	return toFitsMerge(body)
 }
 
 func toFitsRedist(m string, fromHeaders map[string]string) int {
@@ -53,10 +53,14 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 	}
 
 	// cube := datacube.NewDataCube(obsID)
-	cubeIndex, _ := strconv.Atoi(fromHeaders["_cube_index"])
-	cubeIndex--
-	fmt.Printf("cube-index=%d\n", cubeIndex)
-	ips := node.GetIPAddrListByCubeIndex(cubeIndex)
+	// cubeIndex, _ := strconv.Atoi(fromHeaders["_cube_index"])
+	// cubeIndex--
+	// fmt.Printf("cube-index=%d\n", cubeIndex)
+	semaName := fromHeaders["_vtask_size_sema"]
+	ss := strings.Split(semaName, ":")
+	groupIndex, _ := strconv.Atoi(ss[len(ss)-1])
+	fmt.Printf("group-index=%d\n", groupIndex)
+	ips := node.GetIPAddrListByCubeIndex(groupIndex)
 	// ips := node.GetIPAddrListByTime(cube, t0)
 	fromIP := fromHeaders["from_ip"]
 
@@ -130,6 +134,6 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 	envVars := map[string]string{
 		"SINK_MODULE": "fits-redist",
 	}
-	common.AddTimeStamp("before-send-messages")
+	common.AddTimeStamp("before-add-tasks")
 	return task.Add(m, hs, envVars)
 }

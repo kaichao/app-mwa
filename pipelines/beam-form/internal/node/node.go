@@ -7,7 +7,7 @@ import (
 
 // GetIPAddrListByCubeIndex ...
 // - 用于toRedist中本组分发
-func GetIPAddrListByCubeIndex(cubeIndex int) []string {
+func GetIPAddrListByCubeIndex(groupIndex int) []string {
 	var ret []string
 	if len(Nodes) <= 24 {
 		for i := 0; i < 24; i++ {
@@ -16,7 +16,7 @@ func GetIPAddrListByCubeIndex(cubeIndex int) []string {
 	} else {
 		// >= 48 nodes
 		numGroup := len(Nodes) / 24
-		start := (cubeIndex % numGroup) * 24
+		start := (groupIndex % numGroup) * 24
 		for i := 0; i < 24; i++ {
 			ret = append(ret, Nodes[i+start].IPAddr)
 		}
@@ -43,25 +43,6 @@ func GetNodeNameByIndexChannel(cube *datacube.DataCube, indexGroup int, ch int) 
 	return Nodes[index].Name
 }
 
-/*
-// GetNodeNameByTimeChannel ...
-// - 用于toBeamMake
-func GetNodeNameByTimeChannel(cube *datacube.DataCube, t int, ch int) string {
-	index := cube.GetTimeChannelIndex(t, ch, len(Nodes))
-	return Nodes[index].Name
-}
-
-// GetIPAddrListByTime ...
-// - 用于toRedist
-func GetIPAddrListByTime(cube *datacube.DataCube, t int) []string {
-	ips := []string{}
-	for ch := cube.ChannelBegin; ch < cube.ChannelBegin+cube.NumOfChannels; ch++ {
-		index := cube.GetTimeChannelIndex(t, ch, len(Nodes))
-		ips = append(ips, Nodes[index].IPAddr)
-	}
-	return ips
-}
-*/
 // GetNodeNameByPointingTime ...
 // - 用于fits-merge
 func GetNodeNameByPointingTime(cube *datacube.DataCube, p int, t int) string {

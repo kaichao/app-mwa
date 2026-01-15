@@ -27,7 +27,6 @@ func main() {
 	}
 
 	logrus.Infoln("02, after JSON format verification of headers")
-
 	doMessageRoute := fromFuncs[headers["from_module"]]
 	if doMessageRoute == nil {
 		logrus.Warnf("from_module not set/not existed in message-router, from_module=%s ,message=%s\n",
@@ -47,15 +46,17 @@ func main() {
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":                fromNull,
-		"tar-load":        fromTarLoad,
-		"cube-vtask":      fromCubeVtask,
-		"pull-unpack":     fromPullUnpack,
-		"beam-make":       fromBeamMake,
-		"down-sample":     fromDownSample,
-		"fits-redist":     fromFitsRedist,
-		"fits-merge":      fromFitsMerge,
-		"fits24ch-copy":   fromFits24chCopy,
-		"fits24ch-unload": fromFits24chUnload,
+		"":              fromNull,
+		"tar-load":      fromTarLoad,
+		"wait-queue":    fromWaitQueue,
+		"vtask-head":    fromVtaskHead,
+		"pull-unpack":   fromPullUnpack,
+		"beam-make":     fromBeamMake,
+		"down-sample":   fromDownSample,
+		"fits-redist":   fromFitsRedist,
+		"fits-merge":    fromFitsMerge,
+		"vtask-tail":    fromVtaskTail,
+		"fits24ch-copy": fromFits24chCopy,
+		// "fits24ch-unload": fromFits24chUnload,
 	}
 )
