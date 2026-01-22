@@ -41,11 +41,11 @@ target_hosts=$(get_header "$2" "target_hosts")
 IFS=',' read -r -a arr_hosts <<< "$target_hosts"
 
 cd "${dir_1chx}/$1"
-echo pwd:$PWD >> ${WORK_DIR}/custom-out.txt
+echo pwd:$PWD >> ${WORK_DIR}/auxout.txt
 # 使用 mapfile 将当前目录下所有文件名读取到数组中
 mapfile -t arr_files < <(ls -p | grep -v /)
 
-echo files:${#arr_files[@]},hosts:${#arr_hosts[@]} >> ${WORK_DIR}/custom-out.txt
+echo files:${#arr_files[@]},hosts:${#arr_hosts[@]} >> ${WORK_DIR}/auxout.txt
 
 # 检查 arr_files 和 arr_hosts 的长度是否相同
 if [ ${#arr_files[@]} -ne ${#arr_hosts[@]} ]; then
@@ -74,7 +74,7 @@ for i in "${!arr_files[@]}"; do
     else
         mv -f $f $file_1chy
     fi
-    echo "source=$f,target=$file_1chy,m=$m,host:${arr_hosts[i]}" >> ${WORK_DIR}/custom-out.txt
+    echo "source=$f,target=$file_1chy,m=$m,host:${arr_hosts[i]}" >> ${WORK_DIR}/auxout.txt
 
     if [ ${arr_hosts[i]} == "localhost" ]; then
         continue
@@ -88,12 +88,12 @@ for i in "${!arr_files[@]}"; do
     if [[ $code -ne 0 ]]; then
         ret_code=$code
     fi
-    echo "after file-copy,file=$m, ret_code=$ret_code, code:$code" >> "${WORK_DIR}/custom-out.txt"
+    echo "after file-copy,file=$m, ret_code=$ret_code, code:$code" >> "${WORK_DIR}/auxout.txt"
 done
 
-echo removed-files: >> ${WORK_DIR}/custom-out.txt
-cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/custom-out.txt
-cat "ret_code:$ret_code" >> ${WORK_DIR}/custom-out.txt
+echo removed-files: >> ${WORK_DIR}/auxout.txt
+cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/auxout.txt
+cat "ret_code:$ret_code" >> ${WORK_DIR}/auxout.txt
 
 # 删除 /app/share/bin/run.sh 调用产生的消息
 rm -f ${WORK_DIR}/messages.txt

@@ -32,8 +32,9 @@ func fromBeamMake(body string, headers map[string]string) int {
 	// semaName := fmt.Sprintf("dat-done:%s/p%05d_%05d/t%d_%d/ch%d", obsID, ps0, ps1, suffix)
 	cubeName := headers["_vtask_cube_name"]
 	semaName := fmt.Sprintf("dat-done:%s/ch%d", cubeName, ch)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	// 信号量操作
-	v, err := semaphore.AddValue(semaName, appID, -1)
+	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, err-info:%v\n", err)
 		return 3
@@ -81,7 +82,7 @@ func fromBeamMake(body string, headers map[string]string) int {
 func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 	cube := datacube.NewDataCube(cubeID)
 	ps := cube.GetPointingRangesByInterval(cube.PointingBegin, cube.PointingEnd)
-	messages := []string{}
+	tasks := []string{}
 	for k := 0; k < len(ps); k += 2 {
 		body := fmt.Sprintf(`%s/p%05d_%05d/t%d_%d/ch%d`,
 			cube.ObsID, ps[k], ps[k+1], cube.TimeBegin, cube.TimeEnd, ch)
@@ -97,9 +98,9 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 		}
 		line := fmt.Sprintf(`%s,{"sort_tag":"%s","_sort_tag":"%s"}`,
 			body, sortTag, sortTag)
-		messages = append(messages, line)
+		tasks = append(tasks, line)
 	}
-	fmt.Printf("num-of-messages in toBeamMake():%d\n", len(messages))
+	fmt.Printf("num-of-messages in toBeamMake():%d\n", len(tasks))
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_MODULE":     "beam-make",
@@ -109,5 +110,10 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 	// 	cubeID, fromHeaders["_cube_index"])
 	// headers := fmt.Sprintf(`{"_cube_id":"%s"}`, cubeID)
 	headers := `{}`
-	return task.AddTasks(messages, headers, envVars)
+	_, err := task.AddTasks(tasks, headers, envVars)
+	if err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

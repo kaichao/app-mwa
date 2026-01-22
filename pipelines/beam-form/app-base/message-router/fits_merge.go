@@ -22,7 +22,7 @@ func fromFitsMerge(message string, headers map[string]string) int {
 
 	// semaphore: pointing-done:1257010784/p00001
 	sema := "pointing-done:" + ss[1]
-	v, err := semaphore.AddValue(sema, appID, -1)
+	v, err := semaphore.AddValue(sema, 0, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2
@@ -39,15 +39,19 @@ func fromFitsMerge(message string, headers map[string]string) int {
 func toFitsMerge(cubeID string) int {
 	obsID, pBegin, pEnd, t0, t1, _, _ := strparse.ParseParts(cubeID)
 
-	// output message: 1257010784/p00023/t1257010786_1257010965
-	messages := []string{}
+	// output task: 1257010784/p00023/t1257010786_1257010965
+	tasks := []string{}
 	for p := pBegin; p <= pEnd; p++ {
 		m := fmt.Sprintf("%s/p%05d/t%d_%d", obsID, p, t0, t1)
-		messages = append(messages, m)
+		tasks = append(tasks, m)
 	}
 
 	envVars := map[string]string{
 		"SINK_MODULE": "fits-merge",
 	}
-	return task.AddTasks(messages, "", envVars)
+	if _, err := task.AddTasks(tasks, "", envVars); err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

@@ -24,14 +24,14 @@ func getPointingVariable(varName string, appID int) (string, error) {
 	if os.Getenv("USE_GLOBAL_POINTING") == "yes" {
 		return global.Get(varName)
 	}
-	return variable.Get(varName, appID)
+	return variable.Get(varName, 0, appID)
 }
 
 func setPointingVariable(varName string, varValue string, appID int) error {
 	if os.Getenv("USE_GLOBAL_POINTING") == "yes" {
 		return global.Set(varName, varValue)
 	}
-	return variable.Set(varName, varValue, appID)
+	return variable.Set(varName, varValue, 0, appID)
 }
 
 func addTasks(sinkModule string, bodies []string) error {

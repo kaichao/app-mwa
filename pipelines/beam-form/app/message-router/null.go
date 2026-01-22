@@ -28,7 +28,7 @@ func fromNull(body string, headers map[string]string) int {
 			line := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size)
 			lines = append(lines, line)
 		}
-		err := semaphore.CreateSemaphores(lines, appID, 500)
+		err := semaphore.CreateSemaphores(lines, 0, appID, 500)
 		if err != nil {
 			logrus.Errorf("create semaphore pointing-done, err-info:%v", err)
 			return 1
@@ -50,12 +50,12 @@ func fromNull(body string, headers map[string]string) int {
 	}
 
 	// 产生所有cube到wait-queue
-	fmtCubicID := "%s/p%05d_%05d/t%d_%d"
+	fmtCubicName := "%s/p%05d_%05d/t%d_%d"
 	trs := cube.GetTimeRanges()
 	for i := 0; i < len(trs); i += 2 {
-		cubeID := fmt.Sprintf(fmtCubicID, cube.ObsID,
+		cubeName := fmt.Sprintf(fmtCubicName, cube.ObsID,
 			cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
-		if ret := toWaitQueue(cubeID); ret != 0 {
+		if ret := toWaitQueue(cubeName); ret != 0 {
 			return ret
 		}
 	}
@@ -88,5 +88,11 @@ func toCrossAppPresto(pointing string) int {
 	}
 	fmt.Printf("In toCrossAppPresto(), env:APP_ID=%s, MODULE_ID=%s, SINK_MODULE=%s,GRPC_SERVER=%s\n",
 		envVars["APP_ID"], envVars["MODULE_ID"], envVars["SINK_MODULE"], os.Getenv("GRPC_SERVER"))
-	return task.AddWithMapHeaders(pointing, headers, envVars)
+
+	_, err = task.AddWithMapHeaders(pointing, headers, envVars)
+	if err != nil {
+		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		return 1
+	}
+	return 0
 }

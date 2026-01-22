@@ -10,11 +10,11 @@ function post_check() {
     t1=$6
     target_dir=$7
 
-    echo "[post_check]:" >> ${WORK_DIR}/custom-out.txt
-    echo "ch=$ch"  >> ${WORK_DIR}/custom-out.txt
-    echo "p0=$p0, p1=$p1"  >> ${WORK_DIR}/custom-out.txt
-    echo "t0=$t0, t1=$t1"  >> ${WORK_DIR}/custom-out.txt
-    echo "target_dir=$target_dir"  >> ${WORK_DIR}/custom-out.txt
+    echo "[post_check]:" >> ${WORK_DIR}/auxout.txt
+    echo "ch=$ch"  >> ${WORK_DIR}/auxout.txt
+    echo "p0=$p0, p1=$p1"  >> ${WORK_DIR}/auxout.txt
+    echo "t0=$t0, t1=$t1"  >> ${WORK_DIR}/auxout.txt
+    echo "target_dir=$target_dir"  >> ${WORK_DIR}/auxout.txt
 
     # 初始化字节数数组
     sizes=()
@@ -25,9 +25,9 @@ function post_check() {
 
         if [[ -f "$dest_file" ]]; then
             sizes+=( $(stat -c%s "$dest_file") )
-            echo "file: $dest_file_r, bytes: $(stat -c%s "$dest_file")" >> ${WORK_DIR}/custom-out.txt
+            echo "file: $dest_file_r, bytes: $(stat -c%s "$dest_file")" >> ${WORK_DIR}/auxout.txt
         else
-            echo "[ERROR] post_check file $dest_file not exists!" >> ${WORK_DIR}/custom-out.txt
+            echo "[ERROR] post_check file $dest_file not exists!" >> ${WORK_DIR}/auxout.txt
             exit 101
         fi
     done
@@ -40,7 +40,7 @@ function post_check() {
         mean=$((mean + size))
     done
     mean=$((mean / num_files))
-    echo " $num_files files, average bytes: $mean" >> ${WORK_DIR}/custom-out.txt
+    echo " $num_files files, average bytes: $mean" >> ${WORK_DIR}/auxout.txt
 
     # 检查文件字节数是否一致？
     all_equal=true
@@ -52,9 +52,9 @@ function post_check() {
     done
 
     if $all_equal; then
-        echo "所有文件字节数一致" >> ${WORK_DIR}/custom-out.txt
+        echo "所有文件字节数一致" >> ${WORK_DIR}/auxout.txt
     else
-        echo [ERROR] "文件字节数不一致" >> ${WORK_DIR}/custom-out.txt
+        echo [ERROR] "文件字节数不一致" >> ${WORK_DIR}/auxout.txt
         return 102
     fi
 }

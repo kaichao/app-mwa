@@ -39,7 +39,7 @@ dir_1ch="$DIR_1CH/$m"
 dir_1chx="$DIR_1CHX/$m"
 dir_1chy="$DIR_1CHY/$m"
 mkdir -p $dir_1chx; code=$?
-[[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir_1chx"  >> ${WORK_DIR}/custom-out.txt && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] mkdir $dir_1chx"  >> ${WORK_DIR}/auxout.txt && exit $code
 
 # remove existing intermediate files in output dir
 rm -f $dir_1chx/*
@@ -53,7 +53,7 @@ cd ${dir_1ch}
 
 # Check if any .fits files exist
 if ! ls *.fits &> /dev/null; then
-    echo "No .fits files found in the current directory."  >> ${WORK_DIR}/custom-out.txt
+    echo "No .fits files found in the current directory."  >> ${WORK_DIR}/auxout.txt
     exit 101
 fi
 
@@ -62,7 +62,7 @@ for f in *.fits; do
     # 3. run the programs to downsample the files
     psrfits_subband -dstime ${DOWNSAMP_FACTOR_TIME} -o ${dir_1chx}/$f ${dir_1ch}/$f
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f "  >> ${WORK_DIR}/custom-out.txt && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR] psrfits_subband, filename:${dir_1ch}/$f "  >> ${WORK_DIR}/auxout.txt && exit $code
 
     # rename file to normalized
     mv ${dir_1chx}/${f}_0001.fits ${dir_1chx}/${f}
@@ -81,9 +81,9 @@ for f in *.fits; do
     # 检查输入、输出文件的大小比例是否合理？
     post_check "${dir_1ch}/${f}" "${target_file}"
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/custom-out.txt && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/auxout.txt && exit $code
 
-cat <<EOF >> ${WORK_DIR}/custom-out.txt
+cat <<EOF >> ${WORK_DIR}/auxout.txt
 filenames:
 psrfits_subband output:${dir_1chx}/${f}_0001.fits
 normalized:${dir_1chx}/${f}
@@ -114,7 +114,7 @@ EOF
             f1="${BASH_REMATCH[1]}/${BASH_REMATCH[5]}/${BASH_REMATCH[3]}/${BASH_REMATCH[4]}.fits"
             mkdir -p "$(dirname $f1)" && mv -f $f0 $f1
             code=$?
-            [[ $code -ne 0 ]] && echo "[ERROR] rename ${f0} " >> ${WORK_DIR}/custom-out.txt && exit $code
+            [[ $code -ne 0 ]] && echo "[ERROR] rename ${f0} " >> ${WORK_DIR}/auxout.txt && exit $code
 
             echo $f1 > ${WORK_DIR}/output-files.txt
         else
@@ -132,12 +132,12 @@ done
 # 用于测试
 [ "$KEEP_TARGET_FILE" == "no" ] && echo "${dir_1chx}" >> ${WORK_DIR}/removed-files.txt
 
-echo "removed-files:" >> ${WORK_DIR}/custom-out.txt
-cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/custom-out.txt
+echo "removed-files:" >> ${WORK_DIR}/auxout.txt
+cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/auxout.txt
 
 if [ "$ENABLE_LOCAL_COMPUTE" != "yes" ]; then
     rmdir $dir_1chx
 fi
-echo "$1" >> ${WORK_DIR}/messages.txt
+echo "$1" >> ${WORK_DIR}/sink-tasks.txt
 
 exit $code

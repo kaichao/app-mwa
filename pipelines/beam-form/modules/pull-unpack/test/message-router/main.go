@@ -43,12 +43,11 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 
 	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
 
-	messages := []string{}
+	tasks := []string{}
 
 	for j := 0; j < cube.NumOfChannels; j++ {
 		ch := cube.ChannelBegin + j
 		for i := 0; i < len(trs); i += 2 {
-
 			targetSubDir := fmt.Sprintf("%s/t%d_%d/ch%d", cube.ObsID, trs[i], trs[i+1], ch)
 			headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
 
@@ -58,7 +57,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 
 			for k := 0; k < len(tus); k += 2 {
 				m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
-				messages = append(messages, m+","+headers)
+				tasks = append(tasks, m+","+headers)
 			}
 		}
 	}
@@ -66,6 +65,9 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
-
-	return task.AddTasks(messages, "{}", envs)
+	if _, err := task.AddTasks(tasks, "{}", envs); err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

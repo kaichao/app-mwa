@@ -30,7 +30,8 @@ func fromFitsRedist(body string, headers map[string]string) int {
 	cubeID := body[:idx]
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	semaName := fmt.Sprintf("fits-done:%s", cubeID)
-	v, err := semaphore.AddValue(semaName, appID, -1)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
 		return 1
@@ -135,5 +136,11 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 		"SINK_MODULE": "fits-redist",
 	}
 	common.AddTimeStamp("before-add-tasks")
-	return task.Add(m, hs, envVars)
+	_, err = task.Add(m, hs, envVars)
+	if err != nil {
+		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		return 1
+	}
+	return 0
+
 }

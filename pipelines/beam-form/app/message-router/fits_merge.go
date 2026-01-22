@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/kaichao/scalebox/pkg/common"
@@ -48,10 +49,8 @@ func fromFitsMerge(body string, headers map[string]string) int {
 	vtaskCubeName := headers["_vtask_cube_name"]
 	semaName1 := "cube-vtask-done:" + vtaskCubeName
 	semaPairs[semaName1] = -1
-
-	fmt.Printf("sema-pairs:%v\n", semaPairs)
-
-	m, err := semaphore.AddMultiValues(semaPairs, appID)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	m, err := semaphore.AddMultiValues(semaPairs, vtaskID, appID)
 	if err != nil {
 		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
 			semaPairs, err)
@@ -124,5 +123,10 @@ func toFitsMerge(body string) int {
 		"SINK_MODULE":     "fits-merge",
 		"TIMEOUT_SECONDS": "600",
 	}
-	return task.AddTasks(tasks, "{}", envVars)
+	_, err = task.AddTasks(tasks, "{}", envVars)
+	if err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

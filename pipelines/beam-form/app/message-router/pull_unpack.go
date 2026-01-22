@@ -41,7 +41,8 @@ func fromPullUnpack(body string, headers map[string]string) int {
 
 	cubeID := fmt.Sprintf("%s/t%d_%d", prefix, t0, t1)
 	sema := fmt.Sprintf(`dat-ready:%s/ch%d`, cubeID, ch)
-	v, err := semaphore.AddValue(sema, appID, -1)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	v, err := semaphore.AddValue(sema, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s\n", sema)
 		return 2
@@ -87,11 +88,9 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		id := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, trBegin, trEnd, ch)
 		semaPair := fmt.Sprintf(`"dat-ready:%s":%d`, id, nTimeUnits)
 		semaphores = append(semaphores, semaPair)
-		// semaDatReady += semaPair + "\n"
 
 		semaPair = fmt.Sprintf(`"dat-done:%s":%d`, id, nPRanges)
 		semaphores = append(semaphores, semaPair)
-		// semaDatDone += semaPair + "\n"
 
 		targetSubDir := fmt.Sprintf("%s/t%d_%d/ch%d", cube.ObsID, trBegin, trEnd, ch)
 		headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
@@ -127,9 +126,8 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		semaphores = append(semaphores, semaPair)
 	}
 
-	// semaphores := semaDatReady + semaDatDone + semaFitsDone
-	// common.AppendToFile("my-sema.txt", semaphores)
-	err := semaphore.CreateSemaphores(semaphores, appID, 500)
+	vtaskID, _ := strconv.ParseInt(fromHeaders["_vtask_id"], 10, 64)
+	err := semaphore.CreateSemaphores(semaphores, vtaskID, appID, 500)
 	if err != nil {
 		logrus.Errorf("create sema, err-info:%v\n", err)
 		return 1
@@ -139,13 +137,16 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	// 	cube.PointingBegin, cube.PointingEnd, cube.TimeBegin, cube.TimeEnd)
 	targetURL := fmt.Sprintf("%s/mydata/mwa/dat", os.Getenv("LOCAL_TMPDIR"))
 	headers := map[string]string{
-		// "_cube_id": cubeID,
-		// "_cube_index": fromHeaders["_cube_index"],
 		"target_url": targetURL,
 	}
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
 
-	return task.AddTasksWithMapHeaders(tasks, headers, envs)
+	_, err = task.AddTasksWithMapHeaders(tasks, headers, envs)
+	if err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

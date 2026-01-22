@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/sirupsen/logrus"
 )
 
 func fromDownSample(body string, headers map[string]string) int {
@@ -21,5 +22,10 @@ func toDownSample(body string, fromHeaders map[string]string) int {
 	envVars := map[string]string{
 		"SINK_MODULE": "down-sample",
 	}
-	return task.AddWithMapHeaders(body, headers, envVars)
+	_, err := task.AddWithMapHeaders(body, headers, envVars)
+	if err != nil {
+		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		return 1
+	}
+	return 0
 }

@@ -96,6 +96,9 @@ echo '1302282040/p00961_01920' | \
 echo '1266680784/p00001_00048/t1266680787_1266681586' | \
 TIME_STEP=80 \
 
+1266680784/p00529_00763/t1266682547_1266682706（不完全）
+1266680784/p00001_00763/t1266682707_1266682866(未处理)	
+
 ```sh
 
 echo '1266680784' | \
@@ -250,3 +253,10 @@ export SOURCE_URL=cstu0030@60.245.128.14:65010${SOURCE_DIR}
 ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run --slot-regex='h0' --image-name=hub.cstcloud.cn/scalebox/file-copy
 
 ```
+
+## 出错/节点到期后重启
+
+- 节点renew
+- 重置信号量node-progress为0
+- 修改信号量pointing-done，减去已完成部分
+- 重置slot状态

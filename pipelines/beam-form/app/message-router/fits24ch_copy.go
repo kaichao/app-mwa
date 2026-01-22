@@ -6,6 +6,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -29,8 +30,8 @@ func fromFits24chCopy(body string, headers map[string]string) int {
 	vtaskCubeName := headers["_vtask_cube_name"]
 	semaName1 := "cube-vtask-done:" + vtaskCubeName
 	semaPairs[semaName1] = -1
-
-	m, err := semaphore.AddMultiValues(semaPairs, appID)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	m, err := semaphore.AddMultiValues(semaPairs, vtaskID, appID)
 	if err != nil {
 		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
 			semaPairs, err)
@@ -52,5 +53,11 @@ func toFits24chCopy(fileName, targetURL string) int {
 	envVars := map[string]string{
 		"SINK_MODULE": "fits24ch-copy",
 	}
-	return task.Add(fileName, headers, envVars)
+
+	_, err := task.Add(fileName, headers, envVars)
+	if err != nil {
+		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		return 1
+	}
+	return 0
 }

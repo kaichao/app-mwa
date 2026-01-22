@@ -45,7 +45,7 @@ func defaultFunc(msg string, headers map[string]string) int {
 	}
 	common.AppendToFile("my-semas.txt", semaPointingDone)
 
-	if err := semaphore.CreateFileSemaphores("my-semas.txt", appID, 100); err != nil {
+	if err := semaphore.CreateFileSemaphores("my-semas.txt", 0, appID, 100); err != nil {
 		logrus.Errorf("semaphore-create,err-info:%v\n", err)
 		return 1
 	}

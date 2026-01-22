@@ -50,6 +50,9 @@ modules:
         "/public/home/cstu0098/scalebox":440,
         "/public/home/cstu0099/scalebox":440
         }'
+    environments:
+      # retry时，产生message-router的新task要覆盖 
+      - CONFLICT_ACTION=OVERWRITE
     slots:
       - n0:2
 
@@ -61,6 +64,9 @@ modules:
       slot_options: slot_on_head
     parameters:
       vtask_size: 1
+    environments:
+      # retry时，覆盖message-router的新task
+      - CONFLICT_ACTION=OVERWRITE
 
   vtask-head:
     base_image: hub.cstcloud.cn/scalebox/agent:latest
@@ -116,8 +122,8 @@ modules:
       task_dist_mode: HOST-BOUND
       vtask_role: core
       pod_id: by_channel
-      # 组内不超过4，全局不超过8
-      # node_progress_gap: '{"[a-z][0-9][0-9]":4,"[a-z]":8}'
+      # 组内不超过6，全局不超过8
+      # node_progress_gap: '{"[a-z][0-9][0-9]":6,"[a-z]":8}'
       node_progress_gap: '{"[a-z][0-9][0-9]":6}'
       key_group_regex: ^([0-9]+)
       retry_rules: "['*:3','134:9','135:9','139:9']"

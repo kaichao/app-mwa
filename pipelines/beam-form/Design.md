@@ -17,19 +17,20 @@ flowchart TD
 
 ## 一、功能模块表
 
-| 模块名      | 说明                                                          |
-| ---------- | ------------------------------------------------------------ |
-| tar-load   | tar文件从外部存储加载到HPC存储, 1257010784/p00001_00960/t1257012766_1257012965/ch109     |
-| vtask-head | 实现group_vtasks流控，限制每节点组的最大vtask数量，按顺序释放消息，管理后续所有HOST-BOUND模块 |
-| pull-unpack | 1. 将外部存储/HPC存储的数据拉取到计算节点本地并解包。2. I/O节点将HPC存储的数据解包（标准模块+定制脚本） |
-| beam-make   | 按通道的波束合成 |
-| down-sample | 波束合成结果fits文件做1/4下采样，降低数据量 |
-| fits-redist | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
-| fits-merge  | 按Pointing合并。合并结果：1.存放到HPC存储；2.存放到本地，通过fits24ch-copy传输到HPC存储或计算节点存储 |
-| fits24ch-copy  | 按需，将结果数据拷贝到HPC共享存储或presto计算节点存储 |
-| vtask-tail  |                                     |
-| fits24ch-unload | 按需，将结果数据从HPC存储拷贝到外部存储 |
-| message-router  |                  |
+| 模块名          | 说明                                                          |
+| -------------- | ------------------------------------------------------------ |
+| tar-load       | tar文件从外部存储加载到HPC存储, 1257010784/p00001_00960/t1257012766_1257012965/ch109     |
+| wait-queue     | cube等待队列，串行化 |
+| vtask-head     | 实现vtasks流控，限制每节点组的最大vtask数量，按顺序释放消息，管理后续所有HOST-BOUND模块 |
+| pull-unpack    | 1. 将外部存储/HPC存储的数据拉取到计算节点本地并解包。2. I/O节点将HPC存储的数据解包（标准模块+定制脚本） |
+| beam-make      | 按通道的波束合成 |
+| down-sample    | 波束合成结果fits文件做1/4下采样，降低数据量 |
+| fits-redist    | 下采样后fits文件，按pointing再分发，以便：1.组内节点按指向合并；2.presto-search节点合并 |
+| fits-merge     | 按Pointing合并。合并结果：1.存放到HPC存储；2.存放到本地，通过fits24ch-copy传输到HPC存储或计算节点存储 |
+| fits24ch-copy  | 按需，HOST-BOUND将结果数据拷贝到HPC共享存储或presto计算节点存储 |
+| vtask-tail     |                                     |
+| global-copier  | 运行在头节点或I/O节点。                 |
+| message-router |                  |
 
 
 ## 二、模块设计
@@ -66,7 +67,7 @@ flowchart TD
   - group_regex: ^([0-9]+)/p([0-9]+)_[0-9]+/t([0-9]+)
   - group_index: 1,2,3
 - 流控参数：
-  - group_running_vtasks: 3
+  - vtask_size: 3
 
 - 主要环境变量
 
@@ -112,12 +113,12 @@ flowchart TD
 | vtask_size      | vtask_size:wait-queue | 1 | wait-queue模块的流控，解析阶段自动创建信号量。初值为1；自动减一；vtask-head模块用程序增一 |
 | slot_vtask_size | slot_vtask_size:vtask-head:0 | 2 | vtask模块的流控，解析阶段自动创建信号量。初值为vtask容量；vtask-head模块自动减一；vtask-tail模块自动增一 |
 | :slot_vtask_size | :slot_vtask_size:vtask-head:0 | 2 | 与slot_vtask_size配套资源分配的辅助信号量。解析阶段自动创建信号量。初值等于slot_vtask_size初值；wait-queue的路由模块中自动减一；vtask-head的路由模块自动增一 |
-| cube-vtask-done | cube-vtask-done:1257010784/p00001_00960/t1257010786_1257010985 |      960         | vtask-tail的task生成 |
 | tar-ready       | tar-ready:1257010784/p00001_00960/t1257010786_1257010985       |  cube打包文件数   | 原始数据位于远端存储，生成wait-queue的新task时使用，标识该cube所有的数据文件在HPC共享存储已就绪 |
-| dat-ready       | dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109 | channel级打包文件数 | 160秒/40秒         |
-| dat-done        | dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109  | 指向组处理次数     | 波束合成完成，可删除dat文件   |
-| fits-done       | fits-done:1257010784/p00001_00024/t1257010786_1257010985       |       24         |  24个channel就绪，启动fits-merge。每次完成，驱动pointing-done、cube-vtask-done信号量减一  |
-| pointing-done   | pointing-done:1257010784/p00001                                |  时间区段长度      |          |
+| cube-vtask-done | cube-vtask-done:1257010784/p00001_00960/t1257010786_1257010985 |      960         | vtask信号量。vtask-tail的task生成 |
+| dat-ready       | dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109 | channel级打包文件数 | vtask信号量。160秒/40秒         |
+| dat-done        | dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109  | 指向组处理次数     | vtask信号量。波束合成完成，可删除dat文件   |
+| fits-done       | fits-done:1257010784/p00001_00024/t1257010786_1257010985       |       24         | vtask信号量。24个channel就绪，启动fits-merge。每次完成，驱动pointing-done、cube-vtask-done信号量减一  |
+| pointing-done   | pointing-done:1257010784/p00001                                |  时间区段长度      | 跨vtask信号量。         |
 | task_progress   | task_progress:beam-make:d01-05                                 |   0              | 同组节点的同步，自动生成信号量，初值为0.标识该节点波束合成已处理任务数的计数器。 |
 | capacity-presto-search | capacity-presto-search:h0000                   |  |计算节点上presto-search的vtask数 |
 

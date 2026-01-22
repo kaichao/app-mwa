@@ -16,6 +16,8 @@ package main
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/kaichao/scalebox/pkg/semagroup"
 	"github.com/kaichao/scalebox/pkg/semaphore"
@@ -25,8 +27,6 @@ import (
 
 func fromVtaskHead(body string, headers map[string]string) int {
 	// 分组流控信号量的操作，选择节点组
-	fmt.Printf("IN fromVtaskHead(), headers:%v\n", headers)
-
 	code := toPullUnpack(body, headers)
 	if code != 0 {
 		return code
@@ -34,11 +34,32 @@ func fromVtaskHead(body string, headers map[string]string) int {
 
 	// 恢复信号量，使得后续wait-queue可持续
 	semaName := "vtask_size:wait-queue"
-	if _, err := semaphore.AddValue(semaName, appID, 1); err != nil {
+	if _, err := semaphore.AddValue(semaName, 0, appID, 1); err != nil {
 		logrus.Errorf("Error in semaphore.AddValue, sema-name:%s,err:%v\n",
 			semaName, err)
 		return 1
 	}
+
+	vtaskID, err := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	if err != nil {
+		logrus.Errorf("_vtask_id=%s, no valid vtask-id in headers, err:%v\n", headers["_vtask_id"], err)
+		return 2
+	}
+
+	var pb, pe int
+	n, err := fmt.Sscanf(strings.Split(body, "/")[1], "p%d_%d", &pb, &pe)
+	if err != nil || n != 2 {
+		logrus.Errorf("error parsing cubeID=%s, err-info:%v\n", body, err)
+		return 2
+	}
+	semaName = "cube-vtask-done:" + body
+	semaValue := pe - pb + 1
+	if err = semaphore.Create(semaName, semaValue, vtaskID, appID); err != nil {
+		logrus.Errorf("Semaphore-create error, sema-name:%s,sema-value:%d,app-id:%d,err-info:%v\n",
+			semaName, semaValue, appID, err)
+		return 3
+	}
+
 	return 0
 }
 
@@ -76,6 +97,13 @@ func toVtaskHead(cubeName string) int {
 	// }
 	envs := map[string]string{
 		"SINK_MODULE": "vtask-head",
+		// "CONFLICT_ACTION": "OVERWRITE",
 	}
-	return task.AddWithMapHeaders(cubeName, headers, envs)
+
+	if _, err = task.AddWithMapHeaders(cubeName, headers, envs); err != nil {
+		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		return 1
+	}
+
+	return 0
 }

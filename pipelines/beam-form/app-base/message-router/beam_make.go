@@ -7,6 +7,7 @@ import (
 
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/sirupsen/logrus"
 )
 
 func toBeamMake(msg string) int {
@@ -36,12 +37,17 @@ func toBeamMake(msg string) int {
 			}
 		}
 	}
-	common.AppendToFile("custom-out.txt",
+	common.AppendToFile("auxout.txt",
 		fmt.Sprintf("n_messages:%d\n", len(messages)))
 
 	envVars := map[string]string{
 		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "1800",
 	}
-	return task.AddTasks(messages, "", envVars)
+
+	if _, err := task.AddTasks(messages, "", envVars); err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }

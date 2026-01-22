@@ -39,7 +39,7 @@ func fromTarLoad(body string, headers map[string]string) int {
 	}
 	cubeName := headers["_cube_name"]
 	semaName := "tar-ready:" + cubeName
-	v, err := semaphore.AddValue(semaName, appID, -1)
+	v, err := semaphore.AddValue(semaName, 0, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
 	}
@@ -100,19 +100,28 @@ func toTarLoad(datasetID string) int {
 			}
 		}
 	}
-	headers := map[string]string{
-		"source_url": sourceURL,
-	}
-	envs := map[string]string{
-		"SINK_MODULE": "tar-load",
-	}
-	if err := semaphore.CreateSemaphores(lines, appID, 100); err != nil {
+
+	// 信号量重置，使得可以多次重新加载打包文件
+	os.Setenv("CONFLICT_ACTION", "OVERWRITE")
+	if err := semaphore.CreateSemaphores(lines, 0, appID, 100); err != nil {
 		logrus.Errorf("Create semaphore, err-info:%v\n", err)
 		return 1
 	}
 
+	headers := map[string]string{
+		"source_url": sourceURL,
+	}
+	envs := map[string]string{
+		"SINK_MODULE":     "tar-load",
+		"CONFLICT_ACTION": "OVERWRITE",
+	}
 	fmt.Printf("In toTarLoad(), len(bodies):%d, headers:%v, envs:%v\n", len(bodies), headers, envs)
-	return task.AddTasksWithMapHeaders(bodies, headers, envs)
+	_, err := task.AddTasksWithMapHeaders(bodies, headers, envs)
+	if err != nil {
+		logrus.Errorf("err:%v\n", err)
+		return 1
+	}
+	return 0
 }
 
 // 文件大小：

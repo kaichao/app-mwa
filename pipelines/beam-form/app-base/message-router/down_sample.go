@@ -32,7 +32,7 @@ func fromDownSample(message string, headers map[string]string) int {
 	cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", obsID, pBegin, pEnd, t0, t1)
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	sema := "fits-done:" + cubeID
-	v, err := semaphore.AddValue(sema, appID, -1)
+	v, err := semaphore.AddValue(sema, 0, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2

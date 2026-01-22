@@ -65,23 +65,23 @@ fi
 
 date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
 
-echo "source_url:$source_url, source_dir:$source_dir" >> ${WORK_DIR}/custom-out.txt
-echo "target_url:$target_url, target_dir:$target_dir, target_subdir:$target_subdir" >> ${WORK_DIR}/custom-out.txt
-echo "cmd:$cmd" >> ${WORK_DIR}/custom-out.txt
+echo "source_url:$source_url, source_dir:$source_dir" >> ${WORK_DIR}/auxout.txt
+echo "target_url:$target_url, target_dir:$target_dir, target_subdir:$target_subdir" >> ${WORK_DIR}/auxout.txt
+echo "cmd:$cmd" >> ${WORK_DIR}/auxout.txt
 
-echo "message:$1" >> ${WORK_DIR}/custom-out.txt
+echo "message:$1" >> ${WORK_DIR}/auxout.txt
 
 # cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
 mkdir -p ${target_dir} && cd ${target_dir} && eval $cmd 
 code=$?
-[[ $code -ne 0 ]] && echo "[ERROR]exit after pull-unpack, error_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR]exit after pull-unpack, error_code:$code"  >> ${WORK_DIR}/auxout.txt && exit $code
 
 chmod 644 *.dat
 
 # 检查输出文件是否完整
 post_check $dataset $ch $begin $end $target_dir
 code=$?
-[[ $code -ne 0 ]] && echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/custom-out.txt && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/auxout.txt && exit $code
 
 for ((n=$begin; n<=$end; n++))
 do

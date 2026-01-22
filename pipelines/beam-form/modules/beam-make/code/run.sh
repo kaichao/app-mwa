@@ -4,9 +4,9 @@ source functions.sh
 source $(dirname $0)/functions.sh
 
 echo "WORK_DIR:$WORK_DIR."
-echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/custom-out.txt
+echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/auxout.txt
 
-# env | sort > ${WORK_DIR}/custom-out.txt
+# env | sort > ${WORK_DIR}/auxout.txt
 
 # OBSID/p{PTHEAD}_{PTTAIL}/t{BEG}_{END}/ch{ch}/
 # m="1257617424/p00001_00048/t1257617426_1257617505/ch109"
@@ -39,8 +39,8 @@ else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
-echo "INPUT_ROOT=$INPUT_ROOT" >> ${WORK_DIR}/custom-out.txt
-echo "DIR_DAT=$DIR_DAT" >> ${WORK_DIR}/custom-out.txt
+echo "INPUT_ROOT=$INPUT_ROOT" >> ${WORK_DIR}/auxout.txt
+echo "DIR_DAT=$DIR_DAT" >> ${WORK_DIR}/auxout.txt
 
 
 my_arr=($(echo $m | tr "_" "\n" | tr "/" "\n"))
@@ -64,21 +64,21 @@ fi
 UTT=$( /app/bin/gps2utc.py ${BEG} )
 # UTT=2019-11-05T17:43:25.00
 
-echo UTT=${UTT} >> ${WORK_DIR}/custom-out.txt
-echo "dat_dir=${dat_dir}" >> ${WORK_DIR}/custom-out.txt
+echo UTT=${UTT} >> ${WORK_DIR}/auxout.txt
+echo "dat_dir=${dat_dir}" >> ${WORK_DIR}/auxout.txt
 
 # PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
 pointing_file="${POINTING_FILE:-pointings.txt}"
-echo "pointing_file:$pointing_file" >> ${WORK_DIR}/custom-out.txt
+echo "pointing_file:$pointing_file" >> ${WORK_DIR}/auxout.txt
 
 PTLIST=${DIR_CAL}/${OBSID}/${pointing_file}
 POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
 # 增加对行首尾空字符的过滤
 #POINTS=$(awk "NR>=${PTHEAD} && NR<=${PTTAIL} {gsub(/^[[:space:]]+|[[:space:]]+$/, \"\"); printf \"%s\", \$0; if (NR!=${PTTAIL}) printf \",\"}" ${PTLIST})
-echo "POINTS:$POINTS" >> ${WORK_DIR}/custom-out.txt
+echo "POINTS:$POINTS" >> ${WORK_DIR}/auxout.txt
 
 cd ${WORK_DIR}
-echo "WORK_DIR:${WORK_DIR}, current_dir:${PWD}" >> ${WORK_DIR}/custom-out.txt
+echo "WORK_DIR:${WORK_DIR}, current_dir:${PWD}" >> ${WORK_DIR}/auxout.txt
 if [ "$RUNNING_MODE" = "1" ]; then
     make_beam -o ${OBSID} -b ${BEG} -e ${END} \
         -P ${POINTS} \
@@ -125,7 +125,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
 
     mkdir -p ${fits_dir} && mv -f $orig_file $dest_file
     code=$?
-    [[ $code -ne 0 ]] && echo "[ERROR]exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >> ${WORK_DIR}/custom-out.txt && exit $code
+    [[ $code -ne 0 ]] && echo "[ERROR]exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >> ${WORK_DIR}/auxout.txt && exit $code
 
     # 统计输出文件的字节数
     echo $dest_file >> ${WORK_DIR}/output-files.txt
@@ -136,7 +136,7 @@ done
 # 检查输出文件是否完整
 post_check $OBSID $ch $PTHEAD $PTTAIL $BEG $END $DIR_1CH
 code=$?
-[[ $code -ne 0 ]] && echo "[ERROR] exit after post-check output files, exit_code:$code" >> ${WORK_DIR}/custom-out.txt && exit $code
+[[ $code -ne 0 ]] && echo "[ERROR] exit after post-check output files, exit_code:$code" >> ${WORK_DIR}/auxout.txt && exit $code
 
 echo $1 > ${WORK_DIR}/messages.txt
 
@@ -151,15 +151,15 @@ echo '{
 
 if [ "$KEEP_SOURCE_FILE" = "no" ]; then
     # only used for test
-    echo "removing dat files" >> ${WORK_DIR}/custom-out.txt
+    echo "removing dat files" >> ${WORK_DIR}/auxout.txt
     echo ${dat_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 if [ "$KEEP_TARGET_FILE" = "no" ]; then
     # only used for test
-    echo "remove fits files" >> ${WORK_DIR}/custom-out.txt
+    echo "remove fits files" >> ${WORK_DIR}/auxout.txt
     echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 
-echo stdout,code=$code >> ${WORK_DIR}/custom-out.txt
+echo stdout,code=$code >> ${WORK_DIR}/auxout.txt
 
 exit $code
