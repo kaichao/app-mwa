@@ -23,7 +23,6 @@ import (
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -39,13 +38,9 @@ func fromTarLoad(body string, headers map[string]string) int {
 	}
 	cubeName := headers["_cube_name"]
 	semaName := "tar-ready:" + cubeName
-	v, err := semaphore.AddValue(semaName, 0, appID, -1)
+	n, err := semaphore.AddValue(semaName, 0, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		logrus.Errorf("semaphore-decrement, atoi error, name=%s,err-info:%v\n", semaName, err)
 	}
 	if n <= 0 {
 		// 若支持分组级slot，则发给pull-unpack

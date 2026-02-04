@@ -19,7 +19,7 @@ func toBeamMake(msg string) int {
 
 	messages := []string{}
 	pointingRange := fmt.Sprintf("p%05d_%05d", cube.PointingBegin, cube.PointingEnd)
-	headers := common.SetJSONAttribute("{}", "pointing_range", pointingRange)
+	headers, _ := common.SetJSONAttribute("{}", "pointing_range", pointingRange)
 	fmt.Println("headers:", headers)
 	withPointingPath := os.Getenv("WITH_POINTING_PATH") == "yes"
 	for k := 0; k < len(pRanges); k += 2 {

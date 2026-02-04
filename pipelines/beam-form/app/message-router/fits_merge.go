@@ -42,22 +42,25 @@ func fromFitsMerge(body string, headers map[string]string) int {
 	}
 
 	// 信号量pointing-done / vtask-cube-done的减1操作
-	semaPairs := map[string]int{}
 	// semaphore: pointing-done:1257010784/p00001
-	semaName0 := "pointing-done:" + ss[1]
-	semaPairs[semaName0] = -1
-	vtaskCubeName := headers["_vtask_cube_name"]
-	semaName1 := "cube-vtask-done:" + vtaskCubeName
-	semaPairs[semaName1] = -1
-	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	m, err := semaphore.AddMultiValues(semaPairs, vtaskID, appID)
+	semaPointingDone := "pointing-done:" + ss[1]
+	semaVal, err := semaphore.AddValue(semaPointingDone, 0, appID, -1)
+	fmt.Printf("ret-val of sema=pointing-done:%d\n", semaVal)
 	if err != nil {
-		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
-			semaPairs, err)
+		logrus.Errorf("decrement sema-pointing-done, err:%v\n", err)
 		return 1
 	}
 
-	semaVal := m[semaName1]
+	vtaskCubeName := headers["_vtask_cube_name"]
+	semaCubeVtaskDone := "cube-vtask-done:" + vtaskCubeName
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
+	semaVal, err = semaphore.AddValue(semaCubeVtaskDone, vtaskID, appID, -1)
+	fmt.Printf("ret-val of cube-vtask-done:%d\n", semaVal)
+	if err != nil {
+		logrus.Errorf("decrement sema-cube-vtask-done, err:%v\n", err)
+		return 2
+	}
+
 	if semaVal > 0 {
 		// cube not done.
 		return 0
@@ -93,23 +96,23 @@ func toFitsMerge(body string) int {
 		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
 			// IPv4地址（类型1）， 设置"to_ip"头
-			headers = common.SetJSONAttribute(headers, "to_ip", varValue)
-			headers = common.SetJSONAttribute(headers,
+			headers, _ = common.SetJSONAttribute(headers, "to_ip", varValue)
+			headers, _ = common.SetJSONAttribute(headers,
 				"output_root", os.Getenv("LOCAL_TMPDIR")+"/mydata")
 		} else if strings.Contains(varValue, "@") {
 			// 远端存储（类型3，远端ssh存储）
-			headers = common.SetJSONAttribute(headers, "to_host", toHost)
+			headers, _ = common.SetJSONAttribute(headers, "to_host", toHost)
 			// 24ch存放在/dev/shm
 			// headers = common.SetJSONAttribute(headers,
 			// 	"output_root", os.Getenv("LOCAL_SHMDIR")+"/mydata")
 			// 24ch存放在共享存储
-			headers = common.SetJSONAttribute(headers,
+			headers, _ = common.SetJSONAttribute(headers,
 				"output_root", "/public/home/cstu0100/scalebox/mydata")
 		} else {
 			// 共享存储（类型2）
-			headers = common.SetJSONAttribute(headers, "to_host", toHost)
+			headers, _ = common.SetJSONAttribute(headers, "to_host", toHost)
 			// 24ch存放在共享存储
-			headers = common.SetJSONAttribute(headers,
+			headers, _ = common.SetJSONAttribute(headers,
 				"output_root", varValue)
 		}
 		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)

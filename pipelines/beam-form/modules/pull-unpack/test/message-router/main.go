@@ -52,7 +52,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 			headers := fmt.Sprintf(`{"target_subdir":"%s"}`, targetSubDir)
 
 			sourceURL := os.Getenv("SOURCE_TAR_ROOT")
-			headers = common.SetJSONAttribute(headers, "source_url", sourceURL)
+			headers, _ = common.SetJSONAttribute(headers, "source_url", sourceURL)
 			tus := cube.GetTimeUnitsWithinInterval(trs[i], trs[i+1])
 
 			for k := 0; k < len(tus); k += 2 {

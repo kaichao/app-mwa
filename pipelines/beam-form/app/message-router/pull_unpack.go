@@ -42,12 +42,11 @@ func fromPullUnpack(body string, headers map[string]string) int {
 	cubeID := fmt.Sprintf("%s/t%d_%d", prefix, t0, t1)
 	sema := fmt.Sprintf(`dat-ready:%s/ch%d`, cubeID, ch)
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	v, err := semaphore.AddValue(sema, vtaskID, appID, -1)
+	semaVal, err := semaphore.AddValue(sema, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s\n", sema)
 		return 2
 	}
-	semaVal, _ := strconv.Atoi(v)
 	if semaVal > 0 {
 		return 0
 	}
@@ -106,12 +105,12 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		index := j % len(node.Nodes)
 		toHost := fmt.Sprintf("%s%02d-%02d", hostPrefix, slotSeq, index)
 		// toHost := node.GetNodeNameByIndexChannel(cube, cubeIndex, ch)
-		headers = common.SetJSONAttribute(headers, "to_host", toHost)
+		headers, _ = common.SetJSONAttribute(headers, "to_host", toHost)
 
 		for k := 0; k < len(tus); k += 2 {
 			if iopath.IsPreloadMode() {
 				index := cube0.GetTimeChannelIndex(tus[k], ch)
-				headers = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(index))
+				headers, _ = common.SetJSONAttribute(headers, "source_url", iopath.GetPreloadRoot(index))
 			}
 			m := fmt.Sprintf("%s/%d_%d_ch%d.dat.tar.zst", prefix, tus[k], tus[k+1], ch)
 			tasks = append(tasks, m+","+headers)

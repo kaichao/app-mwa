@@ -31,12 +31,11 @@ func fromFitsRedist(body string, headers map[string]string) int {
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	semaName := fmt.Sprintf("fits-done:%s", cubeID)
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
+	semaVal, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
 		return 1
 	}
-	semaVal, _ := strconv.Atoi(v)
 	if semaVal > 0 {
 		// 24ch not done.
 		return 0

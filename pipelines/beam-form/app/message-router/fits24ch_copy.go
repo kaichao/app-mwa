@@ -31,7 +31,7 @@ func fromFits24chCopy(body string, headers map[string]string) int {
 	semaName1 := "cube-vtask-done:" + vtaskCubeName
 	semaPairs[semaName1] = -1
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	m, err := semaphore.AddMultiValues(semaPairs, vtaskID, appID)
+	m, err := semaphore.AddMapValues(semaPairs, vtaskID, appID)
 	if err != nil {
 		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
 			semaPairs, err)

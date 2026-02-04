@@ -40,7 +40,7 @@ func fromBeamMake(body string, headers map[string]string) int {
 		return 3
 	}
 	// 若信号量为0，则删除dat文件目录（？）
-	if v == "0" {
+	if v == 0 {
 		ipAddr := headers["from_ip"]
 		sshPort, _ := strconv.Atoi(os.Getenv("SSH_PORT"))
 		if sshPort == 0 {
