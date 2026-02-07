@@ -1,0 +1,5 @@
+"path-free-gb:group0:/dir00":500
+"path-free-gb:group0:/dir01":400
+"path-free-gb:group0:/dir02":300
+"path-free-gb:group1:/dir00":300
+"path-free-gb:group1:/dir01":200

@@ -66,18 +66,18 @@ func fromVtaskHead(body string, headers map[string]string) int {
 func toVtaskHead(cubeName string) int {
 	// 手工处理信号量组
 	groupName := ":slot_vtask_size:vtask-head:"
-	v, err := semagroup.Decrement(groupName, appID)
+	_, slotSeq, err := semagroup.Decrement(groupName, appID)
 	if err != nil {
 		logrus.Errorf("semagroup-decrement error, err:%v\n", err)
 		return 1
 	}
 	// v == `":slot_vtask_size:vtask-head:1":3`
-	var slotSeq int
-	_, err = fmt.Sscanf(v, `":slot_vtask_size:vtask-head:%d"`, &slotSeq)
-	if err != nil {
-		logrus.Errorf("Invalid format from semagroup-decrement, err=%v\n", err)
-		return 2
-	}
+	// var slotSeq int
+	// _, err = fmt.Sscanf(v, `":slot_vtask_size:vtask-head:%d"`, &slotSeq)
+	// if err != nil {
+	// 	logrus.Errorf("Invalid format from semagroup-decrement, err=%v\n", err)
+	// 	return 2
+	// }
 	headers := map[string]string{
 		"_vtask_cube_name": cubeName,
 		"to_slot_index":    fmt.Sprintf("%d", slotSeq),
