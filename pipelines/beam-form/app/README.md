@@ -101,7 +101,7 @@ TIME_STEP=80 \
 
 ```sh
 
-echo '1266680784' | \
+echo '1302282040/p00961_01920' | \
 PRELOAD_MODE=yes \
 NUM_GROUPS=1 \
 NODES='^d.+' \

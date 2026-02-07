@@ -7,7 +7,7 @@ import (
 // ExampleNew 展示如何使用New函数从文件创建AggregatedPath
 func ExampleNew() {
 	// 从文件创建AggregatedPath
-	ap, err := aggpath.New(1, "my-group.txt")
+	ap, err := aggpath.New(1, "my-ap.txt")
 	if err != nil {
 		// 处理错误
 		return
@@ -22,14 +22,15 @@ func ExampleNew() {
 func ExampleAggregatedPath_GetMemberPath() {
 	// 创建AggregatedPath实例
 	ap := &aggpath.AggregatedPath{
+		Name:  "my-ap",
 		AppID: 1,
-		StorageGroupMap: map[string]int{
-			"group0": 20,
+		CategoryMap: map[string]int{
+			"name0": 20,
 		},
 	}
 
 	// 获取成员路径
-	path, err := ap.GetMemberPath("group0", "test-path")
+	path, err := ap.GetMemberPath("prefix0", "test-path")
 	if err != nil {
 		// 处理错误
 		return
@@ -44,14 +45,15 @@ func ExampleAggregatedPath_GetMemberPath() {
 func ExampleAggregatedPath_ReleaseMemberPath() {
 	// 创建AggregatedPath实例
 	ap := &aggpath.AggregatedPath{
+		Name:  "my-ap",
 		AppID: 1,
-		StorageGroupMap: map[string]int{
-			"group0": 20,
+		CategoryMap: map[string]int{
+			"name0": 20,
 		},
 	}
 
 	// 释放成员路径
-	err := ap.ReleaseMemberPath("group0", "test-path")
+	err := ap.ReleaseMemberPath("name0", "test-path")
 	if err != nil {
 		// 处理错误
 		return
