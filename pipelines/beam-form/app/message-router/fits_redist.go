@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -24,7 +25,7 @@ func fromFitsRedist(body string, headers map[string]string) int {
 	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	idx := strings.LastIndex(body, "/ch")
 	if idx == -1 {
-		logrus.Errorf("invalid message format from fits-redist, message=%s\n", body)
+		logrus.Errorf("invalid task-body format from fits-redist, task-body=%s\n", body)
 		return 1
 	}
 	cubeID := body[:idx]
@@ -34,7 +35,7 @@ func fromFitsRedist(body string, headers map[string]string) int {
 	semaVal, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
-		return 1
+		return 2
 	}
 	if semaVal > 0 {
 		// 24ch not done.
@@ -45,23 +46,18 @@ func fromFitsRedist(body string, headers map[string]string) int {
 }
 
 func toFitsRedist(m string, fromHeaders map[string]string) int {
-	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// input task-body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	obsID, p0, p1, _, _, _, err := strparse.ParseParts(m)
 	if err != nil {
 		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
 		return 1
 	}
 
-	// cube := datacube.NewDataCube(obsID)
-	// cubeIndex, _ := strconv.Atoi(fromHeaders["_cube_index"])
-	// cubeIndex--
-	// fmt.Printf("cube-index=%d\n", cubeIndex)
 	semaName := fromHeaders["_vtask_size_sema"]
 	ss := strings.Split(semaName, ":")
 	groupIndex, _ := strconv.Atoi(ss[len(ss)-1])
 	fmt.Printf("group-index=%d\n", groupIndex)
-	ips := node.GetIPAddrListByCubeIndex(groupIndex)
-	// ips := node.GetIPAddrListByTime(cube, t0)
+	ips := node.GetIPAddrListByGroupIndex(groupIndex)
 	fromIP := fromHeaders["from_ip"]
 
 	// 1. 读取共享变量表 pointing-data-root。
@@ -78,6 +74,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 
 	toIPs := []string{}
 	// 2. 生成待分发IP列表。若不存在，按需创建共享变量表 pointing-data-root
+	// 判断 varValues 这个字符串切片里，是否所有元素都是空字符串 ""
 	if slices.IndexFunc(varValues, func(s string) bool { return s != "" }) == -1 {
 		// varValues all empty string ""
 		// 变量不存在，创建共享变量组
@@ -92,7 +89,8 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 
 		for p := p0; p <= p1; p++ {
 			i := p - p0
-			varName := fmt.Sprintf("pointing-data-root:%s/p%05d", obsID, p)
+			pointingDir := fmt.Sprintf("%s/p%05d", obsID, p)
+			varName := "pointing-data-root:" + pointingDir
 			var varValue, ip string
 			if i < len(prestoIPs) {
 				// 类型1，非组内IP地址
@@ -101,7 +99,11 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 			} else {
 				// 类型2、类型3，组内地址
 				// 自增长的index
-				varValue = iopath.GetStagingRoot(-1)
+				varValue, err = iopath.GetStagingRoot(pointingDir)
+				if err != nil {
+					logger.LogTracedErrorDefault(err)
+					return 9
+				}
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {
@@ -141,5 +143,4 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 		return 1
 	}
 	return 0
-
 }

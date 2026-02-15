@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
 func fromWaitQueue(body string, headers map[string]string) int {
@@ -19,7 +19,7 @@ func toWaitQueue(cubeName string) int {
 
 	_, err := task.AddWithMapHeaders(cubeName, headers, envs)
 	if err != nil {
-		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
+		logger.LogTracedErrorDefault(err)
 		return 1
 	}
 

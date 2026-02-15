@@ -34,7 +34,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 \
     go build 
 
-FROM debian:12-slim
+FROM debian:13-slim
 
 ENV HTTP_PROXY=
 ENV HTTPS_PROXY=
@@ -65,6 +65,7 @@ COPY --from=0 /go/src/app/message-router/message-router /app/bin/
 
 COPY dataset.yaml /
 COPY app/io-path.yaml /
+COPY app/*.ap-conf /
 # COPY app/*.json /
 
 ENV \

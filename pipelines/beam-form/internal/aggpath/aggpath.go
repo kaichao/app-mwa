@@ -1,6 +1,7 @@
 package aggpath
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -67,16 +68,22 @@ func New(appID int, confFile string) (*AggregatedPath, error) {
 func (ap *AggregatedPath) GetMemberPath(category, path string) (string, error) {
 	delta, ok := ap.CategoryMap[category]
 	if !ok {
-		return "", errors.E("no valid category", "category-name", category)
+		return "", errors.E("no valid category",
+			"category-name", category, "category-map", ap.CategoryMap)
 	}
 
 	// if path对应variable存在，直接返回该目录
 	varName := fmt.Sprintf("member-path:%s:%s", category, path)
 	varValue, err := variable.GetValue(varName, 0, ap.AppID)
-	if err == nil && varValue != "" {
+
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return "", errors.WrapE(err, "variable.GetValue()", "var-name", varName)
+	}
+	if varValue != "" {
 		return varValue, nil
 	}
 
+	// var-value == ""
 	// 通过category获取semagroup的最大值，若该值超过capacityDB值，减去该值
 	semaGName := "path-free-gb:" + ap.Name
 	semaName, semaValue, err := semagroup.GetMax(semaGName, ap.AppID)

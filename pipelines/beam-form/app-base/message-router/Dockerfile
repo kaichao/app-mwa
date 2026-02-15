@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 \
     go build 
 
-FROM debian:12-slim
+FROM debian:13-slim
 
 # install the newest version, rsync 3.2.7, openssh 9.3p1
 RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 

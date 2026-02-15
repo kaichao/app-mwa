@@ -8,15 +8,51 @@ import (
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
-	"reflect"
 	"strconv"
+	"strings"
 
-	"github.com/kaichao/scalebox/pkg/semaphore"
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
 
 func fromNull(body string, headers map[string]string) int {
+	// 按需创建信号量pointing-done，用于标识pointing的完成（？）
+
+	// 生成每个指向数据的独立root目录路径
+	cube := datacube.NewDataCube(body)
+	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
+		pointingDir := fmt.Sprintf("%s/p%05d", cube.ObsID, p)
+		varName := "pointing-data-root:" + pointingDir
+		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
+			varValue, err := iopath.GetStagingRoot(pointingDir)
+			if err != nil {
+				logger.LogTracedErrorDefault(err)
+				return 9
+			}
+			setPointingVariable(varName, varValue, appID)
+		}
+	}
+
+	if !strings.HasPrefix(body, "/") {
+		return toTarLoad(body)
+	}
+
+	// 不需preload，产生所有cube到wait-queue
+	fmtCubicName := "%s/p%05d_%05d/t%d_%d"
+	trs := cube.GetTimeRanges()
+	for i := 0; i < len(trs); i += 2 {
+		cubeName := fmt.Sprintf(fmtCubicName, cube.ObsID,
+			cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
+		if ret := toWaitQueue(cubeName); ret != 0 {
+			return ret
+		}
+	}
+	return 0
+}
+
+/*
+func fromNull0(body string, headers map[string]string) int {
 	cube := datacube.NewDataCube(body)
 	cube0 := datacube.NewDataCube(cube.ObsID)
 	// 按需创建信号量pointing-done，用于标识pointing的完成
@@ -39,14 +75,14 @@ func fromNull(body string, headers map[string]string) int {
 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", cube.ObsID, p)
 		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
-			varValue := iopath.GetStagingRoot(-1)
+			varValue := iopath.GetStagingRoot0(-1)
 			fmt.Printf("var-name:%s, var-value:%s\n", varName, varValue)
 			setPointingVariable(varName, varValue, appID)
 		}
 	}
 
 	if os.Getenv("PRELOAD_MODE") != "preloaded" {
-		return toTarLoad(body)
+		return toTarLoad0(body)
 	}
 
 	// 产生所有cube到wait-queue
@@ -61,7 +97,7 @@ func fromNull(body string, headers map[string]string) int {
 	}
 	return 0
 }
-
+*/
 // toCrossAppPresto()
 func toCrossAppPresto(pointing string) int {
 	varName := "pointing-data-root:" + pointing

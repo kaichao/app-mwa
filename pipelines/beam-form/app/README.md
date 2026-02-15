@@ -76,13 +76,10 @@ START_MESSAGE=1302106648/p02041_03480/t1302106649_1302111446 \
 
 ### p419集群流式并行
 
-#### preload
+#### 导入信号量
 ```sh
-echo '1266680784/p01921_02880/t1266680787_1266681106' | \
-PRELOAD_MODE=preload-only \
-
-echo '1266680784/p_00960' | \
-PRELOAD_MODE=yes \
+app_id=1
+scalebox semaphore create --app-id=$app_id --sema-file /tmp/my-sema.txt
 
 ```
 
@@ -92,25 +89,22 @@ echo '1253991112/p01321_02280' | \
 
 echo '1302282040/p00961_01920' | \
 
+BW_LIMIT=300m \
 
-echo '1266680784/p00001_00048/t1266680787_1266681586' | \
-TIME_STEP=80 \
-
-1266680784/p00529_00763/t1266682547_1266682706（不完全）
-1266680784/p00001_00763/t1266682707_1266682866(未处理)	
 
 ```sh
 
-echo '1302282040/p00961_01920' | \
-PRELOAD_MODE=yes \
-NUM_GROUPS=1 \
+app_id=$(echo '1302282040/p00961_01440' | \
+NUM_GROUPS=2 \
 NODES='^d.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
-POINTING_FILE=pointings-260108.txt \
 GROUP_NODES= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
-scalebox app run -e p419.env
+scalebox app run -e p419.env | cut -d':' -f2 | tr -d '}' )
+
+scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
 
 ```
 

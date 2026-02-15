@@ -16,22 +16,16 @@ import (
 )
 
 func fromBeamMake(body string, headers map[string]string) int {
-	defer func() {
-		common.AddTimeStamp("leave-fromBeamMake()")
-	}()
-	// message: 1257617424/p00049_00072/t1257617426_1257617505/ch111
+	// body: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
 	obsID, _, _, t0, t1, ch, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", body, err)
+		logrus.Errorf("Parse task-body, body=%s,err=%v\n", body, err)
 		return 1
 	}
-	suffix := fmt.Sprintf("t%d_%d/ch%d", t0, t1, ch)
 
 	// 用obsID，但可能有边界对齐问题？
-	// semaName := fmt.Sprintf("dat-done:%s/p%05d_%05d/t%d_%d/ch%d", obsID, ps0, ps1, suffix)
-	cubeName := headers["_vtask_cube_name"]
-	semaName := fmt.Sprintf("dat-done:%s/ch%d", cubeName, ch)
+	semaName := fmt.Sprintf("dat-done:%s/ch%d", headers["_vtask_cube_name"], ch)
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	// 信号量操作
 	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
@@ -40,7 +34,7 @@ func fromBeamMake(body string, headers map[string]string) int {
 		return 3
 	}
 	// 若信号量为0，则删除dat文件目录（？）
-	if v == 0 {
+	if v <= 0 {
 		ipAddr := headers["from_ip"]
 		sshPort, _ := strconv.Atoi(os.Getenv("SSH_PORT"))
 		if sshPort == 0 {
@@ -56,26 +50,14 @@ func fromBeamMake(body string, headers map[string]string) int {
 			Port:       sshPort,
 			Background: true,
 		}
-		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s/%s`, os.Getenv("LOCAL_TMPDIR"), obsID, suffix)
+		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s/t%d_%d/ch%d`, os.Getenv("LOCAL_TMPDIR"), obsID, t0, t1, ch)
 		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
 		if err != nil {
 			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
 				cmd, stdout, stderr, err)
 		}
-
-		// cmd := fmt.Sprintf(`ssh -p %s %s@%s rm -rf /tmp/scalebox/mydata/mwa/dat/%s/%s`,
-		// 	sshPort, sshUser, ipAddr, obsID, suffix)
-		// code, err := exec.RunReturnExitCode(cmd, 60)
-		// if err != nil {
-		// 	logrus.Errorf("Remove dat dir, cmd=%s,err-info=%v\n", cmd, err)
-		// 	return 125
-		// }
-		// if code != 0 {
-		// 	return code
-		// }
 	}
 
-	common.AddTimeStamp("before-send-messages")
 	return toDownSample(body, headers)
 }
 
@@ -100,18 +82,14 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 			body, sortTag, sortTag)
 		tasks = append(tasks, line)
 	}
-	fmt.Printf("num-of-messages in toBeamMake():%d\n", len(tasks))
+
 	common.AddTimeStamp("before-send-messages")
 	envVars := map[string]string{
 		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "600",
 	}
-	// headers := fmt.Sprintf(`{"_cube_id":"%s","_cube_index":"%s"}`,
-	// 	cubeID, fromHeaders["_cube_index"])
-	// headers := fmt.Sprintf(`{"_cube_id":"%s"}`, cubeID)
 	headers := `{}`
-	_, err := task.AddTasks(tasks, headers, envVars)
-	if err != nil {
+	if _, err := task.AddTasks(tasks, headers, envVars); err != nil {
 		logrus.Errorf("err:%v\n", err)
 		return 1
 	}

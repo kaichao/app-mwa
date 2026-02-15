@@ -8,11 +8,9 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/kaichao/scalebox/pkg/common"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
@@ -25,55 +23,36 @@ func fromFitsMerge(body string, headers map[string]string) int {
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
 	ss := re.FindStringSubmatch(body)
 	if ss == nil {
-		logrus.Errorf("Invalid format, message:%s\n", body)
+		logrus.Errorf("Invalid format, task-body:%s\n", body)
 		return 1
 	}
-
-	varName := fmt.Sprintf("pointing-data-root:%s", ss[1])
+	pointingID := ss[1]
+	varName := fmt.Sprintf("pointing-data-root:%s", pointingID)
 	varValue, err := getPointingVariable(varName, appID)
 	if err != nil {
 		logrus.Errorf("variable-get, err-info:%v\n", err)
 		return 11
 	}
-	if strings.Contains(varValue, "@") {
-		// 共享变量pointing-data-root，若为类型3，给fits24-copy发消息，推送到远端ssh存储
-		fileName := fmt.Sprintf("mwa/24ch/%s.fits.zst", body)
+
+	fileName := fmt.Sprintf("mwa/24ch/%s.fits.zst", body)
+	if os.Getenv("RUN_MODE") == "full-parallel" {
+		// 全并行，需通过fits24ch-copy拷贝到脉冲星搜索的计算节点（全并行，fits合并在后续计算节点上？）
 		return toFits24chCopy(fileName, varValue)
 	}
-
-	// 信号量pointing-done / vtask-cube-done的减1操作
-	// semaphore: pointing-done:1257010784/p00001
-	semaPointingDone := "pointing-done:" + ss[1]
-	semaVal, err := semaphore.AddValue(semaPointingDone, 0, appID, -1)
-	fmt.Printf("ret-val of sema=pointing-done:%d\n", semaVal)
-	if err != nil {
-		logrus.Errorf("decrement sema-pointing-done, err:%v\n", err)
-		return 1
+	if strings.Contains(varValue, "@") {
+		// 共享变量pointing-data-root，若为类型3，给fits24-unload发消息，推送到远端ssh存储
+		if code := toFits24chUnload(fileName, varValue); code > 0 {
+			return code
+		}
 	}
 
-	vtaskCubeName := headers["_vtask_cube_name"]
-	semaCubeVtaskDone := "cube-vtask-done:" + vtaskCubeName
-	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	semaVal, err = semaphore.AddValue(semaCubeVtaskDone, vtaskID, appID, -1)
-	fmt.Printf("ret-val of cube-vtask-done:%d\n", semaVal)
-	if err != nil {
-		logrus.Errorf("decrement sema-cube-vtask-done, err:%v\n", err)
-		return 2
-	}
+	return toVtaskTail(pointingID, headers)
 
-	if semaVal > 0 {
-		// cube not done.
-		return 0
-	}
-
-	return toVtaskTail(ss[1])
-
-	// common.AddTimeStamp("before-add-tasks")
 	// return toCrossAppPresto(ss[1])
 }
 
 func toFitsMerge(body string) int {
-	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// task-body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(body)
 	if err != nil {
 		logrus.Errorf("Parse message, body=%s,err=%v\n", body, err)
@@ -107,7 +86,7 @@ func toFitsMerge(body string) int {
 			// 	"output_root", os.Getenv("LOCAL_SHMDIR")+"/mydata")
 			// 24ch存放在共享存储
 			headers, _ = common.SetJSONAttribute(headers,
-				"output_root", "/public/home/cstu0100/scalebox/mydata")
+				"output_root", "/public/home/cstu0100/scalebox/mydata/mwa")
 		} else {
 			// 共享存储（类型2）
 			headers, _ = common.SetJSONAttribute(headers, "to_host", toHost)

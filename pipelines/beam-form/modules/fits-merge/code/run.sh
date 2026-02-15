@@ -13,8 +13,8 @@ else
 fi
 
 output_root=$(get_header "$2" "output_root")
-if [ $output_root ]; then
-    DIR_24CH=$(get_host_path "${output_root}/mwa/24ch")
+if [[ -n "$output_root" ]]; then
+    DIR_24CH=$(get_host_path "${output_root}/24ch")
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi

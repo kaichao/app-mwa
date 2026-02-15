@@ -24,23 +24,25 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
 // body: 1267459410_1267459449_ch109.dat.tar.zst
 // headers:
 //   - _cube_name: 1257010784/p00001_00960/t1257012766_1257012965
 func fromTarLoad(body string, headers map[string]string) int {
-	if os.Getenv("PRELOAD_MODE") == "preload-only" {
-		return 0
-	}
+	// if os.Getenv("PRELOAD_MODE") == "preload-only" {
+	// 	return 0
+	// }
 	cubeName := headers["_cube_name"]
 	semaName := "tar-ready:" + cubeName
 	n, err := semaphore.AddValue(semaName, 0, appID, -1)
 	if err != nil {
-		logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
+		logger.LogTracedErrorDefault(err)
+		// logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
+		return 1
 	}
 	if n <= 0 {
 		// 若支持分组级slot，则发给pull-unpack
@@ -63,7 +65,9 @@ func fromTarLoad(body string, headers map[string]string) int {
 // - 1257010784/p00001_00960/t1257012766_1257012965
 // - 1257010784/p00001_00960/t1257012766_
 // - 1257010784/p00001_00960/t_1257012965
-func toTarLoad(datasetID string) int {
+// 可删除。
+/*
+func toTarLoad0(datasetID string) int {
 	// 按顺序产生file-copy消息
 	cube := datacube.NewDataCube(datasetID)
 	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
@@ -87,7 +91,7 @@ func toTarLoad(datasetID string) int {
 				index := cube0.GetTimeChannelIndex(tus[k], ch)
 				targetURL := fmt.Sprintf("%s/mwa/tar/%s",
 					// targetURL := fmt.Sprintf("cstu0030@60.245.128.14:65010%s/mwa/tar/%s",
-					iopath.GetPreloadRoot(index), cube.ObsID)
+					iopath.GetPreloadRoot0(index), cube.ObsID)
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
 				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_name":"%s"}`,
 					fileName, targetURL, cubeName)
@@ -115,6 +119,66 @@ func toTarLoad(datasetID string) int {
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 		return 1
+	}
+	return 0
+}
+*/
+func toTarLoad(datasetID string) int {
+	// 按顺序产生file-copy消息
+	cube := datacube.NewDataCube(datasetID)
+	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
+	fmtTarZst := `%d_%d_ch%d.dat.tar.zst`
+	taskLines := []string{}
+	// tar-ready信号量
+	semaLines := []string{}
+
+	trs := cube.GetTimeRanges()
+	for i := 0; i < len(trs); i += 2 {
+		tus := cube.GetTimeUnitsWithinInterval(trs[i], trs[i+1])
+		cubeName := fmt.Sprintf("%s/p%05d_%05d/t%d_%d",
+			cube.ObsID, cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
+		semaName := "tar-ready:" + cubeName
+		semaValue := len(tus) / 2 * cube.NumOfChannels
+		semaLines = append(semaLines, fmt.Sprintf(`"%s":%d`, semaName, semaValue))
+		for k := 0; k < len(tus); k += 2 {
+			for j := 0; j < cube.NumOfChannels; j++ {
+				ch := cube.ChannelBegin + j
+				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
+				root, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
+				if err != nil {
+					// logrus.Errorf("error:%T,%v\n", err, err)
+					logger.LogTracedErrorDefault(err)
+					return 1
+				}
+				targetURL := fmt.Sprintf("%s/tar/%s", root, cube.ObsID)
+				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_name":"%s"}`,
+					fileName, targetURL, cubeName)
+				taskLines = append(taskLines, body)
+			}
+		}
+	}
+
+	// 信号量重置，使得可以多次重新加载打包文件
+	os.Setenv("CONFLICT_ACTION", "OVERWRITE")
+	defer func() {
+		os.Unsetenv("CONFLICT_ACTION")
+	}()
+	if err := semaphore.CreateSemaphores(semaLines, 0, appID, 100); err != nil {
+		logger.LogTracedErrorDefault(err)
+		return 2
+	}
+
+	headers := map[string]string{
+		"source_url": sourceURL,
+	}
+	envs := map[string]string{
+		"SINK_MODULE":     "tar-load",
+		"CONFLICT_ACTION": "OVERWRITE",
+	}
+
+	if _, err := task.AddTasksWithMapHeaders(taskLines, headers, envs); err != nil {
+		logger.LogTracedErrorDefault(err)
+		return 3
 	}
 	return 0
 }

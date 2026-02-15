@@ -1,7 +1,8 @@
 name: app.beam-form
 cluster: ${CLUSTER}
 parameters:
-  initial_status: RUNNING
+  # initial_status: RUNNING
+  initial_status: INITIAL
   message_router: mr-beam-form
   global_copier_size: 3
   global_copier_env: '{}'
@@ -40,21 +41,21 @@ modules:
   tar-load:
     base_image: ${FILE_COPY}
     arguments:
-      dir_quota_gb: '{
-        "/public/home/cstu0092/scalebox":440,
-        "/public/home/cstu0093/scalebox":440,
-        "/public/home/cstu0094/scalebox":440,
-        "/public/home/cstu0095/scalebox":440,
-        "/public/home/cstu0096/scalebox":440,
-        "/public/home/cstu0097/scalebox":440,
-        "/public/home/cstu0098/scalebox":440,
-        "/public/home/cstu0099/scalebox":440
-        }'
+      # dir_quota_gb: '{
+      #   "/public/home/cstu0092/scalebox":440,
+      #   "/public/home/cstu0093/scalebox":440,
+      #   "/public/home/cstu0094/scalebox":440,
+      #   "/public/home/cstu0095/scalebox":440,
+      #   "/public/home/cstu0096/scalebox":440,
+      #   "/public/home/cstu0097/scalebox":440,
+      #   "/public/home/cstu0098/scalebox":440,
+      #   "/public/home/cstu0099/scalebox":440
+      #   }'
     environments:
       # retry时，产生message-router的新task要覆盖 
       - CONFLICT_ACTION=OVERWRITE
     slots:
-      - n0:2
+      - n0:3
 
   # 开关功能，每次仅能通过一个
   wait-queue:
@@ -73,7 +74,7 @@ modules:
     parameters:
       task_dist_mode: SLOT-BOUND
       vtask_role: head
-      vtask_size: 2
+      vtask_size: 3
       vtask_size_sema_copy: yes
     slots:
       # 最多分组为3
@@ -235,6 +236,7 @@ modules:
       - ${NODES}
       - ${PRESTO_NODES}
 
+  # 全并行模式下，本地做fits合并，需要拷贝到后续计算节点上（运行在计算节点上）
   fits24ch-copy:
     base_image: ${FILE_COPY}
     command: ${COMMAND_TEMPLATE}
@@ -242,26 +244,34 @@ modules:
       slot_options: tmpfs_workdir
     parameters:
       key_group_regex: ^([0-9]+)
-#      task_dist_mode: HOST-BOUND
+      task_dist_mode: HOST-BOUND
       vtask_role: core
-#      pod_id: by_pointing
+      pod_id: by_pointing
     environments:
-      - SOURCE_URL=/public/home/cstu0100/scalebox/mydata
-      # - SOURCE_URL=${LOCAL_SHMDIR}/mydata
+      - SOURCE_URL=${LOCAL_SHMDIR}/mydata
       - TARGET_URL=
       - TARGET_JUMP=${TARGET_JUMP}
       - KEEP_SOURCE_FILE=no
     slots:
       - ${NODES}
 
-  # fits24ch-unload:
-  #   base_image: ${FILE_COPY}
   vtask-tail:
     base_image: hub.cstcloud.cn/scalebox/agent:latest
     arguments:
       slot_options: slot_on_head
     parameters:
       vtask_role: tail
+
+  # 非计算节点上运行
+  fits24ch-unload:
+    base_image: ${FILE_COPY}
+    environments:
+      - SOURCE_URL=/public/home/cstu0100/scalebox/mydata
+      - KEEP_SOURCE_FILE=no
+      # retry时，产生message-router的新task要覆盖 
+      - CONFLICT_ACTION=OVERWRITE
+    slots:
+      - n0:3
 
   mr-beam-form:
     base_image: app-mwa/message-router-beam-form-app
@@ -270,15 +280,12 @@ modules:
       start_message: ${START_MESSAGE}
       task_dist_mode: SLOT-BOUND
       task_batch_size: 2
-      slot_options: reserved_on_exit
+      # slot_options: reserved_on_exit
     environments:
+      - PRELOAED_AGGPATH=yes
       # '' / 'yes' / 'preload-only' / 'preloaded'
-      - PRELOAD_MODE=${PRELOAD_MODE}
-      # 通过命令行指定tar数据的位置（缺省通过*-source.json指定）
-      # - SOURCE_TAR_ROOT=${SOURCE_TAR_ROOT}
-      # 通过命令行指定24ch数据的位置（缺省通过*-target.json指定）
-      # - TARGET_24CH_ROOT=${TARGET_24CH_ROOT}
-
+      # - PRELOAD_MODE=${PRELOAD_MODE}
+      # HPC存储地址，直接加载
       - ORIGIN_ROOT=${ORIGIN_ROOT}
       - PRELOAD_ROOT=${PRELOAD_ROOT}
       - STAGING_ROOT=${STAGING_ROOT}

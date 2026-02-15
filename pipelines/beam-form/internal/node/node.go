@@ -5,9 +5,9 @@ import (
 	"os"
 )
 
-// GetIPAddrListByCubeIndex ...
+// GetIPAddrListByGroupIndex ...
 // - 用于toRedist中本组分发
-func GetIPAddrListByCubeIndex(groupIndex int) []string {
+func GetIPAddrListByGroupIndex(groupIndex int) []string {
 	var ret []string
 	if len(Nodes) <= 24 {
 		for i := 0; i < 24; i++ {
@@ -16,6 +16,7 @@ func GetIPAddrListByCubeIndex(groupIndex int) []string {
 	} else {
 		// >= 48 nodes
 		numGroup := len(Nodes) / 24
+		// groupIndex : [0..numGroup-1]
 		start := (groupIndex % numGroup) * 24
 		for i := 0; i < 24; i++ {
 			ret = append(ret, Nodes[i+start].IPAddr)

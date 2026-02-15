@@ -17,10 +17,10 @@ datasets:
     channelBegin: 109
 
     timeBegin: 1302282041
-    timeStep: 80
-    timeEnd: 1302282360
-    # timeEnd: 1302286838
-
+    timeEnd: 1302286838
+    # timeStep: 80
+    # timeEnd: 1302282200
+    
     # pointing dimension
     pointingEnd: 11570
   
