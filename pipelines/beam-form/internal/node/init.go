@@ -70,7 +70,7 @@ func loadNodeData() {
 		logrus.Errorf("Query Resultset, err-info:%v\n", err)
 	}
 
-	if os.Getenv("PRELOAD_MODE") != "preload-only" && !isFactorOrMultipleOf24(len(Nodes)) {
+	if !isFactorOrMultipleOf24(len(Nodes)) {
 		logrus.Errorf("node-regex=%s, the number of compute nodes is %d, which is not a multiple or a divisor of 24.\n",
 			nodesRegex, len(Nodes))
 		os.Exit(1)

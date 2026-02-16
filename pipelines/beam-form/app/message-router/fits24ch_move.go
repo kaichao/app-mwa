@@ -12,7 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromFits24chCopy(body string, headers map[string]string) int {
+func fromFits24chMove(body string, headers map[string]string) int {
 	// body == mwa/24ch/1257010784/p00001/t1257010786_1257010965.fits.zst
 	re := regexp.MustCompile(`^mwa/24ch/([0-9]+/p[0-9]+)/`)
 	ss := re.FindStringSubmatch(body)
@@ -24,10 +24,10 @@ func fromFits24chCopy(body string, headers map[string]string) int {
 	return toVtaskTail(ss[1], headers)
 }
 
-func toFits24chCopy(fileName, targetURL string) int {
+func toFits24chMove(fileName, targetURL string) int {
 	headers := fmt.Sprintf(`{"target_url":"%s"}`, targetURL)
 	envVars := map[string]string{
-		"SINK_MODULE": "fits24ch-copy",
+		"SINK_MODULE": "fits24ch-move",
 	}
 
 	if _, err := task.Add(fileName, headers, envVars); err != nil {

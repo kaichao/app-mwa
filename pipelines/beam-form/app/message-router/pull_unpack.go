@@ -63,7 +63,6 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		return 1
 	}
 
-	prefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
 	trBegin := trs[0]
 	trEnd := trs[1]
 
@@ -81,9 +80,10 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	}
 	tasks := []string{}
 	semaphores := []string{}
+	pointingPrefix := fmt.Sprintf("%s/p%05d_%05d", cube.ObsID, cube.PointingBegin, cube.PointingEnd)
 	for j := 0; j < cube.NumOfChannels; j++ {
 		ch := cube.ChannelBegin + j
-		id := fmt.Sprintf("%s/t%d_%d/ch%d", prefix, trBegin, trEnd, ch)
+		id := fmt.Sprintf("%s/t%d_%d/ch%d", pointingPrefix, trBegin, trEnd, ch)
 		semaphores = append(semaphores, fmt.Sprintf(`"dat-ready:%s":%d`, id, nTimeUnits))
 		semaphores = append(semaphores, fmt.Sprintf(`"dat-done:%s":%d`, id, nPRanges))
 
@@ -103,7 +103,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 				return 1
 			}
 			headers, _ = common.SetJSONAttribute(headers, "source_url", sourceURL)
-			body := prefix + "/" + fileName
+			body := pointingPrefix + "/" + fileName
 			tasks = append(tasks, body+","+headers)
 		}
 	}

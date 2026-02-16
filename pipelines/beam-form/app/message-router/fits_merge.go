@@ -1,13 +1,13 @@
 package main
 
 import (
-	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"beamform/internal/strparse"
 	"fmt"
 	"net"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/kaichao/scalebox/pkg/common"
@@ -36,8 +36,8 @@ func fromFitsMerge(body string, headers map[string]string) int {
 
 	fileName := fmt.Sprintf("mwa/24ch/%s.fits.zst", body)
 	if os.Getenv("RUN_MODE") == "full-parallel" {
-		// 全并行，需通过fits24ch-copy拷贝到脉冲星搜索的计算节点（全并行，fits合并在后续计算节点上？）
-		return toFits24chCopy(fileName, varValue)
+		// 全并行，需通过fits24ch-move拷贝到脉冲星搜索的计算节点（全并行，fits合并在后续计算节点上？）
+		return toFits24chMove(fileName, varValue)
 	}
 	if strings.Contains(varValue, "@") {
 		// 共享变量pointing-data-root，若为类型3，给fits24-unload发消息，推送到远端ssh存储
@@ -51,7 +51,7 @@ func fromFitsMerge(body string, headers map[string]string) int {
 	// return toCrossAppPresto(ss[1])
 }
 
-func toFitsMerge(body string) int {
+func toFitsMerge(body string, fromHeaders map[string]string) int {
 	// task-body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(body)
 	if err != nil {
@@ -59,9 +59,9 @@ func toFitsMerge(body string) int {
 		return 1
 	}
 
-	cube := datacube.NewDataCube(ds)
+	// cube := datacube.NewDataCube(ds)
 	// sink task: 1257010784/p00023/t1257010786_1257010965
-	tasks := []string{}
+	taskLines := []string{}
 	for p := p0; p <= p1; p++ {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", ds, p)
 		varValue, err := getPointingVariable(varName, appID)
@@ -72,9 +72,15 @@ func toFitsMerge(body string) int {
 
 		headers := ""
 		// BUG: 节点数量少，补充数据时，pointing计数不对齐，toHost不准确
-		toHost := node.GetNodeNameByPointingTime(cube, p, t0)
+		semaName := fromHeaders["_vtask_size_sema"]
+		ss := strings.Split(semaName, ":")
+		groupIndex, _ := strconv.Atoi(ss[len(ss)-1])
+		toHost := node.GetNodeNameByGroupIndexPointing(groupIndex, p)
+		fmt.Printf("group-index=%d,to-host=%s\n", groupIndex, toHost)
+
+		// toHost := node.GetNodeNameByPointingTime(cube, p, t0)
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
-			// IPv4地址（类型1）， 设置"to_ip"头
+			// IPv4地址（类型1）， 设置"to_ip"头，目标端为计算节点
 			headers, _ = common.SetJSONAttribute(headers, "to_ip", varValue)
 			headers, _ = common.SetJSONAttribute(headers,
 				"output_root", os.Getenv("LOCAL_TMPDIR")+"/mydata")
@@ -97,7 +103,7 @@ func toFitsMerge(body string) int {
 		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
 		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
 			varValue, toHost, headers, m)
-		tasks = append(tasks, m)
+		taskLines = append(taskLines, m)
 	}
 
 	common.AddTimeStamp("before-add-tasks")
@@ -105,7 +111,7 @@ func toFitsMerge(body string) int {
 		"SINK_MODULE":     "fits-merge",
 		"TIMEOUT_SECONDS": "600",
 	}
-	_, err = task.AddTasks(tasks, "{}", envVars)
+	_, err = task.AddTasks(taskLines, "{}", envVars)
 	if err != nil {
 		logrus.Errorf("err:%v\n", err)
 		return 1

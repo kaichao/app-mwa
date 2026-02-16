@@ -17,7 +17,7 @@ func fromVtaskTail(body string, headers map[string]string) int {
 	semaName := ":" + headers["_vtask_size_sema"]
 	if _, err := semaphore.AddValue(semaName, vtaskID, appID, 1); err != nil {
 		logger.LogTracedErrorDefault(err)
-		logrus.Errorf("In fromVtaskTail(), sema-name=%s,err=%v\n", semaName, err)
+		// logrus.Errorf("In fromVtaskTail(), sema-name=%s,err=%v\n", semaName, err)
 		return 1
 	}
 	return 0
@@ -52,7 +52,8 @@ func toVtaskTail(pointingID string, fromHeaders map[string]string) int {
 		"SINK_MODULE": "vtask-tail",
 	}
 
-	if _, err := task.AddWithMapHeaders(pointingID, headers, envs); err != nil {
+	body := fromHeaders["_vtask_cube_name"]
+	if _, err := task.AddWithMapHeaders(body, headers, envs); err != nil {
 		logger.LogTracedErrorDefault(err)
 		// logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
 		return 1

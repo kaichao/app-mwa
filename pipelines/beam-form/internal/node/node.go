@@ -5,6 +5,25 @@ import (
 	"os"
 )
 
+// GetNodeNameByIndexChannel ...
+// - 用于pull-unpack
+func GetNodeNameByIndexChannel(cube *datacube.DataCube, indexGroup int, ch int) string {
+	ch -= cube.ChannelBegin
+	numGroups := len(Nodes) / 24
+	var index int
+	if len(Nodes) < 24 {
+		index = ch % len(Nodes)
+	} else {
+		if os.Getenv("INTERLEAVED_DAT") == "yes" && indexGroup%2 == 1 {
+			ch = 23 - ch
+		}
+		index = (indexGroup%numGroups)*24 + ch
+	}
+
+	// fmt.Fprintf(os.Stderr, "len(nodes)=%d,index-group=%d,ch=%d\n", len(Nodes), indexGroup, ch)
+	return Nodes[index].Name
+}
+
 // GetIPAddrListByGroupIndex ...
 // - 用于toRedist中本组分发
 func GetIPAddrListByGroupIndex(groupIndex int) []string {
@@ -25,28 +44,15 @@ func GetIPAddrListByGroupIndex(groupIndex int) []string {
 	return ret
 }
 
-// GetNodeNameByIndexChannel ...
-// - 用于pull-unpack
-func GetNodeNameByIndexChannel(cube *datacube.DataCube, indexGroup int, ch int) string {
-	ch -= cube.ChannelBegin
-	numGroups := len(Nodes) / 24
-	var index int
-	if len(Nodes) < 24 {
-		index = ch % len(Nodes)
-	} else {
-		if os.Getenv("INTERLEAVED_DAT") == "yes" && indexGroup%2 == 1 {
-			ch = 23 - ch
-		}
-		index = (indexGroup%numGroups)*24 + ch
-	}
-
-	// fmt.Fprintf(os.Stderr, "len(nodes)=%d,index-group=%d,ch=%d\n", len(Nodes), indexGroup, ch)
-	return Nodes[index].Name
-}
-
 // GetNodeNameByPointingTime ...
+// func GetNodeNameByPointingTime(cube *datacube.DataCube, p int, t int) string {
+// 	index := cube.GetTimePointingIndex(t, p, len(Nodes))
+// 	return Nodes[index].Name
+// }
+
+// GetNodeNameByGroupIndexPointing ...
 // - 用于fits-merge
-func GetNodeNameByPointingTime(cube *datacube.DataCube, p int, t int) string {
-	index := cube.GetTimePointingIndex(t, p, len(Nodes))
+func GetNodeNameByGroupIndexPointing(groupIndex, p int) string {
+	index := groupIndex*24 + (p-1)%24
 	return Nodes[index].Name
 }

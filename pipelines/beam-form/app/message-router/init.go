@@ -43,7 +43,3 @@ func setPointingVariable(varName string, varValue string, appID int) error {
 	}
 	return variable.Set(varName, varValue, 0, appID)
 }
-
-func addTasks(sinkModule string, bodies []string) error {
-	return nil
-}

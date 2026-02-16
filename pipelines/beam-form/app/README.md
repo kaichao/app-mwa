@@ -64,7 +64,6 @@ ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250707 -type f
 START_MESSAGE=1302106648/p02041_03480/t1302106649_1302111446 \
   PRESTO_APP_ID=175 \
   PRESTO_NODES=a.+ \
-  PRELOAD_MODE=none \
   NODES=d.+ \
   RUN_MODE=full_parallel \
   TIME_STEP=200 \
@@ -87,14 +86,14 @@ scalebox semaphore create --app-id=$app_id --sema-file /tmp/my-sema.txt
 
 echo '1253991112/p01321_02280' | \
 
-echo '1302282040/p00961_01920' | \
+echo '1302282040/p01921_02880' | \
 
 BW_LIMIT=300m \
 
 
 ```sh
 
-app_id=$(echo '1302282040/p00961_01440' | \
+app_id=$(echo '1302282040/p01441_01920' | \
 NUM_GROUPS=2 \
 NODES='^d.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \

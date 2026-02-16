@@ -283,8 +283,6 @@ modules:
       # slot_options: reserved_on_exit
     environments:
       - PRELOAED_AGGPATH=yes
-      # '' / 'yes' / 'preload-only' / 'preloaded'
-      # - PRELOAD_MODE=${PRELOAD_MODE}
       # HPC存储地址，直接加载
       - ORIGIN_ROOT=${ORIGIN_ROOT}
       - PRELOAD_ROOT=${PRELOAD_ROOT}

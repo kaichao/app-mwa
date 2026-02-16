@@ -42,7 +42,7 @@ func fromFitsRedist(body string, headers map[string]string) int {
 		return 0
 	}
 
-	return toFitsMerge(body)
+	return toFitsMerge(body, headers)
 }
 
 func toFitsRedist(m string, fromHeaders map[string]string) int {

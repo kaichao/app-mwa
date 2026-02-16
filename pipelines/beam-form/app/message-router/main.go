@@ -46,17 +46,19 @@ func main() {
 
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
-		"":                fromNull,
-		"tar-load":        fromTarLoad,
-		"wait-queue":      fromWaitQueue,
-		"vtask-head":      fromVtaskHead,
-		"pull-unpack":     fromPullUnpack,
-		"beam-make":       fromBeamMake,
-		"down-sample":     fromDownSample,
-		"fits-redist":     fromFitsRedist,
-		"fits-merge":      fromFitsMerge,
+		"":            fromNull,
+		"tar-load":    fromTarLoad,
+		"wait-queue":  fromWaitQueue,
+		"vtask-head":  fromVtaskHead,
+		"pull-unpack": fromPullUnpack,
+		"beam-make":   fromBeamMake,
+		"down-sample": fromDownSample,
+		"fits-redist": fromFitsRedist,
+		// 可以在波束合成节点、或脉冲星搜索节点上运行
+		"fits-merge": fromFitsMerge,
+		// 在波束合成节点做fits-merge，将24ch移动到计算节点上
+		"fits24ch-move":   fromFits24chMove,
 		"vtask-tail":      fromVtaskTail,
-		"fits24ch-copy":   fromFits24chCopy,
 		"fits24ch-unload": fromFits24chUnload,
 	}
 )

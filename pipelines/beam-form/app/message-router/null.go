@@ -1,5 +1,5 @@
 /*
-fromNull是消息路由的首个执行模块，按PRELOAD_MODE指定的预加载策略，加载原始数据。
+fromNull是消息路由的首个执行模块，按预加载策略，加载原始数据。
 */
 package main
 
@@ -18,6 +18,22 @@ import (
 
 func fromNull(body string, headers map[string]string) int {
 	// 按需创建信号量pointing-done，用于标识pointing的完成（？）
+	// cube := datacube.NewDataCube(body)
+	// cube0 := datacube.NewDataCube(cube.ObsID)
+	// if true || reflect.DeepEqual(cube.GetTimeRanges(), cube0.GetTimeRanges()) {
+	// 	// 输入数据集包含全时段
+	// 	lines := []string{}
+	// 	size := len(cube.GetTimeRanges()) / 2
+	// 	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
+	// 		line := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size)
+	// 		lines = append(lines, line)
+	// 	}
+	// 	err := semaphore.CreateSemaphores(lines, 0, appID, 500)
+	// 	if err != nil {
+	// 		logrus.Errorf("create semaphore pointing-done, err-info:%v", err)
+	// 		return 1
+	// 	}
+	// }
 
 	// 生成每个指向数据的独立root目录路径
 	cube := datacube.NewDataCube(body)
@@ -51,53 +67,6 @@ func fromNull(body string, headers map[string]string) int {
 	return 0
 }
 
-/*
-func fromNull0(body string, headers map[string]string) int {
-	cube := datacube.NewDataCube(body)
-	cube0 := datacube.NewDataCube(cube.ObsID)
-	// 按需创建信号量pointing-done，用于标识pointing的完成
-	if true || reflect.DeepEqual(cube.GetTimeRanges(), cube0.GetTimeRanges()) {
-		// 输入数据集包含全时段
-		lines := []string{}
-		size := len(cube.GetTimeRanges()) / 2
-		for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
-			line := fmt.Sprintf(`"pointing-done:%s/p%05d":%d`, cube.ObsID, p, size)
-			lines = append(lines, line)
-		}
-		err := semaphore.CreateSemaphores(lines, 0, appID, 500)
-		if err != nil {
-			logrus.Errorf("create semaphore pointing-done, err-info:%v", err)
-			return 1
-		}
-	}
-
-	// 生成每个指向数据的独立root目录路径
-	for p := cube.PointingBegin; p <= cube.PointingEnd; p++ {
-		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", cube.ObsID, p)
-		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
-			varValue := iopath.GetStagingRoot0(-1)
-			fmt.Printf("var-name:%s, var-value:%s\n", varName, varValue)
-			setPointingVariable(varName, varValue, appID)
-		}
-	}
-
-	if os.Getenv("PRELOAD_MODE") != "preloaded" {
-		return toTarLoad0(body)
-	}
-
-	// 产生所有cube到wait-queue
-	fmtCubicName := "%s/p%05d_%05d/t%d_%d"
-	trs := cube.GetTimeRanges()
-	for i := 0; i < len(trs); i += 2 {
-		cubeName := fmt.Sprintf(fmtCubicName, cube.ObsID,
-			cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
-		if ret := toWaitQueue(cubeName); ret != 0 {
-			return ret
-		}
-	}
-	return 0
-}
-*/
 // toCrossAppPresto()
 func toCrossAppPresto(pointing string) int {
 	varName := "pointing-data-root:" + pointing

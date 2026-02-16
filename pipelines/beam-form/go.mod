@@ -4,7 +4,7 @@ go 1.25.2
 
 require (
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/kaichao/gopkg v0.0.0-20260209132653-cc877add45d8
+	github.com/kaichao/gopkg v0.0.0-20260216004655-99c16a9e354c
 	github.com/kaichao/scalebox v0.0.0-20260205152807-66ed7b6e528f
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
