@@ -19,7 +19,7 @@ tar-load从外部存储预加载原始打包tar文件到HPC存储
 package main
 
 import (
-	"beamform/app/message-router/iopath"
+	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"

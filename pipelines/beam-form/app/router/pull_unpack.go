@@ -5,7 +5,7 @@
 package main
 
 import (
-	"beamform/app/message-router/iopath"
+	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"fmt"

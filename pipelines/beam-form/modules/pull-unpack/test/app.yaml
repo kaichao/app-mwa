@@ -3,7 +3,7 @@ label: mwa-comput
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router
+  message_router: router
   default_sleep_count: 20
 
 modules:
@@ -20,8 +20,8 @@ modules:
     slots:
       - ${NODES}:1
 
-  message-router:
-    base_image: app-mwa/message-router-pull-unpack-test
+  router:
+    base_image: app-mwa/router-pull-unpack-test
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}

@@ -11,14 +11,14 @@ import (
 )
 
 func main() {
-	logrus.Infoln("00, Entering message-router")
+	logrus.Infoln("00, Entering main-router")
 	if len(os.Args) < 3 {
-		logrus.Errorf("usage: %s <headers> <message>\nparameters expect=2,actual=%d\n",
+		logrus.Errorf("usage: %s <task-body> <headers>\nparameters expect=2,actual=%d\n",
 			os.Args[0], len(os.Args)-1)
 		os.Exit(1)
 	}
 
-	logrus.Infof("01, after number of arguments verification, message-body:%s,message-header:%s.\n",
+	logrus.Infof("01, after number of arguments verification, task-body:%s,task-header:%s.\n",
 		os.Args[1], os.Args[2])
 	headers := make(map[string]string)
 	if err := json.Unmarshal([]byte(os.Args[2]), &headers); err != nil {
@@ -30,13 +30,13 @@ func main() {
 
 	doMessageRoute := fromFuncs[headers["from_module"]]
 	if doMessageRoute == nil {
-		logrus.Warnf("from_module not set/not existed in message-router, from_module=%s ,message=%s\n",
+		logrus.Warnf("from_module not set/not existed in main-router, from_module=%s ,task-body=%s\n",
 			headers["from_module"], os.Args[1])
 		os.Exit(4)
 	}
 
 	common.AddTimeStamp("before-mr")
-	logrus.Infoln("03, message-router not null")
+	logrus.Infoln("03, main-router not null")
 	exitCode := doMessageRoute(os.Args[1], headers)
 	if exitCode != 0 {
 		logrus.Errorf("error found, error-code=%d\n", exitCode)
@@ -48,7 +48,7 @@ func main() {
 var (
 	fromFuncs = map[string]func(string, map[string]string) int{
 		"": defaultFunc,
-		// "message-router": fromMessageRouter,
+		// "main-router": fromMessageRouter,
 		"down-sample": fromDownSample,
 		"fits-merge":  fromFitsMerge,
 	}

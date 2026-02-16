@@ -81,7 +81,7 @@ modules:
       - ${NODES}
 
   mr-beam-form:
-    base_image: app-mwa/message-router-beam-form-app-base
+    base_image: app-mwa/router-beam-form-app-base
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}

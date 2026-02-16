@@ -4,7 +4,7 @@ fromNull是消息路由的首个执行模块，按预加载策略，加载原始
 package main
 
 import (
-	"beamform/app/message-router/iopath"
+	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"

@@ -3,7 +3,7 @@ cluster: ${CLUSTER}
 parameters:
   # initial_status: RUNNING
   initial_status: INITIAL
-  message_router: mr-beam-form
+  message_router: router-beam-form
   global_copier_size: 3
   global_copier_env: '{}'
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
@@ -52,7 +52,7 @@ modules:
       #   "/public/home/cstu0099/scalebox":440
       #   }'
     environments:
-      # retry时，产生message-router的新task要覆盖 
+      # retry时，产生main-router的新task要覆盖 
       - CONFLICT_ACTION=OVERWRITE
     slots:
       - n0:3
@@ -66,7 +66,7 @@ modules:
     parameters:
       vtask_size: 1
     environments:
-      # retry时，覆盖message-router的新task
+      # retry时，覆盖main-router的新task
       - CONFLICT_ACTION=OVERWRITE
 
   vtask-head:
@@ -268,13 +268,13 @@ modules:
     environments:
       - SOURCE_URL=/public/home/cstu0100/scalebox/mydata
       - KEEP_SOURCE_FILE=no
-      # retry时，产生message-router的新task要覆盖 
+      # retry时，产生main-router的新task要覆盖 
       - CONFLICT_ACTION=OVERWRITE
     slots:
       - n0:3
 
-  mr-beam-form:
-    base_image: app-mwa/message-router-beam-form-app
+  router-beam-form:
+    base_image: app-mwa/router-beam-form-app
     parameters:
       key_group_regex: ^([0-9]+)
       start_message: ${START_MESSAGE}

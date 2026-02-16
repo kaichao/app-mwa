@@ -1,7 +1,7 @@
 package main
 
 import (
-	"beamform/app/message-router/iopath"
+	"beamform/app/router/iopath"
 	"beamform/internal/node"
 	"beamform/internal/queue"
 	"beamform/internal/strparse"

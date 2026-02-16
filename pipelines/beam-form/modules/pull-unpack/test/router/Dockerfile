@@ -1,4 +1,4 @@
-FROM golang:1.24.5
+FROM golang:1.25.2
 
 LABEL maintainer="kaichao"
 
@@ -10,9 +10,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY internal /go/src/internal
-COPY modules/pull-unpack/test/message-router/*.go /go/src/modules/pull-unpack/test/message-router/
+COPY modules/pull-unpack/test/router/*.go /go/src/modules/pull-unpack/test/router/
 
-WORKDIR /go/src/modules/pull-unpack/test/message-router/
+WORKDIR /go/src/modules/pull-unpack/test/router/
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -20,7 +20,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 \
     go build 
 
-FROM debian:12-slim
+FROM debian:13-slim
 
 # install the newest version, rsync 3.2.7, openssh 9.3p1
 RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 
@@ -31,13 +31,13 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/modules/pull-unpack/test/message-router/message-router /app/bin/
+COPY --from=0 /go/src/modules/pull-unpack/test/router/router /app/bin/
 
 COPY dataset.yaml /
 
 ENV \
     WORK_DIR= \
-    ACTION_RUN=/app/bin/message-router \
+    ACTION_RUN=/app/bin/router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
     NUM_OF_NODES=24 \

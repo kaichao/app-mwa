@@ -1,4 +1,4 @@
-IMAGE_NAME:=app-mwa/message-router-beam-form-app
+IMAGE_NAME:=app-mwa/router-beam-form-app
 
 build:
 	DOCKER_BUILDKIT=1 docker build --network=host \

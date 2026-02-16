@@ -23,10 +23,10 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY internal /go/src/internal
-COPY app/message-router/*.go /go/src/app/message-router/
-COPY app/message-router/iopath/*.go /go/src/app/message-router/iopath/
+COPY app/router/*.go /go/src/app/router/
+COPY app/router/iopath/*.go /go/src/app/router/iopath/
 
-WORKDIR /go/src/app/message-router
+WORKDIR /go/src/app/router
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -61,7 +61,7 @@ RUN apt-get update \
 RUN echo 'redis-cli() { command redis-cli -h "${REDIS_HOST:-localhost}" -p "${REDIS_PORT:-6379}" "$@"; }' >> /root/.bashrc
 
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
-COPY --from=0 /go/src/app/message-router/message-router /app/bin/
+COPY --from=0 /go/src/app/router/router /app/bin/
 
 COPY dataset.yaml /
 COPY app/io-path.yaml /
@@ -70,7 +70,7 @@ COPY app/*.ap-conf /
 
 ENV \
     WORK_DIR= \
-    ACTION_RUN=/app/bin/message-router \
+    ACTION_RUN=/app/bin/router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
     NUM_OF_NODES=24 \

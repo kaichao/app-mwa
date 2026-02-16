@@ -10,7 +10,7 @@ import (
 )
 
 // n0000 .. n9999
-// g00n00 .. g00n23 ... g99n00 .. g99n23
+// g00-00 .. g00-23
 
 // Node ...
 type Node struct {
@@ -20,6 +20,7 @@ type Node struct {
 	Group  string
 }
 
+// Nodes ...
 var Nodes []*Node
 
 func init() {

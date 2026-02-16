@@ -11,9 +11,9 @@ import (
 )
 
 func main() {
-	// logrus.Infoln("00, Entering message-router")
+	// logrus.Infoln("00, Entering main-router")
 	if len(os.Args) < 3 {
-		logrus.Errorf("usage: %s <headers> <message>\nparameters expect=2,actual=%d\n",
+		logrus.Errorf("usage: %s <task-body> <headers>\nparameters expect=2,actual=%d\n",
 			os.Args[0], len(os.Args)-1)
 		os.Exit(1)
 	}
@@ -29,7 +29,7 @@ func main() {
 	// logrus.Infoln("02, after JSON format verification of headers")
 	doMainRoute := fromFuncs[headers["from_module"]]
 	if doMainRoute == nil {
-		logrus.Warnf("from_module not set/not existed in message-router, from_module=%s ,message=%s\n",
+		logrus.Warnf("from_module not set/not existed in main-router, from_module=%s ,task-body=%s\n",
 			headers["from_module"], os.Args[1])
 		os.Exit(4)
 	}

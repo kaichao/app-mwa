@@ -30,22 +30,22 @@ flowchart TD
 | fits24ch-copy  | 按需，HOST-BOUND将结果数据拷贝到HPC共享存储或presto计算节点存储 |
 | vtask-tail     |                                     |
 | global-copier  | 运行在头节点或I/O节点。                 |
-| message-router |                  |
+| main-router |                  |
 
 
 ## 二、模块设计
 
-| num | module_name      | image_name        | std_image|cust_code| input_message     | input_path     | output_message    | output_path    |
+| num | module_name      | image_name        | std_image|cust_code| input_body     | input_path     | output_body    | output_path    |
 | --- | ---------------- | ----------------- | ------ | -----      | ----------------- | ----------------- | ----------------- | ----------------- |
-| 1 | tar_load | scalebox/file-copy | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
-| 2 | cube_vtask | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_message} | |
-| 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_message} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_message} | ${input_message} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
-| 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_message}| ${input_message} |mwa/1ch/${input_message}/p00001.fits |
-| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_message} | ${input_message} | mwa/1chy/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
-| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_message}|${input_message} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
-| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No  | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_message} | ${input_message} |mwa/24ch/${input_message}.zst|
-| 8 | fits24ch_copy | scalebox/ file-copy | Ye  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
-| 9 | fits24ch_unload | scalebox/ file-copy | Yes  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_message}| ${input_message} | |
+| 1 | tar_load | scalebox/file-copy | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_body} | |
+| 2 | cube_vtask | scalebox/agent     | Yes   | No    | 1257010784/p00001_00960/t1257012766_1257012965 | | ${input_body} | |
+| 3 | pull_unpack | scalebox/ file-copy     | Yes   | Yes   | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | mwa/tar/1266932744/```$```{input_body} <br/> mwa/tar/p00001_00960/1266932744/```$```{input_body} | ${input_body} | mwa/dat/1266932744/p00001_00960/t1266932986_1266933185/ch118 |
+| 4 | beam_make | app-mwa/ mwa-vcstools     | No    | Yes   | 1257010784/p00001_00024/t1257012766_1257012965/ch109 | mwa/dat/${input_body}| ${input_body} |mwa/1ch/${input_body}/p00001.fits |
+| 5 | down_sample | app-mwa/ down-sampler   | No    | No    | 1257010784/p00001_00024/t1257012766_1257012965/ch109 |mwa/1ch/${input_body} | ${input_body} | mwa/1chy/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst (non-local)<br/> mwa/1chx/1257617424/p00001_00024/t1257617426_1257617505/ch109/p00001.fits.zst|
+| 6 | fits_redist | scalebox/ file-copy     | Yes   | Yes   | 1257010784/p00001_00024/t1257010786_1257010965/ch121 |mwa/1chx/${input_body}|${input_body} |mwa/1chz/1257617424/p00001/t1257012766_1257012965/ch109.fits.zst|
+| 7 | fits_merge | app-mwa/ mwa-vcstools    | Yes   | No  | 1257010784/p00023/t1257010786_1257010965 |mwa/1chz/${input_body} | ${input_body} |mwa/24ch/${input_body}.zst|
+| 8 | fits24ch_copy | scalebox/ file-copy | Ye  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_body}| ${input_body} | |
+| 9 | fits24ch_unload | scalebox/ file-copy | Yes  | No  | 1257010784/p00023/t1257010786_1257010965.tar.zst | mwa/24ch/${input_body}| ${input_body} | |
 
 
 ### 2.1 cube-vtask
@@ -198,26 +198,26 @@ _vtask_cube_name : 例1257010784/p00001_00960/t1257010786_1257010985
 - 计算集群共享存储：用共享目录表示
 - 外部的共享存储：通过ssh表示表示（user@ip-addr:port/remote-dir）
 
-在message-router的```from_module='down-sample'```中，生成、使用该变量。
+在main-router的```from_module='down-sample'```中，生成、使用该变量。
 - 若变量表中不存在该指向对应的变量，则通过以下步骤生成：
   - 优先读取优先队列，生成计算节点；
   - 则依据各个可用共享存储的当前带宽、可用容量等，综合选择一个共享存储。
 
-在message-router的```from_module='fits-merge'```中，使用该变量。若用外部共享存储，通过```fits-push```将生成结果推送过去。
+在main-router的```from_module='fits-merge'```中，使用该变量。若用外部共享存储，通过```fits-push```将生成结果推送过去。
 
 在presto搜索模块中，收到消息后，通过该变量获取波束合成结果。
 
-## 四、message-router设计
+## 四、main-router设计
 
-| from_module            | task_body            | to_module                    | output_message        |
+| from_module            | task_body            | to_module                    | output_task        |
 | ---------------------- | ------------------------ | --------------------------- | ---------------------- |
 | (default) | 1257010784 <br/> 1257010784/p00001_00960 <br/> 1257010784/p00001_00960/t1257012766_1257012965 <br/> 1257010784/p00001_00960/t1257012766_1257012965/ch109 | wait_queue <br/> pull_unpack | 1257010784/p00001_00960/t1257012766_1257012965 <br/> 1266932744/p00001_00960/1266933866_1266933905_ch112.dat.tar.zst | 
 | wait_queue | 1257010784/p00001_00960/t1257012766_1257012965 | pull_unpack | p00001_00960/1266932744/1266932986_1266933025_ch118.dat.tar.zst |
 | pull_unpack | 1266932744/1266932986_1266933025_ch118.dat.tar.zst <br/> 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst | beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 |
-| beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | down_sample |  ${input_message} |
+| beam_make | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | down_sample |  ${task_body} |
 | down_sample | 1257010784/p00001_00960/t1257012766_1257012965/ch109 | fits_redist <br/> fits_merge | 1257010784/p00023/t1257010786_1257010965/ch121.fits <br/> 1257010784/p00023/t1257010786_1257010965 |
-| fits_redist | 1257010784/p00023/t1257010786_1257010965/ch121.fits | fits_merge |  ${input_message} |
-| fits_merge | 1257010784/p00023/t1257010786_1257010965 | fits_push |  ${input_message} |
+| fits_redist | 1257010784/p00023/t1257010786_1257010965/ch121.fits | fits_merge |  ${task_body} |
+| fits_merge | 1257010784/p00023/t1257010786_1257010965 | fits_push |  ${task_body} |
 | fits_push | 1257010784/p00023/t1257010786_1257010965 | (NULL) |  |
 
 ### init()

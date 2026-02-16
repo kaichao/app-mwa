@@ -1,4 +1,4 @@
-FROM golang:1.24.5
+FROM golang:1.25.2
 
 LABEL maintainer="kaichao"
 
@@ -10,9 +10,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY internal /go/src/internal
-COPY app-base/message-router/*.go /go/src/app-base/message-router/
+COPY app-base/router/*.go /go/src/app-base/router/
 
-WORKDIR /go/src/app-base/message-router
+WORKDIR /go/src/app-base/router
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -31,13 +31,13 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/app-base/message-router/message-router /app/bin/
+COPY --from=0 /go/src/app-base/router/router /app/bin/
 
 COPY dataset.yaml /
 
 ENV \
     WORK_DIR= \
-    ACTION_RUN=/app/bin/message-router \
+    ACTION_RUN=/app/bin/router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
     NUM_OF_NODES=24 \

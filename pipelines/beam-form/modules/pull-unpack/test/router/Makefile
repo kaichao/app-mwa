@@ -1,4 +1,4 @@
-IMAGE_NAME:=app-mwa/message-router-pull-unpack-test
+IMAGE_NAME:=app-mwa/router-pull-unpack-test
 
 build:
 	DOCKER_BUILDKIT=1 docker build --network=host \
