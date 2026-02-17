@@ -125,6 +125,9 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	}
 
 	targetURL := fmt.Sprintf("%s/mydata/mwa", os.Getenv("LOCAL_TMPDIR"))
+
+	// 增加"_global_dat_dir"
+	// "target_url": "/tmp/scalebox-0/mydata/mwa",
 	headers := map[string]string{
 		"target_url": targetURL,
 	}

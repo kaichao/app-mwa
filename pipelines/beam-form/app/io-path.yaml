@@ -9,7 +9,7 @@ origin:
       capacity_gb: 20480
 
 preload:
-# 原始文件预加载（*.tar/*.dat）
+# 原始文件预加载（*.tar）
   name: tar
   weighted_paths:
     - path: "astro@10.100.1.30:10022/data1/mydata"

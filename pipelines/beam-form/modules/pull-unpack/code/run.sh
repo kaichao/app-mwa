@@ -53,6 +53,18 @@ if [ -n "$bw_limit" ]; then
 else
     cmd_part="zstd -d | tar --touch -xvf -"
 fi
+
+# pv -q -L 50m < "/input_dir/mwa/tar/1302282040/1302282041_1302282080_ch130.dat.tar.zst" \
+#   | zstd -d \
+#   | tar -C dir1 --touch -xvf -
+
+# pv -q -L 50m < "/input_dir/mwa/tar/1302282040/1302282041_1302282080_ch130.dat.tar.zst" \
+#   | zstd -d \
+#   | tee \
+#       >(tar -C dir1 --touch -xvf -) \
+#       >(tar -C dir2 --touch -xvf -) \
+#     > /dev/null
+
 # pv -L 500k source_file > destination_file
 if [ "$source_mode" = "LOCAL" ]; then
     source_dir=$(get_host_path $source_dir)
@@ -75,7 +87,7 @@ echo "source_url:$source_url, source_dir:$source_dir" >> ${WORK_DIR}/auxout.txt
 echo "target_url:$target_url, target_dir:$target_dir, target_subdir:$target_subdir" >> ${WORK_DIR}/auxout.txt
 echo "cmd:$cmd" >> ${WORK_DIR}/auxout.txt
 
-echo "message:$1" >> ${WORK_DIR}/auxout.txt
+echo "task-body:$1" >> ${WORK_DIR}/auxout.txt
 
 # cmd="ssh -p ${ssh_port} ${ssh_args} ${ssh_host} \"cat ${source_dir}/$m\" - | zstd -d | tar -xvf -"
 mkdir -p ${target_dir} && cd ${target_dir} && eval $cmd 
