@@ -16,7 +16,7 @@ test-agg:
       capacity_gb: 50
     - path: AGG_PATH
       weight: 1
-      category: test-agg
+      category: cat-agg
       need_gb: 10
   # aggregated_paths:
   #   - name: test-agg
@@ -38,7 +38,7 @@ test-mixed:
     - path: AGG_PATH
       weight: 3
       # 信号量中对应部分
-      category: test-mixed
+      category: cat-mixed
       need_gb: 20
   # aggregated_paths:
   #   - name: test-mixed

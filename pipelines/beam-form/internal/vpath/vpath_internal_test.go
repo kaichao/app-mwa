@@ -20,7 +20,8 @@ func TestNewVirtualPathFromConfigBasic(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, vp)
 
-	path, err := vp.GetPath("default", "test-key")
+	// 现在selector的key是配置名称，而不是wp.Category
+	path, err := vp.GetPath("test-basic", "test-key")
 	assert.NoError(t, err)
 	assert.Equal(t, "/path1", path)
 }
@@ -41,7 +42,7 @@ func TestNewVirtualPathFromConfigWeightedSelection(t *testing.T) {
 	// 多次选择，验证大致比例
 	countA, countB := 0, 0
 	for i := 0; i < 100; i++ {
-		path, err := vp.GetPath("default", "test")
+		path, err := vp.GetPath("test-weighted", "test")
 		assert.NoError(t, err)
 		if path == "/pathA" {
 			countA++
@@ -82,17 +83,17 @@ func TestNewVirtualPathFromConfigWithMemoryAggregator(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 第一次分配
-	path1, err := vp.GetPath("storage", "job1")
+	path1, err := vp.GetPath("test-memory-aggregator", "job1")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2"}, path1)
 
 	// 相同key返回相同路径
-	path2, err := vp.GetPath("storage", "job1")
+	path2, err := vp.GetPath("test-memory-aggregator", "job1")
 	assert.NoError(t, err)
 	assert.Equal(t, path1, path2)
 
 	// 不同key可能不同
-	path3, err := vp.GetPath("storage", "job2")
+	path3, err := vp.GetPath("test-memory-aggregator", "job2")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2"}, path3)
 }
@@ -128,7 +129,7 @@ func TestNewVirtualPathFromConfigMixedPaths(t *testing.T) {
 	// 多次获取，验证路径是有效的
 	validPaths := []string{"/fast/ssd", "/slow/hdd", "/dir0", "/dir1", "/dir2"}
 	for i := 0; i < 20; i++ {
-		path, err := vp.GetPath("default", fmt.Sprintf("key-%d", i))
+		path, err := vp.GetPath("test-mixed-paths", fmt.Sprintf("key-%d", i))
 		assert.NoError(t, err)
 		assert.Contains(t, validPaths, path)
 	}
@@ -161,36 +162,18 @@ func TestReleasePath(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 分配路径
-	path, err := vp.GetPath("storage", "job1")
+	path, err := vp.GetPath("test-release", "job1")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2", "/node3"}, path)
 
 	// 释放路径
-	err = vp.ReleasePath("storage", "job1")
+	err = vp.ReleasePath("test-release", "job1")
 	assert.NoError(t, err)
 
 	// 可以重新分配
-	newPath, err := vp.GetPath("storage", "job1")
+	newPath, err := vp.GetPath("test-release", "job1")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2", "/node3"}, newPath)
-}
-
-// TestGetConfig 测试获取配置
-func TestGetConfig(t *testing.T) {
-	config := &Config{
-		Name: "test-get-config",
-		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 1.0, Type: "static", Category: "default"},
-		},
-	}
-
-	vp, err := NewVirtualPathFromConfig(1, config)
-	assert.NoError(t, err)
-
-	retrievedConfig := vp.getConfig()
-	assert.Equal(t, config.Name, retrievedConfig.Name)
-	assert.Len(t, retrievedConfig.WeightedPaths, 1)
-	assert.Equal(t, "/path1", retrievedConfig.WeightedPaths[0].Path)
 }
 
 // TestNewSelectorAlgorithm 测试新的选择器算法公平性
@@ -211,7 +194,7 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		// 多次选择，统计结果
 		countA, countB := 0, 0
 		for i := 0; i < 1000; i++ {
-			path, err := vp.GetPath("default", fmt.Sprintf("key-%d", i))
+			path, err := vp.GetPath("test-simple-weights", fmt.Sprintf("key-%d", i))
 			assert.NoError(t, err)
 			if path == "/pathA" {
 				countA++
@@ -230,7 +213,7 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 
 		// 验证算法确定性：重新运行应该得到相同结果
 		vp2, _ := NewVirtualPathFromConfig(1, config)
-		firstPath, _ := vp2.GetPath("default", "test-key")
+		firstPath, _ := vp2.GetPath("test-simple-weights", "test-key")
 		// 第一次选择应该是权重最大的路径（/pathA，权重0.7）
 		assert.Equal(t, "/pathA", firstPath)
 	})
@@ -252,7 +235,7 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		// 多次选择，统计结果
 		counts := make(map[string]int)
 		for i := 0; i < 999; i++ { // 使用999确保能被3整除的测试
-			path, err := vp.GetPath("default", fmt.Sprintf("key-%d", i))
+			path, err := vp.GetPath("test-equal-weights", fmt.Sprintf("key-%d", i))
 			assert.NoError(t, err)
 			counts[path]++
 		}
@@ -281,7 +264,7 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		// 多次选择，统计结果
 		counts := make(map[string]int)
 		for i := 0; i < 1000; i++ {
-			path, err := vp.GetPath("default", fmt.Sprintf("key-%d", i))
+			path, err := vp.GetPath("test-complex-weights", fmt.Sprintf("key-%d", i))
 			assert.NoError(t, err)
 			counts[path]++
 		}
@@ -310,7 +293,7 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 
 		// 多次选择，验证权重为0的路径永远不会被选择
 		for i := 0; i < 100; i++ {
-			path, err := vp.GetPath("default", fmt.Sprintf("key-%d", i))
+			path, err := vp.GetPath("test-zero-weight", fmt.Sprintf("key-%d", i))
 			assert.NoError(t, err)
 			assert.NotEqual(t, "/pathB", path, "Zero weight path should never be selected")
 		}

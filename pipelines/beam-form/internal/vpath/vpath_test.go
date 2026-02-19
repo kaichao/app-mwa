@@ -66,7 +66,8 @@ func TestGetPathStatic(t *testing.T) {
 	vp, err := vpath.NewVirtualPathFromConfig(1, config)
 	assert.NoError(t, err)
 
-	path, err := vp.GetPath("default", "key1")
+	// 现在selector的key是配置名称，而不是wp.Category
+	path, err := vp.GetPath("test-static", "key1")
 	assert.NoError(t, err)
 	assert.Equal(t, "/static1", path)
 }
@@ -92,17 +93,17 @@ func TestGetPathAggregated(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 第一次分配
-	path1, err := vp.GetPath("storage", "job1")
+	path1, err := vp.GetPath("test-agg", "job1")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2"}, path1)
 
 	// 相同key返回相同路径
-	path2, err := vp.GetPath("storage", "job1")
+	path2, err := vp.GetPath("test-agg", "job1")
 	assert.NoError(t, err)
 	assert.Equal(t, path1, path2)
 
 	// 不同key可能不同
-	path3, err := vp.GetPath("storage", "job2")
+	path3, err := vp.GetPath("test-agg", "job2")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2"}, path3)
 }
@@ -128,16 +129,16 @@ func TestReleasePath(t *testing.T) {
 	assert.NoError(t, err)
 
 	// 分配路径
-	path, err := vp.GetPath("storage", "job1")
+	path, err := vp.GetPath("test-release", "job1")
 	assert.NoError(t, err)
 	_ = path // 使用变量避免编译警告
 
 	// 释放路径
-	err = vp.ReleasePath("storage", "job1")
+	err = vp.ReleasePath("test-release", "job1")
 	assert.NoError(t, err)
 
 	// 可以重新分配
-	newPath, err := vp.GetPath("storage", "job1")
+	newPath, err := vp.GetPath("test-release", "job1")
 	assert.NoError(t, err)
 	assert.Contains(t, []string{"/node1", "/node2", "/node3"}, newPath)
 }
@@ -155,7 +156,7 @@ func TestWeightedSelection(t *testing.T) {
 	// 多次选择，验证大致比例
 	countA, countB := 0, 0
 	for i := 0; i < 100; i++ {
-		path, err := vp.GetPath("default", "test")
+		path, err := vp.GetPath("test-weighted", "test")
 		assert.NoError(t, err)
 		if path == "/pathA" {
 			countA++
@@ -199,7 +200,6 @@ func TestCategoryTestStatic(t *testing.T) {
 	for i := 0; i < 20; i++ {
 		p := fmt.Sprintf("key-%02d", i)
 		path, err := vp.GetPath("test-static", p)
-		fmt.Println(i, path)
 		assert.NoError(t, err)
 		assert.Contains(t, validPaths, path)
 	}

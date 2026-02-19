@@ -51,6 +51,7 @@ func main() {
     }
 
     // 获取路径
+    // 注意：category参数对应YAML配置中的配置块名称
     path, err := vp.GetPath("my-category", "job-001")
     if err != nil {
         panic(err)
@@ -93,9 +94,10 @@ func main() {
     }
 
     // 使用示例
+    // 注意：category参数对应Config.Name
     for i := 0; i < 5; i++ {
         key := fmt.Sprintf("task-%d", i)
-        path, err := vp.GetPath("default", key)
+        path, err := vp.GetPath("example", key)
         if err != nil {
             panic(err)
         }
@@ -123,14 +125,47 @@ func main() {
 ### WeightedPathConfig
 - `Path`: 路径（AGG_PATH表示聚合路径）
 - `Weight`: 权重，影响选择概率
-- `Type`: "static"或"aggregated"
-- `Category`: 路径分类
-- `CapacityGB`: 容量（GB）
+- `Type`: "static"或"aggregated"（自动推断）
+- `Category`: 路径分类（仅对AGG_PATH有效）
+- `CapacityGB`: 容量（GB），对于AGG_PATH表示每次分配需要的容量
 
 ### AggregatedPathConfig  
 - `Name`: 聚合路径名称
 - `CapacityGB`: 总容量
 - `Members`: 成员路径列表
+
+**注意**：在新的设计中，聚合目录通常由Scalebox信号量管理，`aggregated_paths`配置主要用于测试和向后兼容。
+
+## Scalebox聚合器使用指南
+
+### 1. 配置Scalebox聚合器
+
+```yaml
+# config.yaml
+production-category:
+  aggregator_type: "scalebox"
+  weighted_paths:
+    - path: "/local/ssd"
+      weight: 0.3
+      capacity_gb: 500
+    - path: AGG_PATH
+      weight: 0.7
+      category: storage-pool
+      need_gb: 50
+```
+
+### 2. 环境要求
+- Scalebox数据库必须可用
+- 信号量配置必须在数据库中预先设置
+- 需要设置PGHOST等数据库连接环境变量
+
+### 3. 测试环境设置
+对于集成测试，可以使用memory聚合器或设置测试数据库：
+
+```go
+// 在测试中设置环境变量
+os.Setenv("PGHOST", "test-host")
+```
 
 ## 算法特性
 
@@ -166,11 +201,13 @@ defer vp.ReleasePath("temp", "process-001")
 
 ## 注意事项
 
-1. **key的唯一性**：相同category和key总是返回相同路径
-2. **及时释放**：使用完路径后调用ReleasePath释放资源
-3. **权重设置**：权重为0的路径不会被选择
-4. **容量管理**：聚合路径有容量限制，分配时检查容量
+1. **category参数**：对应YAML配置中的配置块名称或Config.Name
+2. **key的唯一性**：相同category和key总是返回相同路径
+3. **及时释放**：使用完路径后调用ReleasePath释放资源
+4. **权重设置**：权重为0的路径不会被选择
+5. **容量管理**：聚合路径有容量限制，分配时检查容量
+6. **测试环境**：Scalebox聚合器需要数据库连接，测试时可能需要跳过相关测试
 
 ## 更多示例
 
-查看源码，获取完整示例。
+查看源码和testdata目录，获取完整示例。

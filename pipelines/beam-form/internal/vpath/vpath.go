@@ -9,8 +9,7 @@ import (
 type VirtualPath struct {
 	name        string
 	appID       int
-	config      *Config            // 主配置（用于向后兼容）
-	configs     map[string]*Config // category名称 -> 配置（新设计）
+	configs     map[string]*Config // category名称 -> 配置
 	selectors   map[string]Selector
 	aggregators map[string]Aggregator
 }
@@ -81,7 +80,7 @@ type AggregatedPathConfig struct {
 // NewVirtualPath 创建VirtualPath实例（主入口）
 // appID: 应用ID，用于区分不同应用
 // configFile: 配置文件路径（YAML格式）
-// 加载YAML文件中的所有配置，合并它们
+// 加载YAML文件中的所有配置，不合并它们，保留原始配置结构
 func NewVirtualPath(appID int, configFile string) (*VirtualPath, error) {
 	// 加载所有配置
 	allConfigs, err := loadAllConfigsFromYAML(configFile)
@@ -94,53 +93,26 @@ func NewVirtualPath(appID int, configFile string) (*VirtualPath, error) {
 		return nil, errors.E("no configuration found in YAML file")
 	}
 
-	// 合并所有配置
-	mergedConfig := &Config{
-		Name:            "merged-config",
-		WeightedPaths:   make([]WeightedPathConfig, 0),
-		AggregatedPaths: make([]AggregatedPathConfig, 0),
+	// 创建VirtualPath，不合并配置
+	vp := &VirtualPath{
+		name:        "multi-config",
+		appID:       appID,
+		configs:     allConfigs,
+		selectors:   make(map[string]Selector),
+		aggregators: make(map[string]Aggregator),
 	}
 
-	// 合并所有WeightedPaths
-	for configName, config := range allConfigs {
-		// 设置配置名称（用于调试）
-		if config.Name == "" {
-			config.Name = configName
-		}
-
-		// 合并WeightedPaths
-		mergedConfig.WeightedPaths = append(mergedConfig.WeightedPaths, config.WeightedPaths...)
-
-		// 合并AggregatedPaths
-		mergedConfig.AggregatedPaths = append(mergedConfig.AggregatedPaths, config.AggregatedPaths...)
-
-		// 使用第一个配置的AggregatorType（如果有）
-		if config.AggregatorType != "" && mergedConfig.AggregatorType == "" {
-			mergedConfig.AggregatorType = config.AggregatorType
-		}
+	// 初始化选择器（按配置名称分组）
+	if err := vp.initSelectors(); err != nil {
+		return nil, errors.WrapE(err, "init selectors")
 	}
 
-	// 调试信息
-	// fmt.Printf("DEBUG NewVirtualPath: merged AggregatorType=%s, AggregatedPaths count=%d\n",
-	//     mergedConfig.AggregatorType, len(mergedConfig.AggregatedPaths))
-	// for i, ap := range mergedConfig.AggregatedPaths {
-	//     fmt.Printf("  [%d] Name=%s, Members=%v\n", i, ap.Name, ap.Members)
-	// }
-
-	// 创建VirtualPath
-	return newFromConfig(appID, mergedConfig)
-}
-
-// NewVirtualPathForCategory 创建指定category的VirtualPath实例
-func NewVirtualPathForCategory(appID int, configFile, category string) (*VirtualPath, error) {
-	// 加载指定category的配置
-	config, err := loadConfigFromYAML(configFile, category)
-	if err != nil {
-		return nil, errors.WrapE(err, "load config from YAML")
+	// 初始化聚合器
+	if err := vp.initAggregators(); err != nil {
+		return nil, errors.WrapE(err, "init aggregators")
 	}
 
-	// 创建VirtualPath
-	return newFromConfig(appID, config)
+	return vp, nil
 }
 
 // NewVirtualPathFromConfig 从Config创建VirtualPath实例（用于测试）
@@ -163,15 +135,19 @@ func newFromConfig(appID int, config *Config) (*VirtualPath, error) {
 		return nil, errors.WrapE(err, "validate config")
 	}
 
+	// 创建configs map，包含单个配置
+	configs := make(map[string]*Config)
+	configs[config.Name] = config
+
 	vp := &VirtualPath{
 		name:        config.Name,
 		appID:       appID,
-		config:      config,
+		configs:     configs,
 		selectors:   make(map[string]Selector),
 		aggregators: make(map[string]Aggregator),
 	}
 
-	// 初始化选择器（按category分组）
+	// 初始化选择器（按配置名称分组）
 	if err := vp.initSelectors(); err != nil {
 		return nil, errors.WrapE(err, "init selectors")
 	}
@@ -186,24 +162,11 @@ func newFromConfig(appID int, config *Config) (*VirtualPath, error) {
 
 // initSelectors 初始化选择器
 func (vp *VirtualPath) initSelectors() error {
-	// 按category分组WeightedPaths
-	categoryMap := make(map[string][]WeightedPathConfig)
-
-	for _, wp := range vp.config.WeightedPaths {
-		// 使用wp.Category作为分组key
-		// 注意：wp.Category在config.go中已经正确设置
-		category := wp.Category
-		if category == "" {
-			// 如果Category为空，使用默认
-			category = "default"
-		}
-		categoryMap[category] = append(categoryMap[category], wp)
-	}
-
-	// 为每个category创建选择器
-	for category, configs := range categoryMap {
-		selector := NewWeightedSelector(category, configs)
-		vp.selectors[category] = selector
+	// 使用configs（按配置名称分组）
+	for configName, config := range vp.configs {
+		// 为每个配置创建选择器，key是配置名称
+		selector := NewWeightedSelector(configName, config.WeightedPaths)
+		vp.selectors[configName] = selector
 	}
 
 	return nil
@@ -213,16 +176,20 @@ func (vp *VirtualPath) initSelectors() error {
 func (vp *VirtualPath) initAggregators() error {
 	// 收集所有需要聚合器的category
 	categories := make(map[string]bool)
-	for _, wp := range vp.config.WeightedPaths {
-		if wp.Type == "aggregated" && wp.Category != "" {
-			categories[wp.Category] = true
+
+	// 收集所有配置中的aggregated路径
+	for _, config := range vp.configs {
+		for _, wp := range config.WeightedPaths {
+			if wp.Type == "aggregated" && wp.Category != "" {
+				categories[wp.Category] = true
+			}
 		}
 	}
 
 	// 为每个category创建聚合器
 	for category := range categories {
 		if _, exists := vp.aggregators[category]; exists {
-			continue // 已经存在（可能从AggregatedPaths创建的）
+			continue // 已经存在
 		}
 
 		var aggregator Aggregator
@@ -230,30 +197,37 @@ func (vp *VirtualPath) initAggregators() error {
 
 		// 检查是否有对应的AggregatedPathConfig
 		var apConfig *AggregatedPathConfig
-		for i, ap := range vp.config.AggregatedPaths {
-			if ap.Name == category {
-				apConfig = &vp.config.AggregatedPaths[i]
+		// 从所有configs中查找
+		for _, config := range vp.configs {
+			for i, ap := range config.AggregatedPaths {
+				if ap.Name == category {
+					apConfig = &config.AggregatedPaths[i]
+					break
+				}
+			}
+			if apConfig != nil {
 				break
 			}
 		}
 
 		// 确定聚合器类型
-		aggregatorType := vp.config.AggregatorType
+		aggregatorType := ""
+		// 从第一个配置中获取AggregatorType
+		for _, config := range vp.configs {
+			if config.AggregatorType != "" {
+				aggregatorType = config.AggregatorType
+				break
+			}
+		}
 		if aggregatorType == "" {
 			// 默认使用scalebox
 			aggregatorType = "scalebox"
 		}
 
 		// 如果有AggregatedPathConfig，但aggregatorType不是memory，则使用memory（向后兼容）
-		// 注意：这主要是为了测试，生产环境应该使用scalebox
 		if apConfig != nil && aggregatorType != "memory" {
-			// 如果有AggregatedPathConfig但未指定memory类型，使用memory（测试场景）
 			aggregatorType = "memory"
 		}
-
-		// 调试信息
-		// fmt.Printf("DEBUG initAggregators: category=%s, hasAggregatedPathConfig=%v, aggregatorType=%s, AggregatedPaths count=%d\n",
-		//     category, apConfig != nil, aggregatorType, len(vp.config.AggregatedPaths))
 
 		switch aggregatorType {
 		case "memory":
@@ -280,14 +254,6 @@ func (vp *VirtualPath) initAggregators() error {
 		vp.aggregators[category] = aggregator
 	}
 
-	// 向后兼容：仍然为AggregatedPaths创建聚合器（如果还没创建）
-	for _, apConfig := range vp.config.AggregatedPaths {
-		if _, exists := vp.aggregators[apConfig.Name]; !exists {
-			aggregator := NewMemoryAggregator(apConfig)
-			vp.aggregators[apConfig.Name] = aggregator
-		}
-	}
-
 	return nil
 }
 
@@ -305,7 +271,12 @@ func (vp *VirtualPath) GetPath(category, key string) (string, error) {
 
 	// 查找对应的配置
 	var wpConfig *WeightedPathConfig
-	for _, wp := range vp.config.WeightedPaths {
+	// 使用configs，需要找到category对应的配置
+	config, ok := vp.configs[category]
+	if !ok {
+		return "", errors.E("config not found for category", "category", category)
+	}
+	for _, wp := range config.WeightedPaths {
 		if wp.Path == selectedPath {
 			wpConfig = &wp
 			break
@@ -336,8 +307,14 @@ func (vp *VirtualPath) GetPath(category, key string) (string, error) {
 // category: 路径分类
 // key: 唯一标识符
 func (vp *VirtualPath) ReleasePath(category, key string) error {
-	// 查找category对应的配置，确定是否是aggregated类型
-	for _, wp := range vp.config.WeightedPaths {
+	// 使用configs，需要找到category对应的配置
+	config, ok := vp.configs[category]
+	if !ok {
+		return errors.E("config not found for category", "category", category)
+	}
+
+	// 查找aggregated类型的路径
+	for _, wp := range config.WeightedPaths {
 		if wp.Type == "aggregated" {
 			// 释放聚合路径
 			aggregator, ok := vp.aggregators[wp.Category]
@@ -350,11 +327,6 @@ func (vp *VirtualPath) ReleasePath(category, key string) error {
 
 	// 如果不是aggregated类型，无需释放
 	return nil
-}
-
-// getConfig 获取配置（用于测试，包内可见）
-func (vp *VirtualPath) getConfig() *Config {
-	return vp.config
 }
 
 // validateConfig 验证配置
