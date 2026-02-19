@@ -1,6 +1,7 @@
 /Makefile
 tmp/
 .DS_Store
+/.vscode
 *.drawio
 
 cal/**

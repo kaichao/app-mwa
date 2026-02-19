@@ -1,0 +1,49 @@
+# 测试用的vpath.yaml配置
+test-static:
+  weighted_paths:
+    - path: "/test/path1"
+      weight: 1
+      capacity_gb: 100
+    - path: "/test/path2"
+      weight: 2
+      capacity_gb: 200
+
+test-agg:
+  # aggregator_type: "memory"
+  weighted_paths:
+    - path: "/local/storage"
+      weight: 0
+      capacity_gb: 50
+    - path: AGG_PATH
+      weight: 1
+      category: test-agg
+      need_gb: 10
+  # aggregated_paths:
+  #   - name: test-agg
+  #     capacity_gb: 1000
+  #     members:
+  #       - "/test-agg/dir0"
+  #       - "/test-agg/dir1"
+  #       - "/test-agg/dir2"
+
+test-mixed:
+  # aggregator_type: "memory"
+  weighted_paths:
+    - path: "/fast/ssd"
+      weight: 1
+      capacity_gb: 500
+    - path: "/slow/hdd"
+      weight: 2
+      capacity_gb: 2000
+    - path: AGG_PATH
+      weight: 3
+      # 信号量中对应部分
+      category: test-mixed
+      need_gb: 20
+  # aggregated_paths:
+  #   - name: test-mixed
+  #     capacity_gb: 1000
+  #     members:
+  #       - "/test-mixed/dir0"
+  #       - "/test-mixed/dir1"
+  #       - "/test-mixed/dir2"

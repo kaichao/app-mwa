@@ -1,0 +1,67 @@
+origin-tar:
+# 原始打包数据（*.tar）
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 0.5
+      capacity_gb: 20480
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+
+preload-tar:
+# 原始文件预加载（*.tar）
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: "/public/home/cstu0030/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 480
+    - path: "/work2/cstu0030/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+      # 信号量文件：preload.sema
+    - path: AGG_PATH
+      weight: 1.0
+      category: mwa
+      need_gb: 11
+
+global-dat:
+# 共享存储上的计算文件（*.tar）
+  weighted_paths:
+    - path: "/work2/cstu0030/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+      # 信号量文件：mwa.sema
+    - path: AGG_PATH
+      weight: 1.0
+      category: mwa
+      need_gb: 50
+
+staging-24ch:
+# 24-channel beam-form
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 1.0
+      capacity_gb: 20480
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+    - path: "/work1/cstu0036/scalebox/mydata"
+      weight: 0.0
+      capacity_gb: 20480
+      # 信号量文件：mwa.sema
+    - path: AGG_PATH
+      weight: 0.0
+      category: mwa
+      need_gb: 29
+
+final:
+# 最终结果
+  weighted_paths:
+    - path: "astro@10.100.1.30:10022/data1/mydata"
+      weight: 1.0
+    - path: "astro@10.100.1.30:10022/data2/mydata"
+      weight: 0.0
+    - path: "/public/home/cstu0030/scalebox/mydata"
+      weight: 0.0
