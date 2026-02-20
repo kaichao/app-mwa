@@ -5,7 +5,6 @@
 package main
 
 import (
-	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"fmt"
@@ -97,12 +96,24 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 
 		for k := 0; k < len(tus); k += 2 {
 			fileName := fmt.Sprintf("%d_%d_ch%d.dat.tar.zst", tus[k], tus[k+1], ch)
-			sourceURL, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
+			// sourceURL, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
+			sourceURL, err := vPath.GetPath("preload-tar", cube.ObsID+"/"+fileName)
 			if err != nil {
 				logger.LogTracedErrorDefault(err)
 				return 1
 			}
 			headers, _ = common.SetJSONAttribute(headers, "source_url", sourceURL)
+
+			// 增加"_global_dat_dir"
+			// path: 1302282040/t1302282041_1302282200/ch126
+			globalDatDir, err := vPath.GetPath("global-dat", targetSubDir)
+			if err != nil {
+				logger.LogTracedErrorDefault(err)
+			} else {
+				headers, _ = common.SetJSONAttribute(headers,
+					"_global_dat_dir", globalDatDir)
+			}
+
 			body := pointingPrefix + "/" + fileName
 			tasks = append(tasks, body+","+headers)
 		}
@@ -126,7 +137,6 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 
 	targetURL := fmt.Sprintf("%s/mydata/mwa", os.Getenv("LOCAL_TMPDIR"))
 
-	// 增加"_global_dat_dir"
 	// "target_url": "/tmp/scalebox-0/mydata/mwa",
 	headers := map[string]string{
 		"target_url": targetURL,

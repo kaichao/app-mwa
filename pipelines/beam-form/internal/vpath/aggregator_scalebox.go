@@ -23,19 +23,19 @@ type ScaleboxAggregator struct {
 }
 
 // NewScaleboxAggregator 创建Scalebox存储聚合器
-// category: 聚合目录分类名，如"mwa"
+// pool: 存储池标识名，如"mwa"
 // appID: 应用ID
-func NewScaleboxAggregator(category string, appID int) (*ScaleboxAggregator, error) {
-	if category == "" {
-		return nil, errors.E("category is empty")
+func NewScaleboxAggregator(pool string, appID int) (*ScaleboxAggregator, error) {
+	if pool == "" {
+		return nil, errors.E("pool is empty")
 	}
 
 	// 构建信号量和变量名称（遵循aggpath的命名约定）
-	semaName := "path-free-gb:" + category
-	varPrefix := "member-path:" + category
+	semaName := "path-free-gb:" + pool
+	varPrefix := "member-path:" + pool
 
 	return &ScaleboxAggregator{
-		name:      category,
+		name:      pool,
 		appID:     appID,
 		semaName:  semaName,
 		varPrefix: varPrefix,
@@ -56,7 +56,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 	}
 
 	// var-value == ""
-	// 通过category获取semagroup的最大值，若该值超过capacityDB值，减去该值
+	// 通过pool获取semagroup的最大值，若该值超过capacityDB值，减去该值
 	semaGName := "path-free-gb:" + sa.name
 	semaName, semaValue, err := semagroup.GetMax(semaGName, sa.appID)
 	if err != nil {
@@ -64,7 +64,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 			"semagroup-name", semaGName, "app-id", sa.appID)
 	}
 	if semaValue < capacityGB {
-		return "", errors.E("No enough disk space", "category", sa.name)
+		return "", errors.E("No enough disk space", "pool", sa.name)
 	}
 	_, err = semaphore.AddValue(semaName, 0, sa.appID, -capacityGB)
 	if err != nil {
@@ -92,7 +92,7 @@ func (sa *ScaleboxAggregator) Release(key string, capacityGB int) error {
 		// 如果variable不存在，可能已经被释放
 		logrus.Warnf("Variable not found when releasing member path: %s", varName)
 		return errors.WrapE(err, "variable-get",
-			"category", sa.name, "path", key)
+			"pool", sa.name, "path", key)
 	}
 	// 删除目录中数据
 	if err := os.RemoveAll(memberPath); err != nil {
@@ -102,7 +102,7 @@ func (sa *ScaleboxAggregator) Release(key string, capacityGB int) error {
 	// 对应信号量增加capacityGB
 	semaName := fmt.Sprintf("path-free-gb:%s:%s", sa.name, memberPath)
 	if _, err := semaphore.AddValue(semaName, 0, sa.appID, capacityGB); err != nil {
-		return errors.WrapE(err, "semaphore-add", "category", sa.name)
+		return errors.WrapE(err, "semaphore-add", "pool", sa.name)
 	}
 	// 删除variable
 	err = variable.Set(varName, "", 0, sa.appID)

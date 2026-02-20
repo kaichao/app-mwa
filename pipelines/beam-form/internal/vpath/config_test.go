@@ -12,7 +12,8 @@ import (
 func TestLoadConfigFromYAML(t *testing.T) {
 	// 创建临时YAML文件
 	tempDir := os.TempDir()
-	yamlContent := `test-category:
+	yamlContent := `
+test-category:
   weighted_paths:
     - path: "/path1"
       weight: 0.5
@@ -47,7 +48,7 @@ func TestLoadConfigFromYAMLWithAGG_PATH(t *testing.T) {
   weighted_paths:
     - path: AGG_PATH
       weight: 1.0
-      category: storage
+      pool: storage
       need_gb: 10
 `
 	tempFile := filepath.Join(tempDir, "test-agg-config.yaml")
@@ -64,7 +65,7 @@ func TestLoadConfigFromYAMLWithAGG_PATH(t *testing.T) {
 	assert.Len(t, config.WeightedPaths, 1)
 	assert.Equal(t, "AGG_PATH", config.WeightedPaths[0].Path)
 	assert.Equal(t, "aggregated", config.WeightedPaths[0].Type)
-	assert.Equal(t, "storage", config.WeightedPaths[0].Category)
+	assert.Equal(t, "storage", config.WeightedPaths[0].Pool)
 	assert.Equal(t, 10, config.WeightedPaths[0].CapacityGB)
 }
 
@@ -72,7 +73,8 @@ func TestLoadConfigFromYAMLWithAGG_PATH(t *testing.T) {
 func TestLoadAllConfigsFromYAML(t *testing.T) {
 	// 创建临时YAML文件
 	tempDir := os.TempDir()
-	yamlContent := `test-category1:
+	yamlContent := `
+test-category1:
   weighted_paths:
     - path: "/path1"
       weight: 1.0
@@ -103,8 +105,8 @@ func TestValidateConfigWeightZero(t *testing.T) {
 	config := &Config{
 		Name: "test-weight-zero",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 0.0, Type: "static", Category: "default"},
-			{Path: "/path2", Weight: 1.0, Type: "static", Category: "default"},
+			{Path: "/path1", Weight: 0.0, Type: "static", Pool: "default"},
+			{Path: "/path2", Weight: 1.0, Type: "static", Pool: "default"},
 		},
 	}
 
@@ -120,8 +122,8 @@ func TestValidateConfigTotalWeightZero(t *testing.T) {
 	config := &Config{
 		Name: "test-total-weight-zero",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 0.0, Type: "static", Category: "default"},
-			{Path: "/path2", Weight: 0.0, Type: "static", Category: "default"},
+			{Path: "/path1", Weight: 0.0, Type: "static", Pool: "default"},
+			{Path: "/path2", Weight: 0.0, Type: "static", Pool: "default"},
 		},
 	}
 
@@ -135,7 +137,7 @@ func TestValidateConfigWeightNegative(t *testing.T) {
 	config := &Config{
 		Name: "test-weight-negative",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: -1.0, Type: "static", Category: "default"},
+			{Path: "/path1", Weight: -1.0, Type: "static", Pool: "default"},
 		},
 	}
 

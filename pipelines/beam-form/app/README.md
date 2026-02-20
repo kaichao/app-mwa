@@ -93,10 +93,10 @@ BW_LIMIT=300m \
 
 ```sh
 
-app_id=$(echo '1302282040/p01921_02400' | \
+app_id=$(echo '1302282040/p03001_03600' | \
 NUM_GROUPS=1 \
-NODES='^d.+' \
-ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata \
+NODES='^d00.+' \
+ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
 GROUP_NODES= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \

@@ -4,7 +4,6 @@ fromNull是消息路由的首个执行模块，按预加载策略，加载原始
 package main
 
 import (
-	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
@@ -41,7 +40,8 @@ func fromNull(body string, headers map[string]string) int {
 		pointingDir := fmt.Sprintf("%s/p%05d", cube.ObsID, p)
 		varName := "pointing-data-root:" + pointingDir
 		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
-			varValue, err := iopath.GetStagingRoot(pointingDir)
+			// varValue, err := iopath.GetStagingRoot(pointingDir)
+			varValue, err := vPath.GetPath("staging-24ch", pointingDir)
 			if err != nil {
 				logger.LogTracedErrorDefault(err)
 				return 9

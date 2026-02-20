@@ -1,7 +1,6 @@
 package main
 
 import (
-	"beamform/app/router/iopath"
 	"beamform/internal/node"
 	"beamform/internal/queue"
 	"beamform/internal/strparse"
@@ -99,7 +98,8 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 			} else {
 				// 类型2、类型3，组内地址
 				// 自增长的index
-				varValue, err = iopath.GetStagingRoot(pointingDir)
+				// varValue, err = iopath.GetStagingRoot(pointingDir)
+				varValue, err = vPath.GetPath("stageing-24ch", pointingDir)
 				if err != nil {
 					logger.LogTracedErrorDefault(err)
 					return 9

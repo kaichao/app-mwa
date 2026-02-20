@@ -51,9 +51,9 @@ type WeightedPathConfig struct {
 	// 注意：根据path是否等于"AGG_PATH"自动推断
 	Type string `yaml:"-"` // 不从YAML读取，由代码推断
 
-	// Category 聚合目录分类（仅对AGG_PATH有效）
-	// 对应YAML中的category字段
-	Category string `yaml:"category,omitempty"`
+	// Pool 存储池标识（仅对AGG_PATH有效）
+	// 对应YAML中的pool字段
+	Pool string `yaml:"pool,omitempty"`
 
 	// CapacityGB 容量需求（GB）
 	// 对于static路径：表示路径容量
@@ -174,21 +174,21 @@ func (vp *VirtualPath) initSelectors() error {
 
 // initAggregators 初始化聚合器
 func (vp *VirtualPath) initAggregators() error {
-	// 收集所有需要聚合器的category
-	categories := make(map[string]bool)
+	// 收集所有需要聚合器的pool
+	pools := make(map[string]bool)
 
 	// 收集所有配置中的aggregated路径
 	for _, config := range vp.configs {
 		for _, wp := range config.WeightedPaths {
-			if wp.Type == "aggregated" && wp.Category != "" {
-				categories[wp.Category] = true
+			if wp.Type == "aggregated" && wp.Pool != "" {
+				pools[wp.Pool] = true
 			}
 		}
 	}
 
-	// 为每个category创建聚合器
-	for category := range categories {
-		if _, exists := vp.aggregators[category]; exists {
+	// 为每个pool创建聚合器
+	for pool := range pools {
+		if _, exists := vp.aggregators[pool]; exists {
 			continue // 已经存在
 		}
 
@@ -200,7 +200,7 @@ func (vp *VirtualPath) initAggregators() error {
 		// 从所有configs中查找
 		for _, config := range vp.configs {
 			for i, ap := range config.AggregatedPaths {
-				if ap.Name == category {
+				if ap.Name == pool {
 					apConfig = &config.AggregatedPaths[i]
 					break
 				}
@@ -234,7 +234,7 @@ func (vp *VirtualPath) initAggregators() error {
 			if apConfig == nil {
 				// 如果没有配置，创建一个默认的（仅用于测试）
 				apConfig = &AggregatedPathConfig{
-					Name:       category,
+					Name:       pool,
 					CapacityGB: 1000, // 默认容量
 					Members:    []string{"/default/path1", "/default/path2"},
 				}
@@ -242,16 +242,16 @@ func (vp *VirtualPath) initAggregators() error {
 			aggregator = NewMemoryAggregator(*apConfig)
 
 		case "scalebox":
-			aggregator, err = NewScaleboxAggregator(category, vp.appID)
+			aggregator, err = NewScaleboxAggregator(pool, vp.appID)
 			if err != nil {
-				return errors.WrapE(err, "create ScaleboxAggregator", "category", category)
+				return errors.WrapE(err, "create ScaleboxAggregator", "pool", pool)
 			}
 
 		default:
 			return errors.E("unknown aggregator type", "type", aggregatorType)
 		}
 
-		vp.aggregators[category] = aggregator
+		vp.aggregators[pool] = aggregator
 	}
 
 	return nil
@@ -293,9 +293,9 @@ func (vp *VirtualPath) GetPath(category, key string) (string, error) {
 		return wpConfig.Path, nil
 	case "aggregated":
 		// 从聚合器分配路径
-		aggregator, ok := vp.aggregators[wpConfig.Category]
+		aggregator, ok := vp.aggregators[wpConfig.Pool]
 		if !ok {
-			return "", errors.E("aggregator not found", "category", wpConfig.Category)
+			return "", errors.E("aggregator not found", "pool", wpConfig.Pool)
 		}
 		return aggregator.Allocate(key, wpConfig.CapacityGB)
 	default:
@@ -317,9 +317,9 @@ func (vp *VirtualPath) ReleasePath(category, key string) error {
 	for _, wp := range config.WeightedPaths {
 		if wp.Type == "aggregated" {
 			// 释放聚合路径
-			aggregator, ok := vp.aggregators[wp.Category]
+			aggregator, ok := vp.aggregators[wp.Pool]
 			if !ok {
-				return errors.E("aggregator not found", "category", wp.Category)
+				return errors.E("aggregator not found", "pool", wp.Pool)
 			}
 			return aggregator.Release(key, wp.CapacityGB)
 		}
@@ -362,8 +362,8 @@ func validateConfig(config *Config) error {
 		}
 
 		if wp.Type == "aggregated" {
-			if wp.Category == "" {
-				return errors.E("WeightedPaths[%d].Category is empty for aggregated type", len(filteredPaths))
+			if wp.Pool == "" {
+				return errors.E("WeightedPaths[%d].Pool is empty for aggregated type", len(filteredPaths))
 			}
 			if wp.CapacityGB <= 0 {
 				return errors.E("WeightedPaths[%d].CapacityGB must be > 0 for aggregated type", len(filteredPaths))

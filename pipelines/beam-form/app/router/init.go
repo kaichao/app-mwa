@@ -2,9 +2,11 @@ package main
 
 import (
 	"beamform/internal/cache"
+	"beamform/internal/vpath"
 	"os"
 	"strconv"
 
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/global"
 	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
@@ -12,6 +14,7 @@ import (
 
 var (
 	appID int
+	vPath *vpath.VirtualPath
 )
 
 func init() {
@@ -28,6 +31,12 @@ func init() {
 
 	moduleID, _ := strconv.Atoi(os.Getenv("MODULE_ID"))
 	appID = cache.GetAppIDByModuleID(moduleID)
+
+	var err error
+	vPath, err = vpath.NewVirtualPath(appID, "/vpath.yaml")
+	if err != nil {
+		logger.LogTracedErrorDefault(err)
+	}
 }
 
 func getPointingVariable(varName string, appID int) (string, error) {

@@ -78,7 +78,7 @@ func TestGetPathAggregated(t *testing.T) {
 		{
 			Path:       "AGG_PATH",
 			Weight:     1.0,
-			Category:   "storage",
+			Pool:       "storage",
 			CapacityGB: 10,
 		},
 	}, []vpath.AggregatedPathConfig{
@@ -114,7 +114,7 @@ func TestReleasePath(t *testing.T) {
 		{
 			Path:       "AGG_PATH",
 			Weight:     1.0,
-			Category:   "storage",
+			Pool:       "storage",
 			CapacityGB: 10,
 		},
 	}, []vpath.AggregatedPathConfig{

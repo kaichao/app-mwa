@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/kaichao/gopkg/exec"
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
@@ -50,11 +51,28 @@ func fromBeamMake(body string, headers map[string]string) int {
 			Port:       sshPort,
 			Background: true,
 		}
-		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s/t%d_%d/ch%d`, os.Getenv("LOCAL_TMPDIR"), obsID, t0, t1, ch)
+		subDatDir := fmt.Sprintf(`%s/t%d_%d/ch%d`, obsID, t0, t1, ch)
+		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s`,
+			os.Getenv("LOCAL_TMPDIR"), subDatDir)
 		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
 		if err != nil {
 			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
 				cmd, stdout, stderr, err)
+		}
+
+		if globalDatDir := headers["_global_dat_dir"]; globalDatDir != "" {
+			cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
+				globalDatDir, subDatDir)
+			_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
+			if err != nil {
+				logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
+					cmd, stdout, stderr, err)
+			}
+
+			// sub-path: 1302282040/t1302282041_1302282200/ch126
+			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
+				logger.LogTracedErrorDefault(err)
+			}
 		}
 	}
 
@@ -78,8 +96,16 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 			// 多个channel用单个节点计算
 			sortTag = fmt.Sprintf("t%d:ch%d:p%05d", cube.TimeBegin, ch, ps[k])
 		}
-		line := fmt.Sprintf(`%s,{"sort_tag":"%s","_sort_tag":"%s"}`,
-			body, sortTag, sortTag)
+		headers := fmt.Sprintf(`{"sort_tag":"%s","_sort_tag":"%s"}`,
+			sortTag, sortTag)
+
+		globalDatDir := fromHeaders["_global_dat_dir"]
+		if globalDatDir != "" {
+			headers, _ = common.SetJSONAttribute(headers,
+				"_global_dat_dir", globalDatDir)
+		}
+
+		line := body + "," + headers
 		tasks = append(tasks, line)
 	}
 

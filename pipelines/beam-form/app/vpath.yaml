@@ -2,7 +2,7 @@ origin-tar:
 # 原始打包数据（*.tar）
   weighted_paths:
     - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 0.5
+      weight: 1.0
       capacity_gb: 20480
     - path: "astro@10.100.1.30:10022/data2/mydata"
       weight: 0.0
@@ -23,7 +23,8 @@ preload-tar:
       # 信号量文件：preload.sema
     - path: AGG_PATH
       weight: 1.0
-      category: mwa
+      # 存储池的信号量分组标识
+      pool: preload
       need_gb: 11
 
 global-dat:
@@ -35,17 +36,18 @@ global-dat:
       # 信号量文件：mwa.sema
     - path: AGG_PATH
       weight: 1.0
-      category: mwa
+      # 存储池的信号量分组标识
+      pool: mwa
       need_gb: 50
 
 staging-24ch:
 # 24-channel beam-form
   weighted_paths:
     - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 1.0
+      weight: 0.0
       capacity_gb: 20480
     - path: "astro@10.100.1.30:10022/data2/mydata"
-      weight: 0.0
+      weight: 1.0
       capacity_gb: 20480
     - path: "/work1/cstu0036/scalebox/mydata"
       weight: 0.0
@@ -53,7 +55,8 @@ staging-24ch:
       # 信号量文件：mwa.sema
     - path: AGG_PATH
       weight: 0.0
-      category: mwa
+      # 存储池的信号量分组标识
+      pool: mwa
       need_gb: 29
 
 final:

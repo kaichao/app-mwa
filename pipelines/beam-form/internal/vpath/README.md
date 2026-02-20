@@ -25,7 +25,7 @@ my-category:
       weight: 2.0
     - path: AGG_PATH
       weight: 3.0
-      category: my-category
+      pool: my-category
       need_gb: 20
   aggregated_paths:
     - name: my-category
@@ -81,8 +81,8 @@ func main() {
     config := &vpath.Config{
         Name: "example",
         WeightedPaths: []vpath.WeightedPathConfig{
-            {Path: "/path1", Weight: 1.0, Type: "static", Category: "default"},
-            {Path: "/path2", Weight: 2.0, Type: "static", Category: "default"},
+            {Path: "/path1", Weight: 1.0, Type: "static", Pool: "default"},
+            {Path: "/path2", Weight: 2.0, Type: "static", Pool: "default"},
         },
         AggregatorType: "memory",
     }
@@ -126,7 +126,7 @@ func main() {
 - `Path`: 路径（AGG_PATH表示聚合路径）
 - `Weight`: 权重，影响选择概率
 - `Type`: "static"或"aggregated"（自动推断）
-- `Category`: 路径分类（仅对AGG_PATH有效）
+- `Pool`: 存储池标识（仅对AGG_PATH有效）
 - `CapacityGB`: 容量（GB），对于AGG_PATH表示每次分配需要的容量
 
 ### AggregatedPathConfig  
@@ -150,7 +150,7 @@ production-category:
       capacity_gb: 500
     - path: AGG_PATH
       weight: 0.7
-      category: storage-pool
+      pool: storage-pool
       need_gb: 50
 ```
 

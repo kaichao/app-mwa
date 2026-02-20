@@ -12,7 +12,7 @@ func TestNewVirtualPathFromConfigBasic(t *testing.T) {
 	config := &Config{
 		Name: "test-basic",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 1.0, Type: "static", Category: "default"},
+			{Path: "/path1", Weight: 1.0, Type: "static", Pool: "default"},
 		},
 	}
 
@@ -31,8 +31,8 @@ func TestNewVirtualPathFromConfigWeightedSelection(t *testing.T) {
 	config := &Config{
 		Name: "test-weighted",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/pathA", Weight: 0.7, Type: "static", Category: "default"},
-			{Path: "/pathB", Weight: 0.3, Type: "static", Category: "default"},
+			{Path: "/pathA", Weight: 0.7, Type: "static", Pool: "default"},
+			{Path: "/pathB", Weight: 0.3, Type: "static", Pool: "default"},
 		},
 	}
 
@@ -65,7 +65,7 @@ func TestNewVirtualPathFromConfigWithMemoryAggregator(t *testing.T) {
 				Path:       "AGG_PATH",
 				Weight:     1.0,
 				Type:       "aggregated",
-				Category:   "storage",
+				Pool:       "storage",
 				CapacityGB: 10,
 			},
 		},
@@ -103,13 +103,13 @@ func TestNewVirtualPathFromConfigMixedPaths(t *testing.T) {
 	config := &Config{
 		Name: "test-mixed-paths",
 		WeightedPaths: []WeightedPathConfig{
-			{Path: "/fast/ssd", Weight: 1.0, Type: "static", Category: "default"},
-			{Path: "/slow/hdd", Weight: 2.0, Type: "static", Category: "default"},
+			{Path: "/fast/ssd", Weight: 1.0, Type: "static", Pool: "default"},
+			{Path: "/slow/hdd", Weight: 2.0, Type: "static", Pool: "default"},
 			{
 				Path:       "AGG_PATH",
 				Weight:     3.0,
 				Type:       "aggregated",
-				Category:   "default",
+				Pool:       "default",
 				CapacityGB: 20,
 			},
 		},
@@ -144,7 +144,7 @@ func TestReleasePath(t *testing.T) {
 				Path:       "AGG_PATH",
 				Weight:     1.0,
 				Type:       "aggregated",
-				Category:   "storage",
+				Pool:       "storage",
 				CapacityGB: 10,
 			},
 		},
@@ -183,8 +183,8 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		config := &Config{
 			Name: "test-simple-weights",
 			WeightedPaths: []WeightedPathConfig{
-				{Path: "/pathA", Weight: 0.7, Type: "static", Category: "default"},
-				{Path: "/pathB", Weight: 0.3, Type: "static", Category: "default"},
+				{Path: "/pathA", Weight: 0.7, Type: "static", Pool: "default"},
+				{Path: "/pathB", Weight: 0.3, Type: "static", Pool: "default"},
 			},
 		}
 
@@ -223,9 +223,9 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		config := &Config{
 			Name: "test-equal-weights",
 			WeightedPaths: []WeightedPathConfig{
-				{Path: "/path1", Weight: 1.0, Type: "static", Category: "default"},
-				{Path: "/path2", Weight: 1.0, Type: "static", Category: "default"},
-				{Path: "/path3", Weight: 1.0, Type: "static", Category: "default"},
+				{Path: "/path1", Weight: 1.0, Type: "static", Pool: "default"},
+				{Path: "/path2", Weight: 1.0, Type: "static", Pool: "default"},
+				{Path: "/path3", Weight: 1.0, Type: "static", Pool: "default"},
 			},
 		}
 
@@ -251,10 +251,10 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		config := &Config{
 			Name: "test-complex-weights",
 			WeightedPaths: []WeightedPathConfig{
-				{Path: "/pathA", Weight: 0.1, Type: "static", Category: "default"},
-				{Path: "/pathB", Weight: 0.2, Type: "static", Category: "default"},
-				{Path: "/pathC", Weight: 0.3, Type: "static", Category: "default"},
-				{Path: "/pathD", Weight: 0.4, Type: "static", Category: "default"},
+				{Path: "/pathA", Weight: 0.1, Type: "static", Pool: "default"},
+				{Path: "/pathB", Weight: 0.2, Type: "static", Pool: "default"},
+				{Path: "/pathC", Weight: 0.3, Type: "static", Pool: "default"},
+				{Path: "/pathD", Weight: 0.4, Type: "static", Pool: "default"},
 			},
 		}
 
@@ -282,9 +282,9 @@ func TestNewSelectorAlgorithm(t *testing.T) {
 		config := &Config{
 			Name: "test-zero-weight",
 			WeightedPaths: []WeightedPathConfig{
-				{Path: "/pathA", Weight: 1.0, Type: "static", Category: "default"},
-				{Path: "/pathB", Weight: 0.0, Type: "static", Category: "default"}, // 权重为0，应该被排除
-				{Path: "/pathC", Weight: 2.0, Type: "static", Category: "default"},
+				{Path: "/pathA", Weight: 1.0, Type: "static", Pool: "default"},
+				{Path: "/pathB", Weight: 0.0, Type: "static", Pool: "default"}, // 权重为0，应该被排除
+				{Path: "/pathC", Weight: 2.0, Type: "static", Pool: "default"},
 			},
 		}
 

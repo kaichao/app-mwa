@@ -20,7 +20,7 @@ func TestScaleboxAggregatorBasic(t *testing.T) {
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
-				Category:   "test-agg", // 对应test-agg.sema
+				Pool:       "test-agg", // 对应test-agg.sema
 				CapacityGB: 50,         // 需要50GB容量
 			},
 		},
@@ -64,7 +64,7 @@ func TestScaleboxAggregatorMultipleAllocations(t *testing.T) {
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
-				Category:   "test-agg",
+				Pool:       "test-agg",
 				CapacityGB: 30, // 较小容量，可以分配多个
 			},
 		},
@@ -111,7 +111,7 @@ func TestScaleboxAggregatorInsufficientCapacity(t *testing.T) {
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
-				Category:   "test-agg",
+				Pool:       "test-agg",
 				CapacityGB: 500, // 超过任何单个目录的容量（最大199GB）
 			},
 		},
@@ -142,12 +142,12 @@ func TestScaleboxAggregatorWithMixedPaths(t *testing.T) {
 				Path:       "/local/ssd",
 				Weight:     0.3,
 				CapacityGB: 500,
-				Category:   "test-agg", // 使用已经存在的category
+				Pool:       "test-agg", // 使用已经存在的pool
 			},
 			{
 				Path:       "AGG_PATH",
 				Weight:     0.7,
-				Category:   "test-agg", // 使用已经存在的category
+				Pool:       "test-agg", // 使用已经存在的pool
 				CapacityGB: 50,
 			},
 		},

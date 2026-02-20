@@ -45,7 +45,7 @@ func (ma *MemoryAggregator) Allocate(key string, capacityGB int) (string, error)
 	}
 
 	return "", errors.E("no enough capacity",
-		"category", ma.name,
+		"pool", ma.name,
 		"capacity_needed", capacityGB,
 		"total_capacity", ma.capacity)
 }
@@ -104,8 +104,8 @@ func (ma *MemoryAggregator) Stats() map[string]interface{} {
 }
 
 // allocationKey 生成分配键
-func (ma *MemoryAggregator) allocationKey(category, key string) string {
-	return category + ":" + key
+func (ma *MemoryAggregator) allocationKey(pool, key string) string {
+	return pool + ":" + key
 }
 
 // capacityPerMember 计算每个成员的平均容量

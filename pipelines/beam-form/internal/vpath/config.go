@@ -57,14 +57,13 @@ func loadConfigFromYAML(filename, categoryName string) (*Config, error) {
 			if wp.NeedGB > 0 {
 				wp.CapacityGB = wp.NeedGB
 			}
-			// 对于AGG_PATH，如果category为空，使用配置名称作为category
-			if wp.Category == "" {
-				wp.Category = categoryName
+			// 对于AGG_PATH，如果pool为空，使用配置名称作为pool
+			if wp.Pool == "" {
+				wp.Pool = categoryName
 			}
 		} else {
 			wp.Type = "static"
-			// 对于静态路径，使用配置名称作为category
-			wp.Category = categoryName
+			// 对于静态路径，不需要设置pool
 		}
 
 		config.WeightedPaths = append(config.WeightedPaths, wp)
@@ -111,14 +110,13 @@ func loadAllConfigsFromYAML(filename string) (map[string]*Config, error) {
 				if wp.NeedGB > 0 {
 					wp.CapacityGB = wp.NeedGB
 				}
-				// 对于AGG_PATH，如果category为空，使用配置名称作为category
-				if wp.Category == "" {
-					wp.Category = categoryName
+				// 对于AGG_PATH，如果pool为空，使用配置名称作为pool
+				if wp.Pool == "" {
+					wp.Pool = categoryName
 				}
 			} else {
 				wp.Type = "static"
-				// 对于静态路径，使用配置名称作为category
-				wp.Category = categoryName
+				// 对于静态路径，不需要设置pool
 			}
 
 			config.WeightedPaths = append(config.WeightedPaths, wp)
@@ -149,7 +147,7 @@ func saveConfigToYAML(filename string, configs map[string]*Config) error {
 			cc.WeightedPaths[i] = WeightedPathConfig{
 				Path:       wp.Path,
 				Weight:     wp.Weight,
-				Category:   wp.Category,
+				Pool:       wp.Pool,
 				CapacityGB: wp.CapacityGB,
 				NeedGB:     wp.NeedGB,
 			}

@@ -19,7 +19,6 @@ tar-load从外部存储预加载原始打包tar文件到HPC存储
 package main
 
 import (
-	"beamform/app/router/iopath"
 	"beamform/internal/datacube"
 	"fmt"
 	"os"
@@ -27,6 +26,7 @@ import (
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/sirupsen/logrus"
 )
 
 // body: 1267459410_1267459449_ch109.dat.tar.zst
@@ -65,7 +65,16 @@ func fromTarLoad(body string, headers map[string]string) int {
 func toTarLoad(datasetID string) int {
 	// 按顺序产生tar-load的任务
 	cube := datacube.NewDataCube(datasetID)
-	sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
+	originRoot := os.Getenv("ORIGIN_ROOT")
+	if originRoot == "" {
+		logrus.Errorln("env-var ORIGIN_ROOT not set!")
+		return 1
+	}
+	// sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
+	sourceURL := fmt.Sprintf("%s/tar/%s",
+		// iopath.GetOriginRoot(),
+		originRoot,
+		cube.ObsID)
 	fmtTarZst := `%d_%d_ch%d.dat.tar.zst`
 	taskLines := []string{}
 	// tar-ready信号量
@@ -83,7 +92,8 @@ func toTarLoad(datasetID string) int {
 			for j := 0; j < cube.NumOfChannels; j++ {
 				ch := cube.ChannelBegin + j
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
-				root, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
+				// root, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
+				root, err := vPath.GetPath("preload-tar", cube.ObsID+"/"+fileName)
 				if err != nil {
 					// logrus.Errorf("error:%T,%v\n", err, err)
 					logger.LogTracedErrorDefault(err)
