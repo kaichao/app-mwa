@@ -96,7 +96,7 @@ cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/auxout.txt
 cat "ret_code:$ret_code" >> ${WORK_DIR}/auxout.txt
 
 # 删除 /app/share/bin/run.sh 调用产生的消息
-rm -f ${WORK_DIR}/messages.txt
+rm -f ${WORK_DIR}/sink-tasks.txt
 if [[ $ret_code -ne 0 ]]; then
     rm -f ${WORK_DIR}/removed-files.txt
     # TODO : 1chy -> 1chx

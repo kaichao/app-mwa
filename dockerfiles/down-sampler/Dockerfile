@@ -5,7 +5,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY code/run.sh /app/bin/
+# COPY code/run.sh /app/bin/
 
 ENV \
     LOCAL_INPUT_ROOT= \

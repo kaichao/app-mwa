@@ -13,7 +13,7 @@ import (
 )
 
 func fromFits24chUnload(body string, headers map[string]string) int {
-	// 仅纪录
+	// 仅纪录，不处理。
 	return 0
 }
 

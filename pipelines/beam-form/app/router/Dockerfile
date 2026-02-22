@@ -24,7 +24,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 COPY internal /go/src/internal
 COPY app/router/*.go /go/src/app/router/
-COPY app/router/iopath/*.go /go/src/app/router/iopath/
+# COPY app/router/iopath/*.go /go/src/app/router/iopath/
 
 WORKDIR /go/src/app/router
 
@@ -64,12 +64,8 @@ COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 COPY --from=0 /go/src/app/router/router /app/bin/
 
 COPY dataset.yaml /
-# COPY app/io-path.yaml /
-# COPY app/*.ap-conf /
 
 COPY app/vpath.yaml /
-
-# COPY app/*.json /
 
 ENV \
     WORK_DIR= \

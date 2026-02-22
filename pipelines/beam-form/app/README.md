@@ -252,4 +252,5 @@ ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run -
 - 节点renew
 - 重置信号量node-progress为0
 - 修改信号量pointing-done，减去已完成部分
+- 重置共享变量pull_unpack:first_load
 - 重置slot状态

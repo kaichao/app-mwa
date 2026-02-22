@@ -138,7 +138,7 @@ post_check $OBSID $ch $PTHEAD $PTTAIL $BEG $END $DIR_1CH
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] exit after post-check output files, exit_code:$code" >> ${WORK_DIR}/auxout.txt && exit $code
 
-echo $1 > ${WORK_DIR}/messages.txt
+echo $1 > ${WORK_DIR}/sink-tasks.txt
 
 # 统计输入文件的总字节数
 num_points=${#point_arr[@]}

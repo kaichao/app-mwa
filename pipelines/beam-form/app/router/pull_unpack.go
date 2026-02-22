@@ -7,6 +7,8 @@ package main
 import (
 	"beamform/internal/datacube"
 	"beamform/internal/node"
+	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -16,6 +18,7 @@ import (
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/sirupsen/logrus"
 )
 
@@ -94,6 +97,10 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		toHost := fmt.Sprintf("%s%02d-%02d", hostPrefix, slotSeq, index)
 		headers, _ = common.SetJSONAttribute(headers, "to_host", toHost)
 
+		if bwLimitMB := getOptBandwidthMB(toHost); bwLimitMB != "" {
+			headers, _ = common.SetJSONAttribute(headers, "bw_limit", bwLimitMB)
+		}
+
 		for k := 0; k < len(tus); k += 2 {
 			fileName := fmt.Sprintf("%d_%d_ch%d.dat.tar.zst", tus[k], tus[k+1], ch)
 			// sourceURL, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
@@ -151,4 +158,27 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		return 1
 	}
 	return 0
+}
+
+// 获取优化的带宽，以MB/s计，返回字符串，'100m'/'1000k'
+func getOptBandwidthMB(toHost string) string {
+	// 共享变量是否存在，若不存在，若为空，则为缺省值 yes
+	varName := "pull_unpack:first_load:" + toHost
+	val, err := variable.GetValue(varName, 0, appID)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logger.LogTracedErrorDefault(err)
+			return ""
+		}
+		// 未定义pull_unpack:first_load
+	}
+	if val != "" {
+		return os.Getenv("BW_LIMIT")
+	}
+	err = variable.Set(varName, "no", 0, appID)
+	if err != nil {
+		logger.LogTracedErrorDefault(err)
+		return ""
+	}
+	return os.Getenv("FIRST_BW_LIMIT")
 }

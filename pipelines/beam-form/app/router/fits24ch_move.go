@@ -32,7 +32,6 @@ func toFits24chMove(fileName, targetURL string) int {
 
 	if _, err := task.Add(fileName, headers, envVars); err != nil {
 		logger.LogTracedErrorDefault(err)
-		// logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
 		return 1
 	}
 	return 0
