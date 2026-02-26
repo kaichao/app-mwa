@@ -142,9 +142,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		return 1
 	}
 
-	targetURL := fmt.Sprintf("%s/mydata/mwa", os.Getenv("LOCAL_TMPDIR"))
-
-	// "target_url": "/tmp/scalebox-0/mydata/mwa",
+	targetURL := os.Getenv("LOCAL_TMPDIR")
 	headers := map[string]string{
 		"target_url": targetURL,
 	}

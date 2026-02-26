@@ -21,19 +21,17 @@ else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 if [ $INPUT_ROOT ]; then
-    DIR_DAT=$(get_host_path "${INPUT_ROOT}/mydata/mwa/dat")
+    DIR_DAT=$(get_host_path "${INPUT_ROOT}/dat")
     # DIR_DAT="${LOCAL_TMPDIR}/mydata/mwa/dat"
+elif [ "$SLOT_ROLE" = "group" ]; then
+    # 用全局dat目录
+    DIR_DAT=/cluster_data_root/mwa/dat
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 
-if [ "$SLOT_ROLE" = "group" ]; then
-    # 用全局dat目录
-    DIR_DAT=/cluster_data_root/mwa/dat
-fi
-
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1ch")
+    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/1ch")
     # DIR_1CH=$(get_host_path "${LOCAL_TMPFSDIR}/mydata/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
@@ -160,6 +158,6 @@ if [ "$KEEP_TARGET_FILE" = "no" ]; then
     echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt
 fi
 
-echo stdout,code=$code >> ${WORK_DIR}/auxout.txt
+echo code=$code >> ${WORK_DIR}/auxout.txt
 
 exit $code

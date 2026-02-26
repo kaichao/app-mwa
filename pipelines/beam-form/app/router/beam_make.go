@@ -52,7 +52,7 @@ func fromBeamMake(body string, headers map[string]string) int {
 			Background: true,
 		}
 		subDatDir := fmt.Sprintf(`%s/t%d_%d/ch%d`, obsID, t0, t1, ch)
-		cmd := fmt.Sprintf(`rm -rf %s/mydata/mwa/dat/%s`,
+		cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
 			os.Getenv("LOCAL_TMPDIR"), subDatDir)
 		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
 		if err != nil {

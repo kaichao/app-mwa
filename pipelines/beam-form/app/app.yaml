@@ -86,8 +86,8 @@ modules:
     arguments:
       code_path: ${CODE_BASE}/pull-unpack/code
       slot_options: tmpfs_workdir
-      free_space_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":15}'
-      dir_quota_gb: '{"${LOCAL_TMPDIR}/mydata/mwa/dat":${PULL_UNPACK_LIMIT_GB}}'
+      free_space_gb: '{"${LOCAL_TMPDIR}/dat":15}'
+      dir_quota_gb: '{"${LOCAL_TMPDIR}/dat":95}'
     parameters:
       task_dist_mode: HOST-BOUND
       vtask_role: core
@@ -99,12 +99,12 @@ modules:
       - SOURCE_JUMP=${SOURCE_JUMP}
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=
-      - BW_LIMIT=${BW_LIMIT}
+      # - BW_LIMIT=${BW_LIMIT}
       - KEEP_SOURCE_FILE=yes
       # 解包后文件的group-id，确保计算完成后可删除。
       - TMPDIR_GROUP=39
-      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
-      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
+      # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}    
 
@@ -141,8 +141,8 @@ modules:
       # 精搜的指向文件名
       - POINTING_FILE=${POINTING_FILE}
       - TMPDIR_GROUP=39
-      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
-      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
+      # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
       - ${GROUP_NODES}:2:d00
@@ -169,8 +169,8 @@ modules:
       - KEEP_TARGET_FILE=
       - ENABLE_LOCAL_COMPUTE=yes
       - TMPDIR_GROUP=39
-      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
-      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
+      # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}
       - ${GROUP_NODES}
@@ -229,8 +229,8 @@ modules:
       # "500k"/"1m"/...
       - BW_LIMIT=20m
       - TMPDIR_GROUP=39
-      - LOCAL_TMPDIR=${LOCAL_TMPDIR}
-      - LOCAL_SHMDIR=${LOCAL_SHMDIR}
+      # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
+      # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}
       - ${PRESTO_NODES}
@@ -276,7 +276,6 @@ modules:
     base_image: app-mwa/router-beam-form-app
     parameters:
       key_group_regex: ^([0-9]+)
-      start_message: ${START_MESSAGE}
       task_dist_mode: SLOT-BOUND
       task_batch_size: 2
       # slot_options: reserved_on_exit

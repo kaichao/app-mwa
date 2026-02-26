@@ -110,7 +110,16 @@ fi
 # 检查输出文件是否完整
 post_check $dataset $ch $begin $end $target_dir
 code=$?
-[[ $code -ne 0 ]] && echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/auxout.txt && exit $code
+# [[ $code -ne 0 ]] && echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/auxout.txt && exit $code
+if [[ $code -ne 0 ]]; then
+    echo "[ERROR]exit after post-check output files, exit_code:$code"  >> ${WORK_DIR}/auxout.txt
+    # 删除已解包文件
+    for ((n=$begin; n<=$end; n++))
+    do
+        rm -f "${target_dir}/${dataset}_${n}_ch${ch}.dat"
+    done
+    exit $code
+fi
 
 for ((n=$begin; n<=$end; n++))
 do

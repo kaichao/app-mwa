@@ -4,22 +4,16 @@ source functions.sh
 # source $(dirname $0)/functions.sh
 
 if [ $INPUT_ROOT ]; then
-    dir_1chx=$(get_host_path "${INPUT_ROOT}/mydata/mwa/1chx")
+    dir_1chx=$(get_host_path "${INPUT_ROOT}/1chx")
 else
     dir_1chx=/cluster_data_root/mwa/1chx
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    dir_1chy=$(get_host_path "${OUTPUT_ROOT}/mydata/mwa/1chy")
+    dir_1chy=$(get_host_path "${OUTPUT_ROOT}/1chy")
 else
     dir_1chy=/cluster_data_root/mwa/1chy
 fi
-
-# if [ $OUTPUT_ROOT ]; then
-#     DIR_1CHZ=$(get_host_path "${OUTPUT_ROOT}/mwa/1chz")
-# else
-#     DIR_1CHZ=/cluster_data_root/mwa/1chz
-# fi
 
 # 输入消息： 1257617424/p00001_00024/t1257617426_1257617505/ch113
 regex='^([0-9]+)/(p[0-9]+_[0-9]+)/(t[0-9]+_[0-9]+)/(ch[0-9]+)$'
@@ -57,9 +51,6 @@ export SOURCE_URL=${LOCAL_SHMDIR}
 
 target_user=${TARGET_USER:-root}
 target_port=${TARGET_PORT:-22}
-# target_root=${TARGET_ROOT:-${CLUSTER_DATA_ROOT}}
-# target_dir="${target_root}/mwa/1chz"
-# echo "target_dir:$target_dir"
 
 ret_code=0
 for i in "${!arr_files[@]}"; do
@@ -79,10 +70,9 @@ for i in "${!arr_files[@]}"; do
     if [ ${arr_hosts[i]} == "localhost" ]; then
         continue
     fi
-#    export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${target_dir}
     export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${LOCAL_SHMDIR}
     # 循环调用/app/share/bin/run.sh，分发文件
-    m="mydata/mwa/1chy/$fn"
+    m="1chy/$fn"
     eval "/app/share/bin/run.sh '$m' '$2'"
     code=$?
     if [[ $code -ne 0 ]]; then

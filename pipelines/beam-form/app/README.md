@@ -93,7 +93,7 @@ BW_LIMIT=300m \
 
 ```sh
 
-app_id=$(echo '1302282040/p03001_03600' | \
+app_id=$(echo '1302282040/p03601_04200' | \
 NUM_GROUPS=1 \
 NODES='^d00.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
@@ -247,10 +247,12 @@ ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run -
 
 ```
 
-## 出错/节点到期后重启
+## 出错/节点到期后，应用内重启
 
-- 节点renew
-- 重置信号量node-progress为0
-- 修改信号量pointing-done，减去已完成部分
-- 重置共享变量pull_unpack:first_load
+- 节点renew(清除计算节点上临时空间)
 - 重置slot状态
+- 重置信号量node-progress为0
+- 重置应用相关状态
+  - 清除共享存储上的临时空间
+  - 修改信号量pointing-done，减去已完成部分
+  - 重置共享变量pull_unpack:first_load，使得下次启动，能够快速加载数据
