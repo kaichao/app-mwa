@@ -2,7 +2,7 @@ name: app-base.beam-form
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: mr-beam-form
+  main_router: mr-beam-form
 
 modules:
   beam-make:
@@ -84,7 +84,7 @@ modules:
     base_image: app-mwa/router-beam-form-app-base
     parameters:
       key_group_regex: ^([0-9]+)$
-      start_message: ${START_MESSAGE}
+      start_task: ${START_MESSAGE}
     environments:
       - TIME_STEP=${TIME_STEP}
       - WITH_POINTING_PATH=no

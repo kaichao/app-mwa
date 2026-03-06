@@ -3,10 +3,10 @@ label: perf-test
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router
+  main_router: main-router
   default_sleep_count: ${APP_SLEEP_COUNT}
 
-jobs:
+modules:
   beam-maker:
     label: beam-maker
     base_image: ${MWA_VCSTOOLS}
@@ -27,9 +27,9 @@ jobs:
       - LOCAL_INPUT_ROOT=
       - LOCAL_CAL_ROOT=
       - LOCAL_OUTPUT_ROOT=
-    hosts:
+    slots:
       - ${NODES}:4
-    sink_jobs:
+    sink_modules:
       - down-sampler
 
   down-sampler:
@@ -43,7 +43,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       - LOCAL_INPUT_ROOT=
       - LOCAL_OUTPUT_ROOT=
-    hosts:
+    slots:
       - ${NODES}:2
 
   fits-merger:
@@ -63,18 +63,18 @@ jobs:
       # without down_sampler
       - DOWN_SAMPLER_ENABLED=no
       - KEEP_TARGET_FILE=${KEEP_24CH_FILE}
-    hosts:
+    slots:
       - ${NODES}:1
 
-  message-router:
+  main-router:
     label: 主消息路由
     base_image: hub.cstcloud.cn/scalebox/agent
     parameters:
       slot_on_head: yes
       start_message: ANY
     arguments:
-      # code_path: ${CODE_BASE}/pipelines/perf-test/message-router/code
-      code_path: ${HOME}/app-mwa/pipelines/perf-test/message-router/code
+      # code_path: ${CODE_BASE}/pipelines/perf-test/main-router/code
+      code_path: ${HOME}/app-mwa/pipelines/perf-test/main-router/code
       slot_options: reserved_on_exit
       local_ip_index: 2
     environments:
@@ -82,6 +82,6 @@ jobs:
       - WITH_HEADERS=yes
       - TRACE=
       - KEEP_24CH_FILE=${KEEP_24CH_FILE}
-    sink_jobs:
+    sink_modules:
       - beam-maker
       - fits-merger

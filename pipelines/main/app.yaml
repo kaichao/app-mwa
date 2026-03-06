@@ -3,7 +3,7 @@ label: mwa-comput
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-main
+  main_router: router-main
   default_sleep_count: 600
 
 jobs:
@@ -30,7 +30,7 @@ jobs:
       key_group_index: 1,2,3
     environments:
       - TARGET_URL=/work2/cstu0036/mydata/mwa/tar
-    hosts:
+    slots:
       - ${IO_NODES}
 
   pull-unpack:
@@ -66,12 +66,12 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_DISK_ROOT}
       - JUMP_SERVERS=${JUMP_SERVERS}
       - BW_LIMIT=100m
-      # 可给message-router发送重复名的消息（覆盖）
+      # 可给main-router发送重复名的消息（覆盖）
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
       # - KEEP_SOURCE_FILE=yes
       - KEEP_SOURCE_FILE=no
-    hosts:
+    slots:
       -  ${NODES}:1
 
   beam-maker:
@@ -95,8 +95,8 @@ jobs:
       # 若节点少，每个节点处理多于一个channel，则为 1,3,2
       # 若节点多，每个节点处理1个channel，则顺序为：1,2,4
       key_group_index: 1,2,3
-      # beam-maker的message-router耗时长，独立处理
-      message_router_index: 1
+      # beam-maker的main-router耗时长，独立处理
+      router_index: 1
       retry_rules: "['137:3','1:3','*:2']"
       max_tasks_per_minute: 3
       pod_id: pod_0
@@ -108,7 +108,7 @@ jobs:
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
       # 通常无KEEP_SOURCE_FILE设置，由信号量统一管理何时删除原始文件，仅压力测试时需使用
-    hosts:
+    slots:
       - ${NODES}:4
 
   down-sampler:
@@ -126,7 +126,7 @@ jobs:
       key_group_regex: (^[0-9]+)/p([0-9]+)/t([0-9]+)_[0-9]+/ch([0-9]{3}).fits$
       key_group_index: 1,3,2
       bulk_message_size: 10
-      message_router_index: 2
+      router_index: 2
       pod_id: pod_0
     environments:
       - KEEP_SOURCE_FILE=no
@@ -134,7 +134,7 @@ jobs:
       - LOCAL_OUTPUT_ROOT=${LOCAL_SHM_ROOT}
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
-    hosts:
+    slots:
       - ${NODES}:1
 
   # pull
@@ -152,7 +152,7 @@ jobs:
       bulk_message_size: 3
       # 255 12
       retry_rules: "['255:2','12:1']"
-      message_router_index: 3
+      router_index: 3
       slot_options: tmpfs_workdir
     environments:
       - TARGET_URL=/dev/shm/scalebox/mydata/mwa/1chx
@@ -160,7 +160,7 @@ jobs:
       - KEEP_SOURCE_FILE=no
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
-    hosts:
+    slots:
       - ${NODES}:1
 
   fits-merger:
@@ -187,7 +187,7 @@ jobs:
       - BW_LIMIT=
       - SOFT_OUTPUT_MB=
       - HARD_OUTPUT_MB=
-    hosts:
+    slots:
       - ${NODES}:1
 
   fits-24ch-push:
@@ -207,10 +207,10 @@ jobs:
       - SOURCE_URL=${CLUSTER_DATA_ROOT}/mwa/24ch
       - TARGET_URL=${RESULT_24CH_URL}
       - TARGET_JUMP_SERVERS=${JUMP_SERVERS}
-    hosts:
+    slots:
       - ${IO_NODES}
 
-  message-router-main:
+  router-main:
     label: 主消息路由
     base_image: app-mwa/message-router-go
     parameters:
@@ -243,7 +243,7 @@ jobs:
       - ENABLE_CLUSTER_DIST=yes
       - INPUT_ROOT=/work1/cstu0036/mydata
       # - TRACE=yes
-    hosts:
+    slots:
       - h0:4
     sink_jobs:
       - dir-list

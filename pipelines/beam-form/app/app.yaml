@@ -3,7 +3,7 @@ cluster: ${CLUSTER}
 parameters:
   # initial_status: RUNNING
   initial_status: INITIAL
-  message_router: router-beam-form
+  main_router: router-beam-form
   global_copier_size: 3
   global_copier_env: '{}'
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
@@ -92,7 +92,7 @@ modules:
       task_dist_mode: HOST-BOUND
       vtask_role: core
       pod_id: by_channel
-      message_router_index: 2
+      router_index: 2
       key_group_regex: ^([0-9]+)
     environments:
       - SOURCE_URL=
@@ -130,7 +130,7 @@ modules:
       retry_rules: "['*:3','134:9','135:9','139:9']"
       slot_timeout_minutes: 30
       slot_recoverable: yes
-      message_router_index: 1
+      router_index: 1
       task_cache_expired_minutes: 65
     environments:
       - INPUT_ROOT=${LOCAL_TMPDIR}
@@ -145,7 +145,7 @@ modules:
       # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
-      - ${GROUP_NODES}:2:d00
+      - ${GROUP_SLOTS}
 
   down-sample:
     base_image: ${DOWN_SAMPLE}

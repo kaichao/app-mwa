@@ -100,7 +100,22 @@ ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
 GROUP_NODES= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
-scalebox app run -e p419.env | cut -d':' -f2 | tr -d '}' )
+scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
+
+scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
+
+
+export LOG_LEVEL=DEBUG
+app_id=$(echo '1302282040/p04201_04800' | \
+NUM_GROUPS=1 \
+NODES='^a00.+' \
+ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
+GROUP_NODES='a01-00' \
+GROUP_SLOTS='a01-00:2:a00' \
+PRESTO_APP_ID= \
+PRESTO_NODES= \
+scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
 
 scalebox semaphore create --app-id=$app_id --sema-file preload.sema
 scalebox semaphore create --app-id=$app_id --sema-file mwa.sema

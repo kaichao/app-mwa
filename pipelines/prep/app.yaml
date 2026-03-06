@@ -2,9 +2,9 @@ name: file-copy.scalebox
 cluster: ${CLUSTER}
 parameters:
   initial_status: RUNNING
-  message_router: message-router-mwa
+  main_router: router-mwa
 
-jobs:
+modules:
   dir-list:
     label: 打包文件列表
     base_image: hub.cstcloud.cn/scalebox/dir-listx
@@ -18,7 +18,7 @@ jobs:
      # - REGEX_FILTER=^.+_[0-9]{5}3274[6-9].+
       - REGEX_2D_DATASET=
       - INDEX_2D_DATASET=
-  message-router-mwa:
+  router-mwa:
     label: 主消息路由
     base_image: app-fast/message-router:2309
    # schedule_mode: HEAD
@@ -35,7 +35,7 @@ jobs:
       - star_s=${STAR_S}
       - end_st=${END_ST}
       - size=${SIZE}
-    sink_jobs:
+    sink_modules:
       - unpack
       - dir-list
       - repack
@@ -52,7 +52,7 @@ jobs:
     environments:
       - SOURCE_URL=${UNPACK_SOURCE_URL}
       - OUTPUT_URL=${UNPACK_OUTPUT_URL}
-    hosts:
+    slots:
       - r01:1
       - r02:1
       - r03:1
@@ -75,13 +75,12 @@ jobs:
       pod_id: pod_0
       key_group_regex: ([0-9]+)+_([0-9]+)_ch([0-9]+).dat$
       key_group_index: 1,3,2
- 
     environments:
       - SOURCE_URL=
       - TARGET_URL=/data/mwa
      # - SOURCE_MODE=${FITS_REDIST_MODE}
       - KEEP_SOURCE_FILE=no
-    hosts:
+    slots:
       - r01:1
       - r02:1  
       - r03:1
@@ -132,7 +131,7 @@ jobs:
         - TARGET_URL=${TARGET_URL_RCLONE}
         - ACTION=${REMOTE_ACTION}
         - RM_FILE=${RM_FILE}
-      hosts:
+      slotts:
         - r01:1
         - r02:1
         - r03:1

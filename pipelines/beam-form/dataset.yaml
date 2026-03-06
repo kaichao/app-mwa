@@ -11,7 +11,7 @@ datasets:
   1302282040:
     # t: 1302282041 .. 1302286838, 4798
     # pointings.txt 的1-230行是已知脉冲星，231-11571是盲搜格点
-    # finished: 960
+    # finished: 4200
 
     # channel dimension
     channelBegin: 109
