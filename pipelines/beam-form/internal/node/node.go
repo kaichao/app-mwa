@@ -51,8 +51,15 @@ func GetIPAddrListByGroupIndex(groupIndex int) []string {
 // }
 
 // GetNodeNameByGroupIndexPointing ...
-// - 用于fits-merge
+// - 用于fits-merge任务生成。
 func GetNodeNameByGroupIndexPointing(groupIndex, p int) string {
-	index := groupIndex*24 + (p-1)%24
+	groupSize := 24
+	// TODO: 如果节点数小于24，会报错。
+	// 仅考虑单组小于24节点的情况。
+	// 如果多组，总节点数依然小于24，比如，2组8个节点共16个节点的情况，还需再考虑
+	if len(Nodes) < 24 {
+		groupSize = len(Nodes)
+	}
+	index := groupIndex*groupSize + (p-1)%groupSize
 	return Nodes[index].Name
 }

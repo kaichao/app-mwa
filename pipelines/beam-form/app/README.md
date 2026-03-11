@@ -86,33 +86,27 @@ scalebox semaphore create --app-id=$app_id --sema-file /tmp/my-sema.txt
 
 echo '1253991112/p01321_02280' | \
 
-echo '1302282040/p01921_02880' | \
-
-BW_LIMIT=300m \
-
 
 ```sh
 
-app_id=$(echo '1302282040/p03601_04200' | \
+app_id=$(echo '1302282040/p04201_04800' | \
 NUM_GROUPS=1 \
 NODES='^d00.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
 GROUP_NODES= \
+GROUP_SLOTS= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
-
-scalebox semaphore create --app-id=$app_id --sema-file preload.sema
-scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
 
 
 export LOG_LEVEL=DEBUG
 app_id=$(echo '1302282040/p04201_04800' | \
 NUM_GROUPS=1 \
-NODES='^a00.+' \
+NODES='^d00.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
-GROUP_NODES='a01-00' \
-GROUP_SLOTS='a01-00:2:a00' \
+GROUP_NODES='g00-00' \
+GROUP_SLOTS='g00-00:4:d00' \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )

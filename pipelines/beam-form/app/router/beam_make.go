@@ -46,33 +46,39 @@ func fromBeamMake(body string, headers map[string]string) int {
 			sshUser = "root"
 		}
 		config := exec.SSHConfig{
-			User:       sshUser,
-			Host:       ipAddr,
-			Port:       sshPort,
-			Background: true,
+			User: sshUser,
+			Host: ipAddr,
+			Port: sshPort,
+			// Background: true,
 		}
 		subDatDir := fmt.Sprintf(`%s/t%d_%d/ch%d`, obsID, t0, t1, ch)
-		cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
-			os.Getenv("LOCAL_TMPDIR"), subDatDir)
-		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
-		if err != nil {
-			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
-				cmd, stdout, stderr, err)
-		}
+		dataDir := fmt.Sprintf("%s/dat/%s", os.Getenv("LOCAL_TMPDIR"), subDatDir)
+
+		// cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
+		// 	os.Getenv("LOCAL_TMPDIR"), subDatDir)
 
 		if globalDatDir := headers["_global_dat_dir"]; globalDatDir != "" {
-			cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
-				globalDatDir, subDatDir)
-			_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
-			if err != nil {
-				logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
-					cmd, stdout, stderr, err)
-			}
+			dataDir += fmt.Sprintf(" %s/dat/%s", globalDatDir, subDatDir)
+			// cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
+			// 	globalDatDir, subDatDir)
+			// _, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
+			// if err != nil {
+			// 	logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
+			// 		cmd, stdout, stderr, err)
+			// }
 
 			// sub-path: 1302282040/t1302282041_1302282200/ch126
 			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
 				logger.LogTracedErrorDefault(err)
 			}
+		}
+
+		cmd := "rm -rf " + dataDir
+		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
+		fmt.Printf("[***]remove dirs:%s,host:%s\nstdout:%s\nstderr:%s\nerr:%v\n", dataDir, ipAddr, stdout, stderr, err)
+		if err != nil {
+			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
+				cmd, stdout, stderr, err)
 		}
 	}
 

@@ -20,12 +20,14 @@ if [ $CAL_ROOT ]; then
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
-if [ $INPUT_ROOT ]; then
+
+if [ "$SLOT_ROLE" = "group" ]; then
+    # 用全局dat目录
+    global_dat_dir=$(get_header "$2" "_global_dat_dir")
+    DIR_DAT=$(get_host_path "${global_dat_dir}/dat")
+elif [ $INPUT_ROOT ]; then
     DIR_DAT=$(get_host_path "${INPUT_ROOT}/dat")
     # DIR_DAT="${LOCAL_TMPDIR}/mydata/mwa/dat"
-elif [ "$SLOT_ROLE" = "group" ]; then
-    # 用全局dat目录
-    DIR_DAT=/cluster_data_root/mwa/dat
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
