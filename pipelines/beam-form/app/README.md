@@ -101,7 +101,7 @@ scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
 
 
 export LOG_LEVEL=DEBUG
-app_id=$(echo '1302282040/p04201_04800' | \
+app_id=$(echo '1302282040/p05401_06000' | \
 NUM_GROUPS=1 \
 NODES='^d00.+' \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
@@ -264,4 +264,4 @@ ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run -
 - 重置应用相关状态
   - 清除共享存储上的临时空间
   - 修改信号量pointing-done，减去已完成部分
-  - 重置共享变量pull_unpack:first_load，使得下次启动，能够快速加载数据
+  - 重置共享变量first_load:pull_unpack，使得下次启动，能够快速加载数据

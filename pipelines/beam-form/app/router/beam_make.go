@@ -36,7 +36,9 @@ func fromBeamMake(body string, headers map[string]string) int {
 	}
 	// 若信号量为0，则删除dat文件目录（？）
 	if v <= 0 {
-		ipAddr := headers["from_ip"]
+		// 考虑到存在组外节点做beam-make的情况，不能直接用from_ip来做本地dat文件删除
+		// 需明确使用toBeamMake()中纪录的对应组内地址（_grouped_ip）
+		ipAddr := headers["_grouped_ip"]
 		sshPort, _ := strconv.Atoi(os.Getenv("SSH_PORT"))
 		if sshPort == 0 {
 			sshPort = 22
@@ -46,27 +48,16 @@ func fromBeamMake(body string, headers map[string]string) int {
 			sshUser = "root"
 		}
 		config := exec.SSHConfig{
-			User: sshUser,
-			Host: ipAddr,
-			Port: sshPort,
-			// Background: true,
+			User:       sshUser,
+			Host:       ipAddr,
+			Port:       sshPort,
+			Background: true,
 		}
 		subDatDir := fmt.Sprintf(`%s/t%d_%d/ch%d`, obsID, t0, t1, ch)
 		dataDir := fmt.Sprintf("%s/dat/%s", os.Getenv("LOCAL_TMPDIR"), subDatDir)
 
-		// cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
-		// 	os.Getenv("LOCAL_TMPDIR"), subDatDir)
-
 		if globalDatDir := headers["_global_dat_dir"]; globalDatDir != "" {
 			dataDir += fmt.Sprintf(" %s/dat/%s", globalDatDir, subDatDir)
-			// cmd := fmt.Sprintf(`rm -rf %s/dat/%s`,
-			// 	globalDatDir, subDatDir)
-			// _, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
-			// if err != nil {
-			// 	logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
-			// 		cmd, stdout, stderr, err)
-			// }
-
 			// sub-path: 1302282040/t1302282041_1302282200/ch126
 			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
 				logger.LogTracedErrorDefault(err)
@@ -75,7 +66,10 @@ func fromBeamMake(body string, headers map[string]string) int {
 
 		cmd := "rm -rf " + dataDir
 		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
-		fmt.Printf("[***]remove dirs:%s,host:%s\nstdout:%s\nstderr:%s\nerr:%v\n", dataDir, ipAddr, stdout, stderr, err)
+		auxoutFile := os.Getenv("WORK_DIR") + "/auxout.txt"
+		common.AppendToFile(auxoutFile, fmt.Sprintf(
+			"[***]remove dirs:%s,host:%s\nstdout:%s\nstderr:%s\nerr:%v\n",
+			dataDir, ipAddr, stdout, stderr, err))
 		if err != nil {
 			logrus.Warnf("exec-cmd:%s\nstdout:\n%s\nstderr:\n%s\nerr-info:\n%v\n",
 				cmd, stdout, stderr, err)
@@ -120,7 +114,10 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 		"SINK_MODULE":     "beam-make",
 		"TIMEOUT_SECONDS": "600",
 	}
-	headers := `{}`
+	// pull-unpack的ip地址
+	fromIP := fromHeaders["from_ip"]
+	// 设置为组内地址，供组外做beam-make的节点删除本地SSD存储的dat数据时使用
+	headers := fmt.Sprintf(`{"_grouped_ip":"%s"}`, fromIP)
 	if _, err := task.AddTasks(tasks, headers, envVars); err != nil {
 		logrus.Errorf("err:%v\n", err)
 		return 1

@@ -161,14 +161,14 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 // 获取优化的带宽，以MB/s计，返回字符串，'100m'/'1000k'
 func getOptBandwidthMB(toHost string) string {
 	// 共享变量是否存在，若不存在，若为空，则为缺省值 yes
-	varName := "pull_unpack:first_load:" + toHost
+	varName := "first_load:pull_unpack:" + toHost
 	val, err := variable.GetValue(varName, 0, appID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			logger.LogTracedErrorDefault(err)
 			return ""
 		}
-		// 未定义pull_unpack:first_load
+		// 未定义first_load:pull_unpack
 	}
 	if val != "" {
 		return os.Getenv("BW_LIMIT")
