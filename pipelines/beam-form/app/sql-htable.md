@@ -495,3 +495,28 @@ SELECT *
 FROM htable
 
 ```
+
+## 组计算的组节点任务统计
+- 按channel统计
+```sql
+select substring(body from 'ch(\d+)$') AS ch_number,count(*)
+from t_task_exec
+where slot in (
+select id
+from t_slot
+where mod_id=3145 and parameters->>'group_prefix' IS NOT NULL
+)
+group by 1
+order by 1;
+```
+
+- 总数统计
+```sql
+select count(*) 
+from t_task_exec
+where slot in (
+select id
+from t_slot
+where mod_id=3145 and parameters->>'group_prefix' IS NOT NULL
+);
+```

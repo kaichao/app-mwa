@@ -3,28 +3,24 @@ package main
 import (
 	"strconv"
 
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
-func fromVtaskTail(body string, headers map[string]string) int {
+func fromVtaskTail(body string, headers map[string]string) error {
 	// 恢复应用级编程信号量
 	// vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	// 待确认 vtask-id = 0 ?
 	vtaskID := int64(0)
 	semaName := ":" + headers["_vtask_size_sema"]
-	if _, err := semaphore.AddValue(semaName, vtaskID, appID, 1); err != nil {
-		logger.LogTracedErrorDefault(err)
-		// logrus.Errorf("In fromVtaskTail(), sema-name=%s,err=%v\n", semaName, err)
-		return 1
-	}
-	return 0
+	_, err := semaphore.AddValue(semaName, vtaskID, appID, 1)
+	return errors.WrapE(err, "add-semaphore",
+		"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
 }
 
 // pointingID:
-func toVtaskTail(pointingID string, fromHeaders map[string]string) int {
+func toVtaskTail(pointingID string, fromHeaders map[string]string) error {
 	vtaskID, _ := strconv.ParseInt(fromHeaders["_vtask_id"], 10, 64)
 	// 信号量pointing-done / vtask-cube-done的减1操作
 	semaPairs := map[string]int{}
@@ -37,14 +33,13 @@ func toVtaskTail(pointingID string, fromHeaders map[string]string) int {
 	// 执行减一操作
 	m, err := semaphore.AddMapValues(semaPairs, vtaskID, appID)
 	if err != nil {
-		logrus.Errorf("error while decrement semaphore,sema-pairs=%v, err:%v\n",
-			semaPairs, err)
-		return 1
+		return errors.WrapE(err, "decrement semaphore",
+			"app-id", appID, "vtask-id", vtaskID, "sema-pairs", semaPairs)
 	}
 
 	if semaVal := m[semaName1]; semaVal > 0 {
 		// cube not done.
-		return 0
+		return nil
 	}
 
 	headers := map[string]string{}
@@ -53,10 +48,7 @@ func toVtaskTail(pointingID string, fromHeaders map[string]string) int {
 	}
 
 	body := fromHeaders["_vtask_cube_name"]
-	if _, err := task.AddWithMapHeaders(body, headers, envs); err != nil {
-		logger.LogTracedErrorDefault(err)
-		// logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
-		return 1
-	}
-	return 0
+	_, err = task.AddWithMapHeaders(body, headers, envs)
+	return errors.WrapE(err, "add-task",
+		"task-body", body, "task-headers", headers, "envs", envs)
 }

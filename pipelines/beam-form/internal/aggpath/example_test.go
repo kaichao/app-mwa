@@ -1,9 +1,6 @@
 package aggpath_test
 
-import (
-	"beamform/internal/aggpath"
-)
-
+/*
 // ExampleNew 展示如何使用New函数从文件创建AggregatedPath
 func ExampleNew() {
 	// 从文件创建AggregatedPath
@@ -60,3 +57,4 @@ func ExampleAggregatedPath_ReleaseMemberPath() {
 	}
 	// Output:
 }
+*/

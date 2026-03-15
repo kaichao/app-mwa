@@ -1,11 +1,6 @@
 package picker
 
-import (
-	"fmt"
-	"os"
-	"testing"
-)
-
+/*
 func TestPicker(t *testing.T) {
 	os.Setenv("CLUSTER", "p419")
 	// 用于测试的环境变量
@@ -15,3 +10,4 @@ func TestPicker(t *testing.T) {
 		fmt.Println(picker.GetNext())
 	}
 }
+*/

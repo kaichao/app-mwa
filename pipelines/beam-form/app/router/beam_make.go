@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
@@ -16,13 +17,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func fromBeamMake(body string, headers map[string]string) int {
+func fromBeamMake(body string, headers map[string]string) error {
 	// body: 1257617424/p00049_00072/t1257617426_1257617505/ch111
 	// sema: dat-done:1257010784/p00001_00960/t1257010786_1257010985/ch109
 	obsID, _, _, t0, t1, ch, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse task-body, body=%s,err=%v\n", body, err)
-		return 1
+		return errors.WrapE(err, "parse task-body", "task-body", body)
 	}
 
 	// 用obsID，但可能有边界对齐问题？
@@ -31,8 +31,8 @@ func fromBeamMake(body string, headers map[string]string) int {
 	// 信号量操作
 	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
-		logrus.Errorf("semaphore-decrement, err-info:%v\n", err)
-		return 3
+		return errors.WrapE(err, 3, "semaphore-decrement",
+			"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
 	}
 	// 若信号量为0，则删除dat文件目录（？）
 	if v <= 0 {
@@ -79,7 +79,7 @@ func fromBeamMake(body string, headers map[string]string) int {
 	return toDownSample(body, headers)
 }
 
-func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
+func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) error {
 	cube := datacube.NewDataCube(cubeID)
 	ps := cube.GetPointingRangesByInterval(cube.PointingBegin, cube.PointingEnd)
 	tasks := []string{}
@@ -118,9 +118,7 @@ func toBeamMake(cubeID string, ch int, fromHeaders map[string]string) int {
 	fromIP := fromHeaders["from_ip"]
 	// 设置为组内地址，供组外做beam-make的节点删除本地SSD存储的dat数据时使用
 	headers := fmt.Sprintf(`{"_grouped_ip":"%s"}`, fromIP)
-	if _, err := task.AddTasks(tasks, headers, envVars); err != nil {
-		logrus.Errorf("err:%v\n", err)
-		return 1
-	}
-	return 0
+	_, err := task.AddTasks(tasks, headers, envVars)
+	return errors.WrapE(err, "add-tasks",
+		"task-lines", tasks, "headers", headers, "envs", envVars)
 }

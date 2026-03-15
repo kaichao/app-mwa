@@ -1,19 +1,22 @@
 package main
 
 import (
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
-func fromDownSample(body string, headers map[string]string) int {
+func fromDownSample(body string, headers map[string]string) error {
 	defer func() {
 		common.AddTimeStamp("leave-fromDownSample()")
 	}()
-	return toFitsRedist(body, headers)
+
+	err := toFitsRedist(body, headers)
+	return errors.WrapE(err, "toFitsRedist()",
+		"task-body", body, "headers", headers)
 }
 
-func toDownSample(body string, fromHeaders map[string]string) int {
+func toDownSample(body string, fromHeaders map[string]string) error {
 	headers := map[string]string{
 		"_sort_tag": fromHeaders["_sort_tag"],
 		"sort_tag":  fromHeaders["_sort_tag"],
@@ -22,9 +25,6 @@ func toDownSample(body string, fromHeaders map[string]string) int {
 		"SINK_MODULE": "down-sample",
 	}
 	_, err := task.AddWithMapHeaders(body, headers, envVars)
-	if err != nil {
-		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
-		return 1
-	}
-	return 0
+	return errors.WrapE(err, "add-task",
+		"task-body", body, "headers", headers, "envs", envVars)
 }

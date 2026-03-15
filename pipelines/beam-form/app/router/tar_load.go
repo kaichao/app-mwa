@@ -23,30 +23,30 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
 // body: 1267459410_1267459449_ch109.dat.tar.zst
 // headers:
 //   - _cube_name: 1257010784/p00001_00960/t1257012766_1257012965
-func fromTarLoad(body string, headers map[string]string) int {
+func fromTarLoad(body string, headers map[string]string) error {
 	cubeName := headers["_cube_name"]
 	semaName := "tar-ready:" + cubeName
 	n, err := semaphore.AddValue(semaName, 0, appID, -1)
 	if err != nil {
-		logger.LogTracedErrorDefault(err)
-		// logrus.Errorf("semaphore-decrement, name=%s,err-info:%v\n", semaName, err)
-		return 1
+		return errors.WrapE(err, "decrement semaphore",
+			"sema-name", semaName, "app-id", appID)
 	}
 	if n <= 0 {
 		// 若支持分组级slot，则发给pull-unpack
 		// 否则发给wait-queue
-		return toWaitQueue(cubeName)
+		err = toWaitQueue(cubeName)
+		return errors.WrapE(err,
+			"toWaitQueue()", "cube-name", cubeName)
 	}
-	return 0
+	return nil
 }
 
 // toTarLoad
@@ -62,13 +62,12 @@ func fromTarLoad(body string, headers map[string]string) int {
 // - 1257010784/p00001_00960/t1257012766_1257012965
 // - 1257010784/p00001_00960/t1257012766_
 // - 1257010784/p00001_00960/t_1257012965
-func toTarLoad(datasetID string) int {
+func toTarLoad(datasetID string) error {
 	// 按顺序产生tar-load的任务
 	cube := datacube.NewDataCube(datasetID)
 	originRoot := os.Getenv("ORIGIN_ROOT")
 	if originRoot == "" {
-		logrus.Errorln("env-var ORIGIN_ROOT not set!")
-		return 1
+		return errors.E("env-var ORIGIN_ROOT not set")
 	}
 	// sourceURL := fmt.Sprintf("%s/mwa/tar/%s", iopath.GetOriginRoot(), cube.ObsID)
 	sourceURL := fmt.Sprintf("%s/tar/%s",
@@ -93,11 +92,10 @@ func toTarLoad(datasetID string) int {
 				ch := cube.ChannelBegin + j
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
 				// root, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
-				root, err := vPath.GetPath("preload-tar", cube.ObsID+"/"+fileName)
+				key := cube.ObsID + "/" + fileName
+				root, err := vPath.GetPath("preload-tar", key)
 				if err != nil {
-					// logrus.Errorf("error:%T,%v\n", err, err)
-					logger.LogTracedErrorDefault(err)
-					return 1
+					return errors.WrapE(err, "vPath.GetPath", "category", "preload-tar", "key", key)
 				}
 				targetURL := fmt.Sprintf("%s/tar/%s", root, cube.ObsID)
 				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_name":"%s"}`,
@@ -113,8 +111,8 @@ func toTarLoad(datasetID string) int {
 		os.Unsetenv("CONFLICT_ACTION")
 	}()
 	if err := semaphore.CreateSemaphores(semaLines, 0, appID, 100); err != nil {
-		logger.LogTracedErrorDefault(err)
-		return 2
+		return errors.WrapE(err, 2, "CreateSemaphores",
+			"app-id", appID, "sema-lines", semaLines)
 	}
 
 	headers := map[string]string{
@@ -124,12 +122,9 @@ func toTarLoad(datasetID string) int {
 		"SINK_MODULE":     "tar-load",
 		"CONFLICT_ACTION": "OVERWRITE",
 	}
-
-	if _, err := task.AddTasksWithMapHeaders(taskLines, headers, envs); err != nil {
-		logger.LogTracedErrorDefault(err)
-		return 3
-	}
-	return 0
+	_, err := task.AddTasksWithMapHeaders(taskLines, headers, envs)
+	return errors.WrapE(err, 3, "add-task",
+		"task-lines", taskLines, "headers", headers, "envs", envs)
 }
 
 // 文件大小：

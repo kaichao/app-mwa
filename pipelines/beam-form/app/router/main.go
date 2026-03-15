@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/kaichao/gopkg/errors"
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/sirupsen/logrus"
 
@@ -36,16 +38,21 @@ func main() {
 
 	common.AddTimeStamp("before-mr")
 	// logrus.Infoln("03, main-router not null")
-	exitCode := doMainRoute(os.Args[1], headers)
-	if exitCode != 0 {
-		logrus.Errorf("error found, error-code=%d\n", exitCode)
+	err := doMainRoute(os.Args[1], headers)
+	if err == nil {
+		os.Exit(0)
 	}
-	common.AddTimeStamp("before-exit")
-	os.Exit(exitCode)
+	logger.LogTracedErrorDefault(err)
+	if te, ok := err.(*errors.TracedError); ok {
+		os.Exit(te.Code)
+	}
+
+	// other error
+	os.Exit(1)
 }
 
 var (
-	fromFuncs = map[string]func(string, map[string]string) int{
+	fromFuncs = map[string]func(string, map[string]string) error{
 		"":            fromNull,
 		"tar-load":    fromTarLoad,
 		"wait-queue":  fromWaitQueue,

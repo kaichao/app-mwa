@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/task"
 )
 
-func fromWaitQueue(body string, headers map[string]string) int {
+func fromWaitQueue(body string, headers map[string]string) error {
 	return toVtaskHead(body)
 }
 
-func toWaitQueue(cubeName string) int {
+func toWaitQueue(cubeName string) error {
 	// cube-name: 1257010784/p00001_00960/t1257012766_1257012965
 	headers := map[string]string{}
 	envs := map[string]string{
@@ -18,10 +18,5 @@ func toWaitQueue(cubeName string) int {
 	}
 
 	_, err := task.AddWithMapHeaders(cubeName, headers, envs)
-	if err != nil {
-		logger.LogTracedErrorDefault(err)
-		return 1
-	}
-
-	return 0
+	return errors.WrapE(err, "add-tasks", "task-body", cubeName)
 }

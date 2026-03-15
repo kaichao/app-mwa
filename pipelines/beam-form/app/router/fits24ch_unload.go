@@ -8,23 +8,21 @@ package main
 import (
 	"fmt"
 
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/task"
 )
 
-func fromFits24chUnload(body string, headers map[string]string) int {
+func fromFits24chUnload(body string, headers map[string]string) error {
 	// 仅纪录，不处理。
-	return 0
+	return nil
 }
 
-func toFits24chUnload(fileName, targetURL string) int {
+func toFits24chUnload(fileName, targetURL string) error {
 	headers := fmt.Sprintf(`{"target_url":"%s"}`, targetURL)
 	envVars := map[string]string{
 		"SINK_MODULE": "fits24ch-unload",
 	}
-	if _, err := task.Add(fileName, headers, envVars); err != nil {
-		logger.LogTracedErrorDefault(err)
-		return 1
-	}
-	return 0
+	_, err := task.Add(fileName, headers, envVars)
+	return errors.WrapE(err, "add-task",
+		"task-body", fileName, "headers", headers, "envs", envVars)
 }

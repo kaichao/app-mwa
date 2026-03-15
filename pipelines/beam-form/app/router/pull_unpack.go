@@ -8,21 +8,21 @@ import (
 	"beamform/internal/datacube"
 	"beamform/internal/node"
 	"database/sql"
-	"errors"
+
 	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/variable"
-	"github.com/sirupsen/logrus"
 )
 
-func fromPullUnpack(body string, headers map[string]string) int {
+func fromPullUnpack(body string, headers map[string]string) error {
 	defer func() {
 		common.AddTimeStamp("leave-fromPullUnpack()")
 	}()
@@ -33,8 +33,7 @@ func fromPullUnpack(body string, headers map[string]string) int {
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+_[0-9]+)/([0-9]+)_[0-9]+_ch([0-9]+).dat.tar.zst$`)
 	ss := re.FindStringSubmatch(body)
 	if len(ss) == 0 {
-		logrus.Errorf("Invalid Task-body Format, body=%s\n", body)
-		return 1
+		return errors.E("invalid task-body Format", "task-body", body)
 	}
 	prefix := ss[1]
 	t, _ := strconv.Atoi(ss[2])
@@ -47,22 +46,22 @@ func fromPullUnpack(body string, headers map[string]string) int {
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	semaVal, err := semaphore.AddValue(sema, vtaskID, appID, -1)
 	if err != nil {
-		logrus.Errorf("semaphore-decrement, sema=%s\n", sema)
-		return 2
+		return errors.WrapE(err, 2, "semaphore-decrement",
+			"sema-name", sema, "app-id", appID, "vtask-id", vtaskID)
 	}
 	if semaVal > 0 {
-		return 0
+		return nil
 	}
 	common.AddTimeStamp("prepare-tasks")
-	return toBeamMake(cubeID, ch, headers)
+	return errors.WrapE(toBeamMake(cubeID, ch, headers), "toBeamMake()",
+		"cube-id", cubeID, "ch", ch, "headers", headers)
 }
 
-func toPullUnpack(body string, fromHeaders map[string]string) int {
+func toPullUnpack(body string, fromHeaders map[string]string) error {
 	cube := datacube.NewDataCube(body)
 	trs := cube.GetTimeRanges()
 	if len(trs) != 2 {
-		logrus.Errorf("Only one time-range allowed for cube-id:%s\n", body)
-		return 1
+		return errors.E("only one time-range allowed", "cube-id", body)
 	}
 
 	trBegin := trs[0]
@@ -104,10 +103,11 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 		for k := 0; k < len(tus); k += 2 {
 			fileName := fmt.Sprintf("%d_%d_ch%d.dat.tar.zst", tus[k], tus[k+1], ch)
 			// sourceURL, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
-			sourceURL, err := vPath.GetPath("preload-tar", cube.ObsID+"/"+fileName)
+			key := cube.ObsID + "/" + fileName
+			sourceURL, err := vPath.GetPath("preload-tar", key)
 			if err != nil {
-				logger.LogTracedErrorDefault(err)
-				return 1
+				return errors.WrapE(err, "vPath.GetPath()",
+					"category", "preload-tar", "key", key)
 			}
 			headers, _ = common.SetJSONAttribute(headers, "source_url", sourceURL)
 
@@ -137,9 +137,8 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	vtaskID, _ := strconv.ParseInt(fromHeaders["_vtask_id"], 10, 64)
 	err := semaphore.CreateSemaphores(semaphores, vtaskID, appID, 500)
 	if err != nil {
-		logrus.Errorf("create sema, err-info:%v\n", err)
-		logger.LogTracedErrorDefault(err)
-		return 1
+		return errors.WrapE(err, "semaphore.CreateSemaphores()",
+			"sema-lines", semaphores, "app-id", appID, "vtask-id", vtaskID)
 	}
 
 	targetURL := os.Getenv("LOCAL_TMPDIR")
@@ -149,13 +148,9 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
-
 	_, err = task.AddTasksWithMapHeaders(tasks, headers, envs)
-	if err != nil {
-		logger.LogTracedErrorDefault(err)
-		return 1
-	}
-	return 0
+	return errors.WrapE(err, "add-tasks",
+		"task-lines", tasks, "headers", headers, "envs", envs)
 }
 
 // 获取优化的带宽，以MB/s计，返回字符串，'100m'/'1000k'

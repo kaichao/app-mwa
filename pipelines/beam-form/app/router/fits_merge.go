@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
-func fromFitsMerge(body string, headers map[string]string) int {
+func fromFitsMerge(body string, headers map[string]string) error {
 	// body == 1257010784/p00001/t1257010786_1257010965
 	defer func() {
 		common.AddTimeStamp("leave-fromFitsMerge()")
@@ -23,40 +23,42 @@ func fromFitsMerge(body string, headers map[string]string) int {
 	re := regexp.MustCompile(`^([0-9]+/p[0-9]+)(/t[0-9]+_[0-9]+)$`)
 	ss := re.FindStringSubmatch(body)
 	if ss == nil {
-		logrus.Errorf("Invalid format, task-body:%s\n", body)
-		return 1
+		return errors.E("parse task-body", "task-body", body)
 	}
 	pointingID := ss[1]
 	varName := fmt.Sprintf("pointing-data-root:%s", pointingID)
 	varValue, err := getPointingVariable(varName, appID)
 	if err != nil {
-		logrus.Errorf("variable-get, err-info:%v\n", err)
-		return 11
+		return errors.WrapE(err, 11, "variable-get", "var-name", varName, "app-id", appID)
 	}
 
 	fileName := fmt.Sprintf("mwa/24ch/%s.fits.zst", body)
 	if os.Getenv("RUN_MODE") == "full-parallel" {
 		// 全并行，需通过fits24ch-move拷贝到脉冲星搜索的计算节点（全并行，fits合并在后续计算节点上？）
-		return toFits24chMove(fileName, varValue)
+		err = toFits24chMove(fileName, varValue)
+		return errors.WrapE(err, "toFits24chMove()",
+			"file-name", fileName, "var-value", varValue)
 	}
 	if strings.Contains(varValue, "@") {
 		// 共享变量pointing-data-root，若为类型3，给fits24-unload发消息，推送到远端ssh存储
-		if code := toFits24chUnload(fileName, varValue); code > 0 {
-			return code
+		err = toFits24chUnload(fileName, varValue)
+		if err != nil {
+			return errors.WrapE(err, "toFits24chUnload()",
+				"file-name", fileName, "var-value", varValue)
 		}
 	}
 
-	return toVtaskTail(pointingID, headers)
-
+	err = toVtaskTail(pointingID, headers)
+	return errors.WrapE(err, "toVtaskTail()",
+		"pointing-id", pointingID, "headers", headers)
 	// return toCrossAppPresto(ss[1])
 }
 
-func toFitsMerge(body string, fromHeaders map[string]string) int {
+func toFitsMerge(body string, fromHeaders map[string]string) error {
 	// task-body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	ds, p0, p1, t0, t1, _, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", body, err)
-		return 1
+		return errors.WrapE(err, "parse task-body", "task-body", body)
 	}
 
 	// cube := datacube.NewDataCube(ds)
@@ -66,8 +68,7 @@ func toFitsMerge(body string, fromHeaders map[string]string) int {
 		varName := fmt.Sprintf("pointing-data-root:%s/p%05d", ds, p)
 		varValue, err := getPointingVariable(varName, appID)
 		if err != nil {
-			logrus.Errorf("variable-get, var-name:%s, err-info:%v\n", varName, err)
-			return 11
+			return errors.WrapE(err, 11, "variable-get", "var-name", varName, "app-id", appID)
 		}
 
 		headers := ""
@@ -76,7 +77,6 @@ func toFitsMerge(body string, fromHeaders map[string]string) int {
 		ss := strings.Split(semaName, ":")
 		groupIndex, _ := strconv.Atoi(ss[len(ss)-1])
 		toHost := node.GetNodeNameByGroupIndexPointing(groupIndex, p)
-		fmt.Printf("group-index=%d,to-host=%s\n", groupIndex, toHost)
 
 		// toHost := node.GetNodeNameByPointingTime(cube, p, t0)
 		if ip := net.ParseIP(varValue); ip != nil && ip.To4() != nil {
@@ -100,10 +100,10 @@ func toFitsMerge(body string, fromHeaders map[string]string) int {
 			headers, _ = common.SetJSONAttribute(headers,
 				"output_root", varValue)
 		}
-		m := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
-		fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
-			varValue, toHost, headers, m)
-		taskLines = append(taskLines, m)
+		line := fmt.Sprintf(`%s/p%05d/t%d_%d,%s`, ds, p, t0, t1, headers)
+		// fmt.Printf("var-value:%s,to-host:%s,headers=%s,m=%s\n",
+		// 	varValue, toHost, headers, m)
+		taskLines = append(taskLines, line)
 	}
 
 	common.AddTimeStamp("before-add-tasks")
@@ -112,9 +112,6 @@ func toFitsMerge(body string, fromHeaders map[string]string) int {
 		"TIMEOUT_SECONDS": "600",
 	}
 	_, err = task.AddTasks(taskLines, "{}", envVars)
-	if err != nil {
-		logrus.Errorf("err:%v\n", err)
-		return 1
-	}
-	return 0
+	return errors.WrapE(err, "add-tasks",
+		"task-lines", taskLines, "envs", envVars)
 }

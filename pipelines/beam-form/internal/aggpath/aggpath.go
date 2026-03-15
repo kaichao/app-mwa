@@ -1,20 +1,6 @@
 package aggpath
 
-import (
-	"database/sql"
-	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
-
-	"github.com/kaichao/gopkg/errors"
-	"github.com/kaichao/scalebox/pkg/common"
-	"github.com/kaichao/scalebox/pkg/semagroup"
-	"github.com/kaichao/scalebox/pkg/semaphore"
-	"github.com/kaichao/scalebox/pkg/variable"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 // AggregatedPath 汇聚目录
 type AggregatedPath struct {
 	Name        string
@@ -141,3 +127,4 @@ func (ap *AggregatedPath) ReleaseMemberPath(category, path string) error {
 	err = variable.Set(varName, "", 0, ap.AppID)
 	return errors.WrapE(err, "variable-set", "var-name", varName)
 }
+*/

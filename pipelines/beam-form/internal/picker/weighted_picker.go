@@ -1,11 +1,6 @@
 package picker
 
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-)
-
+/*
 type WeightedPicker struct {
 	TheoryPercent map[string]float64
 	HistoryCounts map[string]int
@@ -66,3 +61,4 @@ func (wp *WeightedPicker) GetNext() string {
 	wp.TotalCount++
 	return firstKey
 }
+*/

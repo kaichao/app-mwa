@@ -10,22 +10,21 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
 
-func fromFitsRedist(body string, headers map[string]string) int {
+func fromFitsRedist(body string, headers map[string]string) error {
 	defer func() {
 		common.AddTimeStamp("leave-fromFitsRedist()")
 	}()
-	// input message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
+	// task-bdy: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	idx := strings.LastIndex(body, "/ch")
 	if idx == -1 {
-		logrus.Errorf("invalid task-body format from fits-redist, task-body=%s\n", body)
-		return 1
+		return errors.E("invalid task-body format", "task-body", body)
 	}
 	cubeID := body[:idx]
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
@@ -33,23 +32,23 @@ func fromFitsRedist(body string, headers map[string]string) int {
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	semaVal, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
 	if err != nil {
-		logrus.Errorf("semaphore-decrement, sema:%s, err:%v\n", semaName, err)
-		return 2
+		return errors.WrapE(err, 2, "semaphore-decrement",
+			"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
 	}
 	if semaVal > 0 {
 		// 24ch not done.
-		return 0
+		return nil
 	}
 
-	return toFitsMerge(body, headers)
+	return errors.WrapE(toFitsMerge(body, headers), "toFitsMerge()",
+		"task-body", body, "headers", headers)
 }
 
-func toFitsRedist(m string, fromHeaders map[string]string) int {
+func toFitsRedist(body string, fromHeaders map[string]string) error {
 	// input task-body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
-	obsID, p0, p1, _, _, _, err := strparse.ParseParts(m)
+	obsID, p0, p1, _, _, _, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("Parse message, body=%s,err=%v\n", m, err)
-		return 1
+		return errors.WrapE(err, "invalid task-body format", "task-body", body)
 	}
 
 	semaName := fromHeaders["_vtask_size_sema"]
@@ -80,9 +79,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 		// 从队列中读取可分配的节点
 		prestoIPs, err := queue.PopN(p1 - p0 + 1)
 		if err != nil {
-			fmt.Printf("Queue pop error, err-info:%v\n", err)
-			logrus.Errorf("Queue pop error, err-info:%v\n", err)
-			return 2
+			return errors.WrapE(err, 2, "queue pop error", "num", p1-p0+1)
 		}
 		fmt.Println("presto-ips:", prestoIPs)
 
@@ -98,11 +95,10 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 			} else {
 				// 类型2、类型3，组内地址
 				// 自增长的index
-				// varValue, err = iopath.GetStagingRoot(pointingDir)
 				varValue, err = vPath.GetPath("stageing-24ch", pointingDir)
 				if err != nil {
-					logger.LogTracedErrorDefault(err)
-					return 9
+					return errors.WrapE(err, 9, "vPath.GetPath()",
+						"category", "stageing-24ch", "key", pointingDir)
 				}
 				if ips[i] == fromIP {
 					ip = "localhost"
@@ -137,10 +133,7 @@ func toFitsRedist(m string, fromHeaders map[string]string) int {
 		"SINK_MODULE": "fits-redist",
 	}
 	common.AddTimeStamp("before-add-tasks")
-	_, err = task.Add(m, hs, envVars)
-	if err != nil {
-		logrus.Errorf("task.AddWithMapHeaders(),err:%v\n", err)
-		return 1
-	}
-	return 0
+	_, err = task.Add(body, hs, envVars)
+	return errors.WrapE(err, "add-task",
+		"task-body", body, "headers", hs, "envs", envVars)
 }

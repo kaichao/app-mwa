@@ -10,12 +10,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kaichao/gopkg/logger"
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
 )
 
-func fromNull(body string, headers map[string]string) int {
+func fromNull(body string, headers map[string]string) error {
 	// 按需创建信号量pointing-done，用于标识pointing的完成（？）
 	// cube := datacube.NewDataCube(body)
 	// cube0 := datacube.NewDataCube(cube.ObsID)
@@ -43,8 +43,8 @@ func fromNull(body string, headers map[string]string) int {
 			// varValue, err := iopath.GetStagingRoot(pointingDir)
 			varValue, err := vPath.GetPath("staging-24ch", pointingDir)
 			if err != nil {
-				logger.LogTracedErrorDefault(err)
-				return 9
+				return errors.WrapE(err, 9, "vPath.GetPath()",
+					"category", "staging-24ch", "key", pointingDir)
 			}
 			setPointingVariable(varName, varValue, appID)
 		}
@@ -60,11 +60,11 @@ func fromNull(body string, headers map[string]string) int {
 	for i := 0; i < len(trs); i += 2 {
 		cubeName := fmt.Sprintf(fmtCubicName, cube.ObsID,
 			cube.PointingBegin, cube.PointingEnd, trs[i], trs[i+1])
-		if ret := toWaitQueue(cubeName); ret != 0 {
-			return ret
+		if err := toWaitQueue(cubeName); err != nil {
+			return errors.WrapE(err, "toWaitQueue()", "cube-name", cubeName)
 		}
 	}
-	return 0
+	return nil
 }
 
 // toCrossAppPresto()
