@@ -13,14 +13,14 @@ modules:
       slot_options: tmpfs_workdir
     environments:
       - SOURCE_URL=${SOURCE_URL}
-      - SOURCE_JUMP_SERVERS=${SOURCE_JUMP_SERVERS}
+      - SOURCE_JUMP=${SOURCE_JUMP}
       - TARGET_SUBDIR=
       - TARGET_URL=${TARGET_URL}
     slots:
       - ${NODES}:1
 
   router:
-    base_image: app-mwa/router-pull-unpack-test
+    base_image: app-mwa/router-pull-unpack
     parameters:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}

@@ -4,8 +4,8 @@ go 1.25.2
 
 require (
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/kaichao/gopkg v0.0.0-20260125155601-255eda705ce6
-	github.com/kaichao/scalebox v0.0.0-20260126100334-8cb59b9bcac3
+	github.com/kaichao/gopkg v0.0.0-20260512020252-8da80054f979
+	github.com/kaichao/scalebox v0.0.0-20260512022448-81481db79880
 	github.com/sirupsen/logrus v1.9.4
 	gopkg.in/yaml.v2 v2.4.0
 )

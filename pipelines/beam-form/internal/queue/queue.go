@@ -1,13 +1,13 @@
 package queue
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/sirupsen/logrus"
 )
@@ -34,16 +34,15 @@ func Push(item string, priority float32) error {
 	timestamp := time.Now().UnixMilli()
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZADD %s %f %s:%d`,
 		redisHost, redisPort, queueKey, priority, item, timestamp)
-	code, _, stderr, err := exec.RunReturnAll(cmd, 5)
+	_, stderr, err := exec.RunReturnAll(cmd, 5)
+
 	if err != nil {
-		return err
+		logrus.Errorln("stderr:\n", stderr)
+		code := errors.GetCode(err)
+		return errors.WrapE(err, code, "exec.RunReturnAll",
+			"cmd", "redis-cli ZADD", "host", item)
 	}
 
-	if code != 0 {
-		errMsg := fmt.Sprintf("Error with exit-code:%d", code)
-		logrus.Errorln("stderr:\n", stderr)
-		return errors.New(errMsg)
-	}
 	return nil
 }
 
@@ -53,7 +52,8 @@ func PopN(num int) ([]string, error) {
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZPOPMIN %s %d`,
 		redisHost, redisPort, queueKey, num)
 	fmt.Printf("redis-cmd:%s\n", cmd)
-	code, stdout, stderr, err := exec.RunReturnAll(cmd, 10)
+	stdout, stderr, err := exec.RunReturnAll(cmd, 10)
+	code := errors.GetCode(err)
 	if err != nil {
 		return []string{}, err
 	}
@@ -71,7 +71,8 @@ func Query() error {
 	redisHost, redisPort := getRedisHostPort()
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d ZRANGE %s 0 -1`,
 		redisHost, redisPort, queueKey)
-	code, stdout, stderr, err := exec.RunReturnAll(cmd, 5)
+	stdout, stderr, err := exec.RunReturnAll(cmd, 5)
+	code := errors.GetCode(err)
 	if err != nil {
 		return err
 	}
@@ -90,7 +91,8 @@ func Clear() error {
 	redisHost, redisPort := getRedisHostPort()
 	cmd := fmt.Sprintf(`redis-cli -h %s -p %d DEL %s`,
 		redisHost, redisPort, queueKey)
-	code, stdout, stderr, err := exec.RunReturnAll(cmd, 5)
+	stdout, stderr, err := exec.RunReturnAll(cmd, 5)
+	code := errors.GetCode(err)
 	if err != nil {
 		return err
 	}

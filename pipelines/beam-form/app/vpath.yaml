@@ -20,10 +20,10 @@ preload-tar:
     - path: "/work2/cstu0030/scalebox/mydata"
       weight: 0.0
       capacity_gb: 20480
-      # 信号量文件：preload.sema
     - path: AGG_PATH
       weight: 1.0
       # 存储池的信号量分组标识
+      # 信号量文件：preload.sema
       pool: preload
       need_gb: 11
 
@@ -33,10 +33,10 @@ global-dat:
     - path: "/work2/cstu0030/scalebox/mydata"
       weight: 0.0
       capacity_gb: 20480
-      # 信号量文件：mwa.sema
     - path: AGG_PATH
       weight: 1.0
       # 存储池的信号量分组标识
+      # 信号量文件：mwa.sema
       pool: mwa
       need_gb: 50
 
@@ -52,10 +52,10 @@ staging-24ch:
     - path: "/work1/cstu0036/scalebox/mydata"
       weight: 0.0
       capacity_gb: 20480
-      # 信号量文件：mwa.sema
     - path: AGG_PATH
       weight: 0.0
       # 存储池的信号量分组标识
+      # 信号量文件：mwa.sema
       pool: mwa
       need_gb: 29
 

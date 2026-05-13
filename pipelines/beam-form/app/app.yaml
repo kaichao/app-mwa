@@ -146,6 +146,7 @@ modules:
     slots:
       - ${NODES}:${NUM_BEAM_MAKE}
       - ${GROUP_SLOTS}
+      - ${GLOBAL_SLOTS}
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
@@ -274,13 +275,14 @@ modules:
 
   router-beam-form:
     base_image: app-mwa/router-beam-form-app
+    arguments:
+      # slot_options: reserved_on_exit
     parameters:
       key_group_regex: ^([0-9]+)
       task_dist_mode: SLOT-BOUND
       task_batch_size: 2
-      # slot_options: reserved_on_exit
     environments:
-      - PRELOAED_AGGPATH=yes
+      - PRELOAED_VPATH=yes
       # HPC存储地址，直接加载
       - ORIGIN_ROOT=${ORIGIN_ROOT}
       - PRELOAD_ROOT=${PRELOAD_ROOT}
@@ -297,6 +299,8 @@ modules:
       # 首次加载更高限速，以支持快速加载
       - FIRST_BW_LIMIT=${FIRST_BW_LIMIT}
       - BW_LIMIT=30m
+      # 组节点，若不为空，则pull-unpack是否同步产生全局dat数据，以支持组计算
+      - GROUP_NODES=${GROUP_NODES}
       #  不同channel数据的计算量不同，交叉分布有助于在各节点上均衡分布计算量，仅针对24个节点以上有效
       - INTERLEAVED_DAT=yes
       # 全并行的波束合成(full_parallel)，隐含着指向优先的排序 POINTING_FIRST=yes

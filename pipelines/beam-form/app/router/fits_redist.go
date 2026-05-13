@@ -12,8 +12,8 @@ import (
 
 	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/vtask"
 	"github.com/sirupsen/logrus"
 )
 
@@ -30,7 +30,8 @@ func fromFitsRedist(body string, headers map[string]string) error {
 	// semaphore: fits-done:1257010784/p00001_00024/t1257010786_1257010985
 	semaName := fmt.Sprintf("fits-done:%s", cubeID)
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	semaVal, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
+	// semaVal, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
+	semaVal, err := vtask.AddSemaphoreValue(semaName, -1, vtaskID, appID)
 	if err != nil {
 		return errors.WrapE(err, 2, "semaphore-decrement",
 			"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)

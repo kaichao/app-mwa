@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	"github.com/kaichao/gopkg/errors"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/vtask"
 )
 
 func fromVtaskTail(body string, headers map[string]string) error {
@@ -14,7 +14,9 @@ func fromVtaskTail(body string, headers map[string]string) error {
 	// 待确认 vtask-id = 0 ?
 	vtaskID := int64(0)
 	semaName := ":" + headers["_vtask_size_sema"]
-	_, err := semaphore.AddValue(semaName, vtaskID, appID, 1)
+	// _, err := semaphore.AddValue(semaName, vtaskID, appID, 1)
+	_, err := vtask.AddSemaphoreValue(semaName, 1, vtaskID, appID)
+
 	return errors.WrapE(err, "add-semaphore",
 		"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
 }
@@ -31,7 +33,7 @@ func toVtaskTail(pointingID string, fromHeaders map[string]string) error {
 	semaName1 := "cube-vtask-done:" + fromHeaders["_vtask_cube_name"]
 	semaPairs[semaName1] = -1
 	// 执行减一操作
-	m, err := semaphore.AddMapValues(semaPairs, vtaskID, appID)
+	m, err := vtask.AddSemaphoreMapValues(semaPairs, vtaskID, appID)
 	if err != nil {
 		return errors.WrapE(err, "decrement semaphore",
 			"app-id", appID, "vtask-id", vtaskID, "sema-pairs", semaPairs)

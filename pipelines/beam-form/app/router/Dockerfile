@@ -4,18 +4,17 @@ LABEL maintainer="kaichao"
 
 ARG http_proxy
 ARG https_proxy
-ARG GOPROXY=direct
 
 ENV HTTP_PROXY=$http_proxy
 ENV HTTPS_PROXY=$https_proxy
-ENV GOPROXY=$GOPROXY
 
-# ARG GOPROXY=https://goproxy.io
 RUN \
     apt update \
     && apt-get install -y git \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+ARG GOPROXY=https://goproxy.io
 
 WORKDIR /go/src
 COPY go.* /go/src/
@@ -72,7 +71,7 @@ ENV \
     ACTION_RUN=/app/bin/router \
     # TRACE / DEBUG / INFO / WARN / ERROR / FATAL / PANIC
     LOG_LEVEL= \
-    NUM_OF_NODES=24 \
+    # NUM_OF_NODES=24 \
     DEFAULT_USER=root \
     REDIS_HOST= \
     REDIS_PORT= \

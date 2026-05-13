@@ -21,7 +21,7 @@ func fromFitsMerge(body string, headers map[string]string) int {
 
 	// semaphore: pointing-done:1257010784/p00001
 	sema := "pointing-done:" + ss[1]
-	semaValue, err := semaphore.AddValue(sema, 0, appID, -1)
+	semaValue, err := semaphore.AddValue(sema, -1, appID)
 	if err != nil {
 		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
 		return 2

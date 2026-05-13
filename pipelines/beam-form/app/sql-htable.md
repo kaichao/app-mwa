@@ -164,7 +164,7 @@ ORDER BY rn;
 
 ## beam-make / down-sample / fits-redist 进度
 
-- 消息格式：
+- task-body格式：
 - 1257010784/p00001_00024/t1257012766_1257012965/ch109
 
 ```sql

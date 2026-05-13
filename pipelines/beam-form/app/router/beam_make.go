@@ -12,8 +12,8 @@ import (
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
-	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/vtask"
 	"github.com/sirupsen/logrus"
 )
 
@@ -29,7 +29,7 @@ func fromBeamMake(body string, headers map[string]string) error {
 	semaName := fmt.Sprintf("dat-done:%s/ch%d", headers["_vtask_cube_name"], ch)
 	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	// 信号量操作
-	v, err := semaphore.AddValue(semaName, vtaskID, appID, -1)
+	v, err := vtask.AddSemaphoreValue(semaName, -1, vtaskID, appID)
 	if err != nil {
 		return errors.WrapE(err, 3, "semaphore-decrement",
 			"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
@@ -60,12 +60,12 @@ func fromBeamMake(body string, headers map[string]string) error {
 			dataDir += fmt.Sprintf(" %s/dat/%s", globalDatDir, subDatDir)
 			// sub-path: 1302282040/t1302282041_1302282200/ch126
 			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
-				logger.LogTracedErrorDefault(err)
+				logger.LogError(err, logEntry)
 			}
 		}
 
 		cmd := "rm -rf " + dataDir
-		_, stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
+		stdout, stderr, err := exec.RunSSHCommand(config, cmd, 30)
 		auxoutFile := os.Getenv("WORK_DIR") + "/auxout.txt"
 		common.AppendToFile(auxoutFile, fmt.Sprintf(
 			"[***]remove dirs:%s,host:%s\nstdout:%s\nstderr:%s\nerr:%v\n",

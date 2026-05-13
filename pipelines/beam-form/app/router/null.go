@@ -50,7 +50,7 @@ func fromNull(body string, headers map[string]string) error {
 		}
 	}
 
-	if !strings.HasPrefix(body, "/") {
+	if !strings.HasPrefix(os.Getenv("ORIGIN_ROOT"), "/") {
 		return toTarLoad(body)
 	}
 

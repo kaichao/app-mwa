@@ -42,11 +42,11 @@ func main() {
 	if err == nil {
 		os.Exit(0)
 	}
-	logger.LogTracedErrorDefault(err)
+
+	logger.LogError(err, logEntry)
 	if te, ok := err.(*errors.TracedError); ok {
 		os.Exit(te.Code)
 	}
-
 	// other error
 	os.Exit(1)
 }

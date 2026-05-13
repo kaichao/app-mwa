@@ -1,9 +1,9 @@
-IMAGE_NAME:=app-mwa/router-pull-unpack-test
+IMAGE_NAME:=app-mwa/router-pull-unpack
 
 build:
 	DOCKER_BUILDKIT=1 docker build --network=host \
 		--build-arg PREFIX= --build-arg ARCH=amd64 \
-		-f Dockerfile -t $(IMAGE_NAME) ../../../..
+		-f Dockerfile -t $(IMAGE_NAME) ../../..
 
 dist: build
 	docker save $(IMAGE_NAME) | zstdmt | pv | ssh p419 'zstd -d | docker load'

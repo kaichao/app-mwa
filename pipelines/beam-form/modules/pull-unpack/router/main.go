@@ -7,6 +7,8 @@ import (
 	"os"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/kaichao/gopkg/errors"
+	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/sirupsen/logrus"
@@ -26,16 +28,24 @@ func main() {
 	}
 
 	if headers["from_module"] == "pull-unpack" {
-		logrus.Printf("message from pull-unpack")
+		logrus.Printf("task from pull-unpack")
 		os.Exit(0)
 	}
 
-	code := toPullUnpack(os.Args[1], headers)
+	err := toPullUnpack(os.Args[1], headers)
+	if err == nil {
+		os.Exit(0)
+	}
+	logger.LogTracedErrorDefault(err)
+	if te, ok := err.(*errors.TracedError); ok {
+		os.Exit(te.Code)
+	}
 
-	os.Exit(code)
+	// other error
+	os.Exit(1)
 }
 
-func toPullUnpack(body string, fromHeaders map[string]string) int {
+func toPullUnpack(body string, fromHeaders map[string]string) error {
 	cube := datacube.NewDataCube(body)
 	fmt.Println(cube.ToCubeString())
 	trs := cube.GetTimeRanges()
@@ -65,9 +75,6 @@ func toPullUnpack(body string, fromHeaders map[string]string) int {
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
-	if _, err := task.AddTasks(tasks, "{}", envs); err != nil {
-		logrus.Errorf("err:%v\n", err)
-		return 1
-	}
-	return 0
+	_, err := task.AddTasks(tasks, "{}", envs)
+	return errors.WrapE(err, "task.AddTasks()")
 }

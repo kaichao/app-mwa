@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/postgres"
 	"github.com/sirupsen/logrus"
@@ -14,13 +15,13 @@ import (
 
 func createSemaphore(semaName string, defaultValue int) int {
 	cmdText := fmt.Sprintf("scalebox semaphore create %s %d", semaName, defaultValue)
-	code, _ := exec.RunReturnExitCode(cmdText, 15)
-	return code
+	_, _, err := exec.RunReturnAll(cmdText, 15)
+	return errors.GetCode(err)
 }
 
 func countDown(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore decrement %s", semaName)
-	stdout, _ := exec.RunReturnStdout(cmdText, 15)
+	stdout, _, _ := exec.RunReturnAll(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}
@@ -35,7 +36,7 @@ func countDown(semaName string) int {
 
 func getSemaphore(semaName string) int {
 	cmdText := fmt.Sprintf("scalebox semaphore get %s", semaName)
-	stdout, _ := exec.RunReturnStdout(cmdText, 15)
+	stdout, _, _ := exec.RunReturnAll(cmdText, 15)
 	if stdout == "" {
 		return math.MinInt
 	}

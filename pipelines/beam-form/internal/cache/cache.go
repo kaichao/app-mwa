@@ -1,13 +1,6 @@
 package cache
 
-import (
-	"time"
-
-	"github.com/kaichao/gopkg/dbcache"
-	"github.com/kaichao/scalebox/pkg/postgres"
-	"github.com/sirupsen/logrus"
-)
-
+/*
 var (
 	appIDCache *dbcache.DBCache[int]
 )
@@ -31,3 +24,4 @@ func GetAppIDByModuleID(moduleID int) int {
 	}
 	return appID
 }
+*/

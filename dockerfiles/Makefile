@@ -2,7 +2,7 @@
 dirs:=mwa-vcstools down-sampler
 
 # 默认 HOST 可以通过命令行传入，例如 make build HOST=h12
-HOST ?= macos
+HOST ?= linux
 
 ifneq ($(HOST),macos)
 SCALEBOX_DIR := ~/scalebox
@@ -50,7 +50,8 @@ build-images:
 
 dist-dcu:
 	make build-images HOST=dcu
-	for i in {1..4};do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
+# 	for i in {1..4};do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
+	for i in 1 2 4;do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
 	make -C mwa-vcstools dist-dcu
 	make -C down-sampler dist-dcu
 

@@ -23,6 +23,7 @@ import (
 	"github.com/kaichao/scalebox/pkg/semagroup"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
+	"github.com/kaichao/scalebox/pkg/vtask"
 )
 
 func fromVtaskHead(body string, headers map[string]string) error {
@@ -46,13 +47,14 @@ func fromVtaskHead(body string, headers map[string]string) error {
 
 	// 恢复信号量，使得后续wait-queue可持续
 	semaName := "vtask_size:wait-queue"
-	if _, err := semaphore.AddValue(semaName, 0, appID, 1); err != nil {
+	if _, err := semaphore.AddValue(semaName, 1, appID); err != nil {
 		return errors.WrapE(err, "restore-sema", "sema-name", semaName, "app-id", appID)
 	}
 
 	semaName = "cube-vtask-done:" + body
 	semaValue := pe - pb + 1
-	err = semaphore.Create(semaName, semaValue, vtaskID, appID)
+	// err = semaphore.Create(semaName, semaValue, vtaskID, appID)
+	err = vtask.CreateSemaphore(semaName, semaValue, vtaskID, appID)
 	return errors.WrapE(err, 3, "semaphore.Create()",
 		"sema-name", semaName, "sema-value", semaValue, "app-id", appID, "vtask-id", vtaskID)
 }

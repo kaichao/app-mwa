@@ -8,6 +8,7 @@ import (
 
 	"mr/datacube"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 )
 
@@ -86,6 +87,6 @@ func defaultFunc(message string, headers map[string]string) int {
 	createBeamMakerProgressCountSemaphores(cube)
 
 	cmd := fmt.Sprintf("scalebox task add --header prefix_url=%s %s", ss[0], ss[1])
-	code, _ := exec.RunReturnExitCode(cmd, 0)
-	return code
+	_, _, err := exec.RunReturnAll(cmd, 0)
+	return errors.GetCode(err)
 }

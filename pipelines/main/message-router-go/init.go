@@ -10,6 +10,7 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/postgres"
@@ -52,8 +53,8 @@ func sendNodeAwareMessage(message string, headers map[string]string, sinkJob str
 		}
 	}
 
-	code, _ := exec.RunReturnExitCode(cmdTxt, 60)
-	return code
+	_, _, err := exec.RunReturnAll(cmdTxt, 60)
+	return errors.GetCode(err)
 }
 
 func sendJobRefMessage(message string, headers map[string]string, sinkJob string) int {
@@ -66,8 +67,8 @@ func sendJobRefMessage(message string, headers map[string]string, sinkJob string
 			cmdTxt = fmt.Sprintf("scalebox task add --sink-job %s --headers '%s' %s", sinkJob, h, message)
 		}
 	}
-	code, _ := exec.RunReturnExitCode(cmdTxt, 60)
-	return code
+	_, _, err := exec.RunReturnAll(cmdTxt, 60)
+	return errors.GetCode(err)
 }
 
 func initHosts() {
@@ -110,12 +111,13 @@ func ExecWithRetries(cmd string, numRetries int, timeout int) (int, string, stri
 	var (
 		code           int
 		stdout, stderr string
+		err            error
 	)
 
 	for i := 0; i < numRetries; i++ {
-		code, stdout, stderr, _ = exec.RunReturnAll(cmd, timeout)
-		if code == 0 {
-			return code, stdout, stderr
+		stdout, stderr, err = exec.RunReturnAll(cmd, timeout)
+		if err == nil {
+			return errors.GetCode(err), stdout, stderr
 		}
 		fmt.Printf("num-of-retries:%d,cmd=%s\n", i+1, cmd)
 		time.Sleep(delay)

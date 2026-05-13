@@ -16,6 +16,9 @@ flowchart TD
 
 ## 一、数据拷贝
 
+### 1.1 打包文件从p419拷贝到dcu
+
+
 ### p419集群
 
 在scalebox/dockerfiles/files/app-dir-copy目录下
@@ -57,11 +60,52 @@ ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250707 -type f
 
 ## 二、波束合成计算
 
+### 2.1 p419集群上的计算
+
+#### 流水线运行
+
+echo '1253991112/p01321_02280' | \
+
+
+```sh
+
+app_id=$(echo '1302282040/p07921_08400' | \
+ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
+NUM_GROUPS=1 \
+NODES='^d00.+' \
+GROUP_NODES= \
+GROUP_SLOTS= \
+PRESTO_APP_ID= \
+PRESTO_NODES= \
+scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
+
+
+export LOG_LEVEL=DEBUG
+app_id=$(echo '1302282040/p09361_09840' | \
+ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
+NUM_GROUPS=1 \
+NODES='^d00.+' \
+GROUP_NODES='g00-0[01]' \
+GROUP_SLOTS='g00-00:4:d0' \
+GLOBAL_SLOTS='g00-01:4:d' \
+PRESTO_APP_ID= \
+PRESTO_NODES= \
+scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
+
+scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
+
+scalebox app set-status --app-id=$app_id RUNNING
+
+```
+
+
+
 ### p419集群全并行
 
 - 1440指向(全并行处理)
 ```sh
-START_MESSAGE=1302106648/p02041_03480/t1302106649_1302111446 \
+START_TASK=1302106648/p02041_03480/t1302106649_1302111446 \
   PRESTO_APP_ID=175 \
   PRESTO_NODES=a.+ \
   NODES=d.+ \
@@ -82,44 +126,10 @@ scalebox semaphore create --app-id=$app_id --sema-file /tmp/my-sema.txt
 
 ```
 
-#### 流水线运行
-
-echo '1253991112/p01321_02280' | \
-
-
-```sh
-
-app_id=$(echo '1302282040/p04201_04800' | \
-NUM_GROUPS=1 \
-NODES='^d00.+' \
-ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
-GROUP_NODES= \
-GROUP_SLOTS= \
-PRESTO_APP_ID= \
-PRESTO_NODES= \
-scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
-
-
-export LOG_LEVEL=DEBUG
-app_id=$(echo '1302282040/p05401_06000' | \
-NUM_GROUPS=1 \
-NODES='^d00.+' \
-ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
-GROUP_NODES='g00-00' \
-GROUP_SLOTS='g00-00:4:d00' \
-PRESTO_APP_ID= \
-PRESTO_NODES= \
-scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
-
-scalebox semaphore create --app-id=$app_id --sema-file preload.sema
-scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
-
-```
-
 
 - 每组观测起始指向处理
 ```sh
-START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
+START_TASK=1253991112/p00001_00120/t1253994234_1253994833 \
   PRESTO_APP_ID= \
   PRESTO_NODES= \
   NODES='d00.+' \
@@ -156,10 +166,27 @@ START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
 
 ### dcu集群
 
+```sh
+app_id=$(echo '1253991112/p00001_00096/t_1253991273' | \
+ORIGIN_ROOT=/raid0/scalebox/mydata/mwa \
+NUM_GROUPS=1 \
+NODES='^n-0[023]' \
+TIME_STEP=80 \
+NUM_BEAM_MAKE=2 \
+GROUP_NODES= \
+GROUP_SLOTS= \
+PRESTO_APP_ID= \
+PRESTO_NODES= \
+scalebox run -e dcu.env | cut -d':' -f2 | tr -d '}' )
+
+scalebox app set-status --app-id=$app_id RUNNING
+
+```
+
 - source_url通过dcu-soruce.json来指定
 
 ```sh
-  START_MESSAGE=1302106648/p00001_00096/t1302106649_1302106888 \
+  START_TASK=1302106648/p00001_00096/t1302106649_1302106888 \
   SOURCE_TAR_ROOT=scalebox@159.226.237.136:10022/raid0/tmp \
   TIME_STEP=80 \
   NODES=n-0[012] \
@@ -170,7 +197,7 @@ START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
 
 - singularity
 ```sh
-  START_MESSAGE=1267459328/p00001_00096/t1267459330_1267459409 \
+  START_TASK=1267459328/p00001_00096/t1267459330_1267459409 \
   TIME_STEP=80 \
   NODES=n-0[012] \
   NUM_BEAM_MAKE=2 \
@@ -180,7 +207,7 @@ START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
 
 
 ```sh
-  START_MESSAGE=1257617424/p00001_00096 \
+  START_TASK=1257617424/p00001_00096 \
   TIME_STEP=80 \
   NODES=n-0[023] \
   NUM_BEAM_MAKE=3 \
@@ -190,7 +217,7 @@ START_MESSAGE=1253991112/p00001_00120/t1253994234_1253994833 \
 
 
 ```sh
-  START_MESSAGE=1257617424/p00001_00096/t1257617426_1257617585 \
+  START_TASK=1257617424/p00001_00096/t1257617426_1257617585 \
   TIME_STEP=80 \
   NODES=n-0[123] \
   scalebox app create

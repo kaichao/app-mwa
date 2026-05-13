@@ -6,7 +6,7 @@ tar-load从外部存储预加载原始打包tar文件到HPC存储
 - 以time-range为顺序
 - 直接用基于task-id为加载顺序，不使用独立sort_tag
 
-# 消息路由中代码说明
+# 主路由中代码说明
 
 ## fromTarLoad
 - 处理tar-load返回的消息
@@ -34,7 +34,7 @@ import (
 func fromTarLoad(body string, headers map[string]string) error {
 	cubeName := headers["_cube_name"]
 	semaName := "tar-ready:" + cubeName
-	n, err := semaphore.AddValue(semaName, 0, appID, -1)
+	n, err := semaphore.AddValue(semaName, -1, appID)
 	if err != nil {
 		return errors.WrapE(err, "decrement semaphore",
 			"sema-name", semaName, "app-id", appID)
@@ -110,7 +110,7 @@ func toTarLoad(datasetID string) error {
 	defer func() {
 		os.Unsetenv("CONFLICT_ACTION")
 	}()
-	if err := semaphore.CreateSemaphores(semaLines, 0, appID, 100); err != nil {
+	if err := semaphore.CreateSemaphores(semaLines, appID, 100); err != nil {
 		return errors.WrapE(err, 2, "CreateSemaphores",
 			"app-id", appID, "sema-lines", semaLines)
 	}

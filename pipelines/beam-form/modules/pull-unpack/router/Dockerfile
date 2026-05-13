@@ -10,9 +10,9 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
 COPY internal /go/src/internal
-COPY modules/pull-unpack/test/router/*.go /go/src/modules/pull-unpack/test/router/
+COPY modules/pull-unpack/router/*.go /go/src/modules/pull-unpack/router/
 
-WORKDIR /go/src/modules/pull-unpack/test/router/
+WORKDIR /go/src/modules/pull-unpack/router/
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
@@ -22,16 +22,16 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM debian:13-slim
 
-# install the newest version, rsync 3.2.7, openssh 9.3p1
-RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list.d/bookworm-testing.list \ 
-    && apt-get update \
+# install the newest version openssh 10.0p2 / zstd 1.5.7
+RUN \
+    apt-get update \
     && apt-get install -y openssh-client zstd \
     && apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
 
-COPY --from=0 /go/src/modules/pull-unpack/test/router/router /app/bin/
+COPY --from=0 /go/src/modules/pull-unpack/router/router /app/bin/
 
 COPY dataset.yaml /
 

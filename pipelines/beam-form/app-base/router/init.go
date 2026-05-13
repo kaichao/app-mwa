@@ -1,7 +1,6 @@
 package main
 
 import (
-	"beamform/internal/cache"
 	"os"
 	"strconv"
 )
@@ -9,6 +8,5 @@ import (
 var appID int
 
 func init() {
-	moduleID, _ := strconv.Atoi(os.Getenv("MODULE_ID"))
-	appID = cache.GetAppIDByModuleID(moduleID)
+	appID, _ = strconv.Atoi(os.Getenv("APP_ID"))
 }

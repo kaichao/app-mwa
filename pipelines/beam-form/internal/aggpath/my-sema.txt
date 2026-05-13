@@ -1,5 +1,0 @@
-"path-free-gb:my-ap:/dir00":500
-"path-free-gb:my-ap:/dir01":450
-"path-free-gb:my-ap:/dir02":400
-"path-free-gb:my-ap:/dir03":350
-"path-free-gb:my-ap:/dir04":300

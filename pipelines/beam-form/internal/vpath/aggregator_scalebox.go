@@ -46,7 +46,7 @@ func NewScaleboxAggregator(pool string, appID int) (*ScaleboxAggregator, error) 
 func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, error) {
 	// if path对应variable存在，直接返回该目录
 	varName := fmt.Sprintf("member-path:%s:%s", sa.name, key)
-	varValue, err := variable.GetValue(varName, 0, sa.appID)
+	varValue, err := variable.GetValue(varName, sa.appID)
 
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", errors.WrapE(err, "variable.GetValue()", "var-name", varName)
@@ -66,7 +66,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 	if semaValue < capacityGB {
 		return "", errors.E("No enough disk space", "pool", sa.name)
 	}
-	_, err = semaphore.AddValue(semaName, 0, sa.appID, -capacityGB)
+	_, err = semaphore.AddValue(semaName, -capacityGB, sa.appID)
 	if err != nil {
 		return "", errors.WrapE(err, "semaphore-addvalue",
 			"sema-name", semaName, "app-id", sa.appID)
@@ -74,7 +74,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 	// 以前述的信号量名，创建对应的variable
 	// 去掉前面的path-free-gb: 及 name
 	varValue = strings.Split(semaName, ":")[2]
-	err = variable.Set(varName, varValue, 0, sa.appID)
+	err = variable.Set(varName, varValue, sa.appID)
 	if err != nil {
 		return "", errors.WrapE(err, "variable-set",
 			"var-name", varName, "app-id", sa.appID)
@@ -87,7 +87,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 func (sa *ScaleboxAggregator) Release(key string, capacityGB int) error {
 	// 获取对应的variable值（即成员目录）
 	varName := fmt.Sprintf("member-path:%s:%s", sa.name, key)
-	memberPath, err := variable.GetValue(varName, 0, sa.appID)
+	memberPath, err := variable.GetValue(varName, sa.appID)
 	if err != nil {
 		// 如果variable不存在，可能已经被释放
 		logrus.Warnf("Variable not found when releasing member path: %s", varName)
@@ -101,11 +101,11 @@ func (sa *ScaleboxAggregator) Release(key string, capacityGB int) error {
 
 	// 对应信号量增加capacityGB
 	semaName := fmt.Sprintf("path-free-gb:%s:%s", sa.name, memberPath)
-	if _, err := semaphore.AddValue(semaName, 0, sa.appID, capacityGB); err != nil {
+	if _, err := semaphore.AddValue(semaName, capacityGB, sa.appID); err != nil {
 		return errors.WrapE(err, "semaphore-add", "pool", sa.name)
 	}
 	// 删除variable
-	err = variable.Set(varName, "", 0, sa.appID)
+	err = variable.Set(varName, "", sa.appID)
 	return errors.WrapE(err, "variable-set", "var-name", varName)
 }
 

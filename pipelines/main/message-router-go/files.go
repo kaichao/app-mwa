@@ -8,6 +8,7 @@ import (
 
 	"mr/datacube"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/scalebox/pkg/common"
 )
@@ -203,8 +204,8 @@ func fromPullUnpack(message string, headers map[string]string) int {
 		// }
 	}
 	cmdTxt := "scalebox task add --sink-job beam-maker"
-	code, _ := exec.RunReturnExitCode(cmdTxt, 120)
-	return code
+	_, _, err := exec.RunReturnAll(cmdTxt, 120)
+	return errors.GetCode(err)
 }
 
 func filterDataCube(message string) bool {
