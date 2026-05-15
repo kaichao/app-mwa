@@ -18,7 +18,7 @@ modules:
     environments:
       - INPUT_ROOT=
       - OUTPUT_ROOT=
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE=yes
       - ENABLE_LOCAL_COMPUTE=
     hosts:
       - n-03:1

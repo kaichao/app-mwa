@@ -92,7 +92,7 @@ echo "cmd_prefix:$cmd_prefix" >> ${WORK_DIR}/auxout.txt
 echo "cmd_suffix:$cmd_suffix" >> ${WORK_DIR}/auxout.txt
 echo "cmd:$cmd" >> ${WORK_DIR}/auxout.txt
 
-date --iso-8601=ns >> ${WORK_DIR}/timestamps.txt
+date +%Y-%m-%dT%H:%M:%S.%6N > "${WORK_DIR}/timestamps.txt"
 
 echo "source_url:$source_url, source_dir:$source_dir" >> ${WORK_DIR}/auxout.txt
 echo "target_url:$target_url, target_dir:$target_dir, target_subdir:$target_subdir" >> ${WORK_DIR}/auxout.txt
@@ -121,19 +121,26 @@ if [[ $code -ne 0 ]]; then
     exit $code
 fi
 
+echo "$1" >> ${WORK_DIR}/sink-tasks.txt
+
+# 生成计量数据
+if [ "$source_mode" = "LOCAL" ]; then
+    keep_source=$(get_header "$2" "keep_source")
+    if [ "$keep_source" = "no" ]; then
+        echo "${source_file}" > ${WORK_DIR}/removed-files.txt
+    fi
+
+    original_size=$(stat -c%s "$source_file")
+    echo "$CLUSTER_DATA_ROOT,$original_size" > ${WORK_DIR}/input-files.txt
+else
+    original_size=$($ssh_cmd "stat -c%s '$escaped_file_path'")
+    ssh_host=$(get_ssh_host "source_url")
+    echo "from,$ssh_host,$original_size,$escaped_file_path" > ${WORK_DIR}/network-files.txt
+fi
+
 for ((n=$begin; n<=$end; n++))
 do
     echo "${target_dir}/${dataset}_${n}_ch${ch}.dat" >> ${WORK_DIR}/output-files.txt
 done
-
-echo "$1" >> ${WORK_DIR}/sink-tasks.txt
-
-if [ "$source_mode" = "LOCAL" ]; then
-    echo "${source_file}" >> ${WORK_DIR}/input-files.txt
-    keep_source_file=$(get_header "$2" "keep_source_file")
-    if [ "$keep_source_file" = "no" ]; then
-        echo "${source_file}" > ${WORK_DIR}/removed-files.txt
-    fi
-fi
 
 exit $code

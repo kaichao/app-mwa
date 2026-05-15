@@ -100,7 +100,7 @@ modules:
       - TARGET_SUBDIR=${TARGET_SUBDIR}
       - TARGET_URL=
       # - BW_LIMIT=${BW_LIMIT}
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE=yes
       # 解包后文件的group-id，确保计算完成后可删除。
       - TMPDIR_GROUP=39
       # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
@@ -135,9 +135,9 @@ modules:
     environments:
       - INPUT_ROOT=${LOCAL_TMPDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
-      - KEEP_TARGET_FILE=yes
+      - KEEP_TARGET=yes
       - POINTING_RANGE=${POINTING_RANGE}
-      - ZSTD_TARGET_FILE=no
+      - ZSTD_TARGET=no
       # 精搜的指向文件名
       - POINTING_FILE=${POINTING_FILE}
       - TMPDIR_GROUP=39
@@ -166,8 +166,8 @@ modules:
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=${LOCAL_SHMDIR}
-      - KEEP_SOURCE_FILE=no
-      - KEEP_TARGET_FILE=
+      - KEEP_SOURCE=no
+      - KEEP_TARGET=
       - ENABLE_LOCAL_COMPUTE=yes
       - TMPDIR_GROUP=39
       # - LOCAL_TMPDIR=${LOCAL_TMPDIR}
@@ -199,7 +199,7 @@ modules:
       - TARGET_ROOT=${LOCAL_SHMDIR}
       - TARGET_USER=${TARGET_USER}
       - TARGET_PORT=${TARGET_PORT}
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE=no
       - TMPDIR_GROUP=39
       - LOCAL_TMPDIR=${LOCAL_TMPDIR}
       - LOCAL_SHMDIR=${LOCAL_SHMDIR}
@@ -226,7 +226,7 @@ modules:
     environments:
       - INPUT_ROOT=${LOCAL_SHMDIR}
       - OUTPUT_ROOT=
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE=no
       # "500k"/"1m"/...
       - BW_LIMIT=20m
       - TMPDIR_GROUP=39
@@ -251,7 +251,7 @@ modules:
       - SOURCE_URL=${LOCAL_SHMDIR}/mydata
       - TARGET_URL=
       - TARGET_JUMP=${TARGET_JUMP}
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE=no
     slots:
       - ${NODES}
 
@@ -267,7 +267,7 @@ modules:
     base_image: ${FILE_COPY}
     environments:
       - SOURCE_URL=/public/home/cstu0100/scalebox/mydata
-      - KEEP_SOURCE_FILE=no
+      - KEEP_SOURCE=no
       # retry时，产生main-router的新task要覆盖 
       - CONFLICT_ACTION=OVERWRITE
     slots:

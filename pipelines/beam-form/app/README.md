@@ -180,19 +180,6 @@ PRESTO_NODES= \
 scalebox run -e dcu.env | cut -d':' -f2 | tr -d '}' )
 
 scalebox app set-status --app-id=$app_id RUNNING
-
-```
-
-- source_url通过dcu-soruce.json来指定
-
-```sh
-  START_TASK=1302106648/p00001_00096/t1302106649_1302106888 \
-  SOURCE_TAR_ROOT=scalebox@159.226.237.136:10022/raid0/tmp \
-  TIME_STEP=80 \
-  NODES=n-0[012] \
-  NUM_BEAM_MAKE=2 \
-  TARGET_JUMP=root@10.200.1.100 \
-  scalebox app create
 ```
 
 - singularity
@@ -205,23 +192,6 @@ scalebox app set-status --app-id=$app_id RUNNING
   scalebox app create -e dcu.env
 ```
 
-
-```sh
-  START_TASK=1257617424/p00001_00096 \
-  TIME_STEP=80 \
-  NODES=n-0[023] \
-  NUM_BEAM_MAKE=3 \
-  TARGET_JUMP=root@10.200.1.100 \
-  scalebox app create
-```
-
-
-```sh
-  START_TASK=1257617424/p00001_00096/t1257617426_1257617585 \
-  TIME_STEP=80 \
-  NODES=n-0[123] \
-  scalebox app create
-```
 
 ## 新增一个队列原始
 

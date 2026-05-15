@@ -70,13 +70,13 @@ code=$?
 bw_limit=$(get_header "$2" "bw_limit")
 # BW_LIMIT  "500k"/"1m"
 if [ -n "$bw_limit" ]; then
-    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+    if [ "$ZSTD_TARGET" = "no" ]; then
         cmd="cat ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}; rm -f ${WORK_DIR}/${filename}"
     else
         cmd="zstd -c --rm ${WORK_DIR}/${filename} | pv -q -L $bw_limit > ${filename}.zst"
     fi
 else
-    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+    if [ "$ZSTD_TARGET" = "no" ]; then
         cmd="mv -f ${WORK_DIR}/${filename} ."
     else
         cmd="zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst"
@@ -88,11 +88,11 @@ code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file "  >> ${WORK_DIR}/auxout.txt && exit $code
 
 echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
-[ "$KEEP_TARGET_FILE" = "no" ] && echo "${output_file}.zst" >> ${WORK_DIR}/removed-files.txt
+[ "$KEEP_TARGET" = "no" ] && echo "${output_file}.zst" >> ${WORK_DIR}/removed-files.txt
 
 full_path="${DIR_1CHY}/$1"
 echo [DEBUG]full_path:$full_path
-[ "$KEEP_SOURCE_FILE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
+[ "$KEEP_SOURCE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
 echo $full_path >> ${WORK_DIR}/input-files.txt
 
 echo "send-message to sink-module"

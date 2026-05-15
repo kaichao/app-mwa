@@ -13,7 +13,7 @@ echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/auxout.txt
 m=$1
 pointing_range=$(get_header "$2" "pointing_range")
 
-KEEP_SOURCE_FILE=${KEEP_SOURCE_FILE:-"yes"}
+KEEP_SOURCE=${KEEP_SOURCE:-"yes"}
 
 if [ $CAL_ROOT ]; then
     DIR_CAL=$(get_host_path "${CAL_ROOT}/mwa/cal")
@@ -117,7 +117,7 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     orig_file="${WORK_DIR}/${point_arr[${i}]}/*.fits"
 
     # BUG：压缩参数开启会导致post_check检查出错 ！
-    if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
+    if [ "$ZSTD_TARGET" = "yes" ]; then
         zstd -T4 --rm "${orig_file}"
         orig_file="${orig_file}.zst"
         dest_file="${dest_file}.zst"
@@ -149,12 +149,12 @@ echo '{
     "inputBytes":'${input_bytes}'
 }' > ${WORK_DIR}/task-exec.json
 
-if [ "$KEEP_SOURCE_FILE" = "no" ]; then
+if [ "$KEEP_SOURCE" = "no" ]; then
     # only used for test
     echo "removing dat files" >> ${WORK_DIR}/auxout.txt
     echo ${dat_dir} >> ${WORK_DIR}/removed-files.txt
 fi
-if [ "$KEEP_TARGET_FILE" = "no" ]; then
+if [ "$KEEP_TARGET" = "no" ]; then
     # only used for test
     echo "remove fits files" >> ${WORK_DIR}/auxout.txt
     echo ${fits_dir} >> ${WORK_DIR}/removed-files.txt

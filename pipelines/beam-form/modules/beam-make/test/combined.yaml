@@ -16,7 +16,7 @@ modules:
     environments:
       - INPUT_ROOT=${INPUT_ROOT}
       - OUTPUT_ROOT=${OUTPUT_ROOT}
-      - KEEP_TARGET_FILE=yes
+      - KEEP_TARGET=yes
     hosts:
       - n-00:${NUM_SLOTS}
     sink_modules:
@@ -35,8 +35,8 @@ modules:
     environments:
       - INPUT_ROOT=${INPUT_ROOT}
       - OUTPUT_ROOT=${OUTPUT_ROOT}
-      - KEEP_SOURCE_FILE=no
-      - KEEP_TARGET_FILE=yes
+      - KEEP_SOURCE=no
+      - KEEP_TARGET=yes
       - ENABLE_LOCAL_COMPUTE=yes
     hosts:
       - n-00:1

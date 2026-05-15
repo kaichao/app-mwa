@@ -24,11 +24,11 @@ modules:
     environments:
       - INPUT_ROOT=
       - OUTPUT_ROOT=${FITS_ROOT}
-      - KEEP_TARGET_FILE=yes
+      - KEEP_TARGET=yes
       - POINTING_FILE=
       # - POINTING_FILE=pointing-250313.txt
       - POINTING_RANGE=
-      - ZSTD_TARGET_FILE=no
+      - ZSTD_TARGET=no
       # 设置临时目录下的文件所属组
       - TMPDIR_GROUP=39
     slots:
@@ -52,10 +52,10 @@ modules:
     environments:
       - INPUT_ROOT=${FITS_ROOT}
       - OUTPUT_ROOT=
-      - KEEP_SOURCE_FILE=no
-      - KEEP_TARGET_FILE=
+      - KEEP_SOURCE=no
+      - KEEP_TARGET=
       - ENABLE_LOCAL_COMPUTE=${ENABLE_LOCAL_COMPUTE}
-      - ZSTD_TARGET_FILE=no
+      - ZSTD_TARGET=no
       - TMPDIR_GROUP=39
     slots:
       - ${NODES}
@@ -74,8 +74,8 @@ modules:
     environments:
       - INPUT_ROOT=
       - OUTPUT_ROOT=${OUTPUT_ROOT_24CH}
-      - KEEP_SOURCE_FILE=no
-      - ZSTD_TARGET_FILE=no
+      - KEEP_SOURCE=no
+      - ZSTD_TARGET=no
       - TMPDIR_GROUP=39
     slots:
       - ${NODES}

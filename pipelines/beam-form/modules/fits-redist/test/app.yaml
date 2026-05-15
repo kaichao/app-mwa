@@ -15,7 +15,7 @@ modules:
       key_group_regex: ^([0-9]+)$
       start_message: ${START_MESSAGE}
     environments:
-      - KEEP_SOURCE_FILE=yes
+      - KEEP_SOURCE=yes
       - TARGET_HOSTS=${TARGET_HOSTS}
       - TARGET_USER=
       - TARGET_PORT=

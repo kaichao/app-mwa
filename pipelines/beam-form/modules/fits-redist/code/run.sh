@@ -60,7 +60,7 @@ for i in "${!arr_files[@]}"; do
     fn="${ds}/${p}/${t_label}/${ch}.fits.zst"
     file_1chy="${dir_1chy}/$fn"
     mkdir -p "$(dirname $file_1chy)"
-    if [ "$KEEP_SOURCE_FILE" == "yes" ]; then
+    if [ "$KEEP_SOURCE" == "yes" ]; then
         cp -f $f $file_1chy
     else
         mv -f $f $file_1chy

@@ -65,7 +65,7 @@ for f in *.fits; do
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] rename fits file:${dir_1chx}/${f}" >&2 && exit $code
 
-    if [ "$ZSTD_TARGET_FILE" = "no" ]; then
+    if [ "$ZSTD_TARGET" = "no" ]; then
         target_file="${dir_1chx}/${f}"
     else
         zstd --long -T2 --rm ${dir_1chx}/${f}
@@ -87,7 +87,7 @@ target_file:$target_file
 EOF
 
 
-    if [ "$ZSTD_TARGET_FILE" = "yes" ]; then
+    if [ "$ZSTD_TARGET" = "yes" ]; then
         # 下采样后文件
         f0="${dir_1chx}/${f}.zst"
         # 按pointing再分发后文件
@@ -124,9 +124,9 @@ EOF
 
 done
 
-[ "$KEEP_SOURCE_FILE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt
+[ "$KEEP_SOURCE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt
 # 用于测试
-[ "$KEEP_TARGET_FILE" == "no" ] && echo "${dir_1chx}" >> ${WORK_DIR}/removed-files.txt
+[ "$KEEP_TARGET" == "no" ] && echo "${dir_1chx}" >> ${WORK_DIR}/removed-files.txt
 
 echo "removed-files:" >> ${WORK_DIR}/auxout.txt
 cat ${WORK_DIR}/removed-files.txt >> ${WORK_DIR}/auxout.txt
