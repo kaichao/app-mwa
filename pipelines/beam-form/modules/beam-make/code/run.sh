@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source functions.sh
+source /usr/local/lib/scalebox/functions.sh
 source $(dirname $0)/functions.sh
 
 echo "WORK_DIR:$WORK_DIR."
@@ -11,30 +11,30 @@ echo "SLOT_ROLE=$SLOT_ROLE" >> ${WORK_DIR}/auxout.txt
 # OBSID/p{PTHEAD}_{PTTAIL}/t{BEG}_{END}/ch{ch}/
 # m="1257617424/p00001_00048/t1257617426_1257617505/ch109"
 m=$1
-pointing_range=$(get_header "$2" "pointing_range")
+pointing_range=$(scalebox::task_header "$2" "pointing_range")
 
 KEEP_SOURCE=${KEEP_SOURCE:-"yes"}
 
 if [ $CAL_ROOT ]; then
-    DIR_CAL=$(get_host_path "${CAL_ROOT}/mwa/cal")
+    DIR_CAL=$(path::host_path "${CAL_ROOT}/mwa/cal")
 else
     DIR_CAL=/cluster_data_root/mwa/cal
 fi
 
 if [ "$SLOT_ROLE" = "group" ]; then
     # 用全局dat目录
-    global_dat_dir=$(get_header "$2" "_global_dat_dir")
-    DIR_DAT=$(get_host_path "${global_dat_dir}/dat")
+    global_dat_dir=$(scalebox::task_header "$2" "_global_dat_dir")
+    DIR_DAT=$(path::host_path "${global_dat_dir}/dat")
 elif [ $INPUT_ROOT ]; then
-    DIR_DAT=$(get_host_path "${INPUT_ROOT}/dat")
+    DIR_DAT=$(path::host_path "${INPUT_ROOT}/dat")
     # DIR_DAT="${LOCAL_TMPDIR}/mydata/mwa/dat"
 else
     DIR_DAT=/cluster_data_root/mwa/dat
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${OUTPUT_ROOT}/1ch")
-    # DIR_1CH=$(get_host_path "${LOCAL_TMPFSDIR}/mydata/mwa/1ch")
+    DIR_1CH=$(path::host_path "${OUTPUT_ROOT}/1ch")
+    # DIR_1CH=$(path::host_path "${LOCAL_TMPFSDIR}/mydata/mwa/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
@@ -115,14 +115,17 @@ for ii in $(seq $PTHEAD $PTTAIL); do
     # dest_file=${DIR_1CH}/${dest_file_r}
     dest_file=${fits_dir}/p${pi}.fits
     orig_file="${WORK_DIR}/${point_arr[${i}]}/*.fits"
-
     # BUG：压缩参数开启会导致post_check检查出错 ！
     if [ "$ZSTD_TARGET" = "yes" ]; then
+        orig_size=$(stat -c%s "$orig_file")
+        echo "$orig_file,$orig_size" >> ${WORK_DIR}/output-files.txt
+        echo "$orig_file,$orig_size" >> ${WORK_DIR}/input-files.txt
         zstd -T4 --rm "${orig_file}"
         orig_file="${orig_file}.zst"
         dest_file="${dest_file}.zst"
     fi
 
+    # 在本地磁盘分区中移动，不统计读写字节数
     mkdir -p ${fits_dir} && mv -f $orig_file $dest_file
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR]exit after mkdir and mv, dest_file:$dest_file, error_code:$code" >> ${WORK_DIR}/auxout.txt && exit $code
@@ -141,13 +144,14 @@ code=$?
 echo $1 > ${WORK_DIR}/sink-tasks.txt
 
 # 统计输入文件的总字节数
-num_points=${#point_arr[@]}
-num_files=$(expr "$END" - "$BEG")
-file_length=327680000
-input_bytes=$(( (num_files+1) * file_length * num_points ))
-echo '{
-    "inputBytes":'${input_bytes}'
-}' > ${WORK_DIR}/task-exec.json
+# num_points=${#point_arr[@]}
+# num_files=$(expr "$END" - "$BEG")
+# file_length=327680000
+# input_bytes=$(( (num_files+1) * file_length * num_points ))
+# echo '{
+#     "inputBytes":'${input_bytes}'
+# }' > ${WORK_DIR}/task-exec.json
+echo ${dat_dir} >> ${WORK_DIR}/input-files.txt
 
 if [ "$KEEP_SOURCE" = "no" ]; then
     # only used for test

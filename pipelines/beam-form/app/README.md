@@ -177,7 +177,7 @@ GROUP_NODES= \
 GROUP_SLOTS= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
-scalebox run -e dcu.env | cut -d':' -f2 | tr -d '}' )
+scalebox run | cut -d':' -f2 | tr -d '}' )
 
 scalebox app set-status --app-id=$app_id RUNNING
 ```

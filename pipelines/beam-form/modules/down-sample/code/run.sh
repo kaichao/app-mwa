@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source functions.sh
+source /usr/local/lib/scalebox/functions.sh
 source $(dirname $0)/functions.sh
 
 # usage: downsample all .fits file in the input directory,
@@ -16,14 +16,14 @@ source $(dirname $0)/functions.sh
 
 # 1. set the input / output directory
 if [ $INPUT_ROOT ]; then
-    DIR_1CH=$(get_host_path "${INPUT_ROOT}/1ch")
+    DIR_1CH=$(path::host_path "${INPUT_ROOT}/1ch")
 else
     DIR_1CH=/cluster_data_root/mwa/1ch
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    DIR_1CHX=$(get_host_path "${OUTPUT_ROOT}/1chx")
-    DIR_1CHY=$(get_host_path "${OUTPUT_ROOT}/1chy")
+    DIR_1CHX=$(path::host_path "${OUTPUT_ROOT}/1chx")
+    DIR_1CHY=$(path::host_path "${OUTPUT_ROOT}/1chy")
 else
     DIR_1CHX=/cluster_data_root/mwa/1chx
     DIR_1CHY=/cluster_data_root/mwa/1chy
@@ -41,8 +41,10 @@ mkdir -p $dir_1chx; code=$?
 rm -f $dir_1chx/*
 
 if [ -f "${dir_1ch}/*.zst" ]; then
+    echo "$dir_1ch,$(path::size $dir_1ch)" >> ${WORK_DIR}/input-files.txt
     # 解压文件并删除原始文件
-    zstd -d --rm "${DIR_1CH}/${m}/*.zst"
+    zstd -d --rm "${dir_1ch}/*.zst"
+    echo "$dir_1ch,$(path::size $dir_1ch)" >> ${WORK_DIR}/output-files.txt
 fi
 
 cd ${dir_1ch}
@@ -65,13 +67,16 @@ for f in *.fits; do
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] rename fits file:${dir_1chx}/${f}" >&2 && exit $code
 
-    if [ "$ZSTD_TARGET" = "no" ]; then
-        target_file="${dir_1chx}/${f}"
-    else
-        zstd --long -T2 --rm ${dir_1chx}/${f}
+    echo "${dir_1ch}/$f,$(path::size ${dir_1ch}/$f)" >> ${WORK_DIR}/input-files.txt
+    echo "${dir_1chx}/$f,$(path::size ${dir_1chx}/$f)" >> ${WORK_DIR}/output-files.txt
+    target_file="${dir_1chx}/${f}"
+    if [ "$ZSTD_TARGET" != "no" ]; then
+        echo "${target_file},$(path::size ${target_file})" >> ${WORK_DIR}/input-files.txt
+        zstd --long -T2 --rm ${target_file}
         code=$?
-        [[ $code -ne 0 ]] && echo "[ERROR] rename zstd compress file:${dir_1chx}/${f}" >&2 && exit $code
-        target_file="${dir_1chx}/${f}.zst"
+        [[ $code -ne 0 ]] && echo "[ERROR] rename zstd compress file:${target_file}" >&2 && exit $code
+        target_file="${target_file}.zst"
+        echo "${target_file},$(path::size ${target_file})" >> ${WORK_DIR}/output-files.txt
     fi
 
     # 检查输入、输出文件的大小比例是否合理？
@@ -79,14 +84,12 @@ for f in *.fits; do
     code=$?
     [[ $code -ne 0 ]] && echo "[ERROR] post_check ${m} " >> ${WORK_DIR}/auxout.txt && exit $code
 
-cat <<EOF >> ${WORK_DIR}/auxout.txt
+cat << EOF >> ${WORK_DIR}/auxout.txt
 filenames:
 psrfits_subband output:${dir_1chx}/${f}_0001.fits
 normalized:${dir_1chx}/${f}
 target_file:$target_file
 EOF
-
-
     if [ "$ZSTD_TARGET" = "yes" ]; then
         # 下采样后文件
         f0="${dir_1chx}/${f}.zst"
@@ -111,17 +114,11 @@ EOF
             mkdir -p "$(dirname $f1)" && mv -f $f0 $f1
             code=$?
             [[ $code -ne 0 ]] && echo "[ERROR] rename ${f0} " >> ${WORK_DIR}/auxout.txt && exit $code
-
-            echo $f1 > ${WORK_DIR}/output-files.txt
         else
             echo "format error, filename:$f0" >&2
             exit 81
         fi
-    else
-        echo $f0 >> ${WORK_DIR}/output-files.txt
     fi
-    echo "${dir_1ch}/${f}" >> ${WORK_DIR}/input-files.txt
-
 done
 
 [ "$KEEP_SOURCE" == "no" ] && echo "${dir_1ch}" >> ${WORK_DIR}/removed-files.txt

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-source functions.sh
-source /app/share/bin/functions.sh
+source /usr/local/lib/scalebox/functions.sh
 source $(dirname $0)/functions.sh
 
 # 1266932744/p00001_00960/1266932986_1266933025_ch118.dat.tar.zst
@@ -24,8 +23,8 @@ fi
 echo "pointing_path=$pointing_path"
 
 # target_url is local-dir
-target_url=$(get_header "$2" "target_url")
-target_subdir=$(get_header "$2" "target_subdir")
+target_url=$(scalebox::task_header "$2" "target_url")
+target_subdir=$(scalebox::task_header "$2" "target_subdir")
 if [[ "$target_url" == /* ]]; then
     target_dir="${target_url}/dat/${target_subdir}"
 else
@@ -33,15 +32,15 @@ else
 fi
 mkdir -p "${target_dir}"
 
-source_url=$(get_header "$2" "source_url")
-source_mode=$(get_mode "$source_url")
-source_dir=$(get_data_root "$source_url")
+source_url=$(scalebox::task_header "$2" "source_url")
+source_mode=$(url::mode "$source_url")
+source_dir=$(url::data_root "$source_url")
 
-global_dat_dir=$(get_header "$2" "_global_dat_dir")
+global_dat_dir=$(scalebox::task_header "$2" "_global_dat_dir")
 # 设置--touch，将文件更新时间更新为当前时间，以免在/tmp中被删除
 if [ -n "$global_dat_dir" ]; then
     # 容器内目录与本机目录映射，加上/local_data_root
-    global_dat_dir=$(get_host_path $global_dat_dir)
+    global_dat_dir=$(path::host_path $global_dat_dir)
     global_dat_dir="${global_dat_dir}/dat/${target_subdir}"
     # 单路读入，双路输出
     cmd_suffix="tee >(tar -C ${target_dir} --touch -xvf -) >(tar -C ${global_dat_dir} --touch -xvf -) > /dev/null"
@@ -51,10 +50,10 @@ else
 fi
 
 # BW_LIMIT  "500k"/"1m"
-bw_limit=$(get_header "$2" "bw_limit")
+bw_limit=$(scalebox::task_header "$2" "bw_limit")
 
 if [ "$source_mode" = "LOCAL" ]; then
-    source_dir=$(get_host_path $source_dir)
+    source_dir=$(path::host_path $source_dir)
     source_file="${source_dir}/tar/$dataset/$file_name"
 
     if [ -n "$bw_limit" ]; then
@@ -65,7 +64,7 @@ if [ "$source_mode" = "LOCAL" ]; then
     fi
 else
     # SSH加载
-    ssh_cmd=$(get_ssh_cmd "$2" "source_url" "source_jump")
+    ssh_cmd=$(url::ssh_cmd "$2" "source_url" "source_jump")
     source_file="${source_dir}/tar/$dataset/$file_name"
     cmd_prefix="zstd -d"
     if [ -n "$bw_limit" ]; then
@@ -125,7 +124,7 @@ echo "$1" >> ${WORK_DIR}/sink-tasks.txt
 
 # 生成计量数据
 if [ "$source_mode" = "LOCAL" ]; then
-    keep_source=$(get_header "$2" "keep_source")
+    keep_source=$(scalebox::task_header "$2" "keep_source")
     if [ "$keep_source" = "no" ]; then
         echo "${source_file}" > ${WORK_DIR}/removed-files.txt
     fi
@@ -134,7 +133,7 @@ if [ "$source_mode" = "LOCAL" ]; then
     echo "$CLUSTER_DATA_ROOT,$original_size" > ${WORK_DIR}/input-files.txt
 else
     original_size=$($ssh_cmd "stat -c%s '$escaped_file_path'")
-    ssh_host=$(get_ssh_host "source_url")
+    ssh_host=$(url::ssh_host "source_url")
     echo "from,$ssh_host,$original_size,$escaped_file_path" > ${WORK_DIR}/network-files.txt
 fi
 

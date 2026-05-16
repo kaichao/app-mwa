@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 
-source functions.sh
-# source $(dirname $0)/functions.sh
+source /usr/local/lib/scalebox/functions.sh
 
 if [ $INPUT_ROOT ]; then
-    dir_1chx=$(get_host_path "${INPUT_ROOT}/1chx")
+    dir_1chx=$(path::host_path "${INPUT_ROOT}/1chx")
 else
     dir_1chx=/cluster_data_root/mwa/1chx
 fi
 
 if [ $OUTPUT_ROOT ]; then
-    dir_1chy=$(get_host_path "${OUTPUT_ROOT}/1chy")
+    dir_1chy=$(path::host_path "${OUTPUT_ROOT}/1chy")
 else
     dir_1chy=/cluster_data_root/mwa/1chy
 fi
@@ -30,7 +29,7 @@ else
     exit 81
 fi
 
-target_hosts=$(get_header "$2" "target_hosts")
+target_hosts=$(scalebox::task_header "$2" "target_hosts")
 # 设置 IFS 为逗号
 IFS=',' read -r -a arr_hosts <<< "$target_hosts"
 
@@ -71,13 +70,18 @@ for i in "${!arr_files[@]}"; do
         continue
     fi
     export TARGET_URL=${target_user}@${arr_hosts[i]}:${target_port}${LOCAL_SHMDIR}
+
     # 循环调用/app/share/bin/run.sh，分发文件
     m="1chy/$fn"
+    size=$(path::size $SOURCE_URL/$m)
+    echo "$SOURCE_URL/$m,$size" >> ${WORK_DIR}/input-files.txt
     eval "/app/share/bin/run.sh '$m' '$2'"
     code=$?
     if [[ $code -ne 0 ]]; then
         ret_code=$code
     fi
+    echo "to,${arr_hosts[i]},$size,${LOCAL_SHMDIR}/$m" >> ${WORK_DIR}/network-files.txt
+
     echo "after file-copy,file=$m, ret_code=$ret_code, code:$code" >> "${WORK_DIR}/auxout.txt"
 done
 

@@ -1,20 +1,17 @@
 #!/bin/bash
 
-source functions.sh
+source /usr/local/lib/scalebox/functions.sh
 
-# DOWN_SAMPLER_ENABLED
-# env >> ${WORK_DIR}/auxout.txt
-
-input_root=$(get_header "$2" "input_root")
+input_root=$(scalebox::task_header "$2" "input_root")
 if [ $input_root ]; then
-    DIR_1CHY=$(get_host_path "${input_root}/1chy")
+    DIR_1CHY=$(path::host_path "${input_root}/1chy")
 else
     DIR_1CHY=/cluster_data_root/mwa/1chy
 fi
 
-output_root=$(get_header "$2" "output_root")
+output_root=$(scalebox::task_header "$2" "output_root")
 if [[ -n "$output_root" ]]; then
-    DIR_24CH=$(get_host_path "${output_root}/24ch")
+    DIR_24CH=$(path::host_path "${output_root}/24ch")
 else
     DIR_24CH=/cluster_data_root/mwa/24ch
 fi
@@ -36,8 +33,10 @@ ls -l >> ${WORK_DIR}/auxout.txt
 
 # Only decompress if zst files exist
 if ls *.zst 1> /dev/null 2>&1; then
+    echo "${DIR_1CHY}/$1,$(path::size ${DIR_1CHY}/$1)" >> ${WORK_DIR}/input-files.txt
     ls -l *.zst >> ${WORK_DIR}/auxout.txt
     zstd -d --rm *.zst
+    echo "${DIR_1CHY}/$1,$(path::size ${DIR_1CHY}/$1)" >> ${WORK_DIR}/output-files.txt
 fi
 
 # Check if fits files exist
@@ -46,6 +45,7 @@ if ! ls *.fits 1> /dev/null 2>&1; then
     exit 102
 fi
 
+echo "${DIR_1CHY}/$1,$(path::size ${DIR_1CHY}/$1)" >> ${WORK_DIR}/input-files.txt
 input_files=$(ls *.fits)
 echo input_files:${input_files} >> ${WORK_DIR}/auxout.txt
 splice_psrfits ${input_files} ${WORK_DIR}/all; code=$?
@@ -62,12 +62,13 @@ filename=$(basename ${output_file})
 echo "new feature for local-copy" >> ${WORK_DIR}/auxout.txt
 echo "output_dir:$output_dir" >> ${WORK_DIR}/auxout.txt
 
-cd ${WORK_DIR} && mv -f all*.fits ${filename} 
-# mkdir -p $(dirname ${output_file}) && mv -f ${WORK_DIR}/all*.fits ${output_file}
+cd ${WORK_DIR} && mv -f all*.fits ${filename}
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] rename fits file "  >> ${WORK_DIR}/auxout.txt && exit $code
 
-bw_limit=$(get_header "$2" "bw_limit")
+echo "${WORK_DIR}/${filename},$(path::size ${WORK_DIR}/${filename})" >> ${WORK_DIR}/output-files.txt
+
+bw_limit=$(scalebox::task_header "$2" "bw_limit")
 # BW_LIMIT  "500k"/"1m"
 if [ -n "$bw_limit" ]; then
     if [ "$ZSTD_TARGET" = "no" ]; then
@@ -82,12 +83,12 @@ else
         cmd="zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst"
     fi
 fi
+echo "${WORK_DIR}/${filename},$(path::size ${WORK_DIR}/${filename})" >> ${WORK_DIR}/output-files.txt
 mkdir -p "${output_dir}" && cd "${output_dir}" && eval $cmd
-# mkdir -p ${output_dir} && cd ${output_dir} && zstd -f --rm ${WORK_DIR}/${filename} -o ${filename}.zst
 code=$?
 [[ $code -ne 0 ]] && echo "[ERROR] zstd compress target fits file "  >> ${WORK_DIR}/auxout.txt && exit $code
-
 echo "${output_file}.zst" > ${WORK_DIR}/output-files.txt
+
 [ "$KEEP_TARGET" = "no" ] && echo "${output_file}.zst" >> ${WORK_DIR}/removed-files.txt
 
 full_path="${DIR_1CHY}/$1"
@@ -95,7 +96,6 @@ echo [DEBUG]full_path:$full_path
 [ "$KEEP_SOURCE" = "no" ] && echo $full_path >> ${WORK_DIR}/removed-files.txt
 echo $full_path >> ${WORK_DIR}/input-files.txt
 
-echo "send-message to sink-module"
 echo $new_id > ${WORK_DIR}/sink-tasks.txt
 
 exit $code

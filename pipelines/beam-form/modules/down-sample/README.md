@@ -17,7 +17,6 @@
 |            | ENABLE_LOCAL_COMPUTE | 非本地计算模式，对下采样后目录中的fits文件重新调整目录（本地计算模式，通过fits-redist重新调整目录） |
 
 
-
 ## 二、模块测试
 
 ### 2.1 单task测试
