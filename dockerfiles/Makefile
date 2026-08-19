@@ -50,13 +50,13 @@ build-images:
 
 dist-dcu:
 	make build-images HOST=dcu
-# 	for i in {1..4};do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
-	for i in 1 2 4;do echo i=$$i; docker-dist node$$i hub.cstcloud.cn/scalebox/file-copy;done
+# 	for i in {1..4};do echo i=$$i; docker-dist node$$i scalebox.net/platform/file-copy;done
+	for i in 1 2 4;do echo i=$$i; docker-dist node$$i scalebox.net/platform/file-copy;done
 	make -C mwa-vcstools dist-dcu
 	make -C down-sampler dist-dcu
 
 dist-p419: build-images
-	docker-dist p419 hub.cstcloud.cn/scalebox/file-copy
+	docker-dist p419 scalebox.net/platform/file-copy
 	docker-dist p419 app-mwa/mwa-vcstools:rocm-4.0.1
 	docker-dist p419 app-mwa/down-sampler:latest
 

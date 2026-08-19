@@ -20,8 +20,8 @@ clean:
 	# rm -rf /raid0/scalebox/mydata/mwa/{1ch,1chx,24ch}/
 
 dist-singularity-images:
-	singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://hub.cstcloud.cn/scalebox/file-copy:latest
-	singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://hub.cstcloud.cn/scalebox/node-agent:latest
+	singularity build -F ~/singularity/scalebox/file-copy.sif  docker-daemon://scalebox.net/platform/file-copy:latest
+	singularity build -F ~/singularity/scalebox/node-agent.sif docker-daemon://scalebox.net/platform/node-agent:latest
 	scp  ~/singularity/scalebox/file-copy.sif login1:singularity/scalebox/
 	scp  ~/singularity/scalebox/node-agent.sif login1:singularity/scalebox/
 	make -C ~/app-mwa/dockerfiles/mwa-vcstools dist-singularity

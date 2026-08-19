@@ -1,4 +1,4 @@
-FROM hub.cstcloud.cn/scalebox/agent
+FROM scalebox.net/platform/agent
 
 LABEL maintainer="Jianing Tang <tangjianing@cnic.cn>"
 

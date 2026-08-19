@@ -43,8 +43,6 @@ func init() {
 }
 
 func init() {
-	os.Setenv("REDIS_HOST", os.Getenv("GRPC_SERVER"))
-
 	appID, _ = strconv.Atoi(os.Getenv("APP_ID"))
 
 	var err error

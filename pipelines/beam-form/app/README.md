@@ -36,10 +36,10 @@ scalebox app create
 export SOURCE_URL=/data2/mydata/mwa/tar
 export TARGET_URL=cstu0036@60.245.128.14:65010/work2/cstu0036/mydata/mwa/tar
 
-scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
+scalebox app run --image-name=scalebox.net/platform/file-copy:latest 1267459328/1267464090_1267464129_ch127.dat.tar.zst
 
 cd $SOURCE_URL
-find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:6
+find 1302106648 -type f|sort|scalebox app run --image-name=scalebox.net/platform/file-copy:latest --slot-regex=h0:6
 
 ```
 
@@ -49,7 +49,7 @@ find 1302106648 -type f|sort|scalebox app run --image-name=hub.cstcloud.cn/scale
 
 export SOURCE_URL=cstu0036@60.245.128.14:65010/work1/cstu0036/mydata/mwa/24ch
 export TARGET_URL=/data1/mydata/mwa/24ch
-ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250707 -type f' | sort | scalebox app run --image-name=hub.cstcloud.cn/scalebox/file-copy:latest --slot-regex=h0:6
+ssh login1 'cd /work1/cstu0036/mydata/mwa/24ch && find 1265983624-250707 -type f' | sort | scalebox app run --image-name=scalebox.net/platform/file-copy:latest --slot-regex=h0:6
 
 ```
 
@@ -98,7 +98,6 @@ scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
 scalebox app set-status --app-id=$app_id RUNNING
 
 ```
-
 
 
 ### p419集群全并行
@@ -170,7 +169,7 @@ START_TASK=1253991112/p00001_00120/t1253994234_1253994833 \
 app_id=$(echo '1253991112/p00001_00096/t_1253991273' | \
 ORIGIN_ROOT=/raid0/scalebox/mydata/mwa \
 NUM_GROUPS=1 \
-NODES='^n-0[023]' \
+NODES='^n[013]' \
 TIME_STEP=80 \
 NUM_BEAM_MAKE=2 \
 GROUP_NODES= \
@@ -179,7 +178,15 @@ PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox run | cut -d':' -f2 | tr -d '}' )
 
-scalebox app set-status --app-id=$app_id RUNNING
+app_id=$(echo '1253991112/p00001_00096/t_1253991273' | \
+ORIGIN_ROOT=/raid0/scalebox/mydata/mwa \
+PRELOAD_ROOT=/raid0/scalebox/mydata/mwa \
+NODES='^n[013]' \
+TIME_STEP=80 \
+NUM_BEAM_MAKE=2 \
+scalebox run | cut -d':' -f2 | tr -d '}' )
+
+scalebox app set-status --app-id=$app_id --status=RUNNING
 ```
 
 - singularity
@@ -249,7 +256,7 @@ export SOURCE_DIR=/public/home/cstu0038/scalebox/mydata/mwa/24ch
 export SOURCE_URL=cstu0030@60.245.128.14:65010${SOURCE_DIR}
 
 
-ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run --slot-regex='h0' --image-name=hub.cstcloud.cn/scalebox/file-copy
+ssh login1 "cd $SOURCE_DIR; find 1302106648 -type f" | sort | scalebox app run --slot-regex='h0' --image-name=scalebox.net/platform/file-copy
 
 ```
 

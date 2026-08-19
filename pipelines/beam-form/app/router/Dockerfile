@@ -59,7 +59,7 @@ RUN apt-get update \
 
 RUN echo 'redis-cli() { command redis-cli -h "${REDIS_HOST:-localhost}" -p "${REDIS_PORT:-6379}" "$@"; }' >> /root/.bashrc
 
-COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
+COPY --from=scalebox.net/platform/actuator /root/.ssh /root/.ssh
 COPY --from=0 /go/src/app/router/router /app/bin/
 
 COPY dataset.yaml /
@@ -77,6 +77,6 @@ ENV \
     REDIS_PORT= \
     BATCH_INSERT= 
 
-COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local
+COPY --from=scalebox.net/platform/agent /usr/local /usr/local
 WORKDIR /work
 ENTRYPOINT ["goagent"]

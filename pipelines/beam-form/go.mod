@@ -3,9 +3,9 @@ module beamform
 go 1.25.2
 
 require (
-	github.com/jackc/pgx/v5 v5.8.0
-	github.com/kaichao/gopkg v0.0.0-20260512020252-8da80054f979
-	github.com/kaichao/scalebox v0.0.0-20260512022448-81481db79880
+	github.com/jackc/pgx/v5 v5.9.2
+	github.com/kaichao/gopkg v0.0.0-20260721094408-a4ee0bbe5798
+	github.com/kaichao/scalebox v0.0.0-20260814141536-d2bace8bf42e
 	github.com/sirupsen/logrus v1.9.4
 	github.com/stretchr/testify v1.11.1
 	gopkg.in/yaml.v2 v2.4.0
@@ -18,8 +18,12 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	golang.org/x/crypto v0.47.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.33.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/text v0.36.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
+	google.golang.org/grpc v1.81.1 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )

@@ -8,7 +8,7 @@ parameters:
 
 jobs:
   dir-list:
-    base_image: hub.cstcloud.cn/scalebox/dir-listx
+    base_image: scalebox.net/platform/dir-listx
     arguments:
       slot_options: slot_on_head
     environments:

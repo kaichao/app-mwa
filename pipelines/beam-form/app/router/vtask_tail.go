@@ -9,15 +9,11 @@ import (
 )
 
 func fromVtaskTail(body string, headers map[string]string) error {
-	// 恢复应用级编程信号量
-	// vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	// 待确认 vtask-id = 0 ?
-	vtaskID := int64(0)
+	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
 	semaName := ":" + headers["_vtask_size_sema"]
-	// _, err := semaphore.AddValue(semaName, vtaskID, appID, 1)
-	_, err := vtask.AddSemaphoreValue(semaName, 1, vtaskID, appID)
+	err := vtask.UnbindResource(appID, vtaskID, semaName)
 
-	return errors.WrapE(err, "add-semaphore",
+	return errors.WrapE(err, "vtask-unbind-resource",
 		"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
 }
 

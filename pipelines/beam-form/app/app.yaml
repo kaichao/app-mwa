@@ -8,18 +8,20 @@ parameters:
   global_copier_env: '{}'
   slot_group: '{"pull-unpack":1,"beam-make":4,"down-sample":1,"fits-redist":1}'
 
-vcluster:
+cluster-1:
+  label: 
+  status: OFF
   parameters:
-    base_data_dir: /public/home/cstu0030/scalebox/mydata
+    data_root: /public/home/cstu0030/scalebox/mydata
     uname: cstu0030
     port: 50022
     grpc_server: 10.100.1.30
-    grpc_remote_server: 60.245.128.60
+    remote_grpc_server: 60.245.128.60
   hosts:
     h0:
       label: head-node
       ip_addr: 10.100.1.30
-      role: head
+      role: HEAD
       uname: astro
       port: 10022
     n0:
@@ -29,18 +31,20 @@ vcluster:
       port: 65010
       parameters:
         use_home_tmp: "yes"
-  backend_config:
+  backend:
     type: slurm
-    user_name: cstu0030
+    account: cstu0030
     partition: cstdemo
-    num_groups: ${NUM_GROUPS}
-    group_size: 24
-    group_prefix: d
+    time_limit: "24:00:00"
+    image: node-agent
+    # <group_prefix>:<group_size>:<num_groups>
+    group_spec: d:24:1
+  comment: p419
 
 modules:
   tar-load:
     base_image: ${FILE_COPY}
-    arguments:
+    # arguments:
       # dir_quota_gb: '{
       #   "/public/home/cstu0092/scalebox":440,
       #   "/public/home/cstu0093/scalebox":440,
@@ -59,7 +63,7 @@ modules:
 
   # 开关功能，每次仅能通过一个
   wait-queue:
-    base_image: hub.cstcloud.cn/scalebox/agent:latest
+    base_image: scalebox.net/platform/agent:latest
     arguments:
       code_path: ${PWD}/../modules/wait-queue/code
       slot_options: slot_on_head
@@ -68,9 +72,11 @@ modules:
     environments:
       # retry时，覆盖main-router的新task
       - CONFLICT_ACTION=OVERWRITE
+    sink_vmodules:
+      - vtask-head
 
   vtask-head:
-    base_image: hub.cstcloud.cn/scalebox/agent:latest
+    base_image: scalebox.net/platform/agent:latest
     parameters:
       task_dist_mode: SLOT-BOUND
       vtask_role: head
@@ -78,7 +84,9 @@ modules:
       vtask_size_sema_copy: yes
     slots:
       # 最多分组为3
-      - h0:${NUM_GROUPS}
+      - 'h0:${NUM_GROUPS}'
+    sink_vmodules:
+      - pull-unpack
 
   pull-unpack:
     base_image: ${FILE_COPY}
@@ -107,6 +115,8 @@ modules:
       # - LOCAL_SHMDIR=${LOCAL_SHMDIR}
     slots:
       - ${NODES}    
+    sink_vmodules:
+      - beam-make
 
   beam-make:
     base_image: ${MWA_VCSTOOLS}
@@ -147,6 +157,8 @@ modules:
       - ${NODES}:${NUM_BEAM_MAKE}
       - ${GROUP_SLOTS}
       - ${GLOBAL_SLOTS}
+    sink_vmodules:
+      - down-sample
 
   down-sample:
     base_image: ${DOWN_SAMPLE}
@@ -175,6 +187,9 @@ modules:
     slots:
       - ${NODES}
       - ${GROUP_NODES}
+    sink_vmodules:
+      - fits-redist
+      - fits-merge
 
   fits-redist:
     base_image: ${FILE_COPY}
@@ -206,6 +221,8 @@ modules:
     slots:
       - ${NODES}
       - ${GROUP_NODES}
+    sink_vmodules:
+      - fits-merge
 
   fits-merge:
     label: 24通道fits合并
@@ -235,6 +252,8 @@ modules:
     slots:
       - ${NODES}
       - ${PRESTO_NODES}
+    sink_vmodules:
+      - vtask-tail
 
   # 全并行模式下，本地做fits合并，需要拷贝到后续计算节点上（运行在计算节点上）
   fits24ch-move:
@@ -256,7 +275,7 @@ modules:
       - ${NODES}
 
   vtask-tail:
-    base_image: hub.cstcloud.cn/scalebox/agent:latest
+    base_image: scalebox.net/platform/agent:latest
     arguments:
       slot_options: slot_on_head
     parameters:
@@ -308,5 +327,7 @@ modules:
       - PRESTO_APP_ID=${PRESTO_APP_ID}
       # 用global代替variable，更有效地支持多应用共享
       - USE_GLOBAL_POINTING=yes
+
+      - PGPASS=changeme
     slots:
       - h0:3

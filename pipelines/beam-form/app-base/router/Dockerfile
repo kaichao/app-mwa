@@ -29,7 +29,7 @@ RUN echo "deb http://deb.debian.org/debian testing main" > /etc/apt/sources.list
     && apt-get clean autoclean \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-COPY --from=hub.cstcloud.cn/scalebox/actuator /root/.ssh /root/.ssh
+COPY --from=scalebox.net/platform/actuator /root/.ssh /root/.ssh
 
 COPY --from=0 /go/src/app-base/router/router /app/bin/
 
@@ -44,6 +44,6 @@ ENV \
     DEFAULT_USER=root \
     BATCH_INSERT= 
 
-COPY --from=hub.cstcloud.cn/scalebox/agent /usr/local /usr/local
+COPY --from=scalebox.net/platform/agent /usr/local /usr/local
 WORKDIR /work
 ENTRYPOINT ["goagent"]

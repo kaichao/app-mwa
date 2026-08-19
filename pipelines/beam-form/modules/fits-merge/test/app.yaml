@@ -21,4 +21,4 @@ modules:
       - next-module
 
   next-module:
-    base_image: hub.cstcloud.cn/scalebox/agent
+    base_image: scalebox.net/platform/agent

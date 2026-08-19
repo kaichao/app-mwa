@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	"github.com/kaichao/gopkg/errors"
-	"github.com/kaichao/scalebox/pkg/semagroup"
 	"github.com/kaichao/scalebox/pkg/semaphore"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/vtask"
@@ -60,15 +59,16 @@ func fromVtaskHead(body string, headers map[string]string) error {
 }
 
 func toVtaskHead(cubeName string) error {
-	// 手工处理信号量组
-	groupName := ":slot_vtask_size:vtask-head:"
-	semaName, _, err := semagroup.Decrement(groupName, appID)
-	fmt.Printf("In toVtaskHead(),sema-name:%s,seq#%s#\n", semaName, semaName[len(groupName):])
-	slotSeq, _ := strconv.Atoi(semaName[len(groupName):])
+	// vtask.BindResource 原子化绑定计算资源
+	// GROUP-BOUND(SLOT-BOUND) 返回 slot_seq，HOST-BOUND 返回 hostname
+	resource, mode, err := vtask.BindResource(appID, "")
 	if err != nil {
-		return errors.WrapE(err, "strconv.Atoi()",
-			"value", semaName[len(groupName):], "sema-name", semaName)
+		return errors.WrapE(err, "vtask-bind-resource",
+			"cube-name", cubeName, "app-id", appID)
 	}
+	fmt.Printf("In toVtaskHead(),resource:%s,mode:%s\n", resource, mode)
+
+	slotSeq, _ := strconv.Atoi(resource)
 
 	headers := map[string]string{
 		"_vtask_cube_name": cubeName,

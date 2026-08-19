@@ -7,7 +7,7 @@ parameters:
 modules:
   fits-redist:
     label: 24通道fits再分发
-    base_image: hub.cstcloud.cn/scalebox/file-copy
+    base_image: scalebox.net/platform/file-copy
     arguments:
       slot_options: reserved_on_exit
       code_path: /raid0/root/app-mwa/pipelines/beam-form/modules/fits-redist/code
@@ -26,4 +26,4 @@ modules:
       - next-module
 
   next-module:
-    base_image: hub.cstcloud.cn/scalebox/agent
+    base_image: scalebox.net/platform/agent

@@ -7,7 +7,7 @@ parameters:
 modules:
   dir-list:
     label: 打包文件列表
-    base_image: hub.cstcloud.cn/scalebox/dir-listx
+    base_image: scalebox.net/platform/dir-listx
     command: docker run -d --rm --privileged --network=host {{ENVS}} {{VOLUMES}} {{IMAGE}}
     parameters:
       slot_on_head: yes
@@ -41,7 +41,7 @@ modules:
       - repack
       - rclone-copy
   unpack:
-    base_image: hub.cstcloud.cn/scalebox/untar
+    base_image: scalebox.net/platform/untar
     parameters:
       pod_id: pod_0
       tasks_per_queue: 500
@@ -67,7 +67,7 @@ modules:
       - r12:1
 
   fits-redist:
-    base_image: hub.cstcloud.cn/scalebox/file-copy
+    base_image: scalebox.net/platform/file-copy
     variables:
       max_sleep_count: 120
     parameters:
@@ -95,8 +95,7 @@ modules:
       - r12:1
 
   repack:
-      #base_image: hub.cstcloud.cn/scalebox/agent
-      base_image: hub.cstcloud.cn/scalebox/repack
+      base_image: scalebox.net/platform/repack
       parameters:
         task_dist_mode: HOST-BOUND
         pod_id: pod_0
@@ -120,7 +119,7 @@ modules:
         - r11:1
         - r12:1
   rclone-copy:
-      base_image: hub.cstcloud.cn/scalebox/rclone-copy
+      base_image: scalebox.net/platform/rclone-copy
       parameters:
         #slot_on_head: yes
         tasks_per_queue: 500

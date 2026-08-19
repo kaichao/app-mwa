@@ -87,7 +87,7 @@ modules:
 
   main-router:
     label: 主消息路由
-    base_image: hub.cstcloud.cn/scalebox/agent
+    base_image: scalebox.net/platform/agent
     parameters:
       start_task: ANY
     arguments:

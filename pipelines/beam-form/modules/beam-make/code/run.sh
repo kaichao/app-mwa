@@ -67,7 +67,7 @@ UTT=$( /app/bin/gps2utc.py ${BEG} )
 echo UTT=${UTT} >> ${WORK_DIR}/auxout.txt
 echo "dat_dir=${dat_dir}" >> ${WORK_DIR}/auxout.txt
 
-# PTLIST=${BASEDIR}/1257010784_grid_positions_f0.85_d0.3098_l102.txt
+echo "POINTING_FILE:$POINTING_FILE" >> ${WORK_DIR}/auxout.txt
 pointing_file="${POINTING_FILE:-pointings.txt}"
 echo "pointing_file:$pointing_file" >> ${WORK_DIR}/auxout.txt
 
@@ -143,14 +143,6 @@ code=$?
 
 echo $1 > ${WORK_DIR}/sink-tasks.txt
 
-# 统计输入文件的总字节数
-# num_points=${#point_arr[@]}
-# num_files=$(expr "$END" - "$BEG")
-# file_length=327680000
-# input_bytes=$(( (num_files+1) * file_length * num_points ))
-# echo '{
-#     "inputBytes":'${input_bytes}'
-# }' > ${WORK_DIR}/task-exec.json
 echo ${dat_dir} >> ${WORK_DIR}/input-files.txt
 
 if [ "$KEEP_SOURCE" = "no" ]; then
