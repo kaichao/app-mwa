@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/task"
-	"github.com/sirupsen/logrus"
 )
 
-func toBeamMake(msg string) int {
+func toBeamMake(msg string) error {
 	// output message: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	cube := datacube.NewDataCube(msg)
 
@@ -46,8 +46,8 @@ func toBeamMake(msg string) int {
 	}
 
 	if _, err := task.AddTasks(messages, "", envVars); err != nil {
-		logrus.Errorf("err:%v\n", err)
-		return 1
+		return errors.WrapE(err, 1, "add-tasks",
+			"n-messages", len(messages), "envs", envVars)
 	}
-	return 0
+	return nil
 }

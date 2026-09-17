@@ -21,7 +21,6 @@ import (
 
 	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/semaphore"
-	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/vtask"
 )
 
@@ -36,6 +35,11 @@ func fromVtaskHead(body string, headers map[string]string) error {
 	if err != nil || n != 2 {
 		return errors.WrapE(err, "parse cube-id", "cube-id", body)
 	}
+
+	// root task 由标准 wait-queue 模块的 run.sh（--direct）创建，
+	// 不携带业务 header；在此补齐 _vtask_cube_name，
+	// 随 _vtask_ 前缀 header 沿 sink 链自动传播到下游 core 模块
+	headers["_vtask_cube_name"] = body
 
 	// 分组流控信号量的操作，选择节点组
 	err = toPullUnpack(body, headers)
@@ -56,29 +60,4 @@ func fromVtaskHead(body string, headers map[string]string) error {
 	err = vtask.CreateSemaphore(semaName, semaValue, vtaskID, appID)
 	return errors.WrapE(err, 3, "semaphore.Create()",
 		"sema-name", semaName, "sema-value", semaValue, "app-id", appID, "vtask-id", vtaskID)
-}
-
-func toVtaskHead(cubeName string) error {
-	// vtask.BindResource 原子化绑定计算资源
-	// GROUP-BOUND(SLOT-BOUND) 返回 slot_seq，HOST-BOUND 返回 hostname
-	resource, mode, err := vtask.BindResource(appID, "")
-	if err != nil {
-		return errors.WrapE(err, "vtask-bind-resource",
-			"cube-name", cubeName, "app-id", appID)
-	}
-	fmt.Printf("In toVtaskHead(),resource:%s,mode:%s\n", resource, mode)
-
-	slotSeq, _ := strconv.Atoi(resource)
-
-	headers := map[string]string{
-		"_vtask_cube_name": cubeName,
-		"to_slot_index":    fmt.Sprintf("%d", slotSeq),
-		"_slot_seq":        fmt.Sprintf("%d", slotSeq),
-	}
-	envs := map[string]string{
-		"SINK_MODULE": "vtask-head",
-	}
-	_, err = task.AddWithMapHeaders(cubeName, headers, envs)
-	return errors.WrapE(err, 2, "add-task",
-		"body", cubeName, "headers", headers, "envs", envs)
 }

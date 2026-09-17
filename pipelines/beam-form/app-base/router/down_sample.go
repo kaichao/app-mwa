@@ -4,16 +4,15 @@ import (
 	"beamform/internal/strparse"
 	"fmt"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/semaphore"
-	"github.com/sirupsen/logrus"
 )
 
-func fromDownSample(body string, headers map[string]string) int {
+func fromDownSample(body string, headers map[string]string) error {
 	// input body: 1257010784/p00001_00024/t1257012766_1257012965/ch109
 	obsID, pBegin, pEnd, t0, t1, _, err := strparse.ParseParts(body)
 	if err != nil {
-		logrus.Errorf("message parsing, err-info:%v", err)
-		return 1
+		return errors.WrapE(err, 1, "parse task-body", "task-body", body)
 	}
 
 	cubeID := fmt.Sprintf("%s/p%05d_%05d/t%d_%d", obsID, pBegin, pEnd, t0, t1)
@@ -21,12 +20,12 @@ func fromDownSample(body string, headers map[string]string) int {
 	sema := "fits-done:" + cubeID
 	semaVal, err := semaphore.AddValue(sema, -1, appID)
 	if err != nil {
-		logrus.Errorf("semaphore-decrement, sema=%s,err-info=%v\n", sema, err)
-		return 2
+		return errors.WrapE(err, 2, "semaphore-decrement",
+			"sema-name", sema, "app-id", appID)
 	}
 	if semaVal > 0 {
 		// 24ch not done.
-		return 0
+		return nil
 	}
 
 	return toFitsMerge(cubeID)

@@ -6,7 +6,10 @@ import (
 )
 
 func fromWaitQueue(body string, headers map[string]string) error {
-	return toVtaskHead(body)
+	// 标准 wait-queue 模块的 run.sh 已完成 vtask bind + add-subtask --direct，
+	// 且不写 sink-tasks.txt，task 在 wait-queue slot 终结，正常无回流。
+	// 若因自定义 run.sh 等原因回流，空操作终结，避免重复 bind 造成额度双扣。
+	return nil
 }
 
 func toWaitQueue(cubeName string) error {

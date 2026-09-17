@@ -17,6 +17,7 @@ import (
 	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
+	"github.com/kaichao/scalebox/pkg/module"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/variable"
 	"github.com/kaichao/scalebox/pkg/vtask"
@@ -136,7 +137,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) error {
 			if os.Getenv("GROUP_NODES") != "" {
 				globalDatDir, err := vPath.GetPath("global-dat", targetSubDir)
 				if err != nil {
-					logger.LogError(err, logEntry)
+					logger.LogError(err, module.LogEntry)
 				} else {
 					headers, _ = common.SetJSONAttribute(headers,
 						"_global_dat_dir", globalDatDir)
@@ -164,9 +165,12 @@ func toPullUnpack(body string, fromHeaders map[string]string) error {
 	}
 
 	targetURL := os.Getenv("LOCAL_TMPDIR")
-	headers := map[string]string{
-		"target_url": targetURL,
+	headers := map[string]string{}
+	headers["target_url"] = targetURL
+	if cubeName := fromHeaders["_vtask_cube_name"]; cubeName != "" {
+		headers["_vtask_cube_name"] = cubeName
 	}
+
 	envs := map[string]string{
 		"SINK_MODULE": "pull-unpack",
 	}
@@ -182,7 +186,7 @@ func getOptBandwidthMB(toHost string) string {
 	val, err := variable.GetValue(varName, appID)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
-			logger.LogError(err, logEntry)
+			logger.LogError(err, module.LogEntry)
 			return ""
 		}
 		// 未定义first_load:pull_unpack
@@ -192,7 +196,7 @@ func getOptBandwidthMB(toHost string) string {
 	}
 	err = variable.Set(varName, "no", appID)
 	if err != nil {
-		logger.LogError(err, logEntry)
+		logger.LogError(err, module.LogEntry)
 		return ""
 	}
 	return os.Getenv("FIRST_BW_LIMIT")

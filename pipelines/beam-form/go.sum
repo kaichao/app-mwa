@@ -23,8 +23,8 @@ github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/kaichao/gopkg v0.0.0-20260721094408-a4ee0bbe5798 h1:jqbf+JLfIaDTGTJiE0yBJPgQLHdNZCPUNUhJVEE8/nk=
 github.com/kaichao/gopkg v0.0.0-20260721094408-a4ee0bbe5798/go.mod h1:HUe6A+YBeP7v31tf8+vge8MZSdIzSCsE8eX3aepZAsM=
-github.com/kaichao/scalebox v0.0.0-20260814141536-d2bace8bf42e h1:QIGGi8OcK6qCZxOZbEbRrqcpakggI97EINEdHZCAJoM=
-github.com/kaichao/scalebox v0.0.0-20260814141536-d2bace8bf42e/go.mod h1:p/8aePZ3aBLUNcy+TG5F25NfgFSd3/mevcAJnagpyMc=
+github.com/kaichao/scalebox v0.0.0-20260908004646-fae0e6b823bf h1:rn/mowvornSLToR5SlcAe2hZgq40HD0oFvEoKczvclI=
+github.com/kaichao/scalebox v0.0.0-20260908004646-fae0e6b823bf/go.mod h1:p/8aePZ3aBLUNcy+TG5F25NfgFSd3/mevcAJnagpyMc=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
 github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NBk=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=

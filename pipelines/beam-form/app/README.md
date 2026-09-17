@@ -168,20 +168,8 @@ START_TASK=1253991112/p00001_00120/t1253994234_1253994833 \
 ```sh
 app_id=$(echo '1253991112/p00001_00096/t_1253991273' | \
 ORIGIN_ROOT=/raid0/scalebox/mydata/mwa \
-NUM_GROUPS=1 \
-NODES='^n[013]' \
-TIME_STEP=80 \
-NUM_BEAM_MAKE=2 \
-GROUP_NODES= \
-GROUP_SLOTS= \
-PRESTO_APP_ID= \
-PRESTO_NODES= \
-scalebox run | cut -d':' -f2 | tr -d '}' )
-
-app_id=$(echo '1253991112/p00001_00096/t_1253991273' | \
-ORIGIN_ROOT=/raid0/scalebox/mydata/mwa \
 PRELOAD_ROOT=/raid0/scalebox/mydata/mwa \
-NODES='^n[013]' \
+NODES='^n[023]' \
 TIME_STEP=80 \
 NUM_BEAM_MAKE=2 \
 scalebox run | cut -d':' -f2 | tr -d '}' )

@@ -12,6 +12,7 @@ import (
 	"github.com/kaichao/gopkg/exec"
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/common"
+	"github.com/kaichao/scalebox/pkg/module"
 	"github.com/kaichao/scalebox/pkg/task"
 	"github.com/kaichao/scalebox/pkg/vtask"
 	"github.com/sirupsen/logrus"
@@ -60,7 +61,7 @@ func fromBeamMake(body string, headers map[string]string) error {
 			dataDir += fmt.Sprintf(" %s/dat/%s", globalDatDir, subDatDir)
 			// sub-path: 1302282040/t1302282041_1302282200/ch126
 			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
-				logger.LogError(err, logEntry)
+				logger.LogError(err, module.LogEntry)
 			}
 		}
 

@@ -110,9 +110,8 @@ flowchart TD
 ### 信号量表
 | category        | sema_name                                                      | initial value    |  comment |
 | --------------- | -------------------------------------------------------------- | ---------------- | -------- |
-| vtask_size      | vtask_size:wait-queue | 1 | wait-queue模块的流控，解析阶段自动创建信号量。初值为1；自动减一；vtask-head模块用程序增一 |
-| slot_vtask_size | slot_vtask_size:vtask-head:0 | 2 | vtask模块的流控，解析阶段自动创建信号量。初值为vtask容量；vtask-head模块自动减一；vtask-tail模块自动增一 |
-| :slot_vtask_size | :slot_vtask_size:vtask-head:0 | 2 | 与slot_vtask_size配套资源分配的辅助信号量。解析阶段自动创建信号量。初值等于slot_vtask_size初值；wait-queue的路由模块中自动减一；vtask-head的路由模块自动增一 |
+| vtask_size      | vtask_size:wait-queue | 1 | wait-queue模块的流控（串行化gate），解析阶段自动创建信号量。初值为1；wait-queue slot拾取task时自动减一；vtask-head的task回流router时用程序增一 |
+| group_vtask_size | group_vtask_size:vtask-head:<组号> | vtask容量 | GROUP-BOUND vtask的流控，解析阶段自动创建信号量。初值为vtask容量；wait-queue标准模块run.sh中vtask bind原子减一；vtask-tail完成时controld自动增一（doVTaskFinished） |
 | tar-ready       | tar-ready:1257010784/p00001_00960/t1257010786_1257010985       |  cube打包文件数   | 原始数据位于远端存储，生成wait-queue的新task时使用，标识该cube所有的数据文件在HPC共享存储已就绪 |
 | cube-vtask-done | cube-vtask-done:1257010784/p00001_00960/t1257010786_1257010985 |      960         | vtask信号量。vtask-tail的task生成 |
 | dat-ready       | dat-ready:1257010784/p00001_00960/t1257010786_1257010985/ch109 | channel级打包文件数 | vtask信号量。160秒/40秒         |

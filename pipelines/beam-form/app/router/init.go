@@ -7,48 +7,25 @@ import (
 
 	"github.com/kaichao/gopkg/logger"
 	"github.com/kaichao/scalebox/pkg/global"
+	"github.com/kaichao/scalebox/pkg/module"
 	"github.com/kaichao/scalebox/pkg/variable"
-	"github.com/sirupsen/logrus"
 )
 
 var (
 	appID int
 	vPath *vpath.VirtualPath
-
-	logEntry *logrus.Entry
 )
 
-func init() {
-	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
-	if err != nil {
-		level = logrus.InfoLevel
-	}
-	logrus.SetLevel(level)
-	logrus.SetReportCaller(true)
-	formatter := &logrus.TextFormatter{
-		DisableQuote: true,
-	}
-	logrus.SetFormatter(formatter)
-
-	// 配置logger
-	log := logrus.New()
-	log.SetLevel(level)
-	if level >= logrus.DebugLevel {
-		// debug / trace
-		log.SetFormatter(formatter)
-	} else {
-		log.SetFormatter(&logrus.JSONFormatter{})
-	}
-	logEntry = logrus.NewEntry(log)
-}
-
-func init() {
+// initApp 初始化应用级依赖：APP_ID 与 /vpath.yaml。
+// 必须由 main() 在 module.InitLogging() 之后、module.Run() 之前显式调用——
+// 放在 init() 里会早于日志初始化，module.LogEntry 尚为 nil。
+func initApp() {
 	appID, _ = strconv.Atoi(os.Getenv("APP_ID"))
 
 	var err error
 	vPath, err = vpath.NewVirtualPath(appID, "/vpath.yaml")
 	if err != nil {
-		logger.LogError(err, logEntry)
+		logger.LogError(err, module.LogEntry)
 	}
 }
 

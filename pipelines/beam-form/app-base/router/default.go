@@ -4,12 +4,12 @@ import (
 	"beamform/internal/datacube"
 	"fmt"
 
+	"github.com/kaichao/gopkg/errors"
 	"github.com/kaichao/scalebox/pkg/common"
 	"github.com/kaichao/scalebox/pkg/semaphore"
-	"github.com/sirupsen/logrus"
 )
 
-func defaultFunc(msg string, headers map[string]string) int {
+func defaultFunc(msg string, headers map[string]string) error {
 	defer func() {
 		common.AddTimeStamp("leave-defaultFunc()")
 	}()
@@ -46,8 +46,8 @@ func defaultFunc(msg string, headers map[string]string) int {
 	common.AppendToFile("my-semas.txt", semaPointingDone)
 
 	if err := semaphore.CreateFileSemaphores("my-semas.txt", appID, 100); err != nil {
-		logrus.Errorf("semaphore-create,err-info:%v\n", err)
-		return 1
+		return errors.WrapE(err, 1, "semaphore.create-file-semaphores",
+			"sema-file", "my-semas.txt", "app-id", appID)
 	}
 	common.AddTimeStamp("after-semaphores")
 

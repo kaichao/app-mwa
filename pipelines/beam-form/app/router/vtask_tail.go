@@ -9,12 +9,9 @@ import (
 )
 
 func fromVtaskTail(body string, headers map[string]string) error {
-	vtaskID, _ := strconv.ParseInt(headers["_vtask_id"], 10, 64)
-	semaName := ":" + headers["_vtask_size_sema"]
-	err := vtask.UnbindResource(appID, vtaskID, semaName)
-
-	return errors.WrapE(err, "vtask-unbind-resource",
-		"sema-name", semaName, "app-id", appID, "vtask-id", vtaskID)
+	// vtask 资源额度已由 controld 在 vtask-tail 任务完成时（doVTaskFinished）
+	// 自动加回，这里无需再调用 vtask.UnbindResource
+	return nil
 }
 
 // pointingID:

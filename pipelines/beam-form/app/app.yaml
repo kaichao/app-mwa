@@ -61,17 +61,15 @@ modules:
     slots:
       - n0:3
 
-  # 开关功能，每次仅能通过一个
+  # 开关功能，每次仅能通过一个（标准模块：check.sh 准入闸门 + run.sh bind + --direct 直投 vtask-head）
   wait-queue:
-    base_image: scalebox.net/platform/agent:latest
+    base_image: scalebox.net/platform/wait-queue
     arguments:
-      code_path: ${PWD}/../modules/wait-queue/code
       slot_options: slot_on_head
     parameters:
       vtask_size: 1
     environments:
-      # retry时，覆盖main-router的新task
-      - CONFLICT_ACTION=OVERWRITE
+      - VTASK_MODE=GROUP-BOUND
     sink_vmodules:
       - vtask-head
 
@@ -81,7 +79,6 @@ modules:
       task_dist_mode: SLOT-BOUND
       vtask_role: head
       vtask_size: 3
-      vtask_size_sema_copy: yes
     slots:
       # 最多分组为3
       - 'h0:${NUM_GROUPS}'
