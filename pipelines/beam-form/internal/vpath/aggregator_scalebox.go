@@ -1,7 +1,7 @@
 package vpath
 
 import (
-	"database/sql"
+	"beamform/internal/varerr"
 	"fmt"
 	"os"
 	"strings"
@@ -48,7 +48,7 @@ func (sa *ScaleboxAggregator) Allocate(key string, capacityGB int) (string, erro
 	varName := fmt.Sprintf("member-path:%s:%s", sa.name, key)
 	varValue, err := variable.GetValue(varName, sa.appID)
 
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if err != nil && !varerr.IsNotFound(err) {
 		return "", errors.WrapE(err, "variable.GetValue()", "var-name", varName)
 	}
 	if varValue != "" {

@@ -68,16 +68,25 @@ echo '1253991112/p01321_02280' | \
 
 
 ```sh
+# 申请资源
+scalebox cluster allocate --cluster p419 --account=cstu0030 --group-spec x:6:1 --partition cstdemo 
 
-app_id=$(echo '1302282040/p07921_08400' | \
+# 启动app
+app_id=$(echo '1302282040/p09841_10200' | \
 ORIGIN_ROOT=astro@10.100.1.30:10022/data2/mydata/mwa \
 NUM_GROUPS=1 \
-NODES='^d00.+' \
+NODES='^x03.+' \
 GROUP_NODES= \
 GROUP_SLOTS= \
 PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
+
+scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
+
+scalebox app set-status --app-id=$app_id --status=RUNNING
+
 
 
 export LOG_LEVEL=DEBUG
@@ -92,10 +101,6 @@ PRESTO_APP_ID= \
 PRESTO_NODES= \
 scalebox run -e p419.env | cut -d':' -f2 | tr -d '}' )
 
-scalebox semaphore create --app-id=$app_id --sema-file preload.sema
-scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
-
-scalebox app set-status --app-id=$app_id RUNNING
 
 ```
 

@@ -7,7 +7,7 @@ package main
 import (
 	"beamform/internal/datacube"
 	"beamform/internal/node"
-	"database/sql"
+	"beamform/internal/varerr"
 
 	"fmt"
 	"os"
@@ -185,7 +185,7 @@ func getOptBandwidthMB(toHost string) string {
 	varName := "first_load:pull_unpack:" + toHost
 	val, err := variable.GetValue(varName, appID)
 	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
+		if !varerr.IsNotFound(err) {
 			logger.LogError(err, module.LogEntry)
 			return ""
 		}
