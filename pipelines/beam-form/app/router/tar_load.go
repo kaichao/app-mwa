@@ -93,9 +93,9 @@ func toTarLoad(datasetID string) error {
 				fileName := fmt.Sprintf(fmtTarZst, tus[k], tus[k+1], ch)
 				// root, err := iopath.GetPreloadRoot(cube.ObsID + "/" + fileName)
 				key := cube.ObsID + "/" + fileName
-				root, err := vPath.GetPath("preload-tar", key)
+				root, err := vPath.Allocate("preload-tar", key)
 				if err != nil {
-					return errors.WrapE(err, "vPath.GetPath", "category", "preload-tar", "key", key)
+					return errors.WrapE(err, "vPath.Allocate", "category", "preload-tar", "key", key)
 				}
 				targetURL := fmt.Sprintf("%s/tar/%s", root, cube.ObsID)
 				body := fmt.Sprintf(`%s,{"target_url":"%s","_cube_name":"%s"}`,

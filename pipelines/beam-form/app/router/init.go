@@ -13,7 +13,7 @@ import (
 
 var (
 	appID int
-	vPath *vpath.VirtualPath
+	vPath *vpath.Engine
 )
 
 // initApp 初始化应用级依赖：APP_ID 与 /vpath.yaml。
@@ -23,7 +23,7 @@ func initApp() {
 	appID, _ = strconv.Atoi(os.Getenv("APP_ID"))
 
 	var err error
-	vPath, err = vpath.NewVirtualPath(appID, "/vpath.yaml")
+	vPath, err = vpath.Load("/vpath.yaml", appID)
 	if err != nil {
 		logger.LogError(err, module.LogEntry)
 	}

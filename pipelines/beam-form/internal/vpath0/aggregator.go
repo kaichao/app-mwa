@@ -1,4 +1,4 @@
-package vpath
+package vpath0
 
 // Aggregator 聚合目录管理器接口
 type Aggregator interface {

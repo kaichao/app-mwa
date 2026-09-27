@@ -1,390 +1,223 @@
+// Package vpath 路径映射引擎
+//
+// 两层模型：
+//   StorageClass — 存储类别，定义单位容量 + 加权目标（路径 或 Pool）
+//   Pool        — 存储池，按剩余量最大的策略分配空间
+//
+// 三类存储虚拟化。类型不在配置里声明，而由调用方选择的 API 决定：
+//   a  — 聚合：多个小空间合成大空间，写时按剩余量选（每次分配都选）
+//   b1 — 复制：多个空间存同一份，读时按权重哈希选一个副本（完全无状态）
+//   b2 — 合并：多个空间容量相加，首次写入时按权重哈希选
+//
+// API：
+//   engine, _ := vpath.Load("/vpath.yaml", appID)
+//   path, err := engine.Allocate(class, key)     // 确定位置，必要时新建
+//   path, ok := engine.Locate(class, key)        // 只查不写
+//   paths, err := engine.AllocateAll(class, key) // b1 写多份：全部副本路径
+//   err := engine.Release(class, key)            // 按实际分配池释放
 package vpath
 
 import (
 	"github.com/kaichao/gopkg/errors"
 )
 
-// VirtualPath 虚拟路径管理器
-// 提供加权路径选择和聚合目录功能
-type VirtualPath struct {
-	name        string
-	appID       int
-	configs     map[string]*Config // category名称 -> 配置
-	selectors   map[string]Selector
-	aggregators map[string]Aggregator
-}
+// ── 配置类型 ──────────────────────────────────────────────
 
-// Config 虚拟路径配置
+// Config 顶层配置，对应 YAML 文件结构。
 type Config struct {
-	// Name 配置名称
-	Name string `yaml:"-"` // 不从YAML读取，由代码设置
-
-	// WeightedPaths 加权路径配置
-	WeightedPaths []WeightedPathConfig `yaml:"weighted_paths"`
-
-	// AggregatedPaths 聚合目录配置
-	// 注意：在新的设计中，聚合目录由信号量确定，不通过配置文件
-	// 保留此字段用于向后兼容和测试
-	AggregatedPaths []AggregatedPathConfig `yaml:"-"`
-
-	// AggregatorType 聚合器类型
-	// "memory": 使用MemoryAggregator（测试用）
-	// "scalebox": 使用ScaleboxAggregator（生产用）
-	// 如果未指定，默认根据AggregatedPaths是否为空决定
-	AggregatorType string `yaml:"aggregator_type,omitempty"`
+	Classes map[string]*StorageClass `yaml:"classes"`
+	Pools   map[string]*Pool         `yaml:"pools"`
 }
 
-// WeightedPathConfig 加权路径配置
-type WeightedPathConfig struct {
-	// Path 路径或路径标识符
-	// 可以是具体路径，也可以是特殊标识符如"AGG_PATH"
-	Path string `yaml:"path"`
+// StorageClass 存储类别：定义该类数据的单位容量及存储目标。
+type StorageClass struct {
+	UnitSizeGB int      `yaml:"unit_size_gb,omitempty"` // 该类数据每份的大小（GB）
+	Targets    []Target `yaml:"targets"`
+}
 
-	// Weight 权重值，大于等于0
-	// 权重为0的路径永远不会被选择，但允许配置
-	// 所有路径的权重之和必须大于0
+// Target 存储目标。Path 和 Pool 二选一。
+type Target struct {
+	Path   string  `yaml:"path,omitempty"`
+	Pool   string  `yaml:"pool,omitempty"`
 	Weight float64 `yaml:"weight"`
-
-	// Type 路径类型
-	// "static": 静态路径，直接返回Path
-	// "aggregated": 聚合路径，需要从聚合目录分配
-	// 注意：根据path是否等于"AGG_PATH"自动推断
-	Type string `yaml:"-"` // 不从YAML读取，由代码推断
-
-	// Pool 存储池标识（仅对AGG_PATH有效）
-	// 对应YAML中的pool字段
-	Pool string `yaml:"pool,omitempty"`
-
-	// CapacityGB 容量需求（GB）
-	// 对于static路径：表示路径容量
-	// 对于aggregated路径：表示每次分配需要的容量（对应YAML中的need_gb）
-	CapacityGB int `yaml:"capacity_gb,omitempty"`
-
-	// NeedGB 仅对AGG_PATH有效，从YAML的need_gb字段读取
-	// 临时字段，用于解析
-	NeedGB int `yaml:"need_gb,omitempty"`
 }
 
-// AggregatedPathConfig 聚合目录配置
-type AggregatedPathConfig struct {
-	// Name 聚合目录名称
-	Name string `yaml:"name"`
-
-	// CapacityGB 总容量（GB）
-	CapacityGB int `yaml:"capacity_gb"`
-
-	// Members 成员路径列表
-	Members []string `yaml:"members"`
+// Pool 存储池：分配策略。
+//
+// 池级策略只有 max-free 一种（类型 a 用）；类型 b2 的固定比例落在
+// class 的 targets 权重上，不在池上。
+//
+// 池有哪些成员**不在配置里声明**——完全由信号量组 vpath:free-gb:<pool>
+// 决定。管理员用 sema 文件导入（scalebox semaphore create --sema-file），
+// 分配时取组内剩余量最大的那个。成员路径从信号量名里切出，见
+// memberSemaName。
+type Pool struct {
+	Strategy string `yaml:"strategy"` // 仅 "max-free"
 }
 
-// NewVirtualPath 创建VirtualPath实例（主入口）
-// appID: 应用ID，用于区分不同应用
-// configFile: 配置文件路径（YAML格式）
-// 加载YAML文件中的所有配置，不合并它们，保留原始配置结构
-func NewVirtualPath(appID int, configFile string) (*VirtualPath, error) {
-	// 加载所有配置
-	allConfigs, err := loadAllConfigsFromYAML(configFile)
+// ── 运行时类型 ────────────────────────────────────────────
+
+// Engine 路径映射引擎。
+type Engine struct {
+	config *Config
+	store  store
+}
+
+// ── 公开 API ──────────────────────────────────────────────
+
+// Load 从 YAML 文件加载配置并创建 Engine，使用 scalebox 平台作存储后端。
+func Load(configFile string, appID int) (*Engine, error) {
+	return LoadWithStore(configFile, newScaleboxStore(appID))
+}
+
+// LoadWithStore 从 YAML 文件加载配置并创建 Engine，使用指定的存储后端。
+// 测试可传入内存实现（见 store_test.go），使池逻辑脱离 scalebox 单测。
+func LoadWithStore(configFile string, s store) (*Engine, error) {
+	config, err := loadConfig(configFile)
 	if err != nil {
-		return nil, errors.WrapE(err, "load all configs from YAML")
+		return nil, errors.WrapE(err, "load config")
 	}
-
-	// 检查配置数量
-	if len(allConfigs) == 0 {
-		return nil, errors.E("no configuration found in YAML file")
-	}
-
-	// 创建VirtualPath，不合并配置
-	vp := &VirtualPath{
-		name:        "multi-config",
-		appID:       appID,
-		configs:     allConfigs,
-		selectors:   make(map[string]Selector),
-		aggregators: make(map[string]Aggregator),
-	}
-
-	// 初始化选择器（按配置名称分组）
-	if err := vp.initSelectors(); err != nil {
-		return nil, errors.WrapE(err, "init selectors")
-	}
-
-	// 初始化聚合器
-	if err := vp.initAggregators(); err != nil {
-		return nil, errors.WrapE(err, "init aggregators")
-	}
-
-	return vp, nil
-}
-
-// NewVirtualPathFromConfig 从Config创建VirtualPath实例（用于测试）
-func NewVirtualPathFromConfig(appID int, config *Config) (*VirtualPath, error) {
-	return newFromConfig(appID, config)
-}
-
-// newFromConfig 从Config创建VirtualPath实例（内部使用）
-func newFromConfig(appID int, config *Config) (*VirtualPath, error) {
-	if config == nil {
-		return nil, errors.E("config is nil")
-	}
-
-	if config.Name == "" {
-		return nil, errors.E("config.Name is empty")
-	}
-
-	// 验证配置
-	if err := validateConfig(config); err != nil {
+	if err := config.validate(); err != nil {
 		return nil, errors.WrapE(err, "validate config")
 	}
 
-	// 创建configs map，包含单个配置
-	configs := make(map[string]*Config)
-	configs[config.Name] = config
-
-	vp := &VirtualPath{
-		name:        config.Name,
-		appID:       appID,
-		configs:     configs,
-		selectors:   make(map[string]Selector),
-		aggregators: make(map[string]Aggregator),
-	}
-
-	// 初始化选择器（按配置名称分组）
-	if err := vp.initSelectors(); err != nil {
-		return nil, errors.WrapE(err, "init selectors")
-	}
-
-	// 初始化聚合器
-	if err := vp.initAggregators(); err != nil {
-		return nil, errors.WrapE(err, "init aggregators")
-	}
-
-	return vp, nil
+	// 与 vpath 一样：加载只读配置文件建内存结构，不查数据库
+	return &Engine{config: config, store: s}, nil
 }
 
-// initSelectors 初始化选择器
-func (vp *VirtualPath) initSelectors() error {
-	// 使用configs（按配置名称分组）
-	for configName, config := range vp.configs {
-		// 为每个配置创建选择器，key是配置名称
-		selector := NewWeightedSelector(configName, config.WeightedPaths)
-		vp.selectors[configName] = selector
-	}
+// ── 路径查询与分配 ────────────────────────────────────────
+//
+// 查与分是两个动词：Locate 只查不写，Allocate / AllocateAll 确定位置。
+// 分开是为了避免「查一个尚未分配的东西，却凭空分配一块空间并扣掉容量」。
+//
+// 容量一律取 class 的 unit_size_gb，不由调用方传入——避免分配与释放
+// 各传一个 size 而账本对不上的隐患。
 
-	return nil
-}
-
-// initAggregators 初始化聚合器
-func (vp *VirtualPath) initAggregators() error {
-	// 收集所有需要聚合器的pool
-	pools := make(map[string]bool)
-
-	// 收集所有配置中的aggregated路径
-	for _, config := range vp.configs {
-		for _, wp := range config.WeightedPaths {
-			if wp.Type == "aggregated" && wp.Pool != "" {
-				pools[wp.Pool] = true
-			}
-		}
-	}
-
-	// 为每个pool创建聚合器
-	for pool := range pools {
-		if _, exists := vp.aggregators[pool]; exists {
-			continue // 已经存在
-		}
-
-		var aggregator Aggregator
-		var err error
-
-		// 检查是否有对应的AggregatedPathConfig
-		var apConfig *AggregatedPathConfig
-		// 从所有configs中查找
-		for _, config := range vp.configs {
-			for i, ap := range config.AggregatedPaths {
-				if ap.Name == pool {
-					apConfig = &config.AggregatedPaths[i]
-					break
-				}
-			}
-			if apConfig != nil {
-				break
-			}
-		}
-
-		// 确定聚合器类型
-		aggregatorType := ""
-		// 从第一个配置中获取AggregatorType
-		for _, config := range vp.configs {
-			if config.AggregatorType != "" {
-				aggregatorType = config.AggregatorType
-				break
-			}
-		}
-		if aggregatorType == "" {
-			// 默认使用scalebox
-			aggregatorType = "scalebox"
-		}
-
-		// 如果有AggregatedPathConfig，但aggregatorType不是memory，则使用memory（向后兼容）
-		if apConfig != nil && aggregatorType != "memory" {
-			aggregatorType = "memory"
-		}
-
-		switch aggregatorType {
-		case "memory":
-			if apConfig == nil {
-				// 如果没有配置，创建一个默认的（仅用于测试）
-				apConfig = &AggregatedPathConfig{
-					Name:       pool,
-					CapacityGB: 1000, // 默认容量
-					Members:    []string{"/default/path1", "/default/path2"},
-				}
-			}
-			aggregator = NewMemoryAggregator(*apConfig)
-
-		case "scalebox":
-			aggregator, err = NewScaleboxAggregator(pool, vp.appID)
-			if err != nil {
-				return errors.WrapE(err, "create ScaleboxAggregator", "pool", pool)
-			}
-
-		default:
-			return errors.E("unknown aggregator type", "type", aggregatorType)
-		}
-
-		vp.aggregators[pool] = aggregator
-	}
-
-	return nil
-}
-
-// GetPath 获取路径
-// category: 路径分类，对应WeightedPaths中的配置
-// key: 唯一标识符，用于聚合路径的分配
-func (vp *VirtualPath) GetPath(category, key string) (string, error) {
-	selector, ok := vp.selectors[category]
+// Locate 查询数据单元当前所在的位置。只查不写，未分配时返回 ("", false)。
+//
+// 先查位置记录（类型 a / b2 在分配时写在这里）；无记录时按权重哈希选
+// 一个 target——选中的是 path，说明该类别的副本处处都在（类型 b1）。
+func (e *Engine) Locate(className, key string) (string, bool) {
+	class, ok := e.config.Classes[className]
 	if !ok {
-		return "", errors.E("category not found", "category", category)
+		return "", false
 	}
 
-	// 选择路径
-	selectedPath := selector.Select()
-
-	// 查找对应的配置
-	var wpConfig *WeightedPathConfig
-	// 使用configs，需要找到category对应的配置
-	config, ok := vp.configs[category]
-	if !ok {
-		return "", errors.E("config not found for category", "category", category)
-	}
-	for _, wp := range config.WeightedPaths {
-		if wp.Path == selectedPath {
-			wpConfig = &wp
-			break
+	for _, t := range class.Targets {
+		if t.Pool == "" {
+			continue
+		}
+		if path, found := e.lookup(t.Pool, key); found {
+			return path, true
 		}
 	}
 
-	if wpConfig == nil {
-		return "", errors.E("selected path config not found", "path", selectedPath)
+	target, ok := selectTarget(class.Targets, key)
+	if !ok || target.Path == "" {
+		return "", false
 	}
-
-	// 根据类型处理
-	switch wpConfig.Type {
-	case "static":
-		return wpConfig.Path, nil
-	case "aggregated":
-		// 从聚合器分配路径
-		aggregator, ok := vp.aggregators[wpConfig.Pool]
-		if !ok {
-			return "", errors.E("aggregator not found", "pool", wpConfig.Pool)
-		}
-		return aggregator.Allocate(key, wpConfig.CapacityGB)
-	default:
-		return "", errors.E("unknown path type", "type", wpConfig.Type)
-	}
+	return target.Path, true
 }
 
-// ReleasePath 释放路径
-// category: 路径分类
-// key: 唯一标识符
-func (vp *VirtualPath) ReleasePath(category, key string) error {
-	// 使用configs，需要找到category对应的配置
-	config, ok := vp.configs[category]
-	if !ok {
-		return errors.E("config not found for category", "category", category)
+// lookup 查某池中该 key 的位置记录；查询失败一律视同未分配。
+func (e *Engine) lookup(poolName, key string) (string, bool) {
+	path, ok, err := e.store.LookupVar(memberVarName(poolName, key))
+	if err != nil || !ok {
+		return "", false
 	}
-
-	// 查找aggregated类型的路径
-	for _, wp := range config.WeightedPaths {
-		if wp.Type == "aggregated" {
-			// 释放聚合路径
-			aggregator, ok := vp.aggregators[wp.Pool]
-			if !ok {
-				return errors.E("aggregator not found", "pool", wp.Pool)
-			}
-			return aggregator.Release(key, wp.CapacityGB)
-		}
-	}
-
-	// 如果不是aggregated类型，无需释放
-	return nil
+	return path, true
 }
 
-// validateConfig 验证配置
-func validateConfig(config *Config) error {
-	// 过滤掉权重<=0的项
-	filteredPaths := make([]WeightedPathConfig, 0, len(config.WeightedPaths))
-	totalWeight := 0.0
+// Allocate 确定数据单元的位置：已分配则返回原位置，否则选出空间并记下。
+func (e *Engine) Allocate(className, key string) (string, error) {
+	class, ok := e.config.Classes[className]
+	if !ok {
+		return "", errors.E("class not found", "class", className)
+	}
 
-	for _, wp := range config.WeightedPaths {
-		if wp.Path == "" {
-			return errors.E("WeightedPaths[%d].Path is empty", len(filteredPaths))
-		}
-		if wp.Weight < 0 {
-			return errors.E("WeightedPaths[%d].Weight must be >= 0", len(filteredPaths))
-		}
+	// 幂等：同一 key 重复调用返回同一位置
+	if path, found := e.Locate(className, key); found {
+		return path, nil
+	}
 
-		// 跳过权重<=0的项
-		if wp.Weight <= 0 {
+	target, ok := selectTarget(class.Targets, key)
+	if !ok {
+		return "", errors.E("no selectable target", "class", className)
+	}
+	if target.Path != "" {
+		return target.Path, nil
+	}
+
+	pool, ok := e.config.Pools[target.Pool]
+	if !ok {
+		return "", errors.E("pool not found", "pool", target.Pool)
+	}
+	return pool.allocate(e.store, target.Pool, key, class.UnitSizeGB)
+}
+
+// AllocateAll 返回该数据单元的全部副本位置（类型 b1 的写多份）。
+//
+// 按组成元素逐个处理：path 直接返回，pool 在池内各分配一块，共 n 个。
+// 只对类型 b1 有意义——对以 pool 为主的类别调用会造成 N 倍容量分配。
+func (e *Engine) AllocateAll(className, key string) ([]string, error) {
+	class, ok := e.config.Classes[className]
+	if !ok {
+		return nil, errors.E("class not found", "class", className)
+	}
+
+	paths := make([]string, 0, len(class.Targets))
+	for _, t := range class.Targets {
+		if t.Path != "" {
+			paths = append(paths, t.Path)
 			continue
 		}
 
-		// 推断类型（如果未设置）
-		if wp.Type == "" {
-			if wp.Path == "AGG_PATH" {
-				wp.Type = "aggregated"
-			} else {
-				wp.Type = "static"
-			}
+		pool, ok := e.config.Pools[t.Pool]
+		if !ok {
+			return nil, errors.E("pool not found", "pool", t.Pool)
 		}
-
-		if wp.Type != "static" && wp.Type != "aggregated" {
-			return errors.E("WeightedPaths[%d].Type must be 'static' or 'aggregated'", len(filteredPaths))
+		path, err := pool.allocate(e.store, t.Pool, key, class.UnitSizeGB)
+		if err != nil {
+			return nil, errors.WrapE(err, "allocate", "pool", t.Pool)
 		}
-
-		if wp.Type == "aggregated" {
-			if wp.Pool == "" {
-				return errors.E("WeightedPaths[%d].Pool is empty for aggregated type", len(filteredPaths))
-			}
-			if wp.CapacityGB <= 0 {
-				return errors.E("WeightedPaths[%d].CapacityGB must be > 0 for aggregated type", len(filteredPaths))
-			}
-		}
-
-		totalWeight += wp.Weight
-		filteredPaths = append(filteredPaths, wp)
+		paths = append(paths, path)
 	}
 
-	// 更新配置中的WeightedPaths
-	config.WeightedPaths = filteredPaths
+	return paths, nil
+}
 
-	// 检查总权重是否大于0
-	if totalWeight <= 0 {
-		return errors.E("total weight of all WeightedPaths must be > 0")
+// Release 释放该数据单元占用的空间。
+//
+// 按**实际分配**的池释放——遍历 class 的 pool target 逐个查位置记录，
+// 命中即释放，多池 class 的次生池不会被漏掉。未分配时静默返回（幂等）。
+// 对类型 b1（targets 全为 path）无需释放。
+func (e *Engine) Release(className, key string) error {
+	class, ok := e.config.Classes[className]
+	if !ok {
+		return errors.E("class not found", "class", className)
 	}
 
-	// 注意：在新的设计中，AggregatedPaths不由配置文件确定
-	// 由ScaleboxAggregator通过信号量管理
-	// 所以这里不验证AggregatedPaths
+	for _, t := range class.Targets {
+		if t.Pool == "" {
+			continue
+		}
+		pool, ok := e.config.Pools[t.Pool]
+		if !ok {
+			return errors.E("pool not found", "pool", t.Pool)
+		}
+		if _, err := pool.release(e.store, t.Pool, key, class.UnitSizeGB); err != nil {
+			return errors.WrapE(err, "release", "pool", t.Pool, "key", key)
+		}
+	}
 
 	return nil
+}
+
+// ValidateConfig 验证 YAML 配置文件的合法性（包外可访问）。
+func ValidateConfig(filename string) error {
+	config, err := loadConfig(filename)
+	if err != nil {
+		return err
+	}
+	return config.validate()
 }

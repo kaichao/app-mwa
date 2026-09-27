@@ -1,70 +1,32 @@
-origin-tar:
-# 原始打包数据（*.tar）
-  weighted_paths:
-    - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 1.0
-      capacity_gb: 20480
-    - path: "astro@10.100.1.30:10022/data2/mydata"
-      weight: 0.0
-      capacity_gb: 20480
+# vpath 配置：存储类别的路径映射
+#
+# 池有哪些成员**不在配置里声明**——完全由信号量组 vpath:free-gb:<pool>
+# 决定，由管理员用 sema 文件导入：
+#   scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+#   scalebox semaphore create --app-id=$app_id --sema-file mwa.sema
+#
+# 原 vpath0.yaml（旧实现配置）中 weight: 0.0 的条目在此不再出现——要排除某个目标时整条删掉。
 
-preload-tar:
-# 原始文件预加载（*.tar）
-  weighted_paths:
-    - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 0.0
-      capacity_gb: 20480
-    - path: "/public/home/cstu0030/scalebox/mydata"
-      weight: 0.0
-      capacity_gb: 480
-    - path: "/work2/cstu0030/scalebox/mydata"
-      weight: 0.0
-      capacity_gb: 20480
-    - path: AGG_PATH
-      weight: 1.0
-      # 存储池的信号量分组标识
-      # 信号量文件：preload.sema
-      pool: preload
-      need_gb: 11
+pools:
+  preload:
+    strategy: max-free          # 分配时选剩余量最大的成员
+  mwa:
+    strategy: max-free
 
-global-dat:
-# 共享存储上的计算文件（*.tar）
-  weighted_paths:
-    - path: "/work2/cstu0030/scalebox/mydata"
-      weight: 0.0
-      capacity_gb: 20480
-    - path: AGG_PATH
-      weight: 1.0
-      # 存储池的信号量分组标识
-      # 信号量文件：mwa.sema
-      pool: mwa
-      need_gb: 50
+classes:
+  preload-tar:                  # 预加载 tar，每份 11GB
+    unit_size_gb: 11
+    targets:
+      - pool: preload
+        weight: 1.0
 
-staging-24ch:
-# 24-channel beam-form
-  weighted_paths:
-    - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 0.0
-      capacity_gb: 20480
-    - path: "astro@10.100.1.30:10022/data2/mydata"
-      weight: 1.0
-      capacity_gb: 20480
-    - path: "/work1/cstu0036/scalebox/mydata"
-      weight: 0.0
-      capacity_gb: 20480
-    - path: AGG_PATH
-      weight: 0.0
-      # 存储池的信号量分组标识
-      # 信号量文件：mwa.sema
-      pool: mwa
-      need_gb: 29
+  global-dat:                   # 共享存储上的计算文件，每份 50GB
+    unit_size_gb: 50
+    targets:
+      - pool: mwa
+        weight: 1.0
 
-final:
-# 最终结果
-  weighted_paths:
-    - path: "astro@10.100.1.30:10022/data1/mydata"
-      weight: 1.0
-    - path: "astro@10.100.1.30:10022/data2/mydata"
-      weight: 0.0
-    - path: "/public/home/cstu0030/scalebox/mydata"
-      weight: 0.0
+  staging-24ch:                 # 24 通道波束合成：读已存在的共享位置，不分配
+    targets:
+      - path: "astro@10.100.1.30:10022/data2/mydata"
+        weight: 1.0

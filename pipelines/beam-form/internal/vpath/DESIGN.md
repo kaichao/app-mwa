@@ -41,7 +41,7 @@
 
 #### 算法来源：严格移植现有实现，不另造轮子
 
-类型 a 的分配算法逐行沿用 `internal/vpath/aggregator_scalebox.go` 的 `ScaleboxAggregator.Allocate`。该实现已处理「选择」与「记录」之间的一致性，重构时**逐行对照**即可核查，不要重新设计：
+类型 a 的分配算法逐行沿用 `internal/vpath0/aggregator_scalebox.go` 的 `ScaleboxAggregator.Allocate`。该实现已处理「选择」与「记录」之间的一致性，重构时**逐行对照**即可核查，不要重新设计：
 
 ```
 1. 查共享变量 vpath:member-path:<pool>:<key>
@@ -156,7 +156,7 @@ b2：PA 与 PB 容量相加（Σ）
 pools:
   site-a:                       # 类型 a：聚合站点 A 的 32 个小空间
     strategy: max-free
-    # members 已在信号量组 vpath:free-gb:site-a 中（由 sema 文件创建）
+    # 成员由 sema 文件导入信号量组，配置里不写
 
   site-b:
     strategy: max-free
@@ -174,7 +174,7 @@ classes:
 注意这份配置**看不出**是 b1 还是 b2——这正是"类型由调用方选择的 API 决定，配置层不表达"的体现：
 
 - 调 `Allocate` → b2：按权重选一个池写一份
-- 调 `GetAllPaths` → b1：两个池各写一份，读时按权重选
+- 调 `AllocateAll` → b1：两个池各写一份，读时按权重选
 
 跨站点场景两种都可能要，所以配置不该替调用方决定。
 
@@ -192,17 +192,28 @@ classes:
 
 即：**账本只存在于最底层的物理空间**。组合层不记账，选择时也不看容量；它选中的类型 a 空间**内部照常扣减信号量**，两层职责分明。
 
-**成员的权威来源是信号量**
+**池的成员不在配置里声明**
 
-无论成员是物理路径还是另一个池，**运行时一律从信号量组读取**：
+池有哪些空间，完全由信号量组 `vpath:free-gb:<pool>` 决定：
 
-- 类型 a 的池：成员为物理空间，信号量值为剩余量，分配时扣减
-- 导入方式：由 sema 文件创建（如 `preload` 池的 64 个账号空间），或在 YAML 中列出后**在加载时同步写入**信号量组
+```yaml
+pools:
+  preload:
+    strategy: max-free      # 池里有哪些成员？看信号量组，配置里不写
+```
+
+管理员用 sema 文件导入信号量（`scalebox semaphore create --sema-file preload.sema`），每个成员一行，值就是它当前的剩余 GB 数。之后 vpath 的分配、扣减、归还全部围绕这个组进行。
+
+**信号量组既是容量账本，也是成员清单**——不存在第二份需要同步的数据，也就没有"配置与数据库不一致"这种状态。
+
+这样加载很轻：`Load` 只读 YAML 建内存结构，**不查数据库**（与现有 vpath 一致），每个任务进程的开销为零。成员路径从信号量名里切出，见 `memberSemaName`。
+
+代价是没有"配置里写了但库里缺失"这类检查——但既然成员只存在于一处，也就没有这类不一致可言。
 
 **两条已定规则**：
 
 - **b2 不关心容量**——按配置权值算比例（见二.类型 b2），**选择时**不读成员的剩余量
-- **`GetAllPaths` 逐个处理组成元素**——`path` 直接返回、`pool` 在池内各分配一块，共 n 个
+- **`AllocateAll` 逐个处理组成元素**——`path` 直接返回、`pool` 在池内各分配一块，共 n 个
 
 ---
 
@@ -245,11 +256,11 @@ replica = argmax_i ( -weight_i / ln(hash(key, i)) )
 | 分布 | key 数量大时 ∝ 权重 |
 | 多进程 | 天然一致 |
 
-选哈希而非计数器：**无状态更易管理**。计数器要维护一套 `vpath:read-count:` 信号量、批量读回、应用侧算比值、再写回；哈希只是一个纯函数。代价是比例由精确变为统计趋近，key 数量大时（每次观测几百到几千个 cube）足够接近。
+选哈希而非计数器：**无状态更易管理**。计数器方案需要维护一组读计数信号量（设计过程中曾计划命名为 `vpath:read-count:`）、批量读回、应用侧算比值、再写回；哈希只是一个纯函数。代价是比例由精确变为统计趋近，key 数量大时（每次观测几百到几千个 cube）足够接近。
 
 于是 b1 与 b2 共用同一段加权选择实现，读侧整条路径不产生任何状态。
 
-> 本节能力**暂缓实现**——当前 `origin-tar` 在代码中零引用，无调用方在等它。设计保留，实现排在修 bug 之后。
+> 本节能力已随本次重构实现（`AllocateAll` + 无状态哈希）。`origin-tar` 在代码中仍为零引用，实际接入待应用侧集成时验证。
 
 ### API
 
@@ -259,15 +270,26 @@ replica = argmax_i ( -weight_i / ln(hash(key, i)) )
 |---|---|---|---|
 | `Locate(class, key)` | 查共享变量，**未命中返回空** | 按权重选一个副本返回（无状态哈希） | 查共享变量，**未命中返回空** |
 | `Allocate(class, key)` | 命中即返回；否则选剩余量最大的成员，扣减并记录 | — | 命中即返回；否则按权重哈希选空间并记录 |
-| `GetAllPaths(class, key)` | — | **返回全部 n 个副本路径**（写多份） | — |
-| `ReleasePath(class, key)` | 释放 + 归还容量 | **逐成员释放，仅成员为类型 a 时有效** | 清除位置记录（不涉及账本） |
+| `AllocateAll(class, key)` | — | **返回全部 n 个副本路径**（写多份） | — |
+| `Release(class, key)` | 释放 + 归还容量 | **逐成员释放，仅成员为类型 a 时有效** | 清除位置记录（不涉及账本） |
 | 容量查询 | Σ 剩余 | 任一副本的容量 | Σ 成员（读成员信号量求和） |
 
 三条约定：
 
 - **`Locate` / `Allocate` 分离**解决了一个实际隐患：现有 `pull_unpack.go:122` 用 `GetPath` 去查源文件在哪，若变量尚未写入会**凭空分配一块空间并扣容量**。现在查就是查，未命中返回空
-- **`GetAllPaths` 仅对 b1 有效**。按组成元素逐个处理：`path` 直接返回，`pool` 在池内各分配一块，共 n 个
-- **类型由调用方选择的 API 决定，配置层不表达**。同一份 `targets`，调 `GetAllPaths` 即 b1（写多份），调 `Allocate` 即 b2（写一份）。**风险**：对 b2 类误用 `GetAllPaths` 会造成 N 倍容量分配
+- **`AllocateAll` 仅对 b1 有效**。按组成元素逐个处理：`path` 直接返回，`pool` 在池内各分配一块，共 n 个
+- **类型由调用方选择的 API 决定，配置层不表达**。同一份 `targets`，调 `AllocateAll` 即 b1（写多份），调 `Allocate` 即 b2（写一份）。**风险**：对 b2 类误用 `AllocateAll` 会造成 N 倍容量分配
+
+**返回值形状**——「查」与「分配」的差别体现在签名上：
+
+```go
+path, ok := e.Locate(class, key)       // (string, bool)：查，未分配时 ok=false
+path, err := e.Allocate(class, key)    // (string, error)：分配，可能因空间不足失败
+paths, err := e.AllocateAll(class, key)// ([]string, error)
+err := e.Release(class, key)           // error
+```
+
+`Locate` 用 `(string, bool)` 而非返回 `ErrNotFound`：未分配是正常情况，调用方不该为它比对错误——与 `map` 查找、类型断言同形。
 
 ### 配置形态
 
@@ -287,7 +309,7 @@ replica = argmax_i ( -weight_i / ln(hash(key, i)) )
 pools:
   small:                        # 一批小空间，聚合成一个大空间（类型 a）
     strategy: max-free          # 分配时选剩余量最大的成员
-    # members 从信号量组 vpath:free-gb:small 派生，无需在 YAML 重复
+    # 成员不在配置里——见信号量组 vpath:free-gb:small
 
 # ── 类别层：一类数据放在哪 ───────────────────────────────
 classes:
@@ -330,39 +352,43 @@ classes:
 | b2 | 新数据单元写进哪个空间 |
 | 混合 | 走已有副本，还是分配新空间 |
 
-> 现有 `app/vpath.yaml` 里这个字段实际被当成开关用——`preload-tar` 把三个静态路径全设 `weight: 0.0`、`AGG_PATH` 设 `1.0`，`staging-24ch` 反过来。这说明字段语义在实践中已经模糊。重构后应显式修正：**要排除某个目标就整条注释掉，不要留一条权重为 0 的记录**——后者会让读者误判为"仍在使用"。
+> 重构前的 `app/vpath0.yaml` 里这个字段实际被当成开关用——`preload-tar` 把三个静态路径全设 `weight: 0.0`、`AGG_PATH` 设 `1.0`，`staging-24ch` 反过来。这说明字段语义在实践中已经模糊。重构后应显式修正：**要排除某个目标就整条注释掉，不要留一条权重为 0 的记录**——后者会让读者误判为"仍在使用"。
 
 ---
 
 ## 四、三版实现对比
 
+下表记录重构**前**的 vpath0 与 vpath 状态，以及重构目标——保留它是为了
+留下取舍的依据；「重构目标」一列已在本次重构中落地。
+
 ### A. 定位与配置
 
-| 维度 | vpath（现状） | vpath2（现状） | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 定位 | beam-form 应用内专用 | 应用内重构初步版，计划上提平台 | 平台通用组件 |
-| 配置结构 | 扁平 `map[category]` | `{classes, pools}` 两层 | 沿用 vpath2 |
-| 写目标表示 | `path: AGG_PATH` 字符串哨兵 | `target.pool:` 字段 | 沿用 vpath2 |
-| 单位容量位置 | `need_gb` 挂在 AGG_PATH 上 | `unit_size_gb` 提到 class 级 | 沿用 vpath2 |
+| 配置结构 | 扁平 `map[category]` | `{classes, pools}` 两层 | 沿用 vpath |
+| 写目标表示 | `path: AGG_PATH` 字符串哨兵 | `target.pool:` 字段 | 沿用 vpath |
+| 单位容量位置 | `need_gb` 挂在 AGG_PATH 上 | `unit_size_gb` 提到 class 级 | 沿用 vpath |
 | 类型 b2 支持 | 无 | `weighted` 池策略（按 used/capacity） | 移到 **target 层**：按配置权重哈希选空间，取消池级策略 |
-| 类型 b1 支持 | 只有读侧加权，**无写多份能力** | 同 | 补 `GetAllPaths` |
+| 类型 b1 支持 | 只有读侧加权，**无写多份能力** | 同 | 补 `AllocateAll` |
 | 读写混合表达 | `weight: 0/1` 当开关用 | 仍靠 weight，但语义清晰 | 统一加权，混合自然表达 |
-| 成员列表 | 不在 YAML，来自信号量组 | 必须在 YAML 的 `pool.members` 列出 | 回到信号量组派生 |
+| 成员列表 | 不在 YAML，来自信号量组 | 必须在 YAML 的 `pool.members` 列出 | YAML 声明清单，信号量为权威值；缺失即报错 |
+| 成员字段 | `capacity_gb`（运行时值） | `capacity_gb`（运行时值） | **不进配置**——成员完全由信号量组派生 |
 
 ### B. 读侧（类型 b1）
 
-| 维度 | vpath | vpath2 | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 选择算法 | `min(actual/theory)`，有状态计数 | 同 | **无状态哈希** |
 | 状态 | **进程内** `counts/total` | 同 | **无** |
 | 多进程一致性 | 各进程独立计数，偏差叠加 | 同 | 天然一致 |
 | 并发保护 | 无锁 | 无锁 | 不需要（无共享状态） |
 | 重复读同一 key | 消耗选择配额 | 同 | 恒返回同一副本 |
-| 写多份 | 无 | 无 | `GetAllPaths` |
+| 写多份 | 无 | 无 | `AllocateAll` |
 
 ### C. 写侧（类型 a / b2）
 
-| 维度 | vpath | vpath2 | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 选择规则（类型 a） | `semagroup.GetMax` | 同（max-free） | 同 |
 | 选择规则（类型 b2） | 无 | 池级 `weighted`（按 used/capacity 最小） | 移到 target 层：按配置权重哈希，池级策略取消 |
@@ -373,7 +399,7 @@ classes:
 
 ### D. 状态与生命周期
 
-| 维度 | vpath | vpath2 | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 映射表 | 变量 `member-path:<pool>:<key>` | 同 | 统一加 `vpath:` 前缀 |
 | 幂等分配 | 有 | 有 | 有 |
@@ -384,42 +410,43 @@ classes:
 
 ### E. API 与工程性
 
-| 维度 | vpath | vpath2 | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 入口 | `NewVirtualPath(appID, file)` | `Load(file, appID)`——**参数顺序颠倒** | 统一 |
-| 主 API | `GetPath(cat, key)` | `GetPath(class, key, sizeGB)` | 沿用 vpath2 |
+| 主 API | `GetPath(cat, key)` | `GetPath(class, key, sizeGB)` | 沿用 vpath |
 | 编程式构造 | `NewVirtualPathFromConfig` | 无 | 待定 |
-| 类型安全 | 靠路径字符串反查配置，同值 entry 有歧义 | `selectTarget` 直接返回 `Target` | 沿用 vpath2 |
+| 类型安全 | 靠路径字符串反查配置，同值 entry 有歧义 | `selectTarget` 直接返回 `Target` | 沿用 vpath |
 | 选择器 | `Select()` 无参，内部有状态 | `selectTarget(targets)` 外部传切片，**可传错长度** | **删除**，改用无状态哈希函数 |
-| 配置校验 | 弱，不校验 pool 是否存在 | 强（pool 引用、weight、capacity、strategy） | 沿用 vpath2 + 信号量一致性校验 |
+| 配置校验 | 弱，不校验 pool 是否存在 | 强（pool 引用、weight、capacity、strategy） | 沿用 vpath + 信号量一致性校验 |
 | 可测试性 | `Aggregator` 接口 + `MemoryAggregator`，可脱 DB | 硬编码 gRPC，**无注入点** | 加注入点 |
 | 测试覆盖 | 7 个测试需真实 server（硬失败） | **33 PASS / 4 SKIP，池逻辑零覆盖** | 补齐 |
-| 诊断 | 无 | `Dump` / `DumpConfig` | 沿用 vpath2 |
+| 诊断 | 无 | `Dump` / `DumpConfig` | 沿用 vpath |
 | 错误语义 | `errors.Is(sql.ErrNoRows)` → 已修（`internal/varerr`） | **未修，`strategy.go:91` 同款 bug** | 统一用 `varerr` |
 | category 引用 | 裸字符串，`stageing-24ch` 拼写错误（`fits_redist.go:99`） | — | 待定 |
 
 ### F. 规模与缺陷
 
-| 维度 | vpath | vpath2 | 重构目标 |
+| 维度 | vpath0（旧） | vpath（新） | 重构目标 |
 |---|---|---|---|
 | 非测试代码量 | 959 行 | 535 行 | — |
 | 实际使用的 category | 3/5（`origin-tar`、`final` 零引用） | — | — |
 | 阻塞性问题 | — | 多池释放泄漏、`ErrNoRows` 未修、池逻辑零覆盖 | — |
-| 已知不可修复 | 成员路径含冒号截断 | — | 已在 vpath2 修好 |
+| 已知不可修复 | 成员路径含冒号截断 | — | 已在 vpath 修好 |
 
 ---
 
 ## 五、重构要点
 
-按优先级：
+按优先级，10 条均已在 `internal/vpath` 实现：
 
 1. `strategy.go:91` 改用 `internal/varerr.IsNotFound`
 2. `GetPath` 拆为 `Locate`（只查，未命中返回空）+ `Allocate`（确定位置，必要时新建）
-3. **target 层的加权选择改用无状态哈希**（rendezvous hashing）。这是三类共用的机制——`path` 与 `pool` 在 `targets` 层一律按权重哈希选定，选中 `pool` 后再进池内分配。类型 b1 的读分摊与 b2 的写分摊是同一段实现
-4. `ReleasePath` 按实际分配池释放，不再 `return` 第一个；b1 的 `ReleasePath` 逐成员释放，**仅对成员为类型 a 时有效**
-5. 池成员从信号量组 `vpath:free-gb:<pool>` 派生，YAML 不再列 `members`
-6. 补 `GetAllPaths`（类型 b1 的写多份，仅此一类有效）
-7. 组合层（b1 / b2）的成员引用类型 a 的池，**最多 2 层**、不做更深嵌套；成员一律以信号量组为准，YAML 中定义的成员在加载时同步写入
+3. **target 层的加权选择改用无状态哈希**（rendezvous hashing）。这是三类共用的机制——`path` 与 `pool` 在 `targets` 层一律按权重哈希选定，选中 `pool` 后再进池内分配。类型 b1 的读分摊与 b2 的写分摊是同一段实现。
+   实现要点：`argmax(-weight / ln(h))` 对 h 接近 1 的尾部极其敏感（|ln h| → 0 时得分趋于无穷），哈希函数必须先充分雪崩——实测单用 FNV-1a 会让 7:3 的权重偏离成 8.8:1，叠加 splitmix64 finalizer 后回到 7:3
+4. `Release` 按实际分配池释放，不再 `return` 第一个；b1 的 `Release` 逐成员释放，**仅对成员为类型 a 时有效**
+5. 池成员**不在配置里声明**，完全由信号量组 `vpath:free-gb:<pool>` 派生：信号量由**人工用 sema 文件导入**（`scalebox semaphore create --sema-file`），vpath 只读不写。成员路径从信号量名里切出。`Load` 因此不查数据库，与现有 vpath 一致
+6. 补 `AllocateAll`（类型 b1 的写多份，仅此一类有效）
+7. 组合层（b1 / b2）的成员引用类型 a 的池，**最多 2 层**、不做更深嵌套
 8. 给 `Pool` 加注入点，让池逻辑能脱离 scalebox 测试；补 `Pool.Validate` 做配置与信号量一致性校验
 9. **删除 `weightedSelector`**（有状态加权选择器），代之以无状态哈希函数。`counts/total` 状态、`selectTarget(targets)` 传错切片的隐患、多进程计数不共享的问题一并消失
 10. 去掉池级 `weighted` 策略（按 used/capacity 选成员）——已由 target 层加权哈希取代
@@ -433,12 +460,13 @@ classes:
 | 项 | 结论 |
 |---|---|
 | **vpath 的职责边界** | 仅做**标识 / 名字管理**。写多份、拷贝、部分失败的清理都不在职责内 |
-| **成员的权威来源** | **信号量组**。YAML 中定义的成员在加载时同步写入，运行时一律从信号量读，不再回看 YAML |
+| **成员的权威来源** | **信号量组**，配置里不写成员。由 sema 文件**人工导入**（`scalebox semaphore create --sema-file`），vpath 只读不写 |
+| **加载不查数据库** | `Load` 只读 YAML 建内存结构，与现有 vpath 一致。成员与剩余量都在信号量组里，分配时才读 |
 | b1 写多份的执行者 | vpath 只返回路径列表，实际拷贝由调用方完成（如 file-copy 模块） |
 | b1 与 b2 叠加 | **不需要** RAID10 式组合（先镜像再条带） |
 | b1 写多份的容量检查 | 不做检查，由人工保证空间充足，不足时报错 |
-| **b1 的 `ReleasePath`** | 逐成员释放，**仅对成员为类型 a 时有效** |
-| **`GetAllPaths` 适用范围** | **仅类型 b1** 有效 |
+| **b1 的 `Release`** | 逐成员释放，**仅对成员为类型 a 时有效** |
+| **`AllocateAll` 适用范围** | **仅类型 b1** 有效 |
 | **b2 的选择方式** | 按**配置权值**算比例，不看剩余容量、不记分配次数；实现用无状态哈希 |
 | **b2 的容量耗尽** | **报错**，不跳过、不回退；由人工保证容量充足 |
 | **b1 的读分摊** | **无状态哈希**，不用计数器——读侧整条路径不产生任何状态 |
@@ -455,6 +483,9 @@ classes:
 | 编程式构造 | 是否补 `NewFromConfig` 等价物 |
 | category 名检查 | 当前是裸字符串，`stageing-24ch` 之类拼写错误只在运行期暴露 |
 | 混合 class 的实际用例 | 现有 5 个 category 无一真正混用，混合能力先保留待验证 |
+| **`Release` 是否该删数据** | 当前 `Release` 会 `os.RemoveAll(memberPath)`。成员路径可能是远程的（`astro@10.100.1.30:10022/...`），在计算节点上 `RemoveAll` 只会静默失败；且与第一节「只标识位置、不搬运数据」的边界有张力。是否改为只清记录、删数据交给调用方，需定 |
+| **`AddMember` 暂不实现** | 运行时向池添加成员。设计上要支持两种：给初值，或自动检测分区当前可用空间；对远程 ssh 分区无法自动检测，应提示不支持。当前无用例，需要时再补 |
+| **`Dump` 暂不实现** | 打印各池成员与剩余量的诊断输出。现有 `semagroup` 只有 `GetMax`/`GetMin`，没有"列出组内全部成员"的接口；`semaphore` 的 list 接口应该可以拿到，需要时用它 |
 
 ---
 

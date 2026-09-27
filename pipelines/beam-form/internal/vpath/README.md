@@ -1,213 +1,103 @@
-# vpath - 虚拟路径管理包
+# vpath — 路径映射引擎
 
-vpath包提供了一个虚拟路径管理功能，用于管理和分配文件系统路径，支持加权路径和聚合路径。加权路径可以根据权重进行智能分配管理；聚合路径主要用于在分布式系统中管理共享存储路径的分配和释放，合并多个共享目录下的存储配额，支持更大的存储容量需求，确保大型应用可共享有限的存储资源。
+把物理上分散的多个存储空间组织成若干**逻辑存储类别**，对上层只暴露一个
+路径查询接口。完整设计见 [DESIGN.md](DESIGN.md)。
 
-## 主要功能
+> 上一版实现已在 [`internal/vpath0`](../vpath0/README.md) 归档保留（无生产调用方，仅供对照），
+> 两者的取舍见 [DESIGN.md](DESIGN.md) 的「三版实现对比」。
 
-- **加权路径管理**：直接使用预定义的路径
-- **聚合路径管理**：从多个候选路径中动态分配
-- **加权选择**：根据权重智能选择路径
-- **路径释放**：使用后释放路径资源
-- **多种聚合器**：支持memory和scalebox聚合器
+## 三类存储虚拟化
 
-## 快速开始
+| | a 聚合 | b1 复制 | b2 合并 |
+|---|---|---|---|
+| 类比 | JBOD / LVM | RAID1 | RAID0 |
+| 选择时机 | 写（每次） | 读（每次） | 写（仅首次） |
+| 选择依据 | 剩余量最大 | 配置权重 | 配置权重 |
+| 状态 | 容量账本 + 位置记录 | **无** | 位置记录 |
+| 对外容量 | Σ 成员 | 单空间 | Σ 成员 |
 
-### 1. 从YAML配置文件创建
+三类共用一个无状态加权选择实现（rendezvous hashing），同一 key 恒选同一
+目标，多进程天然一致。
 
-```yaml
-# config.yaml
-my-category:
-  aggregator_type: "memory"
-  weighted_paths:
-    - path: "/fast/ssd"
-      weight: 1.0
-    - path: "/slow/hdd" 
-      weight: 2.0
-    - path: AGG_PATH
-      weight: 3.0
-      pool: my-category
-      need_gb: 20
-  aggregated_paths:
-    - name: my-category
-      capacity_gb: 1000
-      members:
-        - "/agg/dir1"
-        - "/agg/dir2"
-```
+**类型不在配置里声明**，由调用方选择的 API 决定：同一份 `targets`，调
+`Allocate` 即写一份，调 `AllocateAll` 即写多份。类型 a 的输出可作为组合层
+（b1 / b2）的成员，嵌套最多 2 层。
 
-```go
-package main
-
-import (
-    "fmt"
-    "beamform/internal/vpath"
-)
-
-func main() {
-    // 创建VirtualPath实例
-    vp, err := vpath.NewVirtualPath(1, "config.yaml")
-    if err != nil {
-        panic(err)
-    }
-
-    // 获取路径
-    // 注意：category参数对应YAML配置中的配置块名称
-    path, err := vp.GetPath("my-category", "job-001")
-    if err != nil {
-        panic(err)
-    }
-    fmt.Printf("分配到路径: %s\n", path)
-
-    // 释放路径
-    err = vp.ReleasePath("my-category", "job-001")
-    if err != nil {
-        panic(err)
-    }
-}
-```
-
-### 2. 编程方式创建
-
-```go
-package main
-
-import (
-    "fmt"
-    "beamform/internal/vpath"
-)
-
-func main() {
-    // 创建配置
-    config := &vpath.Config{
-        Name: "example",
-        WeightedPaths: []vpath.WeightedPathConfig{
-            {Path: "/path1", Weight: 1.0, Type: "static", Pool: "default"},
-            {Path: "/path2", Weight: 2.0, Type: "static", Pool: "default"},
-        },
-        AggregatorType: "memory",
-    }
-
-    // 创建VirtualPath
-    vp, err := vpath.NewVirtualPathFromConfig(1, config)
-    if err != nil {
-        panic(err)
-    }
-
-    // 使用示例
-    // 注意：category参数对应Config.Name
-    for i := 0; i < 5; i++ {
-        key := fmt.Sprintf("task-%d", i)
-        path, err := vp.GetPath("example", key)
-        if err != nil {
-            panic(err)
-        }
-        fmt.Printf("%s -> %s\n", key, path)
-    }
-}
-```
-
-## 核心API
-
-### NewVirtualPath(appID int, configFile string) (*VirtualPath, error)
-从YAML配置文件创建VirtualPath实例。
-
-### NewVirtualPathFromConfig(appID int, config *Config) (*VirtualPath, error)
-从Config结构体创建VirtualPath实例。
-
-### GetPath(category, key string) (string, error)
-获取路径。相同category和key总是返回相同路径。
-
-### ReleasePath(category, key string) error
-释放路径，允许重新分配。
-
-## 配置说明
-
-### WeightedPathConfig
-- `Path`: 路径（AGG_PATH表示聚合路径）
-- `Weight`: 权重，影响选择概率
-- `Type`: "static"或"aggregated"（自动推断）
-- `Pool`: 存储池标识（仅对AGG_PATH有效）
-- `CapacityGB`: 容量（GB），对于AGG_PATH表示每次分配需要的容量
-
-### AggregatedPathConfig  
-- `Name`: 聚合路径名称
-- `CapacityGB`: 总容量
-- `Members`: 成员路径列表
-
-**注意**：在新的设计中，聚合目录通常由Scalebox信号量管理，`aggregated_paths`配置主要用于测试和向后兼容。
-
-## Scalebox聚合器使用指南
-
-### 1. 配置Scalebox聚合器
+## 配置
 
 ```yaml
-# config.yaml
-production-category:
-  aggregator_type: "scalebox"
-  weighted_paths:
-    - path: "/local/ssd"
-      weight: 0.3
-      capacity_gb: 500
-    - path: AGG_PATH
-      weight: 0.7
-      pool: storage-pool
-      need_gb: 50
+# ── 空间层：物理存储如何组织 ─────────────────────────────
+pools:
+  small:                        # 类型 a：小空间聚合成大空间
+    strategy: max-free
+    # 成员不在配置里——见信号量组 vpath:free-gb:small
+
+# ── 类别层：一类数据放在哪 ───────────────────────────────
+classes:
+  origin-tar:                   # 类型 b1：多个空间各存一份
+    targets:
+      - path: "astro@10.100.1.30:10022/data1/mydata"
+        weight: 1
+      - path: "astro@10.100.1.30:10022/data2/mydata"
+        weight: 3
+
+  cross-site:                   # 类型 b2：两个池容量相加
+    unit_size_gb: 11
+    targets:
+      - pool: site-a  weight: 1
+      - pool: site-b  weight: 1
 ```
 
-### 2. 环境要求
-- Scalebox数据库必须可用
-- 信号量配置必须在数据库中预先设置
-- 需要设置PGHOST等数据库连接环境变量
+## 池成员
 
-### 3. 测试环境设置
-对于集成测试，可以使用memory聚合器或设置测试数据库：
+**不在配置里声明**——池有哪些空间，完全由信号量组 `vpath:free-gb:<pool>`
+决定。管理员用 sema 文件导入：
+
+```sh
+scalebox semaphore create --app-id=$app_id --sema-file preload.sema
+```
+
+每个成员一行，值就是它当前的剩余 GB 数。**信号量组既是容量账本，也是成员
+清单**——只有这一份数据，vpath 只读不写。
+
+`Load` 因此不查数据库，只读 YAML 建内存结构，与现有 vpath 一致，每个任务
+进程的开销为零。成员路径从信号量名里切出（解析时注意路径自身可能含冒号）。
+
+## API
 
 ```go
-// 在测试中设置环境变量
-os.Setenv("PGHOST", "test-host")
+engine, _ := vpath.Load("/vpath.yaml", appID)
+
+path, ok := engine.Locate(class, key)        // 只查不写，未分配时 ok=false
+path, err := engine.Allocate(class, key)     // 确定位置，必要时新建
+paths, err := engine.AllocateAll(class, key) // b1 写多份：全部副本路径
+err := engine.Release(class, key)            // 按实际分配池释放
 ```
 
-## 算法特性
+`Locate` 与 `Allocate` 分开，是为了避免「查一个尚未分配的东西，却凭空
+分配一块空间并扣掉容量」。
 
-vpath使用智能加权选择算法：
-1. 选择实际占比/理论占比最小的项
-2. 第一次调用选择权重最大的项
-3. 权重≤0的项自动排除
-4. 保证长期选择比例接近理论权重
+容量一律取 class 的 `unit_size_gb`，不由调用方传入——避免分配与释放各传
+一个 size 而账本对不上。`AllocateAll` 只对类型 b1 有意义，对以 pool 为主的
+类别调用会造成 N 倍容量分配。
 
-## 示例场景
+## 命名约定
 
-### 场景1：数据存储选择
+| 键 | 含义 |
+|---|---|
+| `vpath:free-gb:<pool>:<member>` | 成员剩余量（信号量） |
+| `vpath:member-path:<pool>:<key>` | 数据单元 → 所在空间（共享变量） |
+
+成员路径自身可能含冒号（如 `astro@host:10022/...`），解析信号量名时必须用
+`SplitN(name, ":", 4)[3]`，不能用 `Split`。
+
+## 测试
+
+池的逻辑可脱离 scalebox 单测——`store` 接口抽出了存储后端，测试注入
+`memoryStore`（见 `store_test.go`），无需启动 server：
+
 ```go
-// 根据存储性能选择路径
-path, _ := vp.GetPath("storage", "data-job")
-// 可能返回："/fast/ssd" 或 "/slow/hdd"
+s := newMemoryStore()
+s.setSema("vpath:free-gb:test-pool:/pool/node1", 100)
+engine, _ := vpath.LoadWithStore("vpath.yaml", s)
 ```
-
-### 场景2：计算节点分配  
-```go
-// 分配计算节点
-node, _ := vp.GetPath("compute", "task-001")
-// 可能返回："/node1" 或 "/node2" 或 "/node3"
-```
-
-### 场景3：临时工作目录
-```go
-// 获取临时工作目录
-workdir, _ := vp.GetPath("temp", "process-001")
-// 使用后释放
-defer vp.ReleasePath("temp", "process-001")
-```
-
-## 注意事项
-
-1. **category参数**：对应YAML配置中的配置块名称或Config.Name
-2. **key的唯一性**：相同category和key总是返回相同路径
-3. **及时释放**：使用完路径后调用ReleasePath释放资源
-4. **权重设置**：权重为0的路径不会被选择
-5. **容量管理**：聚合路径有容量限制，分配时检查容量
-6. **测试环境**：Scalebox聚合器需要数据库连接，测试时可能需要跳过相关测试
-
-## 更多示例
-
-查看源码和testdata目录，获取完整示例。

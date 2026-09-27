@@ -2,146 +2,178 @@ package vpath
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// TestLoadConfigFromYAML 测试从YAML加载配置
-func TestLoadConfigFromYAML(t *testing.T) {
-	// 创建临时YAML文件
-	tempDir := os.TempDir()
-	yamlContent := `
-test-category:
-  weighted_paths:
-    - path: "/path1"
-      weight: 0.5
-      capacity_gb: 100
-    - path: "/path2"
-      weight: 0.5
-      capacity_gb: 200
-`
-	tempFile := filepath.Join(tempDir, "test-config.yaml")
-	if err := os.WriteFile(tempFile, []byte(yamlContent), 0644); err != nil {
-		t.Skipf("Error creating temp file: %v", err)
-		return
-	}
-	defer os.Remove(tempFile)
-
-	config, err := loadConfigFromYAML(tempFile, "test-category")
+func TestLoadConfig(t *testing.T) {
+	config, err := loadConfig("testdata/vpath.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, config)
-	assert.Equal(t, "test-category", config.Name)
-	assert.Len(t, config.WeightedPaths, 2)
-	assert.Equal(t, "/path1", config.WeightedPaths[0].Path)
-	assert.Equal(t, 0.5, config.WeightedPaths[0].Weight)
-	assert.Equal(t, "/path2", config.WeightedPaths[1].Path)
-	assert.Equal(t, 0.5, config.WeightedPaths[1].Weight)
+	assert.Equal(t, 5, len(config.Classes))
+	assert.Equal(t, 2, len(config.Pools))
 }
 
-// TestLoadConfigFromYAMLWithAGG_PATH 测试加载包含AGG_PATH的配置
-func TestLoadConfigFromYAMLWithAGG_PATH(t *testing.T) {
-	// 创建临时YAML文件
-	tempDir := os.TempDir()
-	yamlContent := `test-agg:
-  weighted_paths:
-    - path: AGG_PATH
-      weight: 1.0
-      pool: storage
-      need_gb: 10
-`
-	tempFile := filepath.Join(tempDir, "test-agg-config.yaml")
-	if err := os.WriteFile(tempFile, []byte(yamlContent), 0644); err != nil {
-		t.Skipf("Error creating temp file: %v", err)
-		return
-	}
-	defer os.Remove(tempFile)
+func TestLoadConfigFileNotFound(t *testing.T) {
+	_, err := loadConfig("testdata/nonexistent.yaml")
+	assert.Error(t, err)
+}
 
-	config, err := loadConfigFromYAML(tempFile, "test-agg")
+func TestValidateOK(t *testing.T) {
+	config, err := loadConfig("testdata/vpath.yaml")
 	assert.NoError(t, err)
-	assert.NotNil(t, config)
-	assert.Equal(t, "test-agg", config.Name)
-	assert.Len(t, config.WeightedPaths, 1)
-	assert.Equal(t, "AGG_PATH", config.WeightedPaths[0].Path)
-	assert.Equal(t, "aggregated", config.WeightedPaths[0].Type)
-	assert.Equal(t, "storage", config.WeightedPaths[0].Pool)
-	assert.Equal(t, 10, config.WeightedPaths[0].CapacityGB)
+
+	err = config.validate()
+	assert.NoError(t, err)
 }
 
-// TestLoadAllConfigsFromYAML 测试加载所有配置
-func TestLoadAllConfigsFromYAML(t *testing.T) {
-	// 创建临时YAML文件
-	tempDir := os.TempDir()
+func TestValidateNoClasses(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no classes")
+}
+
+func TestValidateEmptyTargets(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"empty": {Targets: []Target{}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "no targets")
+}
+
+func TestValidateTargetNoPathOrPool(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {Targets: []Target{
+				{Weight: 1.0},
+			}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "must have path or pool")
+}
+
+func TestValidateTargetBothPathAndPool(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {Targets: []Target{
+				{Path: "/foo", Pool: "bar", Weight: 1.0},
+			}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "cannot have both")
+}
+
+func TestValidateTargetNegativeWeight(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {Targets: []Target{
+				{Path: "/foo", Weight: -1.0},
+			}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "weight must be >= 0")
+}
+
+func TestValidateTargetPoolNotFound(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {UnitSizeGB: 10, Targets: []Target{
+				{Pool: "no-such-pool", Weight: 1.0},
+			}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "pool not defined")
+}
+
+func TestValidateUnitSizeGBMissing(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {Targets: []Target{
+				{Pool: "test-pool", Weight: 1.0},
+			}},
+		},
+		Pools: map[string]*Pool{
+			"test-pool": {Strategy: "max-free"},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unit_size_gb must be > 0")
+}
+
+func TestValidateTotalWeightZero(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"bad": {Targets: []Target{
+				{Path: "/foo", Weight: 0.0},
+			}},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "total weight must be > 0")
+}
+
+// 池的成员不在配置里声明——只写分配策略即可
+func TestValidatePoolStrategyOnly(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"ok": {Targets: []Target{
+				{Path: "/foo", Weight: 1.0},
+			}},
+		},
+		Pools: map[string]*Pool{
+			"p": {Strategy: "max-free"},
+		},
+	}
+	assert.NoError(t, config.validate())
+}
+
+func TestValidatePoolUnknownStrategy(t *testing.T) {
+	config := &Config{
+		Classes: map[string]*StorageClass{
+			"ok": {Targets: []Target{
+				{Path: "/foo", Weight: 1.0},
+			}},
+		},
+		Pools: map[string]*Pool{
+			"bad": {Strategy: "random"},
+		},
+	}
+	err := config.validate()
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unknown strategy")
+}
+
+func TestLoadFromTempFile(t *testing.T) {
 	yamlContent := `
-test-category1:
-  weighted_paths:
-    - path: "/path1"
-      weight: 1.0
-      capacity_gb: 100
-test-category2:
-  weighted_paths:
-    - path: "/path2"
-      weight: 1.0
-      capacity_gb: 200
+classes:
+  test:
+    unit_size_gb: 10
+    targets:
+      - path: "/tmp/data"
+        weight: 1.0
 `
-	tempFile := filepath.Join(tempDir, "test-all-configs.yaml")
-	if err := os.WriteFile(tempFile, []byte(yamlContent), 0644); err != nil {
-		t.Skipf("Error creating temp file: %v", err)
-		return
-	}
-	defer os.Remove(tempFile)
-
-	configs, err := loadAllConfigsFromYAML(tempFile)
+	tmpFile := t.TempDir() + "/test-vpath.yaml"
+	err := os.WriteFile(tmpFile, []byte(yamlContent), 0644)
 	assert.NoError(t, err)
-	assert.NotNil(t, configs)
-	assert.Len(t, configs, 2)
-	assert.Contains(t, configs, "test-category1")
-	assert.Contains(t, configs, "test-category2")
-}
 
-// TestValidateConfigWeightZero 测试权重为0的配置
-func TestValidateConfigWeightZero(t *testing.T) {
-	config := &Config{
-		Name: "test-weight-zero",
-		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 0.0, Type: "static", Pool: "default"},
-			{Path: "/path2", Weight: 1.0, Type: "static", Pool: "default"},
-		},
-	}
-
-	err := validateConfig(config)
+	config, err := loadConfig(tmpFile)
 	assert.NoError(t, err)
-	// 权重为0的项应该被过滤掉
-	assert.Len(t, config.WeightedPaths, 1)
-	assert.Equal(t, "/path2", config.WeightedPaths[0].Path)
-}
-
-// TestValidateConfigTotalWeightZero 测试总权重为0的配置
-func TestValidateConfigTotalWeightZero(t *testing.T) {
-	config := &Config{
-		Name: "test-total-weight-zero",
-		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: 0.0, Type: "static", Pool: "default"},
-			{Path: "/path2", Weight: 0.0, Type: "static", Pool: "default"},
-		},
-	}
-
-	err := validateConfig(config)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "total weight of all WeightedPaths must be > 0")
-}
-
-// TestValidateConfigWeightNegative 测试权重为负的配置
-func TestValidateConfigWeightNegative(t *testing.T) {
-	config := &Config{
-		Name: "test-weight-negative",
-		WeightedPaths: []WeightedPathConfig{
-			{Path: "/path1", Weight: -1.0, Type: "static", Pool: "default"},
-		},
-	}
-
-	err := validateConfig(config)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Weight must be >= 0")
+	assert.Equal(t, 1, len(config.Classes))
 }

@@ -1,4 +1,4 @@
-package vpath
+package vpath0
 
 // Selector 路径选择器接口
 type Selector interface {

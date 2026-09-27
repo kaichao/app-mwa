@@ -119,12 +119,12 @@ func toPullUnpack(body string, fromHeaders map[string]string) error {
 					sourceURL = v
 				} else {
 					key := cube.ObsID + "/" + fileName
-					vpath, err := vPath.GetPath("preload-tar", key)
-					if err != nil {
-						return errors.WrapE(err, "vPath.GetPath()",
-							"category", "preload-tar", "key", key)
+					// 只查源文件在哪，不分配——查不到说明上游 tar-load 还没落位
+					allocPath, ok := vPath.Locate("preload-tar", key)
+					if !ok {
+						return errors.E("preload-tar 尚未分配", "key", key)
 					}
-					sourceURL = vpath
+					sourceURL = allocPath
 				}
 			}
 			if sourceURL == "" {
@@ -135,7 +135,7 @@ func toPullUnpack(body string, fromHeaders map[string]string) error {
 			// 增加"_global_dat_dir"
 			// path: 1302282040/t1302282041_1302282200/ch126
 			if os.Getenv("GROUP_NODES") != "" {
-				globalDatDir, err := vPath.GetPath("global-dat", targetSubDir)
+				globalDatDir, err := vPath.Allocate("global-dat", targetSubDir)
 				if err != nil {
 					logger.LogError(err, module.LogEntry)
 				} else {

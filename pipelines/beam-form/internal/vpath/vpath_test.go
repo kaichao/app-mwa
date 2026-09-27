@@ -1,7 +1,6 @@
-package vpath_test
+package vpath
 
 import (
-	"beamform/internal/vpath"
 	"fmt"
 	"os"
 	"testing"
@@ -9,273 +8,302 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// createTestConfig 创建测试配置
-func createTestConfig(name string, weightedPaths []vpath.WeightedPathConfig, aggregatedPaths []vpath.AggregatedPathConfig) *vpath.Config {
-	// 复制weightedPaths，设置Type字段
-	weightedPathsCopy := make([]vpath.WeightedPathConfig, len(weightedPaths))
-	for i, wp := range weightedPaths {
-		weightedPathsCopy[i] = wp
-		// 推断类型
-		if wp.Path == "AGG_PATH" {
-			weightedPathsCopy[i].Type = "aggregated"
-		} else {
-			weightedPathsCopy[i].Type = "static"
+// ── selectTarget 无状态哈希测试 ────────────────────────────
+
+func TestSelectTargetDeterministic(t *testing.T) {
+	targets := []Target{
+		{Path: "/a", Weight: 1.0},
+		{Path: "/b", Weight: 2.0},
+		{Path: "/c", Weight: 1.0},
+	}
+
+	for _, key := range []string{"cube-1", "cube-2", "cube-3", "cube-1000"} {
+		first, ok := selectTarget(targets, key)
+		assert.True(t, ok)
+
+		for i := 0; i < 10; i++ {
+			again, _ := selectTarget(targets, key)
+			assert.Equal(t, first.Path, again.Path, "key %s 应恒选同一 target", key)
 		}
 	}
+}
 
-	return &vpath.Config{
-		Name:            name,
-		WeightedPaths:   weightedPathsCopy,
-		AggregatedPaths: aggregatedPaths,
-		AggregatorType:  "memory", // 测试使用memory aggregator
+func TestSelectTargetDistribution(t *testing.T) {
+	targets := []Target{
+		{Path: "/a", Weight: 7.0},
+		{Path: "/b", Weight: 3.0},
 	}
-}
 
-// TestNewVirtualPath 测试创建VirtualPath
-func TestNewVirtualPath(t *testing.T) {
-	// 创建临时YAML文件
-	tempDir := os.TempDir()
-	yamlContent := `
-test-category:
-  aggregator_type: "memory"
-  weighted_paths:
-    - path: "/path1"
-      weight: 0.5
-    - path: "/path2"
-      weight: 0.5
-`
-	tempFile := tempDir + "/test-config.yaml"
-	if err := os.WriteFile(tempFile, []byte(yamlContent), 0644); err != nil {
-		t.Skipf("Error creating temp file: %v", err)
-		return
-	}
-	defer os.Remove(tempFile)
-
-	vp, err := vpath.NewVirtualPath(1, tempFile)
-	assert.NoError(t, err)
-	assert.NotNil(t, vp)
-}
-
-// TestGetPathStatic 测试获取静态路径
-func TestGetPathStatic(t *testing.T) {
-	config := createTestConfig("test-static", []vpath.WeightedPathConfig{
-		{Path: "/static1", Weight: 1.0},
-	}, nil)
-
-	// 直接使用编程方式创建
-	vp, err := vpath.NewVirtualPathFromConfig(1, config)
-	assert.NoError(t, err)
-
-	// 现在selector的key是配置名称，而不是wp.Category
-	path, err := vp.GetPath("test-static", "key1")
-	assert.NoError(t, err)
-	assert.Equal(t, "/static1", path)
-}
-
-// TestGetPathAggregated 测试获取聚合路径
-func TestGetPathAggregated(t *testing.T) {
-	config := createTestConfig("test-agg", []vpath.WeightedPathConfig{
-		{
-			Path:       "AGG_PATH",
-			Weight:     1.0,
-			Pool:       "storage",
-			CapacityGB: 10,
-		},
-	}, []vpath.AggregatedPathConfig{
-		{
-			Name:       "storage",
-			CapacityGB: 100,
-			Members:    []string{"/node1", "/node2"},
-		},
-	})
-
-	vp, err := vpath.NewVirtualPathFromConfig(1, config)
-	assert.NoError(t, err)
-
-	// 第一次分配
-	path1, err := vp.GetPath("test-agg", "job1")
-	assert.NoError(t, err)
-	assert.Contains(t, []string{"/node1", "/node2"}, path1)
-
-	// 相同key返回相同路径
-	path2, err := vp.GetPath("test-agg", "job1")
-	assert.NoError(t, err)
-	assert.Equal(t, path1, path2)
-
-	// 不同key可能不同
-	path3, err := vp.GetPath("test-agg", "job2")
-	assert.NoError(t, err)
-	assert.Contains(t, []string{"/node1", "/node2"}, path3)
-}
-
-// TestReleasePath 测试释放路径
-func TestReleasePath(t *testing.T) {
-	config := createTestConfig("test-release", []vpath.WeightedPathConfig{
-		{
-			Path:       "AGG_PATH",
-			Weight:     1.0,
-			Pool:       "storage",
-			CapacityGB: 10,
-		},
-	}, []vpath.AggregatedPathConfig{
-		{
-			Name:       "storage",
-			CapacityGB: 30,
-			Members:    []string{"/node1", "/node2", "/node3"},
-		},
-	})
-
-	vp, err := vpath.NewVirtualPathFromConfig(1, config)
-	assert.NoError(t, err)
-
-	// 分配路径
-	path, err := vp.GetPath("test-release", "job1")
-	assert.NoError(t, err)
-	_ = path // 使用变量避免编译警告
-
-	// 释放路径
-	err = vp.ReleasePath("test-release", "job1")
-	assert.NoError(t, err)
-
-	// 可以重新分配
-	newPath, err := vp.GetPath("test-release", "job1")
-	assert.NoError(t, err)
-	assert.Contains(t, []string{"/node1", "/node2", "/node3"}, newPath)
-}
-
-// TestWeightedSelection 测试加权选择
-func TestWeightedSelection(t *testing.T) {
-	config := createTestConfig("test-weighted", []vpath.WeightedPathConfig{
-		{Path: "/pathA", Weight: 0.7},
-		{Path: "/pathB", Weight: 0.3},
-	}, nil)
-
-	vp, err := vpath.NewVirtualPathFromConfig(1, config)
-	assert.NoError(t, err)
-
-	// 多次选择，验证大致比例
-	countA, countB := 0, 0
-	for i := 0; i < 100; i++ {
-		path, err := vp.GetPath("test-weighted", "test")
-		assert.NoError(t, err)
-		if path == "/pathA" {
+	n := 10000
+	countA := 0
+	for i := 0; i < n; i++ {
+		picked, ok := selectTarget(targets, fmt.Sprintf("cube-%d", i))
+		assert.True(t, ok)
+		if picked.Path == "/a" {
 			countA++
-		} else if path == "/pathB" {
-			countB++
 		}
 	}
 
-	// 验证大致比例（允许误差）
-	assert.Greater(t, countA, 50) // 70%的应该多于50
-	assert.Less(t, countB, 50)    // 30%的应该少于50
+	// 期望 7000；容差 500（5%）远大于抽样标准差（约 46）
+	assert.InDelta(t, 7000, countA, 500)
 }
 
-// isScaleboxEnvReady 检查Scalebox测试环境是否就绪
-func isScaleboxEnvReady(t *testing.T) bool {
-	if os.Getenv("PGHOST") == "" {
-		t.Skip("PGHOST environment variable not set, skipping Scalebox integration test")
-		return false
+func TestSelectTargetComplexWeights(t *testing.T) {
+	targets := []Target{
+		{Path: "/a", Weight: 5.0},
+		{Path: "/b", Weight: 3.0},
+		{Path: "/c", Weight: 2.0},
 	}
-	return true
+
+	counts := map[string]int{}
+	for i := 0; i < 10000; i++ {
+		picked, ok := selectTarget(targets, fmt.Sprintf("cube-%d", i))
+		assert.True(t, ok)
+		counts[picked.Path]++
+	}
+
+	assert.InDelta(t, 5000, counts["/a"], 500)
+	assert.InDelta(t, 3000, counts["/b"], 500)
+	assert.InDelta(t, 2000, counts["/c"], 500)
 }
 
-// cleanupTestVariables 清理测试期间创建的变量
-func cleanupTestVariables(t *testing.T, category, key string) {
-	// 尝试释放可能存在的variable
-	// 注意：这里我们直接调用ScaleboxAggregator的Release方法
-	// 但由于我们无法直接访问aggregator，我们只能尝试通过VirtualPath来释放
-	// 实际上，清理应该在每个测试中完成，而不是在这里
-	// 所以这个函数暂时留空，清理工作由测试自己完成
+func TestSelectTargetSkipsZeroWeight(t *testing.T) {
+	targets := []Target{
+		{Path: "/active", Weight: 1.0},
+		{Path: "/disabled", Weight: 0.0},
+	}
+
+	for i := 0; i < 100; i++ {
+		picked, ok := selectTarget(targets, fmt.Sprintf("cube-%d", i))
+		assert.True(t, ok)
+		assert.Equal(t, "/active", picked.Path)
+	}
 }
 
-func TestCategoryTestStatic(t *testing.T) {
-	vp, err := vpath.NewVirtualPath(appID, "testdata/vpath.yaml")
+func TestSelectTargetNoneAvailable(t *testing.T) {
+	allZero := []Target{
+		{Path: "/a", Weight: 0.0},
+		{Path: "/b", Weight: 0.0},
+	}
+	_, ok := selectTarget(allZero, "cube-1")
+	assert.False(t, ok, "权重全为 0 时应返回 false")
+
+	_, ok = selectTarget(nil, "cube-1")
+	assert.False(t, ok, "空 targets 应返回 false")
+}
+
+// ── Engine Load + path target 测试 ─────────────────────────
+
+func TestLoad(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
 	assert.NoError(t, err)
-	assert.NotNil(t, vp)
+	assert.NotNil(t, engine)
+}
 
-	// test-static category只有静态路径
-	validPaths := []string{"/test/path1", "/test/path2"}
+func TestAllocateReadClass(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
 
-	// 多次测试，确保选择器工作
-	for i := 0; i < 20; i++ {
-		p := fmt.Sprintf("key-%02d", i)
-		path, err := vp.GetPath("test-static", p)
+	validPaths := map[string]bool{
+		"/data/partition-a": true,
+		"/data/partition-b": true,
+	}
+
+	// 等权重的两个路径都应被选到（哈希把不同 key 分摊开）
+	seen := map[string]bool{}
+	for i := 0; i < 50; i++ {
+		path, err := engine.Allocate("read-class", fmt.Sprintf("key-%d", i))
 		assert.NoError(t, err)
-		assert.Contains(t, validPaths, path)
+		assert.True(t, validPaths[path], "unexpected path: %s", path)
+		seen[path] = true
 	}
+	assert.Len(t, seen, 2)
 }
 
-func TestCategoryTestAgg(t *testing.T) {
-	vp, err := vpath.NewVirtualPath(appID, "testdata/vpath.yaml")
+func TestAllocateDisabledTarget(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
 	assert.NoError(t, err)
-	assert.NotNil(t, vp)
 
-	// test-agg category有AGG_PATH（权重1）和一个权重为0的静态路径
-	// 权重为0的路径应该被过滤掉，所以只有AGG_PATH
-	category := "test-agg"
-
-	// 多次测试AGG_PATH分配
 	for i := 0; i < 10; i++ {
-		p := fmt.Sprintf("job-%02d", i)
-		path, err := vp.GetPath(category, p)
+		path, err := engine.Allocate("disabled-target", fmt.Sprintf("key-%d", i))
 		assert.NoError(t, err)
-		// AGG_PATH应该返回有效的路径
+		assert.Equal(t, "/data/primary", path)
+	}
+}
+
+func TestAllocateClassNotFound(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	_, err = engine.Allocate("no-such-class", "key")
+	assert.Error(t, err)
+}
+
+func TestReleaseNoPoolTarget(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	err = engine.Release("read-class", "key")
+	assert.NoError(t, err)
+}
+
+// ── ValidateConfig 测试 ──────────────────────────────────
+
+func TestValidateConfigOK(t *testing.T) {
+	err := ValidateConfig("testdata/vpath.yaml")
+	assert.NoError(t, err)
+}
+
+func TestValidateConfigBadFile(t *testing.T) {
+	err := ValidateConfig("testdata/nonexistent.yaml")
+	assert.Error(t, err)
+}
+
+func TestValidateConfigBadYAML(t *testing.T) {
+	yamlContent := `
+classes:
+  bad:
+    targets:
+      - path: "/x"
+        weight: 0.0
+`
+	tmpFile := t.TempDir() + "/bad.yaml"
+	os.WriteFile(tmpFile, []byte(yamlContent), 0644)
+
+	err := ValidateConfig(tmpFile)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "total weight must be > 0")
+}
+
+// ── 池分配测试（内存后端，不依赖 scalebox server） ──────────
+
+// newTestStore 预置各池成员的信号量，模拟管理员用
+// scalebox semaphore create --sema-file 导入的初始剩余量。
+func newTestStore() *memoryStore {
+	s := newMemoryStore()
+	for _, m := range []string{"/pool/node1", "/pool/node2", "/pool/node3"} {
+		s.setSema("vpath:free-gb:test-pool:"+m, 100)
+	}
+	for _, m := range []string{"/large/disk1", "/large/disk2", "/small/disk3"} {
+		s.setSema("vpath:free-gb:big-pool:"+m, 1000)
+	}
+	return s
+}
+
+func TestAllocatePoolTarget(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	path, err := engine.Allocate("write-class", "test-key-1")
+	assert.NoError(t, err)
+	assert.NotEmpty(t, path)
+
+	// 幂等：同一 key 重复分配返回同一位置
+	path2, err := engine.Allocate("write-class", "test-key-1")
+	assert.NoError(t, err)
+	assert.Equal(t, path, path2)
+
+	err = engine.Release("write-class", "test-key-1")
+	assert.NoError(t, err)
+}
+
+func TestAllocatePoolMultipleKeys(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	paths := make(map[string]string)
+	for i := 0; i < 5; i++ {
+		key := fmt.Sprintf("multi-key-%d", i)
+		path, err := engine.Allocate("write-class", key)
+		assert.NoError(t, err)
+		paths[key] = path
+	}
+
+	for key, expected := range paths {
+		path, err := engine.Allocate("write-class", key)
+		assert.NoError(t, err)
+		assert.Equal(t, expected, path)
+	}
+
+	for key := range paths {
+		err = engine.Release("write-class", key)
+		assert.NoError(t, err)
+	}
+}
+
+// 多池 class 的释放必须按**实际分配**的池进行——旧实现在循环内 return
+// 第一个 pool，次生池的位置记录与容量会永久泄漏。
+func TestReleaseSecondaryPool(t *testing.T) {
+	s := newTestStore()
+	engine, err := LoadWithStore("testdata/vpath.yaml", s)
+	assert.NoError(t, err)
+
+	var key, member string
+	for i := 0; i < 100 && member == ""; i++ {
+		k := fmt.Sprintf("multi-%d", i)
+		_, err := engine.Allocate("multi-pool", k)
+		assert.NoError(t, err)
+		if v, ok := s.vars["vpath:member-path:big-pool:"+k]; ok {
+			key, member = k, v
+		}
+	}
+	if key == "" {
+		t.Fatal("100 个 key 中应至少有一个落在 big-pool（multi-pool 的次生池）")
+	}
+
+	before := s.semas["vpath:free-gb:big-pool:"+member]
+
+	assert.NoError(t, engine.Release("multi-pool", key))
+
+	assert.Empty(t, s.vars["vpath:member-path:big-pool:"+key], "次生池的位置记录应被清除")
+	assert.Equal(t, before+10, s.semas["vpath:free-gb:big-pool:"+member],
+		"容量应按 unit_size_gb 归还")
+}
+
+// ── Locate / AllocateAll ──────────────────────────────────
+
+func TestLocateUnallocated(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	// write-class 只有 pool target，未分配时没有位置可查
+	path, ok := engine.Locate("write-class", "never-allocated")
+	assert.False(t, ok)
+	assert.Empty(t, path)
+}
+
+func TestLocateAfterAllocate(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	allocated, err := engine.Allocate("write-class", "k1")
+	assert.NoError(t, err)
+
+	path, ok := engine.Locate("write-class", "k1")
+	assert.True(t, ok)
+	assert.Equal(t, allocated, path)
+}
+
+func TestLocatePathClass(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
+	assert.NoError(t, err)
+
+	// read-class 全是 path target：副本处处都在，无需分配即命中
+	for i := 0; i < 10; i++ {
+		path, ok := engine.Locate("read-class", fmt.Sprintf("k-%d", i))
+		assert.True(t, ok)
 		assert.NotEmpty(t, path)
 	}
-
-	for i := 0; i < 10; i++ {
-		p := fmt.Sprintf("job-%02d", i)
-		err := vp.ReleasePath(category, p)
-		assert.NoError(t, err)
-	}
 }
 
-func TestCategoryTestMixed(t *testing.T) {
-	vp, err := vpath.NewVirtualPath(appID, "testdata/vpath.yaml")
+func TestAllocateAll(t *testing.T) {
+	engine, err := LoadWithStore("testdata/vpath.yaml", newTestStore())
 	assert.NoError(t, err)
-	assert.NotNil(t, vp)
 
-	// test-mixed category有2个静态路径和1个AGG_PATH
-	category := "test-mixed"
-
-	// 多次测试，验证选择器按权重选择
-	staticPaths := []string{"/fast/ssd", "/slow/hdd"}
-	// aggPathPrefix := "/test-mixed/dir" // AGG_PATH分配的路径（暂时注释掉，因为YAML中没有配置aggregated_paths）
-
-	// 统计选择结果
-	staticCount := 0
-	aggCount := 0
-
-	for i := 0; i < 30; i++ {
-		p := fmt.Sprintf("task-%02d", i)
-		path, err := vp.GetPath(category, p)
-		assert.NoError(t, err)
-
-		if path == "/fast/ssd" || path == "/slow/hdd" {
-			staticCount++
-			assert.Contains(t, staticPaths, path)
-		} else if len(path) > 0 {
-			aggCount++
-			// AGG_PATH分配的路径
-			assert.NotEmpty(t, path)
-		}
-	}
-
-	// 验证大致比例（权重：/fast/ssd=1, /slow/hdd=2, AGG_PATH=3）
-	// 总权重=6，静态路径总权重=3，AGG_PATH权重=3
-	// 静态路径应该占约50%，AGG_PATH占约50%
-	total := staticCount + aggCount
-	if total > 0 {
-		staticRatio := float64(staticCount) / float64(total)
-		// 允许误差：40%-60%
-		assert.Greater(t, staticRatio, 0.4)
-		assert.Less(t, staticRatio, 0.6)
-	}
+	paths, err := engine.AllocateAll("read-class", "k1")
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"/data/partition-a", "/data/partition-b"}, paths)
 }
 
-var appID int
-
-func init() {
-	appID = 1
-	os.Setenv("PGHOST", "10.0.6.100")
-}
+// 容量一律取 class 的 unit_size_gb，调用方不再传入——原先的 sizeGB
+// 覆盖参数已按设计移除（见 DESIGN 三.API）。

@@ -1,4 +1,4 @@
-package vpath
+package vpath0
 
 import "github.com/kaichao/gopkg/errors"
 

@@ -1,4 +1,4 @@
-package vpath
+package vpath0
 
 import (
 	"fmt"

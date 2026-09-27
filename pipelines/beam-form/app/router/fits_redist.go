@@ -96,11 +96,11 @@ func toFitsRedist(body string, fromHeaders map[string]string) error {
 			} else {
 				// 类型2、类型3，组内地址
 				// 自增长的index
-				varValue, err = vPath.GetPath("stageing-24ch", pointingDir)
-				if err != nil {
-					return errors.WrapE(err, 9, "vPath.GetPath()",
-						"category", "stageing-24ch", "key", pointingDir)
+				located, ok := vPath.Locate("staging-24ch", pointingDir)
+				if !ok {
+					return errors.E("staging-24ch 位置未找到", "key", pointingDir)
 				}
+				varValue = located
 				if ips[i] == fromIP {
 					ip = "localhost"
 				} else {

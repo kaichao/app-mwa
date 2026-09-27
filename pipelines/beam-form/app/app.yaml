@@ -1,8 +1,7 @@
 name: app.beam-form
 cluster: ${CLUSTER}
 parameters:
-  # initial_status: RUNNING
-  initial_status: INITIAL
+  # initial_status: INITIAL
   main_router: router-beam-form
   global_copier_size: 3
   global_copier_env: '{}'

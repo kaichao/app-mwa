@@ -60,7 +60,7 @@ func fromBeamMake(body string, headers map[string]string) error {
 		if globalDatDir := headers["_global_dat_dir"]; globalDatDir != "" {
 			dataDir += fmt.Sprintf(" %s/dat/%s", globalDatDir, subDatDir)
 			// sub-path: 1302282040/t1302282041_1302282200/ch126
-			if err := vPath.ReleasePath("global-dat", subDatDir); err != nil {
+			if err := vPath.Release("global-dat", subDatDir); err != nil {
 				logger.LogError(err, module.LogEntry)
 			}
 		}

@@ -11,6 +11,7 @@ cd app-base/router && go build -o ../../main-router-base .
 
 # Run tests for a specific package
 go test ./internal/vpath/... -v
+go test ./internal/vpath0/... -v
 go test ./internal/datacube/... -v
 go test ./internal/queue/... -v
 
@@ -67,12 +68,13 @@ Messages use a hierarchical path format parsed by `internal/strparse`:
 
 | Package | Purpose |
 |---------|---------|
-| `internal/vpath/` | Virtual path manager with weighted selection. Chooses storage locations (local SSD, shared storage, remote) based on configurable weights. Supports `static` and `aggregated` path types with Scalebox-backed semaphore aggregation. |
+| `internal/vpath/` | Path mapping engine (current). Two-layer config `{classes, pools}`: a **class** maps data to weighted targets (a path or a pool), a **pool** aggregates members by max-free. The virtualization type is not declared — the same targets act as type a (aggregate), b1 (replicate) or b2 (merge) depending on which API the caller invokes (`Allocate` / `AllocateAll`). Copy selection uses stateless rendezvous hashing, so all processes agree without shared state. Pool membership and capacity are read from the `vpath:free-gb:<pool>` semaphore group. |
+| `internal/vpath0/` | Legacy vpath implementation, **retained as an archive** — no production callers. Flat `map[category]` config with `static` / `aggregated` path types and a Scalebox-backed aggregator. Kept for reference together with its config `app/vpath0.yaml` and sema definitions `app/{mwa,preload}-vpath0.sema`; none of these archived files are copied into the router image. Its integration tests require a live Scalebox gRPC server. |
 | `internal/datacube/` | Data cube configuration. Loads dataset parameters (time range, pointing range, channel count, step sizes) from `dataset.yaml`. Overridable via env vars (`TIME_BEGIN`, `TIME_END`, `POINTING_BEGIN`, `TIME_STEP`). |
 | `internal/strparse/` | Parses the hierarchical message body format into obsID, pointing range, time range, and channel components. |
 | `internal/queue/` | Redis-backed priority queue (`ZADD`/`ZPOPMIN`) for node selection ordering. |
 | `internal/node/` | Node allocation — maps channels and pointings to compute nodes based on group index. |
-| `internal/picker/` | Weighted random picker used by vpath for path selection. |
+| `internal/picker/` | Weighted random picker — no current callers (both vpath engines implement their own selection). |
 | `internal/cache/` | Database cache helpers (currently commented out, using pgx). |
 
 ### Scalebox Integration
@@ -85,5 +87,6 @@ The pipeline relies heavily on the `github.com/kaichao/scalebox` library for:
 ### Configuration
 
 - `dataset.yaml` — Per-observation dataset parameters (time/pointing/channel dimensions)
-- `/vpath.yaml` — Virtual path weighting configuration (loaded at startup by vpath)
+- `/vpath.yaml` — Path mapping configuration (loaded at startup by `internal/vpath` via `initApp` in `app/router/init.go`)
+- `app/vpath0.yaml` — Archived config for `internal/vpath0`, kept in the repo for reference only; not copied into the image
 - Environment variables control behavior: `LOG_LEVEL`, `TIME_STEP`, `POINTING_BEGIN`, `TIME_BEGIN`, `TIME_END`, `RUN_MODE`, `USE_GLOBAL_POINTING`, `ORIGIN_ROOT`, `PRESTO_APP_ID`, `SSH_USER`, `SSH_PORT`

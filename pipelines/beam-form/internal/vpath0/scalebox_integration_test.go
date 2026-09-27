@@ -1,7 +1,7 @@
-package vpath_test
+package vpath0_test
 
 import (
-	"beamform/internal/vpath"
+	"beamform/internal/vpath0"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,9 +14,9 @@ func TestScaleboxAggregatorBasic(t *testing.T) {
 	}
 
 	// 测试配置：使用test-agg category（对应test-agg.sema中的信号量）
-	config := &vpath.Config{
+	config := &vpath0.Config{
 		Name: "test-scalebox-basic",
-		WeightedPaths: []vpath.WeightedPathConfig{
+		WeightedPaths: []vpath0.WeightedPathConfig{
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
@@ -27,7 +27,7 @@ func TestScaleboxAggregatorBasic(t *testing.T) {
 		AggregatorType: "scalebox", // 明确指定使用ScaleboxAggregator
 	}
 
-	vp, err := vpath.NewVirtualPathFromConfig(appID, config)
+	vp, err := vpath0.NewVirtualPathFromConfig(appID, config)
 	assert.NoError(t, err)
 	assert.NotNil(t, vp)
 
@@ -58,9 +58,9 @@ func TestScaleboxAggregatorMultipleAllocations(t *testing.T) {
 		return
 	}
 
-	config := &vpath.Config{
+	config := &vpath0.Config{
 		Name: "test-scalebox-multiple",
-		WeightedPaths: []vpath.WeightedPathConfig{
+		WeightedPaths: []vpath0.WeightedPathConfig{
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
@@ -71,7 +71,7 @@ func TestScaleboxAggregatorMultipleAllocations(t *testing.T) {
 		AggregatorType: "scalebox",
 	}
 
-	vp, err := vpath.NewVirtualPathFromConfig(appID, config)
+	vp, err := vpath0.NewVirtualPathFromConfig(appID, config)
 	assert.NoError(t, err)
 
 	// 分配多个不同key的路径
@@ -105,9 +105,9 @@ func TestScaleboxAggregatorInsufficientCapacity(t *testing.T) {
 		return
 	}
 
-	config := &vpath.Config{
+	config := &vpath0.Config{
 		Name: "test-scalebox-insufficient",
-		WeightedPaths: []vpath.WeightedPathConfig{
+		WeightedPaths: []vpath0.WeightedPathConfig{
 			{
 				Path:       "AGG_PATH",
 				Weight:     1.0,
@@ -118,7 +118,7 @@ func TestScaleboxAggregatorInsufficientCapacity(t *testing.T) {
 		AggregatorType: "scalebox",
 	}
 
-	vp, err := vpath.NewVirtualPathFromConfig(appID, config)
+	vp, err := vpath0.NewVirtualPathFromConfig(appID, config)
 	assert.NoError(t, err)
 
 	// 应该失败，因为容量不足
@@ -135,9 +135,9 @@ func TestScaleboxAggregatorWithMixedPaths(t *testing.T) {
 	}
 
 	// 使用已经存在的test-agg category（数据库中有对应的信号量）
-	config := &vpath.Config{
+	config := &vpath0.Config{
 		Name: "test-scalebox-mixed",
-		WeightedPaths: []vpath.WeightedPathConfig{
+		WeightedPaths: []vpath0.WeightedPathConfig{
 			{
 				Path:       "/local/ssd",
 				Weight:     0.3,
@@ -154,7 +154,7 @@ func TestScaleboxAggregatorWithMixedPaths(t *testing.T) {
 		AggregatorType: "scalebox",
 	}
 
-	vp, err := vpath.NewVirtualPathFromConfig(appID, config)
+	vp, err := vpath0.NewVirtualPathFromConfig(appID, config)
 	assert.NoError(t, err)
 
 	// 测试多次获取，验证加权选择
@@ -188,7 +188,7 @@ func TestScaleboxAggregatorFromYAML(t *testing.T) {
 	yamlFile := "testdata/vpath.yaml"
 
 	// 使用NewVirtualPath从YAML文件创建
-	vp, err := vpath.NewVirtualPath(appID, yamlFile)
+	vp, err := vpath0.NewVirtualPath(appID, yamlFile)
 	assert.NoError(t, err)
 	assert.NotNil(t, vp)
 

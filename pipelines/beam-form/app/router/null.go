@@ -41,10 +41,9 @@ func fromNull(body string, headers map[string]string) error {
 		varName := "pointing-data-root:" + pointingDir
 		if v, err := getPointingVariable(varName, appID); err != nil || v == "" {
 			// varValue, err := iopath.GetStagingRoot(pointingDir)
-			varValue, err := vPath.GetPath("staging-24ch", pointingDir)
-			if err != nil {
-				return errors.WrapE(err, 9, "vPath.GetPath()",
-					"category", "staging-24ch", "key", pointingDir)
+			varValue, ok := vPath.Locate("staging-24ch", pointingDir)
+			if !ok {
+				return errors.E("staging-24ch 位置未找到", "key", pointingDir)
 			}
 			setPointingVariable(varName, varValue, appID)
 		}
